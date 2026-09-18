@@ -1,0 +1,47 @@
+{
+  "evax_protocol": "4.2.3",
+  "identification": {
+    "id": "politique.simulateur",
+    "name": "Simulateur Macro-Politique & Démocratique",
+    "version": "1.0.0",
+    "author": "ÉVA_locale & Jean",
+    "description": "Simulateur systémique gigogne à 4 échelons (Local, National, Europe, Marchés) issu du projet 'Démocratie et politique du peuple pour le peuple par le peuple'."
+  },
+  "entry_point": {
+    "file": "main.py",
+    "class": "ExtensionSimulateurPolitique",
+    "factory": null
+  },
+  "self_contained": {
+    "has_own_venv": false,
+    "install_script": null,
+    "requirements": null,
+    "environment_variables": {}
+  },
+  "performance": {
+    "lazy_load": true,
+    "batchable": false,
+    "cpu_max_percent": 15,
+    "ram_max_mb": 256
+  },
+  "lifecycle": {
+    "auto_start": true,
+    "health_check_interval_sec": 60,
+    "grace_period_sec": 5,
+    "on_crash": "relaunch"
+  },
+  "permissions": {
+    "level": "sandbox",
+    "capabilities": []
+  },
+  "communication": {
+    "subscribes": ["politique.simulation.demande.v1"],
+    "publishes": ["politique.simulation.reponse.v1"]
+  },
+  "context_declaration": {
+    "reads": [],
+    "writes": []
+  },
+  "actions": ["politique.simuler", "politique.scenarios"],
+  "notifications": []
+}
