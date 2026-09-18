@@ -522,12 +522,115 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
         strate_impactee="Europe",
         effet_simulation="Décide formellement de l'activation ou de la levée de la Procédure de Déficit Excessif (PDE) et des sanctions financières associées.",
     ),
+    "CONST_ART_1": ArticleDeLoi(
+        identifiant="CONST_ART_1",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 1er",
+        titre="Principes fondamentaux : République indivisible, laïque, démocratique, sociale et décentralisée",
+        texte_integral="La France est une République indivisible, laïque, démocratique et sociale. Elle assure l'égalité devant la loi de tous les citoyens sans distinction d'origine, de race ou de religion. Son organisation est décentralisée.",
+        strate_impactee="National",
+        effet_simulation="Fonde l'égalité des droits sur l'ensemble du territoire national et l'autonomie de gestion des collectivités décentralisées.",
+    ),
+    "CONST_ART_72_3": ArticleDeLoi(
+        identifiant="CONST_ART_72_3",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 72-3",
+        titre="Reconnaissance constitutionnelle des populations et territoires d'Outre-mer",
+        texte_integral="La République reconnaît, au sein du peuple français, les populations d'outre-mer, dans un idéal commun de liberté, d'égalité et de fraternité. La Guadeloupe, la Guyane, la Martinique, La Réunion, Mayotte, Saint-Barthélemy, Saint-Martin, Saint-Pierre-et-Miquelon, les îles Wallis et Futuna et la Polynésie française sont régis par l'article 73 pour les départements et régions d'outre-mer et par l'article 74 pour les collectivités d'outre-mer.",
+        strate_impactee="Local",
+        effet_simulation="Consacre l'appartenance pleine et entière des territoires ultramarins à la République indivisible.",
+    ),
+    "CONST_ART_73": ArticleDeLoi(
+        identifiant="CONST_ART_73",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 73",
+        titre="Régime législatif des DROM et Collectivités Territoriales Uniques",
+        texte_integral="Dans les départements et les régions d'outre-mer, les lois et règlements sont applicables de plein droit. Ils peuvent faire l'objet d'adaptations tenant aux caractéristiques et contraintes particulières de ces collectivités. Une collectivité unique peut être substituée à un département et une région d'outre-mer.",
+        strate_impactee="Local",
+        effet_simulation="Autorise l'adaptation fiscale (octroi de mer) et la création des Collectivités Uniques de Guyane et Martinique.",
+    ),
+    "CONST_ART_74": ArticleDeLoi(
+        identifiant="CONST_ART_74",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 74",
+        titre="Statut d'autonomie des Collectivités d'Outre-mer (COM)",
+        texte_integral="Les collectivités d'outre-mer régies par le présent article ont un statut qui tient compte des intérêts propres de chacune d'elles au sein de la République. Ce statut est défini par une loi organique qui fixe les compétences exercées et les conditions dans lesquelles les lois y sont applicables.",
+        strate_impactee="Local",
+        effet_simulation="Fonde les régimes d'autonomie fiscale et douanière de la Polynésie française, de Saint-Barthélemy, de Saint-Martin et de Saint-Pierre-et-Miquelon.",
+    ),
+    "CONST_TITRE_XIII": ArticleDeLoi(
+        identifiant="CONST_TITRE_XIII",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Articles 76 et 77",
+        titre="Statut sui generis de la Nouvelle-Calédonie (Accord de Nouméa)",
+        texte_integral="Les populations de la Nouvelle-Calédonie sont appelées à se prononcer sur les dispositions de l'accord signé à Nouméa le 5 mai 1998. La loi organique détermine les compétences de l'État transférées de façon définitive aux institutions de la Nouvelle-Calédonie.",
+        strate_impactee="Local",
+        effet_simulation="Régit le Congrès calédonien, le gouvernement collégial et le Sénat coutumier kanak.",
+    ),
+    "CODE_ELEC_L16": ArticleDeLoi(
+        identifiant="CODE_ELEC_L16",
+        code_ou_traite="Code électoral",
+        article="Article L. 16",
+        titre="Répertoire Électoral Unique (REU) géré par l'INSEE",
+        texte_integral="Il est tenu par l'Institut national de la statistique et des études économiques un répertoire électoral unique comprenant l'ensemble des électeurs inscrits sur les listes électorales de chaque commune et des consulats à l'étranger.",
+        strate_impactee="National",
+        effet_simulation="Base de données unifiée de 49,5 millions d'électeurs avec inscription automatique dès la majorité (18 ans).",
+    ),
+    "CODE_ELEC_L123": ArticleDeLoi(
+        identifiant="CODE_ELEC_L123",
+        code_ou_traite="Code électoral",
+        article="Article L. 123",
+        titre="Scrutin uninominal majoritaire à deux tours pour les Élections Législatives",
+        texte_integral="Les députés sont élus au scrutin uninominal majoritaire à deux tours dans le cadre de 577 circonscriptions. Pour être élu au premier tour, un candidat doit recueillir la majorité absolue des suffrages et un quart des électeurs inscrits. Pour se maintenir au second tour, il faut 12,5 % des inscrits.",
+        strate_impactee="National",
+        effet_simulation="Régit la formation de la majorité gouvernementale à l'Assemblée nationale et les triangulaires électorales.",
+    ),
+    "CODE_ELEC_L260": ArticleDeLoi(
+        identifiant="CODE_ELEC_L260",
+        code_ou_traite="Code électoral",
+        article="Article L. 260",
+        titre="Scrutin de liste paritaire avec prime majoritaire de 50 % aux Élections Municipales",
+        texte_integral="Les conseillers municipaux des communes de 1 000 habitants et plus sont élus au scrutin de liste bloquée paritaire à deux tours avec prime majoritaire de 50 % des sièges pour la liste arrivée en tête et répartition proportionnelle du reste.",
+        strate_impactee="Local",
+        effet_simulation="Assure la stabilité des exécutifs municipaux et impose la stricte parité homme-femme.",
+    ),
+    "CGCT_L2411_1": ArticleDeLoi(
+        identifiant="CGCT_L2411_1",
+        code_ou_traite="Code général des collectivités territoriales (CGCT)",
+        article="Article L. 2411-1",
+        titre="Sections de commune, biens indivis et droits d'affouage",
+        texte_integral="Une section de commune est une personne morale de droit public possédant à titre exclusif des biens, droits ou charges distincts de ceux de la commune. Les habitants de la section ont vocation à la jouissance des biens communaux et aux droits d'affouage.",
+        strate_impactee="Local",
+        effet_simulation="Protège le patrimoine rural indivis (forêts, estives) au niveau des hameaux et terroirs.",
+    ),
+    "CODE_TRANSP_L1803_1": ArticleDeLoi(
+        identifiant="CODE_TRANSP_L1803_1",
+        code_ou_traite="Code des transports",
+        article="Article L. 1803-1",
+        titre="Principe de Continuité Territoriale entre l'Outre-mer et la Métropole",
+        texte_integral="L'État garantit la continuité territoriale entre les collectivités d'outre-mer et le territoire métropolitain. Cette politique concourt à atténuer les contraintes de l'éloignement et du surcoût des transports pour les résidents ultramarins.",
+        strate_impactee="Local",
+        effet_simulation="Finance l'aide à la mobilité aérienne (LADOM) et les tarifs régulés pour les étudiants et familles d'Outre-mer.",
+    ),
 }
 
 
 def get_corpus_lois() -> Dict[str, ArticleDeLoi]:
     """Retourne l'intégralité du registre légal."""
     return REGISTRE_LEGAL
+
+
+# Export direct des instances clés pour import immédiat
+CONST_ART_1 = REGISTRE_LEGAL["CONST_ART_1"]
+CONST_ART_72_3 = REGISTRE_LEGAL["CONST_ART_72_3"]
+CONST_ART_73 = REGISTRE_LEGAL["CONST_ART_73"]
+CONST_ART_74 = REGISTRE_LEGAL["CONST_ART_74"]
+CONST_TITRE_XIII = REGISTRE_LEGAL["CONST_TITRE_XIII"]
+CODE_ELEC_L16 = REGISTRE_LEGAL["CODE_ELEC_L16"]
+CODE_ELEC_L123 = REGISTRE_LEGAL["CODE_ELEC_L123"]
+CODE_ELEC_L260 = REGISTRE_LEGAL["CODE_ELEC_L260"]
+CGCT_L2411_1 = REGISTRE_LEGAL["CGCT_L2411_1"]
+CODE_TRANSP_L1803_1 = REGISTRE_LEGAL["CODE_TRANSP_L1803_1"]
 
 
 def rechercher_loi(mot_cle: str) -> List[ArticleDeLoi]:

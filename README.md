@@ -63,6 +63,7 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 * **[`docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md`](docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md)** : Architecture républicaine, corps de contrôle et réseau consulaire (CCI, CMA, CA).
 * **[`docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md`](docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md)** : **Toutes les assemblées représentatives et décisionnelles** (AN 577, Sénat 348, Congrès 925, CESE 175, Conventions citoyennes 150, Maires 34 935, EPCI 1 254, Départements 101, Régions 18, Chambres consulaires CCI/CMA/CA, Parlement Européen 720, Conseil de l'Union européenne 27). Fonctionnement constitutionnel, jeux de pouvoirs, seuils de vote et contraintes réelles.
 * **[`docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md`](docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md)** : **Le pacte républicain du berceau au tombeau sur 3 générations** : Analyse complète des 9 périodes de vie (0 à 95+ ans), matrice des flux croisés dynamiques (G1 Aînés, G2 Actifs, G3 Jeunesse), soins invisibles (care et garde d'enfants), verrou de l'héritage tardif (52 ans) et Indice d'Harmonie Intergénérationnelle (IEHI).
+* **[`docs/10_STRATES_TERRITORIALES_OUTRE_MER_ET_FONCTIONS_ELECTORALES.md`](docs/10_STRATES_TERRITORIALES_OUTRE_MER_ET_FONCTIONS_ELECTORALES.md)** : **Strates territoriales du Lieu-dit à la Métropole, Outre-Mer complet & Fonctions Électorales** : Continuum géographique intégral (sections de commune L. 2411-1, 25 800 communes rurales, 7 650 bourgs-centres, 1 280 villes moyennes, 180 agglos, 22 métropoles, 1 254 EPCI, 2 054 cantons, 332 arrondissements, 101 départements, 18 régions) ; Outre-mer complet (Guadeloupe, Martinique CTU, Guyane CTU, La Réunion, Mayotte, Saint-Barthélemy, Saint-Martin, Saint-Pierre-et-Miquelon, Wallis-et-Futuna, Polynésie française autonome, Nouvelle-Calédonie sui generis, TAAF, Clipperton, Français de l'étranger, 10,2M km² de ZEE) ; Armature électorale (49,5M électeurs REU, 8 scrutins républicains, 4 formes de référendum Art. 11, 89, 72-1, 72-4).
 * **[`docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md`](docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md)** : Architecture technique du simulateur gigogne & audit des 10 redondances systémiques.
 
 ---
@@ -81,8 +82,9 @@ L'interface web accessible sur `http://localhost:8000` (ou en prévisualisation 
 * **Visualisation des 4 strates gigognes** : Local, National, Europe, Marchés financiers.
 * **Onglet « Assemblées & Pouvoirs »** : Suivi parlementaire (Assemblée nationale, Sénat, Congrès), territorial (Maires, Intercommunalités, Départements, Régions), consultatif & citoyen (CESE, Conventions citoyennes, CCI/CMA/CA) et européen (Parlement européen, Conseil UE).
 * **Onglet « Cycle de Vie & 3 Générations »** : Pilotage du pacte intergénérationnel (G1 Aînés, G2 Actifs, G3 Jeunesse), matrice des flux croisés (360 Md€ retraites, 165 Md€ éducation, 18 Md€ garde bénévole) et indicateur de fardeau de la génération sandwich.
+* **Onglet « Territoires & Élections »** : Continuum complet du lieu-dit à la métropole, tableau de bord des 14 territoires ultramarins (DROM, COM, Calédonie, ZEE), et suivi du REU et des 8 scrutins démocratiques.
 * **Explorateur du Corpus Juridique** avec recherche plein texte instantanée et filtres par code.
-* **Lecteur du Dossier de Mandature** : Consultation directe des 10 volumes de référence.
+* **Lecteur du Dossier de Mandature** : Consultation directe des 11 volumes de référence.
 * **Comparatif multi-scénarios** : Vue d'ensemble sur l'ensemble des métriques institutionnelles, financières et intergénérationnelles.
 
 ### 2. Lancement direct d'un scénario en ligne de commande

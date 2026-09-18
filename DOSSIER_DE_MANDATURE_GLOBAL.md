@@ -584,4 +584,101 @@ La politique du peuple ne se conçoit pas dans l'éphémère d'une mandature ann
 *Pour une analyse détaillée des équations démographiques, des transferts patrimoniaux, du travail invisible de garde d'enfants et de la modélisation SFC complète, se référer au volume complet :*  
 👉 **[`docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md`](docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md)**.
 
+---
+
+# CHAPITRE XII. L'ARCHITECTURE TERRITORIALE, ULTRAMARINE ET ÉLECTORALE DE LA RÉPUBLIQUE
+
+> *« La France est une République indivisible, laïque, démocratique et sociale. Elle assure l'égalité devant la loi de tous les citoyens sans distinction d'origine, de race ou de religion. Son organisation est décentralisée. »*  
+> — Constitution du 4 octobre 1958, Article 1ᵉʳ.
+
+La souveraineté populaire proclamée à l'article 2 (*« gouvernement du peuple, par le peuple et pour le peuple »*) n'est pas une abstraction désincarnée : elle s'incarne dans un maillage géographique physique continu, s'étendant sans discontinuité **du lieu-dit et du hameau communal jusqu'aux mégapoles régionales, et embrassant la totalité des territoires ultramarins des trois océans**.
+
+### 1. Le Continuum Territorial Républicain : Du Hameau à la Mégapole
+
+| Échelon Territorial | Unités / Découpage | Population couverte | Rôle Républicain & Compétences Clés | Mesure & Règle Mandature |
+|---|---|---|---|---|
+| **Lieux-dits & Sections** | ~500 000 lieux-dits / 2 500 sections | Vivier foncier & rural | Biens indivis d'habitants, affouage forestier, estives pastorales (Art. L. 2411-1 CGCT). | Protection du patrimoine indivis et des usages de terroir. |
+| **Communes Rurales (< 1k hab.)** | 25 800 mairies (74% communes) | ~10 millions (15% pop.) | Proximité immédiate, cohésion villageoise, maires sentinelles bénévoles. | Règle d'or budgétaire (L. 1612-4), sanctuarisation DGF rurale. |
+| **Bourgs-Centres (1k à 10k hab.)** | 7 650 communes | ~22 millions (32% pop.) | Écoles primaires, collèges, commerces de bouche, artisans, marchés hebdomadaires. | Allotissement de 30% des achats publics aux artisans locaux. |
+| **Villes Moyennes (10k à 50k hab.)** | 1 280 communes | ~16 millions (24% pop.) | Hôpitaux de secteur, lycées, sous-préfectures, pôles de formation professionnelle. | Réhabilitation des friches et relocalisation industrielle. |
+| **Grandes Agglos (50k à 200k hab.)** | 180 agglomérations | ~10 millions (15% pop.) | Universités, CHU de proximité, réseaux de transports urbains cadencés. | Communautés d'agglomération et communautés urbaines. |
+| **22 Métropoles & Mégapole (200k+)** | 22 métropoles + Gd Paris | ~10 millions (14% pop.) | Hubs internationaux, TGV, recherche d'excellence, sièges d'entreprises mondiales. | Mutualisation EPCI, suppression doublons d'agences (+8 Md€). |
+| **1 254 EPCI à Fiscalité Propre** | 992 CC, 228 CA, 14 CU, 21 Métropoles (+Lyon) | 100% du territoire | Eau, assainissement, collecte déchets, transports, urbanisme (PLUi). | Rationalisation des dépenses d'achat (+6 Md€ massification). |
+| **332 Arrondissements & 101 Dép.** | 332 ss-préf. / 96 métro + 5 OM | 68,4 millions hab. | État déconcentré (préfets) / Action sociale, RSA, APA, collèges, routes. | Neutralisation de l'effet ciseau financier par péréquation d'État. |
+| **18 Régions (13 Hex. + 5 OM)** | 18 conseils régionaux | 68,4 millions hab. | Développement éco., lycées, transports régionaux TER, planification climat SRADDET. | Prime majoritaire de 25% garantissant la stabilité d'action. |
+
+---
+
+### 2. L'Outre-Mer Français Intégral (DROM, COM, Nouvelle-Calédonie & ZEE)
+
+La République française n'est pas un hexagone européen étriqué : elle est un **archipel planétaire** présent sur l'ensemble des océans du globe (Atlantique, Indien, Pacifique, Austral). Ses 10,2 millions de km² de Zone Économique Exclusive (ZEE) hissent la France au **deuxième rang maritime mondial**, juste derrière les États-Unis.
+
+```
+                      ┌──────────────────────────────────────────────┐
+                      │    L'OUTRE-MER DE LA RÉPUBLIQUE FRANÇAISE    │
+                      └──────────────────────┬───────────────────────┘
+                                             │
+      ┌─────────────────────────┬────────────┴─────────────┬──────────────────────────┐
+      ▼                         ▼                          ▼                          ▼
+ 5 DROM (Art. 73)        5 COM (Art. 74)            Sui Generis (Titre XIII)   Domaines de l'État
+ • Guadeloupe (971)      • Saint-Barthélemy (977)   • Nouvelle-Calédonie (988) • TAAF (984)
+ • Martinique (972, CTU) • Saint-Martin (978)         (Congrès, 3 Provinces,    • Clipperton (989)
+ • Guyane (973, CTU)     • St-Pierre-Miquelon (975)    Sénat coutumier)        • Français de l'étranger
+ • La Réunion (974)      • Wallis-et-Futuna (986)                                (Art. 24, AFE, 11 dép.,
+ • Mayotte (976)         • Polynésie fr. (987)                                    12 sénateurs)
+```
+
+1. **Les DROM (Article 73 de la Constitution)** :
+   * Régime de l'assimilation législative avec adaptations justifiées par les contraintes géographiques.
+   * La Martinique et la Guyane ont opté pour la formule de la **Collectivité Territoriale Unique (CTU)** fusionnant les compétences régionales et départementales au sein d'une seule assemblée.
+   * Mayotte exerce le statut hybride de Département-Région.
+2. **Les COM (Article 74 de la Constitution)** :
+   * Régime de la spécialité législative : chaque collectivité dispose d'un statut organique propre voté par le Parlement.
+   * La Polynésie française dispose d'une large autonomie avec un Gouvernement autonome, une Assemblée délibérante et le pouvoir d'édicter des *lois du pays*.
+   * Saint-Barthélemy et Saint-Martin exercent des compétences fiscales et douanières exclusives.
+   * Wallis-et-Futuna conjugue l'administration préfectorale républicaine avec les 3 royaumes coutumiers traditionnels (Uvea, Sigave, Alo).
+3. **La Nouvelle-Calédonie (Titre XIII de la Constitution)** :
+   * Régime constitutionnel sui generis issu des Accords de Matignon (1988) et de Nouméa (1998).
+   * Citoyenneté calédonienne spécifique, gouvernement collégial multipartite, Congrès de Nouvelle-Calédonie (54 élus issus des 3 assemblées provinciales), Sénat coutumier et transferts irréversibles de compétences (art. 76 et 77).
+4. **Terres Australes & Antarctiques Françaises (TAAF) et Clipperton** :
+   * Sanctuaires écologiques et halieutiques majeurs, sans population permanente, administrés sous l'autorité directe de l'État.
+5. **Français établis hors de France** :
+   * Représentés au Parlement national en vertu de l'article 24 (11 députés et 12 sénateurs), assistés de l'Assemblée des Français de l'Étranger (AFE, 90 conseillers) et de 442 conseillers consulaires.
+6. **Lutte contre la vie chère et Continuité territoriale** :
+   * Le surcoût moyen des prix des produits de première nécessité en Outre-mer (+30 à +42 % par rapport à l'Hexagone) est combattu par la réforme de l'octroi de mer, le plafonnement des marges d'importation et la sanctuarisation de la continuité territoriale (Art. L. 1803-1 Code des transports) opérée par LADOM.
+
+---
+
+### 3. L'Armature Électorale et Démocratique Républicaine
+
+Le pouvoir de suffrage appartient au corps électoral souverain consolidé dans le **Répertoire Électoral Unique (REU)** géré en continu par l'INSEE (Art. L. 16 du Code électoral), recensant **49,5 millions de citoyens inscrits**.
+
+#### Tableau Synthétique des 8 Scrutins Républicains
+
+| Élection Républicaine | Fréquence / Mandat | Corps Électoral | Mode de Scrutin | Sièges / Élus | Spécificités & Rétroactions |
+|---|---|---|---|---|---|
+| **Présidentielle** | 5 ans | REU universel direct | Uninominal majoritaire à 2 tours | 1 Chef de l'État | Parrainages de 500 élus d'au moins 30 départements. |
+| **Législatives** | 5 ans | REU universel direct | Uninominal majoritaire à 2 tours | 577 Députés | Seuil de 12,5% des inscrits pour le maintien au 2nd tour (triangulaires). |
+| **Sénatoriales** | 6 ans (/ moitié / 3 ans) | 162 000 grands électeurs | Majoritaire (<3 sén.) ou proportionnel (>=3) | 348 Sénateurs | 95% des électeurs issus des conseils municipaux ruraux et bourgs. |
+| **Régionales & Territoriales** | 6 ans | REU universel direct | Proportionnel de liste à 2 tours | 1 757 Conseillers | Prime majoritaire de 25% des sièges à la liste arrivée en tête. |
+| **Départementales** | 6 ans | REU universel direct | Binominal paritaire à 2 tours | 4 056 Conseillers (2 054 cant.) | Binôme femme-homme indissociable, seuil 12,5% inscrits au 2nd tour. |
+| **Municipales & EPCI** | 6 ans | REU universel direct | Proportionnel avec prime 50% (>=1k hab.) | ~500 000 Conseillers | Fléchage simultané et direct des conseillers communautaires EPCI. |
+| **Européennes** | 5 ans | REU universel direct | Proportionnel de liste à la plus forte moyenne | 81 Députés européens | Circonscription nationale unique, seuil de représentativité de 5%. |
+| **Consulaires** | 5 ans | REU des Français de l'étranger | Proportionnel de liste | 442 Conseillers consulaires | Vote électronique à distance sécurisé et vote à l'urne. |
+
+#### Les 4 Voies Référendaires de la Constitution
+
+1. **Le Référendum Législatif & d'Initiative Partagée (Article 11)** :
+   * Permet de soumettre directement au peuple tout projet de loi portant sur l'organisation des pouvoirs publics, les réformes économiques, sociales ou environnementales, ou la ratification d'un traité. Le Référendum d'Initiative Partagée (RIP) requiert le soutien d'un cinquième des membres du Parlement (185 parlementaires) et d'un dixième des électeurs inscrits (4,95 millions de signatures).
+2. **Le Référendum Constituant (Article 89)** :
+   * Voie de révision constitutionnelle ouverte après le vote en termes identiques du projet ou de la proposition de loi constitutionnelle par l'Assemblée nationale et le Sénat. L'approbation populaire par référendum est obligatoire, sauf dispense présidentielle par convocation du Parlement réuni en Congrès à Versailles avec approbation aux 3/5èmes des suffrages exprimés.
+3. **Le Référendum Décisionnel Local (Article 72-1)** :
+   * Permet à une collectivité territoriale (commune, département, région) de soumettre à la décision de ses citoyens un projet de délibération relevant de ses compétences propres. Le projet est adopté si au moins la moitié des électeurs inscrits ont pris part au scrutin.
+4. **La Consultation Statutaire d'Outre-mer (Article 72-4)** :
+   * Préalable démocratique obligatoire avant tout changement de statut constitutionnel pour une collectivité ultramarine (passage de l'article 73 à l'article 74 ou inversement).
+
+*Pour l'inventaire exhaustif des décrets, des bases de données de l'INSEE et de la DGCL, et de la jurisprudence constitutionnelle afférente, se référer au volume complet :*  
+👉 **[`docs/10_STRATES_TERRITORIALES_OUTRE_MER_ET_FONCTIONS_ELECTORALES.md`](docs/10_STRATES_TERRITORIALES_OUTRE_MER_ET_FONCTIONS_ELECTORALES.md)**.
+
+
 

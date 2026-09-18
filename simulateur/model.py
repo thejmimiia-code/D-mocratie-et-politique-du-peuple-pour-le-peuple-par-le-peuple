@@ -438,6 +438,56 @@ class StrateCycleDeVieEtGenerations:
 
 
 # =============================================================================
+# STRATES TERRITORIALES INTÉGRALES & FONCTIONS ÉLECTORALES
+# =============================================================================
+
+@dataclass
+class StrateTerritorialeContinuum:
+    """Continuum territorial complet de la République : du lieu-dit à la mégapole."""
+    sections_commune_lieux_dits_count: int = 2500     # Sections de commune avec commission syndicale (art. L. 2411-1)
+    communes_rurales_count: int = 25800               # Communes de moins de 1 000 habitants (terroirs, forêt, agriculture)
+    bourgs_centres_count: int = 7650                  # 1 000 à 9 999 habitants (écoles primaires, artisans, commerces)
+    villes_moyennes_count: int = 1280                 # 10 000 à 49 999 habitants (lycées, hôpitaux généraux, tribunaux)
+    grandes_agglomerations_count: int = 180           # 50 000 à 199 999 habitants (CHU, universités, gares TGV)
+    metropoles_count: int = 22                        # Métropoles 200k+ (Grand Paris, Aix-Marseille, Lyon, Bordeaux, Lille...)
+    communes_total: int = 34935                       # Total des communes françaises
+    epci_total: int = 1254                            # Total intercommunalités à fiscalité propre
+    cantons_electoraux_count: int = 2054              # Circonscriptions d'élection des conseils départementaux
+    arrondissements_deconcentres_count: int = 332     # Sous-préfectures territoriales de l'État
+    departements_total: int = 101                     # 96 métropolitains + 5 DROM
+    regions_total: int = 18                           # 13 métropolitaines + 5 DROM
+
+
+@dataclass
+class StrateOutreMerDetail:
+    """Territoires ultramarins de la République : DROM, COM, Nouvelle-Calédonie, TAAF, Clipperton."""
+    drom_population_millions: float = 2.22            # Guadeloupe (971), Martinique (972), Guyane (973), La Réunion (974), Mayotte (976)
+    com_population_millions: float = 0.34             # St-Barth (977), St-Martin (978), St-Pierre (975), Wallis (986), Polynésie (987)
+    nouvelle_caledonie_population_millions: float = 0.27 # Titre XIII (988 - 3 provinces, Congrès de NC, Sénat coutumier)
+    francais_etranger_inscrits_millions: float = 2.10 # Registre consulaire mondial (11 députés, 12 sénateurs, AFE)
+    zee_maritime_millions_km2: float = 10.2           # 2e Zone Économique Exclusive mondiale (souveraineté maritime)
+    surcout_vie_chere_outremer_pct: float = 32.5      # Surcoût moyen des prix alimentaires et vitaux vs Métropole
+    octroi_de_mer_recette_mde: float = 1.60           # Taxe locale d'importation finançant les communes d'Outre-mer
+    indice_continuite_territoriale: float = 54.0      # 0 à 100 : desserte aérienne et maritime LADOM
+
+
+@dataclass
+class StrateFonctionsElectorales:
+    """Fonctions électorales et démocratiques de la Nation."""
+    reu_electeurs_inscrits_millions: float = 49.5     # Répertoire Électoral Unique tenu par l'INSEE
+    taux_participation_presidentielle_pct: float = 72.0 # Projection scrutin présidentiel
+    taux_participation_legislatives_pct: float = 66.5   # Projection scrutin législatif
+    taux_participation_municipales_pct: float = 62.0    # Projection scrutin municipal
+    taux_participation_europeennes_pct: float = 51.5    # Projection scrutin européen
+    taux_participation_regionales_pct: float = 45.0     # Projection scrutin régional
+    circonscriptions_legislatives_total: int = 577      # 539 Métropole + 27 Outre-mer + 11 Français de l'étranger
+    grands_electeurs_senat_total: int = 162000          # Collège électoral sénatorial (95% délégués municipaux)
+    sieges_majorite_absolue_an: int = 289               # Seuil constitutionnel de majorité absolue
+    triangulaires_legislatives_projetees: int = 85      # Circonscriptions avec maintien au second tour (seuil 12,5%)
+    procurations_dematerialisees_pct: float = 68.0      # Identité certifiée France Identité
+
+
+# =============================================================================
 # VECTEUR DE DÉCISION & RÉSULTAT CONSOLIDÉ
 # =============================================================================
 
@@ -476,6 +526,11 @@ class DecisionPolitique:
     reforme_dotation_emancipation_jeunesse: bool = False      # Dotation 10 000 € à 18 ans (études/permis/caution)
     soutien_proches_aidants_autonomie_mde: float = 0.0        # Budget dédié soulageant G2 et renforçant l'APA de G1
     incitation_donations_intergenerationnelles: bool = False  # Abattement fiscal ciblé pour dons de G1 vers G3
+
+    # Mesures territoriales d'Outre-mer & ruralité
+    bouclier_vie_chere_outremer_mde: float = 0.0              # Blocage des prix sur panier vital et réforme octroi de mer
+    renforcement_continuite_territoriale_mde: float = 0.0     # Dotation LADOM billets d'avion et fret maritime
+    dotation_solidarite_rurale_mde: float = 0.0               # Péréquation renforcée pour les communes de moins de 1 000 hab.
 
     # Transferts financiers aux collectivités (DGF)
     delta_dotation_dgf_mde: float = 0.0
@@ -553,7 +608,36 @@ class ResultatEtapeSimulation:
     garde_enfants_grands_parents_mde: float = 18.0    # Valeur économique de la garde bénévole G1 -> G3
     charge_dette_par_jeune_euros: float = 129275.0    # Fardeau de dette publique pesant sur chaque citoyen de G3
 
+    # Dynamiques Territoriales, Outre-mer et Fonctions Électorales
+    outremer_vie_chere_indice: float = 32.5           # Surcoût moyen des prix vitaux en Outre-mer (%)
+    outremer_continuite_indice: float = 54.0          # Indice de continuité territoriale et mobilité LADOM (0-100)
+    participation_electorale_globale_pct: float = 66.5 # Participation moyenne projetée aux scrutins
+    triangulaires_legislatives_count: int = 85        # Nombre de triangulaires aux législatives
+    communes_rurales_vitalite_indice: float = 62.0    # Maintien des commerces/écoles dans les communes <1000 hab.
+    metropoles_efficience_indice: float = 71.0        # Efficience des investissements et transports métropolitains
+
     commentaires: List[str] = field(default_factory=list)
+
+    @property
+    def territoire(self) -> "StrateTerritorialeContinuum":
+        """Reconstitue la vision du continuum territorial complet."""
+        return StrateTerritorialeContinuum()
+
+    @property
+    def outremer(self) -> "StrateOutreMerDetail":
+        """Reconstitue les indicateurs spécifiques d'Outre-mer."""
+        return StrateOutreMerDetail(
+            surcout_vie_chere_outremer_pct=self.outremer_vie_chere_indice,
+            indice_continuite_territoriale=self.outremer_continuite_indice,
+        )
+
+    @property
+    def elections(self) -> "StrateFonctionsElectorales":
+        """Reconstitue les fonctions et paramètres électoraux."""
+        return StrateFonctionsElectorales(
+            taux_participation_legislatives_pct=self.participation_electorale_globale_pct,
+            triangulaires_legislatives_projetees=self.triangulaires_legislatives_count,
+        )
 
     @property
     def generations(self) -> "StrateCycleDeVieEtGenerations":

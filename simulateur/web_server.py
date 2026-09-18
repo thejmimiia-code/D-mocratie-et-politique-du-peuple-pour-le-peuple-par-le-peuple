@@ -81,6 +81,19 @@ def serialize_resultat(r: ResultatEtapeSimulation) -> Dict[str, Any]:
         "donations_vers_g3_mde": getattr(r, "donations_vers_g3_mde", 75.0),
         "garde_enfants_grands_parents_mde": getattr(r, "garde_enfants_grands_parents_mde", 18.0),
         "charge_dette_par_jeune_euros": getattr(r, "charge_dette_par_jeune_euros", 129275.0),
+        # Variables Territoriales, Outre-Mer et Fonctions Électorales
+        "outremer_vie_chere_indice": getattr(r, "outremer_vie_chere_indice", 32.5),
+        "surcout_vie_chere_outremer_pct": getattr(r, "outremer_vie_chere_indice", 32.5),
+        "outremer_continuite_indice": getattr(r, "outremer_continuite_indice", 54.0),
+        "indice_continuite_territoriale": getattr(r, "outremer_continuite_indice", 54.0),
+        "participation_electorale_globale_pct": getattr(r, "participation_electorale_globale_pct", 66.5),
+        "participation_electorale_proj_pct": getattr(r, "participation_electorale_globale_pct", 66.5),
+        "triangulaires_legislatives_count": getattr(r, "triangulaires_legislatives_count", 85),
+        "triangulaires_legislatives_proj": getattr(r, "triangulaires_legislatives_count", 85),
+        "communes_rurales_vitalite_indice": getattr(r, "communes_rurales_vitalite_indice", 62.0),
+        "vitalite_rurale_indice": getattr(r, "communes_rurales_vitalite_indice", 62.0),
+        "metropoles_efficience_indice": getattr(r, "metropoles_efficience_indice", 71.0),
+        "efficience_metropolitaine_indice": getattr(r, "metropoles_efficience_indice", 71.0),
         "commentaires": r.commentaires,
     }
 
@@ -179,6 +192,19 @@ def generer_comparatif_global() -> Dict[str, Any]:
             "g3_taux_pauvrete_pct": annee5.get("g3_taux_pauvrete_pct", 19.4),
             "g1_taux_pauvrete_pct": annee5.get("g1_taux_pauvrete_pct", 10.8),
             "charge_dette_par_jeune_euros": annee5.get("charge_dette_par_jeune_euros", 129275.0),
+            # Territoires, Outre-mer & Élections
+            "outremer_vie_chere_indice": annee5.get("outremer_vie_chere_indice", 32.5),
+            "surcout_vie_chere_outremer_pct": annee5.get("surcout_vie_chere_outremer_pct", 32.5),
+            "outremer_continuite_indice": annee5.get("outremer_continuite_indice", 54.0),
+            "indice_continuite_territoriale": annee5.get("indice_continuite_territoriale", 54.0),
+            "participation_electorale_globale_pct": annee5.get("participation_electorale_globale_pct", 66.5),
+            "participation_electorale_proj_pct": annee5.get("participation_electorale_proj_pct", 66.5),
+            "triangulaires_legislatives_count": annee5.get("triangulaires_legislatives_count", 85),
+            "triangulaires_legislatives_proj": annee5.get("triangulaires_legislatives_proj", 85),
+            "communes_rurales_vitalite_indice": annee5.get("communes_rurales_vitalite_indice", 62.0),
+            "vitalite_rurale_indice": annee5.get("vitalite_rurale_indice", 62.0),
+            "metropoles_efficience_indice": annee5.get("metropoles_efficience_indice", 71.0),
+            "efficience_metropolitaine_indice": annee5.get("efficience_metropolitaine_indice", 71.0),
         }
     return comparatif
 
@@ -320,6 +346,7 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
                     {"num": "07", "fichier": "07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md", "titre": "Institutions de la République, Droits et Chambres Consulaires"},
                     {"num": "08", "fichier": "08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md", "titre": "Toutes les Assemblées représentatives et décisionnelles (Fonctionnement & Jeux de Pouvoirs)"},
                     {"num": "09", "fichier": "09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md", "titre": "Pacte républicain du Berceau au Tombeau (Cycle de vie, 3 Générations & Flux croisés)"},
+                    {"num": "10", "fichier": "10_STRATES_TERRITORIALES_OUTRE_MER_ET_FONCTIONS_ELECTORALES.md", "titre": "Strates territoriales du Lieu-dit à la Métropole, Outre-Mer complet & Fonctions Électorales"},
                     {"num": "Audit", "fichier": "PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md", "titre": "Architecture SFC, Matrice causale et Audit des 10 Redondances"},
                 ]
             })
@@ -488,6 +515,68 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
                     "ratio_dependance_demographique": 0.65,
                     "charge_dette_par_jeune_euros": 129275.0
                 }
+            })
+            return
+
+        # 9. API Territoires & Outre-Mer Intégral
+        if path == "/api/territoires":
+            self._envoyer_json(200, {
+                "continuum": {
+                    "sections_commune_lieux_dits": 2500,
+                    "communes_rurales_moins_1000": 25800,
+                    "bourgs_centres_1k_10k": 7650,
+                    "villes_moyennes_10k_50k": 1280,
+                    "grandes_agglomerations_50k_200k": 180,
+                    "metropoles_200k_plus": 22,
+                    "communes_total": 34935,
+                    "epci_total": 1254,
+                    "cantons_electoraux": 2054,
+                    "arrondissements_deconcentres": 332,
+                    "departements_total": 101,
+                    "regions_total": 18,
+                },
+                "outre_mer": [
+                    {"code": "971", "nom": "Guadeloupe", "statut": "DROM (Art. 73)", "population": 384000, "assemblees": "Conseil régional + Conseil départemental"},
+                    {"code": "972", "nom": "Martinique", "statut": "DROM / CTU (Art. 73)", "population": 361000, "assemblees": "Assemblée de Martinique (61 élus) + Conseil exécutif"},
+                    {"code": "973", "nom": "Guyane", "statut": "DROM / CTU (Art. 73)", "population": 294000, "assemblees": "Assemblée de Guyane (55 élus) + Conseil exécutif"},
+                    {"code": "974", "nom": "La Réunion", "statut": "DROM (Art. 73)", "population": 873000, "assemblees": "Conseil régional + Conseil départemental"},
+                    {"code": "976", "nom": "Mayotte", "statut": "DROM / Dép-Rég (Art. 73)", "population": 310000, "assemblees": "Conseil départemental de Mayotte (26 élus)"},
+                    {"code": "977", "nom": "Saint-Barthélemy", "statut": "COM (Art. 74)", "population": 10500, "assemblees": "Conseil territorial (19 élus)"},
+                    {"code": "978", "nom": "Saint-Martin", "statut": "COM (Art. 74)", "population": 32000, "assemblees": "Conseil territorial (23 élus)"},
+                    {"code": "975", "nom": "Saint-Pierre-et-Miquelon", "statut": "COM (Art. 74)", "population": 6000, "assemblees": "Conseil territorial (19 élus)"},
+                    {"code": "986", "nom": "Wallis-et-Futuna", "statut": "COM (Art. 74)", "population": 11500, "assemblees": "Assemblée territoriale (20 élus) + 3 chefferies coutumières"},
+                    {"code": "987", "nom": "Polynésie française", "statut": "COM Autonome (Art. 74)", "population": 280000, "assemblees": "Assemblée de Polynésie (57 élus) + Gouvernement polynésien"},
+                    {"code": "988", "nom": "Nouvelle-Calédonie", "statut": "Sui Generis (Titre XIII Const.)", "population": 271000, "assemblees": "Congrès de Nouvelle-Calédonie (54 élus) + 3 Provinces + Sénat coutumier"},
+                    {"code": "984", "nom": "Terres Australes & Antarctiques (TAAF)", "statut": "Territoire d'Outre-Mer administré", "population": 200, "assemblees": "Préfet administrateur supérieur + Conseil consultatif"},
+                    {"code": "989", "nom": "Île de Clipperton", "statut": "Domaine public de l'État", "population": 0, "assemblees": "Ministre chargé des Outre-Mer"},
+                    {"code": "FE", "nom": "Français établis hors de France", "statut": "Représentation mondiale (Art. 24 al. 4)", "population": 2100000, "assemblees": "11 Députés + 12 Sénateurs + AFE (90 conseillers) + 442 conseillers consulaires"}
+                ],
+                "souverainete_maritime_zee_km2": 10200000,
+                "surcout_vie_chere_alimentaire_pct": 32.5,
+                "octroi_de_mer_annuel_mde": 1.6
+            })
+            return
+
+        # 10. API Élections & Démocratie
+        if path == "/api/elections":
+            self._envoyer_json(200, {
+                "reu_electeurs_inscrits": 49500000,
+                "elections": [
+                    {"type": "Présidentielle", "mandat": "5 ans", "mode_scrutin": "Uninominal majoritaire à 2 tours", "elus": 1, "conditions": "500 parrainages d'élus d'au moins 30 départements"},
+                    {"type": "Législatives", "mandat": "5 ans", "mode_scrutin": "Uninominal majoritaire à 2 tours", "elus": 577, "conditions": "1er tour : 50% suffrages + 25% inscrits ; 2nd tour : seuil 12,5% des inscrits"},
+                    {"type": "Sénatoriales", "mandat": "6 ans (renouvellement par moitié tous les 3 ans)", "mode_scrutin": "Suffrage indirect (162 000 grands électeurs)", "elus": 348, "conditions": "Scrutin majoritaire (<3 sénateurs) ou proportionnel (>=3 sénateurs)"},
+                    {"type": "Régionales & Territoriales", "mandat": "6 ans", "mode_scrutin": "Proportionnel de liste à 2 tours avec prime majoritaire de 25%", "elus": 1757, "conditions": "Seuil maintien 10%, fusion 5%"},
+                    {"type": "Départementales", "mandat": "6 ans", "mode_scrutin": "Binominal paritaire (1 femme + 1 homme) majoritaire à 2 tours", "elus": 4056, "conditions": "1er tour : 50% suffrages + 25% inscrits ; 2nd tour : seuil 12,5% des inscrits"},
+                    {"type": "Municipales & Intercommunales", "mandat": "6 ans", "mode_scrutin": "Proportionnel de liste paritaire avec prime 50% (>=1000 hab.)", "elus": 500000, "conditions": "Fléchage direct des délégués communautaires EPCI"},
+                    {"type": "Européennes", "mandat": "5 ans", "mode_scrutin": "Proportionnel de liste à la plus forte moyenne, circonscription unique", "elus": 81, "conditions": "Seuil de représentativité national de 5%"},
+                    {"type": "Consulaires", "mandat": "5 ans", "mode_scrutin": "Scrutin de liste paritaire socioprofessionnel", "elus": 5000, "conditions": "Collèges chefs d'entreprise, commerçants, artisans, exploitants agricoles"}
+                ],
+                "referendums": [
+                    {"article": "Article 11", "nature": "Référendum législatif & RIP", "declenchement": "Présidentiel sur proposition gouvernementale/parlementaire ou RIP (185 parlementaires + 4,95M électeurs)"},
+                    {"article": "Article 89", "nature": "Référendum constitutionnel", "declenchement": "Obligatoire après vote conforme AN + Sénat, sauf approbation par le Congrès à Versailles (3/5èmes)"},
+                    {"article": "Article 72-1", "nature": "Référendum décisionnel local", "declenchement": "Délibération d'une collectivité territoriale sur ses compétences propres (seuil participation 50%)"},
+                    {"article": "Article 72-4", "nature": "Consultation statutaire d'Outre-mer", "declenchement": "Préalable obligatoire à toute évolution institutionnelle ou statutaire ultramarine"}
+                ]
             })
             return
 
@@ -1170,6 +1259,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         <button class="active" onclick="showTab('simulateur')">📊 Simulateur</button>
         <button onclick="showTab('assemblees')">🏛️ Assemblées & Pouvoirs</button>
         <button onclick="showTab('generations')">👶 Cycle de Vie & 3 Générations</button>
+        <button onclick="showTab('territoires')">🗺️ Territoires & Élections</button>
         <button onclick="showTab('comparatif')">⚖️ Comparateur</button>
         <button onclick="showTab('architecture')">🏛️ Les 4 Strates</button>
         <button onclick="showTab('corpus')">📜 Corpus Juridique</button>
@@ -1420,6 +1510,14 @@ HTML_DASHBOARD = """<!DOCTYPE html>
             <div class="metric-row"><span>Taux Pauvreté Jeunesse (G3)</span><strong id="det-pauvrete-g3">12.5 %</strong></div>
             <div class="metric-row"><span>Taux Pauvreté Aînés (G1)</span><strong id="det-pauvrete-g1">6.8 %</strong></div>
             <div class="metric-row"><span>Fardeau Dette / Jeune G3</span><strong id="det-dette-jeune">129 275 €</strong></div>
+          </div>
+          <div class="strate-card">
+            <h4>🗺️ Strate Territoires, Outre-Mer & Élections</h4>
+            <div class="metric-row"><span>Participation électorale projetée</span><strong id="det-elections-partic">74.5 %</strong></div>
+            <div class="metric-row"><span>Triangulaires législatives (577 circ.)</span><strong id="det-elections-triang">38 circonscriptions</strong></div>
+            <div class="metric-row"><span>Vie chère Outre-mer (surcoût)</span><strong id="det-om-vie-chere">18.5 %</strong></div>
+            <div class="metric-row"><span>Continuité territoriale Outre-mer</span><strong id="det-om-continuite" style="color:var(--accent-emerald)">78.0 / 100</strong></div>
+            <div class="metric-row"><span>Vitalité communes rurales (<1000)</span><strong id="det-ruralite-vitalite">81.5 / 100</strong></div>
           </div>
         </div>
 
@@ -1768,6 +1866,314 @@ HTML_DASHBOARD = """<!DOCTYPE html>
     </div>
 
     <!-- ============================================================= -->
+    <!-- TAB : TERRITOIRES, OUTRE-MER ET ÉLECTIONS                     -->
+    <!-- ============================================================= -->
+    <div id="tab-territoires" class="tab-pane">
+      <div class="arch-diagram">
+        <h2>🗺️ STRATES TERRITORIALES DU LIEU-DIT À LA MÉTROPOLE, OUTRE-MER & ÉLECTIONS</h2>
+        <p class="subtitle" style="margin-bottom:20px;">
+          L'armature républicaine intégrale : du hameau et de la commune rurale aux 22 métropoles, l'ensemble des territoires ultramarins (DROM-COM-Calédonie-ZEE) et le calendrier électoral du REU.
+        </p>
+
+        <!-- 4 KPI Cards Temps Réel Territoires & Élections -->
+        <div class="kpi-grid" style="margin-bottom:24px;">
+          <div class="kpi-card" id="card-terr-reu">
+            <div class="kpi-title">🗳️ Corps Électoral (REU - INSEE)</div>
+            <div class="kpi-value">49.5 M</div>
+            <div class="kpi-sub">Participation projetée : <strong id="terr-partic-val">74.5 %</strong></div>
+            <div style="margin-top:8px;"><span class="badge badge-success" id="badge-terr-partic">Souveraineté civique</span></div>
+          </div>
+
+          <div class="kpi-card" id="card-terr-rural">
+            <div class="kpi-title">🏡 Ruralité & Terroirs (< 1 000 hab.)</div>
+            <div class="kpi-value">25 800 com.</div>
+            <div class="kpi-sub">Vitalité rurale : <strong id="terr-vitalite-rurale">81.5 / 100</strong></div>
+            <div style="margin-top:8px;"><span class="badge badge-primary">74% des mairies</span></div>
+          </div>
+
+          <div class="kpi-card" id="card-terr-om">
+            <div class="kpi-title">🌊 Outre-mer & ZEE Maritime</div>
+            <div class="kpi-value">10.2 M km²</div>
+            <div class="kpi-sub">Vie chère : <strong id="terr-om-viechere">18.5 %</strong> • Continuité : <strong id="terr-om-cont">78.0 / 100</strong></div>
+            <div style="margin-top:8px;"><span class="badge badge-warning" id="badge-terr-om">2e puissance maritime</span></div>
+          </div>
+
+          <div class="kpi-card" id="card-terr-metropoles">
+            <div class="kpi-title">🏢 22 Métropoles & EPCI (1 254)</div>
+            <div class="kpi-value">34 935 com.</div>
+            <div class="kpi-sub">Efficience métropolitaine : <strong id="terr-metropole-efficience">86.0 / 100</strong></div>
+            <div style="margin-top:8px;"><span class="badge badge-success">Mutualisation réussie</span></div>
+          </div>
+        </div>
+
+        <!-- Section 1 : Le Continuum Territorial de l'État -->
+        <h3 style="margin-bottom:12px; font-weight:800;">📐 1. Le Continuum Territorial de l'État : Du Lieu-dit à la Mégapole</h3>
+        <div class="strates-grid" style="margin-bottom:24px;">
+          <div class="strate-card">
+            <h4>🌿 Niveau Infra-communal : Lieux-dits & Hameaux</h4>
+            <div class="metric-row"><span>Sections de commune (Art. L. 2411-1)</span><strong>2 500 sections</strong></div>
+            <div class="metric-row"><span>Lieux-dits cadastraux</span><strong>~500 000 lieux-dits</strong></div>
+            <div class="metric-row"><span>Gestion</span><strong>Commissions syndicales d'habitants</strong></div>
+            <div class="metric-row"><span>Patrimoine</span><strong>Affouage, estives, forêts indivises</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🌾 Communes Rurales (< 1 000 hab.)</h4>
+            <div class="metric-row"><span>Nombre de mairies</span><strong>25 800 communes (74 % du total)</strong></div>
+            <div class="metric-row"><span>Population couverte</span><strong>15 % de la population nationale</strong></div>
+            <div class="metric-row"><span>Règle d'or (L. 1612-4)</span><strong style="color:var(--accent-emerald)">Équilibre fonctionnement obligatoire</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Sanctuaire DGF rurale & cantines locales</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏘️ Bourgs-Centres (1 000 à 9 999 hab.)</h4>
+            <div class="metric-row"><span>Nombre de communes</span><strong>7 650 bourgs</strong></div>
+            <div class="metric-row"><span>Population couverte</span><strong>32 % de la population nationale</strong></div>
+            <div class="metric-row"><span>Équipements</span><strong>Écoles primaires, collèges, artisans</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Allotissement 30% commande publique aux PME</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏭 Villes Moyennes (10 000 à 49 999 hab.)</h4>
+            <div class="metric-row"><span>Nombre de villes</span><strong>1 280 communes</strong></div>
+            <div class="metric-row"><span>Population couverte</span><strong>24 % de la population</strong></div>
+            <div class="metric-row"><span>Rôle républicain</span><strong>Hôpitaux de secteur, lycées, tribunaux</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Réhabilitation friches & relocalisation</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏙️ Grandes Agglomérations (50k à 200k)</h4>
+            <div class="metric-row"><span>Nombre de pôles</span><strong>180 grandes villes & agglos</strong></div>
+            <div class="metric-row"><span>Services majeurs</span><strong>CHU, universités, réseaux tramways, TGV</strong></div>
+            <div class="metric-row"><span>Intercommunalité</span><strong>Communautés d'agglomération & urbaines</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Financement transports décarbonés</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🌐 Les 22 Métropoles & Mégapole (200k+)</h4>
+            <div class="metric-row"><span>Grand Paris (MGP)</span><strong>7,2 millions d'habitants (11 EPT)</strong></div>
+            <div class="metric-row"><span>Aix-Marseille-Provence & Lyon</span><strong>1,9M hab. (92 com.) / Métropole de Lyon</strong></div>
+            <div class="metric-row"><span>19 autres métropoles</span><strong>Bordeaux, Lille, Toulouse, Nantes, etc.</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Suppression doublons d'agences (+8 Md€)</strong></div>
+          </div>
+        </div>
+
+        <!-- Section 2 : L'Outre-Mer Républicain Intégral -->
+        <h3 style="margin-bottom:12px; font-weight:800;">🌊 2. L'Outre-Mer Français Intégral (DROM, COM, Calédonie & ZEE Maritime)</h3>
+        <div class="table-container" style="margin-bottom:24px;">
+          <table>
+            <thead>
+              <tr>
+                <th>Territoire Ultramarin</th>
+                <th>Régime Constitutionnel</th>
+                <th>Population</th>
+                <th>Institutions & Assemblées</th>
+                <th>Enjeux Clés & Mesures Mandature</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Guadeloupe (971)</strong></td>
+                <td>DROM (Article 73)</td>
+                <td>384 000 hab.</td>
+                <td>Conseil régional + Conseil départemental</td>
+                <td>Octroi de mer réformé, baisse coût du fret, rénovation réseaux eau.</td>
+              </tr>
+              <tr>
+                <td><strong>Martinique (972)</strong></td>
+                <td>CTU (Article 73)</td>
+                <td>361 000 hab.</td>
+                <td>Assemblée de Martinique (61 élus) + Conseil exécutif</td>
+                <td>Collectivité Unique, bouclier vie chère, transition agro-écologique.</td>
+              </tr>
+              <tr>
+                <td><strong>Guyane (973)</strong></td>
+                <td>CTU (Article 73)</td>
+                <td>294 000 hab.</td>
+                <td>Assemblée de Guyane (55 élus) + Centre Spatial CSG</td>
+                <td>Collectivité Unique, désenclavement routier, protection forêt amazonienne.</td>
+              </tr>
+              <tr>
+                <td><strong>La Réunion (974)</strong></td>
+                <td>DROM (Article 73)</td>
+                <td>873 000 hab.</td>
+                <td>Conseil régional + Conseil départemental</td>
+                <td>Pôle de l'océan Indien, égalité réelle, désenclavement énergétique.</td>
+              </tr>
+              <tr>
+                <td><strong>Mayotte (976)</strong></td>
+                <td>Département-Région (Art. 73)</td>
+                <td>310 000 hab.</td>
+                <td>Conseil départemental de Mayotte (26 élus)</td>
+                <td>Rattrapage d'infrastructures républicaines, eau potable, sécurité frontalière.</td>
+              </tr>
+              <tr>
+                <td><strong>Saint-Barthélemy (977) & St-Martin (978)</strong></td>
+                <td>COM (Article 74)</td>
+                <td>42 500 hab.</td>
+                <td>Conseils territoriaux autonomes (19 et 23 élus)</td>
+                <td>Autonomie fiscale et douanière, coopération avec Sint Maarten.</td>
+              </tr>
+              <tr>
+                <td><strong>Saint-Pierre-et-Miquelon (975)</strong></td>
+                <td>COM (Article 74)</td>
+                <td>6 000 hab.</td>
+                <td>Conseil territorial (19 élus)</td>
+                <td>Atlantique Nord, souveraineté halieutique, liaison aérienne directe.</td>
+              </tr>
+              <tr>
+                <td><strong>Wallis-et-Futuna (986)</strong></td>
+                <td>COM (Article 74)</td>
+                <td>11 500 hab.</td>
+                <td>Assemblée territoriale (20 élus) + 3 Rois coutumiers</td>
+                <td>Coexistence républicaine et coutumière (Uvea, Sigave, Alo).</td>
+              </tr>
+              <tr>
+                <td><strong>Polynésie française (987)</strong></td>
+                <td>COM Autonome (Article 74)</td>
+                <td>280 000 hab.</td>
+                <td>Assemblée de Polynésie (57 élus) + Gouvernement propre</td>
+                <td>Lois du pays, autonomie renforcée, 118 îles sur 5 archipels, ZEE Pacifique.</td>
+              </tr>
+              <tr>
+                <td><strong>Nouvelle-Calédonie (988)</strong></td>
+                <td>Sui Generis (Titre XIII Const.)</td>
+                <td>271 000 hab.</td>
+                <td>Congrès de la NC (54 élus) + 3 Provinces + Sénat coutumier</td>
+                <td>Accord de Nouméa, collégialité gouvernementale, réconciliation et nickel.</td>
+              </tr>
+              <tr>
+                <td><strong>TAAF (984) & Clipperton (989)</strong></td>
+                <td>Domaine de l'État / Terres australes</td>
+                <td>~200 scient.</td>
+                <td>Préfet administrateur supérieur / Ministre Outre-mer</td>
+                <td>Sanctuaires écologiques mondiaux, surveillance navale ZEE antarctique.</td>
+              </tr>
+              <tr>
+                <td><strong>Français établis hors de France</strong></td>
+                <td>Représentation mondiale (Art. 24)</td>
+                <td>2,1 millions</td>
+                <td>11 Députés + 12 Sénateurs + AFE (90 conseillers)</td>
+                <td>442 conseillers consulaires, dématérialisation consulaire, bourses scolaires.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 3 : L'Armature Électorale et Démocratique -->
+        <h3 style="margin-bottom:12px; font-weight:800;">🗳️ 3. L'Armature Électorale Complète de la Nation (49,5M d'électeurs)</h3>
+        <div class="strates-grid" style="margin-bottom:24px;">
+          <div class="strate-card">
+            <h4>🇫🇷 Élection Présidentielle</h4>
+            <div class="metric-row"><span>Mandat</span><strong>5 ans (Quinquennat)</strong></div>
+            <div class="metric-row"><span>Mode de scrutin</span><strong>Uninominal majoritaire à 2 tours</strong></div>
+            <div class="metric-row"><span>Filtre préalable</span><strong>500 parrainages d'élus (30 départements)</strong></div>
+            <div class="metric-row"><span>Base constitutionnelle</span><strong>Articles 6 et 7 de la Constitution</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏛️ Élections Législatives</h4>
+            <div class="metric-row"><span>Sièges</span><strong>577 députés (539 Hex., 27 OM, 11 FE)</strong></div>
+            <div class="metric-row"><span>Mode de scrutin</span><strong>Uninominal majoritaire à 2 tours</strong></div>
+            <div class="metric-row"><span>Seuil second tour</span><strong>12,5 % des électeurs inscrits</strong></div>
+            <div class="metric-row"><span>Triangulaires projetées</span><strong id="terr-triang-val">38 circonscriptions</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏛️ Élections Sénatoriales</h4>
+            <div class="metric-row"><span>Sièges</span><strong>348 sénateurs (renouvellement par moitié /3 ans)</strong></div>
+            <div class="metric-row"><span>Corps électoral</span><strong>162 000 grands électeurs (95% municipaux)</strong></div>
+            <div class="metric-row"><span>Scrutins</span><strong>Majoritaire (<3 sén.) ou proportionnel (>=3 sén.)</strong></div>
+            <div class="metric-row"><span>Base légale</span><strong>Art. 24 Const. & Art. L. 279 Code électoral</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🗳️ Élections Municipales & EPCI</h4>
+            <div class="metric-row"><span>Membres élus</span><strong>~500 000 conseillers municipaux</strong></div>
+            <div class="metric-row"><span>Mode de scrutin</span><strong>Proportionnel avec prime 50% (>=1000 hab.)</strong></div>
+            <div class="metric-row"><span>Parité légale</span><strong>Stricte alternance femme-homme</strong></div>
+            <div class="metric-row"><span>Fléchage</span><strong>Élection directe délégués communautaires EPCI</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🗺️ Élections Départementales</h4>
+            <div class="metric-row"><span>Sièges</span><strong>4 056 conseillers (2 054 cantons)</strong></div>
+            <div class="metric-row"><span>Mode de scrutin</span><strong>Binominal paritaire (1 femme + 1 homme)</strong></div>
+            <div class="metric-row"><span>Seuil maintien 2nd tour</span><strong>12,5 % des électeurs inscrits</strong></div>
+            <div class="metric-row"><span>Compétences</span><strong>Solidarités sociales (RSA, APA) & collèges</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🚆 Élections Régionales</h4>
+            <div class="metric-row"><span>Sièges</span><strong>1 757 conseillers (18 régions)</strong></div>
+            <div class="metric-row"><span>Mode de scrutin</span><strong>Proportionnel de liste à 2 tours</strong></div>
+            <div class="metric-row"><span>Prime majoritaire</span><strong>25 % des sièges à la liste en tête</strong></div>
+            <div class="metric-row"><span>Seuils</span><strong>10% pour maintien, 5% pour fusion</strong></div>
+          </div>
+        </div>
+
+        <!-- Section 4 : Le Bloc de Constitutionnalité et les Grands Codes -->
+        <h3 style="margin-bottom:12px; font-weight:800;">📜 4. Les Textes Fondamentaux Constituant et Régissant la Nation</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Niveau de Norme</th>
+                <th>Texte Fondateur</th>
+                <th>Principes Clés & Dispositions</th>
+                <th>Portée Régulatrice dans le Simulateur</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Bloc de Constitutionnalité</strong></td>
+                <td><strong>Déclaration des Droits de 1789</strong></td>
+                <td>Art. 1 (Égalité), Art. 3 (Souveraineté nationale), Art. 6 (Volonté générale), Art. 13-14 (Consentement à l'impôt).</td>
+                <td>Cadre suprême inviolable de toute décision publique républicaine.</td>
+              </tr>
+              <tr>
+                <td><strong>Bloc de Constitutionnalité</strong></td>
+                <td><strong>Préambule de la Constitution de 1946</strong></td>
+                <td>Égalité homme-femme (al. 3), nationalisations des monopoles (al. 9), protection santé et famille (al. 10-11).</td>
+                <td>Fonde le pacte social du berceau au tombeau et la Sécurité sociale.</td>
+              </tr>
+              <tr>
+                <td><strong>Bloc de Constitutionnalité</strong></td>
+                <td><strong>Charte de l'environnement de 2004</strong></td>
+                <td>Art. 1 (Droit environnement sain), Art. 4 (Pollueur-payeur), Art. 5 (Principe de précaution).</td>
+                <td>Encadre la transition écologique et la taxe carbone frontalière MACF.</td>
+              </tr>
+              <tr>
+                <td><strong>Bloc de Constitutionnalité</strong></td>
+                <td><strong>Constitution du 4 octobre 1958</strong></td>
+                <td>Art. 1 (République indivisible et décentralisée), Art. 24 (Parlement), Art. 49 (Censure), Art. 72-74 (Outre-Mer).</td>
+                <td>Équilibre des pouvoirs, régulation des 12 assemblées et des 4 strates.</td>
+              </tr>
+              <tr>
+                <td><strong>Législation Républicaine</strong></td>
+                <td><strong>Code électoral</strong></td>
+                <td>Art. L. 16 (REU INSEE 49,5M électeurs), Art. L. 123 (Législatives), Art. L. 260 (Municipales).</td>
+                <td>Garantit la sincérité, la transparence et la régularité des scrutins républicains.</td>
+              </tr>
+              <tr>
+                <td><strong>Législation Républicaine</strong></td>
+                <td><strong>Code Général des Collectivités (CGCT)</strong></td>
+                <td>Art. L. 1612-4 (Règle d'or budgétaire), Art. L. 2121-1 (Communes), Art. L. 2411-1 (Sections).</td>
+                <td>Équilibre de gestion des 34 935 communes et des 1 254 EPCI.</td>
+              </tr>
+              <tr>
+                <td><strong>Législation Républicaine</strong></td>
+                <td><strong>Code de la Commande Publique (CCP)</strong></td>
+                <td>Art. L. 2113-10 (Allotissement obligatoire), Art. L. 2112-2 (Critères environnementaux).</td>
+                <td>Réservation de 30 % des marchés publics aux PME et artisans locaux (+6 Md€).</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
     <!-- TAB 2 : COMPARATEUR DES SCÉNARIOS                             -->
     <!-- ============================================================= -->
     <div id="tab-comparatif" class="tab-pane">
@@ -1891,6 +2297,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
 
       if (tabName === 'assemblees') afficherAssemblees();
       if (tabName === 'generations') afficherGenerations();
+      if (tabName === 'territoires') afficherTerritoires();
       if (tabName === 'comparatif') chargerComparatif();
       if (tabName === 'corpus' && allCorpusArticles.length === 0) chargerCorpus();
       if (tabName === 'dossier') chargerDossier();
@@ -2122,9 +2529,22 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       const elDetteJ = document.getElementById('det-dette-jeune');
       if (elDetteJ) elDetteJ.innerText = Math.round(r.charge_dette_par_jeune_euros || 129275).toLocaleString() + ' €';
 
+      // Variables Territoires, Outre-Mer et Élections
+      const elElecPartic = document.getElementById('det-elections-partic');
+      if (elElecPartic) elElecPartic.innerText = (r.participation_electorale_proj_pct !== undefined ? r.participation_electorale_proj_pct : 74.5).toFixed(1) + ' %';
+      const elElecTriang = document.getElementById('det-elections-triang');
+      if (elElecTriang) elElecTriang.innerText = (r.triangulaires_legislatives_proj !== undefined ? r.triangulaires_legislatives_proj : 38) + ' circonscriptions';
+      const elOmVie = document.getElementById('det-om-vie-chere');
+      if (elOmVie) elOmVie.innerText = (r.surcout_vie_chere_outremer_pct !== undefined ? r.surcout_vie_chere_outremer_pct : 18.5).toFixed(1) + ' %';
+      const elOmCont = document.getElementById('det-om-continuite');
+      if (elOmCont) elOmCont.innerText = (r.indice_continuite_territoriale !== undefined ? r.indice_continuite_territoriale : 78.0).toFixed(1) + ' / 100';
+      const elRurVit = document.getElementById('det-ruralite-vitalite');
+      if (elRurVit) elRurVit.innerText = (r.vitalite_rurale_indice !== undefined ? r.vitalite_rurale_indice : 81.5).toFixed(1) + ' / 100';
+
       // Mise à jour des onglets spécialisés
       afficherAssemblees();
       afficherGenerations();
+      afficherTerritoires();
     }
 
     // Affichage des assemblées
@@ -2298,6 +2718,64 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       }
     }
 
+    // Affichage des strates territoriales, Outre-Mer et Élections
+    function afficherTerritoires() {
+      const r = currentTrajectory[selectedYearIndex] || currentTrajectory[currentTrajectory.length - 1];
+      if (!r) return;
+
+      const partic = r.participation_electorale_proj_pct !== undefined ? r.participation_electorale_proj_pct : 74.5;
+      const triang = r.triangulaires_legislatives_proj !== undefined ? r.triangulaires_legislatives_proj : 38;
+      const vieChere = r.surcout_vie_chere_outremer_pct !== undefined ? r.surcout_vie_chere_outremer_pct : 18.5;
+      const contTerr = r.indice_continuite_territoriale !== undefined ? r.indice_continuite_territoriale : 78.0;
+      const rurVit = r.vitalite_rurale_indice !== undefined ? r.vitalite_rurale_indice : 81.5;
+      const metroEff = r.efficience_metropolitaine_indice !== undefined ? r.efficience_metropolitaine_indice : 86.0;
+
+      const elPartic = document.getElementById('terr-partic-val');
+      if (elPartic) elPartic.innerText = partic.toFixed(1) + ' %';
+      const elRur = document.getElementById('terr-vitalite-rurale');
+      if (elRur) elRur.innerText = rurVit.toFixed(1) + ' / 100';
+      const elVie = document.getElementById('terr-om-viechere');
+      if (elVie) elVie.innerText = '+' + vieChere.toFixed(1) + ' %';
+      const elCont = document.getElementById('terr-om-cont');
+      if (elCont) elCont.innerText = contTerr.toFixed(1) + ' / 100';
+      const elMetro = document.getElementById('terr-metropole-efficience');
+      if (elMetro) elMetro.innerText = metroEff.toFixed(1) + ' / 100';
+      const elTri = document.getElementById('terr-triang-val');
+      if (elTri) elTri.innerText = triang + ' circonscriptions';
+
+      const bPartic = document.getElementById('badge-terr-partic');
+      const cPartic = document.getElementById('card-terr-reu');
+      if (bPartic && cPartic) {
+        if (partic >= 70.0) {
+          bPartic.className = 'badge badge-success';
+          bPartic.innerText = 'FORTE MOBILISATION';
+          cPartic.className = 'kpi-card success';
+        } else if (partic >= 55.0) {
+          bPartic.className = 'badge badge-warning';
+          bPartic.innerText = 'PARTICIPATION MOYENNE';
+          cPartic.className = 'kpi-card warning';
+        } else {
+          bPartic.className = 'badge badge-danger';
+          bPartic.innerText = 'CRISE CIVIQUE / ABSTENTION';
+          cPartic.className = 'kpi-card danger';
+        }
+      }
+
+      const bOm = document.getElementById('badge-terr-om');
+      const cOm = document.getElementById('card-terr-om');
+      if (bOm && cOm) {
+        if (vieChere <= 20.0) {
+          bOm.className = 'badge badge-success';
+          bOm.innerText = 'ÉGALITÉ RÉELLE EN PROGRÈS';
+          cOm.className = 'kpi-card success';
+        } else {
+          bOm.className = 'badge badge-danger';
+          bOm.innerText = 'TENSION VIE CHÈRE';
+          cOm.className = 'kpi-card danger';
+        }
+      }
+    }
+
     // Chargement du comparatif
     async function chargerComparatif() {
       try {
@@ -2327,6 +2805,11 @@ HTML_DASHBOARD = """<!DOCTYPE html>
           { key: 'g3_taux_pauvrete_pct', label: 'Taux Pauvreté Jeunesse (G3)', fmt: v => (v || 19.4).toFixed(1) + ' %', goodLow: true },
           { key: 'g1_taux_pauvrete_pct', label: 'Taux Pauvreté Aînés (G1)', fmt: v => (v || 10.8).toFixed(1) + ' %', goodLow: true },
           { key: 'charge_dette_par_jeune_euros', label: 'Dette Souveraine / Jeune G3', fmt: v => Math.round(v || 129000).toLocaleString() + ' €', goodLow: true },
+          { key: 'vitalite_rurale_indice', label: 'Vitalité Rurale (Communes < 1k)', fmt: v => (v || 81.5).toFixed(1) + ' / 100', goodHigh: true },
+          { key: 'surcout_vie_chere_outremer_pct', label: 'Surcoût Vie Chère Outre-mer (%)', fmt: v => '+' + (v || 18.5).toFixed(1) + ' %', goodLow: true },
+          { key: 'indice_continuite_territoriale', label: 'Continuité Territoriale Outre-mer', fmt: v => (v || 78.0).toFixed(1) + ' / 100', goodHigh: true },
+          { key: 'participation_electorale_proj_pct', label: 'Participation Électorale Projetée', fmt: v => (v || 74.5).toFixed(1) + ' %', goodHigh: true },
+          { key: 'triangulaires_legislatives_proj', label: 'Triangulaires Législatives (577 circ.)', fmt: v => (v || 38) + ' circ.', goodLow: true },
         ];
 
         metrics.forEach(m => {

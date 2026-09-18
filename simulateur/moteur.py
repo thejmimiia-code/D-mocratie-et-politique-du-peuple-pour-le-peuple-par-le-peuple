@@ -449,6 +449,28 @@ class MoteurSimulationSystemique:
             )
 
         # =========================================================================
+        # 6ter. STRATES TERRITORIALES, OUTRE-MER ET ÉLECTIONS
+        # =========================================================================
+        # 1. Vitalité des communes rurales (< 1000 hab.)
+        aide_rurale = (decision.dotation_solidarite_rurale_mde * 1.8) + (decision.commande_publique_massifiee_mde * 0.8) + (4.0 if decision.baisse_tva_energie_5_5_mde > 0 else 0.0)
+        perte_dgf = 15.0 if decision.delta_dotation_dgf_mde < -5.0 else 0.0
+        vitalite_rurale = max(20.0, min(95.0, round(62.0 + aide_rurale - perte_dgf, 1)))
+
+        # 2. Efficience des métropoles (fin des doublons et rationalisation)
+        efficience_metropoles = max(40.0, min(95.0, round(71.0 + (decision.fusion_doublons_territoriaux_mde * 1.4), 1)))
+
+        # 3. Outre-mer : surcoût de la vie chère (%) et continuité territoriale (0-100)
+        reduction_vie_chere = (3.5 if decision.baisse_tva_energie_5_5_mde > 0 else 0.0) + (decision.bouclier_vie_chere_outremer_mde * 1.5) + (effort_structurel_net / 60.0) * 10.0
+        hausse_choc_om = (6.0 if self.mondial.cours_petrole_brent_usd > 90.0 else 0.0) + (4.0 if ratio_deficit_pib > 5.0 else 0.0)
+        vie_chere_om = max(12.0, min(48.0, round(32.5 - reduction_vie_chere + hausse_choc_om, 1)))
+        continuite_om = max(25.0, min(95.0, round(54.0 + (decision.renforcement_continuite_territoriale_mde * 2.2) + (14.0 if effort_structurel_net >= 50.0 else 0.0), 1)))
+
+        # 4. Fonctions électorales (participation REU et triangulaires)
+        bonus_democ = (4.0 if self.reforme_vote_blanc_active else 0.0) + (6.5 if self.reforme_ric_active else 0.0) + ((self.national.confiance_democratique - 28.0) * 0.12)
+        participation_globale = max(42.0, min(88.0, round(66.5 + bonus_democ - (self.local.tension_sociale_territoriale * 0.08), 1)))
+        triangulaires = max(25, min(180, int(round(85 - (bonus_democ * 3.5) + (self.local.tension_sociale_territoriale * 0.8)))))
+
+        # =========================================================================
         # 7. INSTANTANÉ DE L'ÉTAPE CONSOLIDÉE
         # =========================================================================
         resultat = ResultatEtapeSimulation(
@@ -505,6 +527,13 @@ class MoteurSimulationSystemique:
             donations_vers_g3_mde=donations_g3,
             garde_enfants_grands_parents_mde=garde_enfants_g1,
             charge_dette_par_jeune_euros=charge_dette_par_jeune,
+            # Indicateurs Territoriaux, Outre-mer et Fonctions Électorales
+            outremer_vie_chere_indice=vie_chere_om,
+            outremer_continuite_indice=continuite_om,
+            participation_electorale_globale_pct=participation_globale,
+            triangulaires_legislatives_count=triangulaires,
+            communes_rurales_vitalite_indice=vitalite_rurale,
+            metropoles_efficience_indice=efficience_metropoles,
             commentaires=commentaires,
         )
 

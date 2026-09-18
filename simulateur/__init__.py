@@ -34,6 +34,9 @@ from simulateur.model import (
     CohorteGeneration3Jeunesse,
     FluxCroisesIntergenerationnels,
     StrateCycleDeVieEtGenerations,
+    StrateTerritorialeContinuum,
+    StrateOutreMerDetail,
+    StrateFonctionsElectorales,
 )
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
@@ -82,6 +85,9 @@ __all__ = [
     "CohorteGeneration3Jeunesse",
     "FluxCroisesIntergenerationnels",
     "StrateCycleDeVieEtGenerations",
+    "StrateTerritorialeContinuum",
+    "StrateOutreMerDetail",
+    "StrateFonctionsElectorales",
     "MoteurSimulationSystemique",
     "get_scenario_mandature_5_ans",
     "get_scenario_statut_quo",

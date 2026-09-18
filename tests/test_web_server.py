@@ -149,6 +149,28 @@ class TestWebServerHTTP(unittest.TestCase):
             self.assertIn("flux_croises", data)
             self.assertGreater(data["flux_croises"]["retraites_g2_vers_g1_mde"], 300.0)
 
+    def test_api_territoires(self):
+        with urlopen(f"{self.base_url}/api/territoires") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("continuum", data)
+            self.assertEqual(data["continuum"]["communes_total"], 34935)
+            self.assertEqual(data["continuum"]["departements_total"], 101)
+            self.assertIn("outre_mer", data)
+            self.assertEqual(len(data["outre_mer"]), 14)
+            self.assertGreater(data["souverainete_maritime_zee_km2"], 10000000)
+
+    def test_api_elections(self):
+        with urlopen(f"{self.base_url}/api/elections") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("reu_electeurs_inscrits", data)
+            self.assertEqual(data["reu_electeurs_inscrits"], 49500000)
+            self.assertIn("elections", data)
+            self.assertEqual(len(data["elections"]), 8)
+            self.assertIn("referendums", data)
+            self.assertEqual(len(data["referendums"]), 4)
+
     def test_post_simuler_mandature(self):
         req = Request(
             f"{self.base_url}/api/simuler",
