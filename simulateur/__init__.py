@@ -29,6 +29,11 @@ from simulateur.model import (
     AssembleeConsulaireDetail,
     AssembleeParlementEuropeenDetail,
     AssembleeConseilUEDetail,
+    CohorteGeneration1Seniors,
+    CohorteGeneration2Actifs,
+    CohorteGeneration3Jeunesse,
+    FluxCroisesIntergenerationnels,
+    StrateCycleDeVieEtGenerations,
 )
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
@@ -72,6 +77,11 @@ __all__ = [
     "AssembleeConsulaireDetail",
     "AssembleeParlementEuropeenDetail",
     "AssembleeConseilUEDetail",
+    "CohorteGeneration1Seniors",
+    "CohorteGeneration2Actifs",
+    "CohorteGeneration3Jeunesse",
+    "FluxCroisesIntergenerationnels",
+    "StrateCycleDeVieEtGenerations",
     "MoteurSimulationSystemique",
     "get_scenario_mandature_5_ans",
     "get_scenario_statut_quo",

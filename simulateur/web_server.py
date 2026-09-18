@@ -67,6 +67,20 @@ def serialize_resultat(r: ResultatEtapeSimulation) -> Dict[str, Any]:
         "cese_consensus_social": getattr(r, "cese_consensus_social", 48.0),
         "consulaire_confiance_pme": getattr(r, "consulaire_confiance_pme", 56.0),
         "convention_citoyenne_consensus": getattr(r, "convention_citoyenne_consensus", 84.0),
+        # Variables du Cycle de Vie et des 3 Générations
+        "g1_seniors_pop_m": getattr(r, "g1_seniors_pop_m", 14.6),
+        "g2_actifs_pop_m": getattr(r, "g2_actifs_pop_m", 26.2),
+        "g3_jeunesse_pop_m": getattr(r, "g3_jeunesse_pop_m", 27.6),
+        "ratio_dependance_demographique": getattr(r, "ratio_dependance_demographique", 0.65),
+        "indice_harmonie_intergenerationnelle": getattr(r, "indice_harmonie_intergenerationnelle", 42.0),
+        "g2_charge_sandwich_indice": getattr(r, "g2_charge_sandwich_indice", 68.0),
+        "g3_taux_pauvrete_pct": getattr(r, "g3_taux_pauvrete_pct", 19.4),
+        "g1_taux_pauvrete_pct": getattr(r, "g1_taux_pauvrete_pct", 10.8),
+        "transfert_retraites_mde": getattr(r, "transfert_retraites_mde", 360.0),
+        "transfert_education_mde": getattr(r, "transfert_education_mde", 165.0),
+        "donations_vers_g3_mde": getattr(r, "donations_vers_g3_mde", 75.0),
+        "garde_enfants_grands_parents_mde": getattr(r, "garde_enfants_grands_parents_mde", 18.0),
+        "charge_dette_par_jeune_euros": getattr(r, "charge_dette_par_jeune_euros", 129275.0),
         "commentaires": r.commentaires,
     }
 
@@ -159,6 +173,12 @@ def generer_comparatif_global() -> Dict[str, Any]:
             "pe_taux_alignement": annee5.get("pe_taux_alignement", 65.0),
             "cese_consensus_social": annee5.get("cese_consensus_social", 48.0),
             "convention_citoyenne_consensus": annee5.get("convention_citoyenne_consensus", 84.0),
+            # Cycle de vie et 3 Générations
+            "indice_harmonie_intergenerationnelle": annee5.get("indice_harmonie_intergenerationnelle", 42.0),
+            "g2_charge_sandwich_indice": annee5.get("g2_charge_sandwich_indice", 68.0),
+            "g3_taux_pauvrete_pct": annee5.get("g3_taux_pauvrete_pct", 19.4),
+            "g1_taux_pauvrete_pct": annee5.get("g1_taux_pauvrete_pct", 10.8),
+            "charge_dette_par_jeune_euros": annee5.get("charge_dette_par_jeune_euros", 129275.0),
         }
     return comparatif
 
@@ -299,6 +319,7 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
                     {"num": "06", "fichier": "06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md", "titre": "Corpus Juridique et Réglementaire Intégral"},
                     {"num": "07", "fichier": "07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md", "titre": "Institutions de la République, Droits et Chambres Consulaires"},
                     {"num": "08", "fichier": "08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md", "titre": "Toutes les Assemblées représentatives et décisionnelles (Fonctionnement & Jeux de Pouvoirs)"},
+                    {"num": "09", "fichier": "09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md", "titre": "Pacte républicain du Berceau au Tombeau (Cycle de vie, 3 Générations & Flux croisés)"},
                     {"num": "Audit", "fichier": "PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md", "titre": "Architecture SFC, Matrice causale et Audit des 10 Redondances"},
                 ]
             })
@@ -405,6 +426,68 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
                         "contraintes": "Surveillance rigide des plafonds de Maastricht (3% déficit, 60% dette)."
                     }
                 ]
+            })
+            return
+
+        # 8. API Générations & Cycle de Vie (3 Générations)
+        if path == "/api/generations":
+            self._envoyer_json(200, {
+                "cohortes": [
+                    {
+                        "id": "g1",
+                        "nom": "Génération 1 : Aînés et Retraités",
+                        "ages": "65 à 95+ ans (nés 1930-1960)",
+                        "population_millions": 14.6,
+                        "pension_mediane": "1 620 € / mois",
+                        "part_patrimoine_pct": 61.5,
+                        "taux_pauvrete_pct": 10.8,
+                        "role_social": "Mémoire républicaine, garde bénévole des petits-enfants (18 Md€ équiv.), bénévolat associatif (68%), maires de communes rurales (58%).",
+                        "vulnerabilite": "Dépendance du grand âge, reste à charge EHPAD (1 200 €/m), isolement rural, déserts médicaux."
+                    },
+                    {
+                        "id": "g2",
+                        "nom": "Génération 2 : Actifs et Parents",
+                        "ages": "35 à 64 ans (nés 1961-1990)",
+                        "population_millions": 26.2,
+                        "salaire_median": "2 280 € / mois",
+                        "part_patrimoine_pct": 31.2,
+                        "taux_pauvrete_pct": 13.2,
+                        "role_social": "Moteur contributif et productif de la Nation (345 Md€ cotisations, 125 Md€ impôt sur le revenu), 22,4M actifs occupés.",
+                        "vulnerabilite": "Génération Sandwich écrasée entre le coût d'études/logement de G3 et la charge EHPAD/dépendance de G1, emploi des seniors."
+                    },
+                    {
+                        "id": "g3",
+                        "nom": "Génération 3 : Jeunesse et Avenir",
+                        "ages": "0 à 34 ans (nés 1991-2026+)",
+                        "population_millions": 27.6,
+                        "revenu_median": "1 540 € / mois",
+                        "part_patrimoine_pct": 7.3,
+                        "taux_pauvrete_pct": 19.4,
+                        "role_social": "Relève républicaine, scolarité et études supérieures (15,2M d'élèves/étudiants), innovation et réindustrialisation.",
+                        "vulnerabilite": "Précarité étudiante, fardeau de la dette souveraine (129 k€/jeune), loyers écrasants (38,5% budget), barrière d'accès à la propriété."
+                    }
+                ],
+                "periodes_vie": [
+                    {"code": "P0", "titre": "0 - 3 ans : Petite Enfance & Périnatalité", "acteurs": "Communes, CAF, Départements (PMI)", "enjeux": "Places en crèche, soutien G1 (garde gratuite), congé parental rémunéré."},
+                    {"code": "P1", "titre": "3 - 11 ans : Enfance & École Primaire", "acteurs": "Conseils Municipaux & Éducation Nationale", "enjeux": "Savoirs fondamentaux, cantines scolaires 1€, santé scolaire, périscolaire."},
+                    {"code": "P2", "titre": "11 - 18 ans : Adolescence, Collège & Lycée", "acteurs": "Conseils Départementaux & Régionaux", "enjeux": "Collèges (Dép.), Lycées (Rég.), orientation, apprentissage, santé mentale."},
+                    {"code": "P3", "titre": "18 - 25 ans : Enseignement Supérieur & Autonomie", "acteurs": "État, Universités, Régions, CCI/CMA", "enjeux": "Logement étudiant, CROUS, bourses, dotation républicaine d'émancipation, premier vote."},
+                    {"code": "P4", "titre": "25 - 35 ans : Insertion Active & Premier Toit", "acteurs": "Entreprises, Banques, Bailleurs sociaux, État", "enjeux": "Accès au premier emploi CDI, levée de la barrière de l'apport bancaire, formation couple/famille."},
+                    {"code": "P5", "titre": "35 - 50 ans : Plénitude & Génération Sandwich", "acteurs": "Sécurité sociale, État (Impôts), Départements", "enjeux": "Pic contributif fiscal, double fardeau simultané (aide aux études G3 + aide aux aînés dépendants G1)."},
+                    {"code": "P6", "titre": "50 - 65 ans : Seconde Carrière & Transmission", "acteurs": "Branches professionnelles, Retraites, Notariat", "enjeux": "Maintien emploi seniors 55+, transmission savoir-faire, âge moyen héritage (52 ans)."},
+                    {"code": "P7", "titre": "65 - 80 ans : Retraite Active & Pilier Civique", "acteurs": "Sécurité sociale (CNAV), Communes, Associations", "enjeux": "Retraite par répartition, garde petits-enfants, 68% du bénévolat, maires de villages."},
+                    {"code": "P8", "titre": "80 - 95+ ans : Grand Âge, Dépendance & Fin de Vie", "acteurs": "Départements (APA), CNSA (5e branche), EHPAD, Hôpitaux", "enjeux": "Perte d'autonomie (GIR 1-4), reste à charge EHPAD, maintien à domicile, transmission successorale."}
+                ],
+                "flux_croises": {
+                    "retraites_g2_vers_g1_mde": 360.0,
+                    "sante_g2_vers_g1_mde": 95.0,
+                    "education_g2_vers_g3_mde": 165.0,
+                    "garde_enfants_g1_vers_g3_mde": 18.0,
+                    "successions_g1_vers_g2_mde": 225.0,
+                    "donations_g1_vers_g3_mde": 75.0,
+                    "ratio_dependance_demographique": 0.65,
+                    "charge_dette_par_jeune_euros": 129275.0
+                }
             })
             return
 
@@ -1086,6 +1169,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       <nav>
         <button class="active" onclick="showTab('simulateur')">📊 Simulateur</button>
         <button onclick="showTab('assemblees')">🏛️ Assemblées & Pouvoirs</button>
+        <button onclick="showTab('generations')">👶 Cycle de Vie & 3 Générations</button>
         <button onclick="showTab('comparatif')">⚖️ Comparateur</button>
         <button onclick="showTab('architecture')">🏛️ Les 4 Strates</button>
         <button onclick="showTab('corpus')">📜 Corpus Juridique</button>
@@ -1329,6 +1413,14 @@ HTML_DASHBOARD = """<!DOCTYPE html>
             <div class="metric-row"><span>Veto Constitutionnel Art. 89</span><strong id="det-veto-senat" style="color:var(--accent-emerald)">Veto levé</strong></div>
             <div class="metric-row"><span>Départements en faillite (ciseau)</span><strong id="det-faillite-dept">2 départements</strong></div>
           </div>
+          <div class="strate-card">
+            <h4>👶 Strate Intergénérationnelle : 3 Générations</h4>
+            <div class="metric-row"><span>Harmonie Intergénérationnelle</span><strong id="det-harmonie-gen" style="color:var(--accent-emerald)">83.1 / 100</strong></div>
+            <div class="metric-row"><span>Fardeau Génération Sandwich (G2)</span><strong id="det-charge-sandwich">34.2 / 100</strong></div>
+            <div class="metric-row"><span>Taux Pauvreté Jeunesse (G3)</span><strong id="det-pauvrete-g3">12.5 %</strong></div>
+            <div class="metric-row"><span>Taux Pauvreté Aînés (G1)</span><strong id="det-pauvrete-g1">6.8 %</strong></div>
+            <div class="metric-row"><span>Fardeau Dette / Jeune G3</span><strong id="det-dette-jeune">129 275 €</strong></div>
+          </div>
         </div>
 
         <!-- Flux d'Événements Rétroactifs -->
@@ -1498,6 +1590,184 @@ HTML_DASHBOARD = """<!DOCTYPE html>
     </div>
 
     <!-- ============================================================= -->
+    <!-- TAB : CYCLE DE VIE ET 3 GÉNÉRATIONS (FLUX CROISÉS)            -->
+    <!-- ============================================================= -->
+    <div id="tab-generations" class="tab-pane">
+      <div class="arch-diagram">
+        <h2>👶 CYCLE DE VIE RÉPUBLICAIN & PACTE INTERGÉNÉRATIONNEL (3 GÉNÉRATIONS)</h2>
+        <p class="subtitle" style="margin-bottom:20px;">
+          « Du berceau au tombeau » : conciliation organique de ceux qui ont bâti la France (G1), ceux qui la font tourner au quotidien (G2), et ceux qui portent son avenir (G3).
+        </p>
+
+        <!-- 4 KPI Cards Temps Réel -->
+        <div class="kpi-grid" style="margin-bottom:24px;">
+          <div class="kpi-card" id="card-gen-g1">
+            <div class="kpi-title">👴 G1 : Aînés & Retraités (65-95+)</div>
+            <div class="kpi-value" id="gen-g1-pop">14.6 M</div>
+            <div class="kpi-sub">Pauvreté : <strong id="gen-g1-pauv">10.8 %</strong> • Garde enfants : <strong>18 Md€</strong></div>
+            <div style="margin-top:8px;"><span class="badge badge-primary" id="badge-gen-g1">Piliers civiques</span></div>
+          </div>
+
+          <div class="kpi-card" id="card-gen-g2">
+            <div class="kpi-title">🧑‍💼 G2 : Actifs & Parents (35-64)</div>
+            <div class="kpi-value" id="gen-g2-pop">26.2 M</div>
+            <div class="kpi-sub">Fardeau sandwich : <strong id="gen-g2-charge">68.0 / 100</strong> • Cotis : <strong>345 Md€</strong></div>
+            <div style="margin-top:8px;"><span class="badge badge-warning" id="badge-gen-g2">Cœur productif</span></div>
+          </div>
+
+          <div class="kpi-card" id="card-gen-g3">
+            <div class="kpi-title">🎓 G3 : Jeunesse & Avenir (0-34)</div>
+            <div class="kpi-value" id="gen-g3-pop">27.6 M</div>
+            <div class="kpi-sub">Pauvreté : <strong id="gen-g3-pauv">19.4 %</strong> • Dette/jeune : <strong id="gen-g3-dette">129 k€</strong></div>
+            <div style="margin-top:8px;"><span class="badge badge-danger" id="badge-gen-g3">Relève républicaine</span></div>
+          </div>
+
+          <div class="kpi-card" id="card-gen-harmonie">
+            <div class="kpi-title">⚖️ Harmonie Intergénérationnelle</div>
+            <div class="kpi-value" id="gen-harmonie-score">42.0 / 100</div>
+            <div class="kpi-sub">Ratio dépendance : <strong id="gen-ratio-dep">0.65</strong> • Indice IEHI</div>
+            <div style="margin-top:8px;"><span class="badge badge-warning" id="badge-gen-harmonie">Tension initiale</span></div>
+          </div>
+        </div>
+
+        <!-- Les 9 Périodes de la Vie Humaine -->
+        <h3 style="margin-bottom:12px; font-weight:800;">🧭 Le Cycle de Vie Républicain : Les 9 Périodes du Berceau au Tombeau</h3>
+        <div class="strates-grid" style="margin-bottom:24px;">
+          <div class="strate-card">
+            <h4>🍼 P0 : Périnatalité & Crèche (0 - 3 ans)</h4>
+            <div class="metric-row"><span>Acteurs publics</span><strong>Communes & PMI (Département)</strong></div>
+            <div class="metric-row"><span>Prestations clés</span><strong>CAF (PAJE), Congé parental, Crèches</strong></div>
+            <div class="metric-row"><span>Apport vital de G1</span><strong style="color:var(--accent-emerald)">Garde bénévole par les grands-parents</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong>Places de crèche réservées & PMI confortées</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🎒 P1 : Enfance & École Primaire (3 - 11 ans)</h4>
+            <div class="metric-row"><span>Acteurs publics</span><strong>Conseil Municipal & Éducation Nationale</strong></div>
+            <div class="metric-row"><span>Enjeux vitaux</span><strong>Savoirs fondamentaux, nutrition, éveil</strong></div>
+            <div class="metric-row"><span>Soutien de G1</span><strong>Sorties d'école et devoirs (soulage G2)</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Cantine bio et locale à 1 €</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>📐 P2 : Adolescence, Collège & Lycée (11 - 18 ans)</h4>
+            <div class="metric-row"><span>Acteurs publics</span><strong>Départements (Collèges) & Régions (Lycées)</strong></div>
+            <div class="metric-row"><span>Compétences</span><strong>Bâtiments, numérique, transports scolaires</strong></div>
+            <div class="metric-row"><span>Enjeux citoyens</span><strong>Orientation professionnelle, apprentissage, santé</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Gratuité transports scolaires TER</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏛️ P3 : Études Supérieures & Autonomie (18 - 25 ans)</h4>
+            <div class="metric-row"><span>Acteurs publics</span><strong>État, Universités, CROUS, Chambres Consulaires</strong></div>
+            <div class="metric-row"><span>Plafond de verre</span><strong>Précarité étudiante, coût du logement</strong></div>
+            <div class="metric-row"><span>Droit civique</span><strong>Premier vote républicain, citoyenneté active</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Dotation d'émancipation républicaine (10 k€)</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🔑 P4 : Insertion Active & Premier Toit (25 - 35 ans)</h4>
+            <div class="metric-row"><span>Acteurs publics</span><strong>Entreprises, Banques, Bailleurs HLM, État</strong></div>
+            <div class="metric-row"><span>Barrière majeure</span><strong>Accès au crédit sans apport familial</strong></div>
+            <div class="metric-row"><span>Enjeu démographique</span><strong>Premier enfant, fondation du foyer</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Défiscalisation dons G1 vers G3 pour logement</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>💼 P5 : Plénitude & « Génération Sandwich » (35 - 50 ans)</h4>
+            <div class="metric-row"><span>Rôle systémique</span><strong>Moteur fiscal et productif suprême de la Nation</strong></div>
+            <div class="metric-row"><span>Double fardeau</span><strong style="color:var(--accent-crimson)">Financement G3 (études) + Soutien G1 (dépendance)</strong></div>
+            <div class="metric-row"><span>Contribution nette</span><strong>345 Md€ cotisations + 125 Md€ impôt sur revenu</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Baisse TVA énergie 5,5% & statut proche aidant</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>⏳ P6 : Seconde Carrière & Transmission (50 - 65 ans)</h4>
+            <div class="metric-row"><span>Enjeu républicain</span><strong>Maintien emploi seniors (56,5% FR vs 72% All.)</strong></div>
+            <div class="metric-row"><span>Transmission des savoirs</span><strong>Tutorat intergénérationnel en entreprise</strong></div>
+            <div class="metric-row"><span>Héritage moyen</span><strong>Âge moyen où l'on hérite : 52 ans (trop tard pour G3)</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Circulation précoce du capital vers petits-enfants</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🌳 P7 : Retraite Active & Pilier Associatif (65 - 80 ans)</h4>
+            <div class="metric-row"><span>Régime de solidarité</span><strong>Retraite par répartition gagée par le labeur de G2</strong></div>
+            <div class="metric-row"><span>Force civique</span><strong>68% des responsables associatifs bénévoles</strong></div>
+            <div class="metric-row"><span>Démocratie de terroir</span><strong>58% des maires et élus municipaux ruraux</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">Revalorisation petites retraites agricoles & artisans</strong></div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🕊️ P8 : Grand Âge, Dépendance & Fin de Vie (80 - 95+ ans)</h4>
+            <div class="metric-row"><span>Acteurs institutionnels</span><strong>Départements (APA) & Sécurité Sociale (CNSA)</strong></div>
+            <div class="metric-row"><span>Reste à charge EHPAD</span><strong>1 200 à 1 800 €/mois pesant sur les familles</strong></div>
+            <div class="metric-row"><span>Fin de vie républicaine</span><strong>Soins palliatifs dignes, directives anticipées</strong></div>
+            <div class="metric-row"><span>Mesure Mandature</span><strong style="color:var(--accent-emerald)">5e branche Autonomie & plan maintien à domicile</strong></div>
+          </div>
+        </div>
+
+        <!-- Matrice des Flux Croisés -->
+        <h3 style="margin-bottom:12px; font-weight:800;">🔄 Matrice des Flux Croisés Dynamiques (Qui finance qui ?)</h3>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Flux Intergénérationnel</th>
+                <th>Origine $\rightarrow$ Destination</th>
+                <th>Volume Annuel Estimé</th>
+                <th>Impact Systémique & Rétroaction</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Cotisations & Pensions de Retraite</strong></td>
+                <td>G2 (Actifs) $\rightarrow$ G1 (Retraités)</td>
+                <td><strong id="flux-retraites">360.0 Md€</strong></td>
+                <td>Socle du pacte social de 1945 : répartition pure sans capitalisation spéculative.</td>
+              </tr>
+              <tr>
+                <td><strong>Investissement Éducatif & Universitaire</strong></td>
+                <td>G2 (Actifs) $\rightarrow$ G3 (Jeunesse)</td>
+                <td><strong id="flux-education">165.0 Md€</strong></td>
+                <td>Formation du capital humain national : écoles des maires, collèges, lycées, facultés.</td>
+              </tr>
+              <tr>
+                <td><strong>Solidarité Santé & Affections Longue Durée</strong></td>
+                <td>G2 (Actifs) $\rightarrow$ G1 (Aînés)</td>
+                <td><strong>95.0 Md€</strong></td>
+                <td>Prise en charge à 100% des pathologies lourdes via l'Assurance Maladie mutualisée.</td>
+              </tr>
+              <tr>
+                <td><strong>Garde d'Enfants Bénévole (Care)</strong></td>
+                <td>G1 (Grands-parents) $\rightarrow$ G3 (Enfants)</td>
+                <td><strong id="flux-garde" style="color:var(--accent-emerald)">18.0 Md€ (Travail invisible)</strong></td>
+                <td>Équivalent à 1,2 million de places de crèche : sans G1, l'emploi de G2 s'effondre.</td>
+              </tr>
+              <tr>
+                <td><strong>Transmissions Successorales Générales</strong></td>
+                <td>G1 (Aînés) $\rightarrow$ G2 (Quinquagénaires)</td>
+                <td><strong>225.0 Md€</strong></td>
+                <td>Héritage tardif à 52 ans : concentré chez des actifs dont le logement est déjà payé.</td>
+              </tr>
+              <tr>
+                <td><strong>Donations Directes vers Petits-Enfants</strong></td>
+                <td>G1 (Aînés) $\rightarrow$ G3 (Jeunes adultes)</td>
+                <td><strong id="flux-donations" style="color:var(--accent-emerald)">75.0 Md€</strong></td>
+                <td>Donations inter vivos pour financer le premier achat immobilier ou l'installation artisanale.</td>
+              </tr>
+              <tr>
+                <td><strong>Charge de la Dette Souveraine Léguée</strong></td>
+                <td>Passé $\rightarrow$ G3 (Génération future)</td>
+                <td><strong id="flux-dette-jeune" style="color:var(--accent-crimson)">129 275 € par jeune</strong></td>
+                <td>Dette accumulée (3 568 Md€) pesant sur l'avenir, ramenée sous contrôle par le plan +60 Md€.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
     <!-- TAB 2 : COMPARATEUR DES SCÉNARIOS                             -->
     <!-- ============================================================= -->
     <div id="tab-comparatif" class="tab-pane">
@@ -1620,6 +1890,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       if (clickedBtn) clickedBtn.classList.add('active');
 
       if (tabName === 'assemblees') afficherAssemblees();
+      if (tabName === 'generations') afficherGenerations();
       if (tabName === 'comparatif') chargerComparatif();
       if (tabName === 'corpus' && allCorpusArticles.length === 0) chargerCorpus();
       if (tabName === 'dossier') chargerDossier();
@@ -1838,8 +2109,22 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         evtBox.innerHTML = '<div class="event-line" style="border-left-color:gray; color:gray;">Aucun incident majeur sur cet exercice.</div>';
       }
 
-      // Mise à jour de l'onglet assemblées
+      // Variables Cycle de Vie et 3 Générations
+      const harmGen = r.indice_harmonie_intergenerationnelle !== undefined ? r.indice_harmonie_intergenerationnelle : 42.0;
+      const elHarm = document.getElementById('det-harmonie-gen');
+      if (elHarm) elHarm.innerText = harmGen.toFixed(1) + ' / 100';
+      const elSand = document.getElementById('det-charge-sandwich');
+      if (elSand) elSand.innerText = (r.g2_charge_sandwich_indice !== undefined ? r.g2_charge_sandwich_indice : 68.0).toFixed(1) + ' / 100';
+      const elPauv3 = document.getElementById('det-pauvrete-g3');
+      if (elPauv3) elPauv3.innerText = (r.g3_taux_pauvrete_pct !== undefined ? r.g3_taux_pauvrete_pct : 19.4).toFixed(1) + ' %';
+      const elPauv1 = document.getElementById('det-pauvrete-g1');
+      if (elPauv1) elPauv1.innerText = (r.g1_taux_pauvrete_pct !== undefined ? r.g1_taux_pauvrete_pct : 10.8).toFixed(1) + ' %';
+      const elDetteJ = document.getElementById('det-dette-jeune');
+      if (elDetteJ) elDetteJ.innerText = Math.round(r.charge_dette_par_jeune_euros || 129275).toLocaleString() + ' €';
+
+      // Mise à jour des onglets spécialisés
       afficherAssemblees();
+      afficherGenerations();
     }
 
     // Affichage des assemblées
@@ -1951,6 +2236,68 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       document.getElementById('det-ass-citoyen-consensus').innerText = (r.convention_citoyenne_consensus !== undefined ? r.convention_citoyenne_consensus : 94.0).toFixed(1) + ' %';
     }
 
+    // Affichage du cycle de vie et des 3 générations
+    function afficherGenerations() {
+      const r = currentTrajectory[selectedYearIndex] || currentTrajectory[currentTrajectory.length - 1];
+      if (!r) return;
+
+      const g1Pop = r.g1_seniors_pop_m !== undefined ? r.g1_seniors_pop_m : 14.6;
+      const g2Pop = r.g2_actifs_pop_m !== undefined ? r.g2_actifs_pop_m : 26.2;
+      const g3Pop = r.g3_jeunesse_pop_m !== undefined ? r.g3_jeunesse_pop_m : 27.6;
+      const g1Pauv = r.g1_taux_pauvrete_pct !== undefined ? r.g1_taux_pauvrete_pct : 10.8;
+      const g2Charge = r.g2_charge_sandwich_indice !== undefined ? r.g2_charge_sandwich_indice : 68.0;
+      const g3Pauv = r.g3_taux_pauvrete_pct !== undefined ? r.g3_taux_pauvrete_pct : 19.4;
+      const harmScore = r.indice_harmonie_intergenerationnelle !== undefined ? r.indice_harmonie_intergenerationnelle : 42.0;
+      const ratioDep = r.ratio_dependance_demographique !== undefined ? r.ratio_dependance_demographique : 0.65;
+      const detteJeune = r.charge_dette_par_jeune_euros !== undefined ? r.charge_dette_par_jeune_euros : 129275;
+
+      const elG1P = document.getElementById('gen-g1-pop');
+      if (elG1P) elG1P.innerText = g1Pop.toFixed(1) + ' M';
+      const elG1Pv = document.getElementById('gen-g1-pauv');
+      if (elG1Pv) elG1Pv.innerText = g1Pauv.toFixed(1) + ' %';
+      const elG2P = document.getElementById('gen-g2-pop');
+      if (elG2P) elG2P.innerText = g2Pop.toFixed(1) + ' M';
+      const elG2C = document.getElementById('gen-g2-charge');
+      if (elG2C) elG2C.innerText = g2Charge.toFixed(1) + ' / 100';
+      const elG3P = document.getElementById('gen-g3-pop');
+      if (elG3P) elG3P.innerText = g3Pop.toFixed(1) + ' M';
+      const elG3Pv = document.getElementById('gen-g3-pauv');
+      if (elG3Pv) elG3Pv.innerText = g3Pauv.toFixed(1) + ' %';
+      const elG3D = document.getElementById('gen-g3-dette');
+      if (elG3D) elG3D.innerText = Math.round(detteJeune / 1000) + ' k€';
+      const elHarmS = document.getElementById('gen-harmonie-score');
+      if (elHarmS) elHarmS.innerText = harmScore.toFixed(1) + ' / 100';
+      const elRatioD = document.getElementById('gen-ratio-dep');
+      if (elRatioD) elRatioD.innerText = ratioDep.toFixed(2);
+
+      const bHarm = document.getElementById('badge-gen-harmonie');
+      const cHarm = document.getElementById('card-gen-harmonie');
+      if (bHarm && cHarm) {
+        if (harmScore >= 75) {
+          bHarm.className = 'badge badge-success';
+          bHarm.innerText = 'PACTE HARMONIEUX';
+          cHarm.className = 'kpi-card success';
+        } else if (harmScore >= 50) {
+          bHarm.className = 'badge badge-warning';
+          bHarm.innerText = 'ÉQUILIBRE FRAGILE';
+          cHarm.className = 'kpi-card warning';
+        } else {
+          bHarm.className = 'badge badge-danger';
+          bHarm.innerText = 'FRACTURE INTERGÉNÉRATIONNELLE';
+          cHarm.className = 'kpi-card danger';
+        }
+      }
+
+      // Flux croisés
+      if (document.getElementById('flux-retraites')) {
+        document.getElementById('flux-retraites').innerText = (r.transfert_retraites_mde || 360.0).toFixed(1) + ' Md€';
+        document.getElementById('flux-education').innerText = (r.transfert_education_mde || 165.0).toFixed(1) + ' Md€';
+        document.getElementById('flux-garde').innerText = (r.garde_enfants_grands_parents_mde || 18.0).toFixed(1) + ' Md€';
+        document.getElementById('flux-donations').innerText = (r.donations_vers_g3_mde || 75.0).toFixed(1) + ' Md€';
+        document.getElementById('flux-dette-jeune').innerText = Math.round(detteJeune).toLocaleString() + ' € par jeune';
+      }
+    }
+
     // Chargement du comparatif
     async function chargerComparatif() {
       try {
@@ -1975,6 +2322,11 @@ HTML_DASHBOARD = """<!DOCTYPE html>
           { key: 'senat_veto_art_89', label: 'Veto Sénat (Art. 89)', fmt: v => v ? 'VETO ACTIF' : 'VETO LEVÉ' },
           { key: 'departements_alerte_ciseau', label: 'Départements en Crise Ciseau', fmt: v => (v || 2) + ' départements', goodLow: true },
           { key: 'consulaire_confiance_pme', label: 'Confiance PME (Consulaire)', fmt: v => (v || 78.0).toFixed(1) + ' %', goodHigh: true },
+          { key: 'indice_harmonie_intergenerationnelle', label: 'Harmonie Intergénérationnelle (IEHI)', fmt: v => (v || 42.0).toFixed(1) + ' / 100', goodHigh: true },
+          { key: 'g2_charge_sandwich_indice', label: 'Fardeau Génération Sandwich (G2)', fmt: v => (v || 68.0).toFixed(1) + ' / 100', goodLow: true },
+          { key: 'g3_taux_pauvrete_pct', label: 'Taux Pauvreté Jeunesse (G3)', fmt: v => (v || 19.4).toFixed(1) + ' %', goodLow: true },
+          { key: 'g1_taux_pauvrete_pct', label: 'Taux Pauvreté Aînés (G1)', fmt: v => (v || 10.8).toFixed(1) + ' %', goodLow: true },
+          { key: 'charge_dette_par_jeune_euros', label: 'Dette Souveraine / Jeune G3', fmt: v => Math.round(v || 129000).toLocaleString() + ' €', goodLow: true },
         ];
 
         metrics.forEach(m => {

@@ -124,7 +124,9 @@ class TestWebServerHTTP(unittest.TestCase):
         with urlopen(f"{self.base_url}/api/dossier") as resp:
             self.assertEqual(resp.status, 200)
             data = json.loads(resp.read().decode("utf-8"))
-            self.assertGreaterEqual(len(data["volumes"]), 9)
+            self.assertGreaterEqual(len(data["volumes"]), 10)
+            fichiers = [v["fichier"] for v in data["volumes"]]
+            self.assertIn("09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md", fichiers)
 
     def test_api_assemblees(self):
         with urlopen(f"{self.base_url}/api/assemblees") as resp:
@@ -135,6 +137,17 @@ class TestWebServerHTTP(unittest.TestCase):
             noms = [a["nom"] for a in data["assemblees"]]
             self.assertIn("Assemblée nationale", noms)
             self.assertIn("Sénat", noms)
+
+    def test_api_generations(self):
+        with urlopen(f"{self.base_url}/api/generations") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("cohortes", data)
+            self.assertEqual(len(data["cohortes"]), 3)
+            self.assertIn("periodes_vie", data)
+            self.assertEqual(len(data["periodes_vie"]), 9)
+            self.assertIn("flux_croises", data)
+            self.assertGreater(data["flux_croises"]["retraites_g2_vers_g1_mde"], 300.0)
 
     def test_post_simuler_mandature(self):
         req = Request(

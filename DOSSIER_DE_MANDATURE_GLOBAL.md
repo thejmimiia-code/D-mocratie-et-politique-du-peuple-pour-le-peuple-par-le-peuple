@@ -48,6 +48,11 @@
    * Typologie des 12 assemblées (Parlementaires, Territoriales, Citoyennes & Consultatives, Européennes)
    * Dynamiques induites, jeux de pouvoirs, seuils de vote et contraintes réelles
    * Rétroactions systémiques sur la trajectoire des 60 Md€ et renvoi vers le Volume 08
+11. **LE PACTE RÉPUBLICAIN DU BERCEAU AU TOMBEAU SUR 3 GÉNÉRATIONS**
+   * Décomposition des 9 étapes de la vie humaine (de la maternité/crèche au grand âge et fin de vie)
+   * Anatomie des 3 cohortes co-existantes (G1 Aînés, G2 Actifs, G3 Jeunesse)
+   * Matrice des flux croisés dynamiques (retraites 360 Md€, éducation 165 Md€, care bénévole 18 Md€, transmission)
+   * Résolution des 5 fractures intergénérationnelles et renvoi vers le Volume 09
 
 ---
 
@@ -539,4 +544,44 @@ Pour gouverner de façon réaliste et pérenne, un plan de mandature ne peut pas
 
 *Pour une analyse détaillée du fonctionnement juridique, des textes fondateurs, des matrices de vote et des dynamiques de chaque assemblée, se référer au volume complet :*  
 👉 **[`docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md`](docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md)**.
+
+---
+
+# CHAPITRE XI. LE PACTE RÉPUBLICAIN DU BERCEAU AU TOMBEAU SUR 3 GÉNÉRATIONS
+
+> *« La Nation assure à l'individu et à la famille les conditions nécessaires à leur développement. Elle garantit à tous, notamment à l'enfant, à la mère et aux vieux travailleurs, la protection de la santé, la sécurité matérielle, le repos et les loisirs. »*  
+> — Préambule de la Constitution de 1946 (Alinéa 10), Bloc de constitutionnalité de 1958.
+
+La politique du peuple ne se conçoit pas dans l'éphémère d'une mandature annuelle : elle s'enracine dans la solidarité organique liant **ceux qui ont bâti la France (Gén. 1), ceux qui la font tourner quotidiennement par leur travail (Gén. 2), et ceux qui incarnent son avenir républicain (Gén. 3)**.
+
+### 1. Les 9 Périodes de l'Existence Humaine dans la République
+
+| Période de vie | Tranche d'âge | Acteurs publics clés | Droits républicains & Transferts vitaux | Apport intergénérationnel |
+|---|---|---|---|---|
+| **P0 : Périnatalité & Crèche** | 0 à 3 ans | Communes, CAF, Départements (PMI) | Maternité, PAJE, places de crèche, PMI | Garde bénévole massive par les grands-parents (G1) |
+| **P1 : Enfance & Primaire** | 3 à 11 ans | Mairies, Éducation Nationale | Écoles communales, cantines 1€, éveil civique | Sorties scolaires et devoirs assurés par G1 |
+| **P2 : Adolescence & Secondaire** | 11 à 18 ans | Départements (Collèges), Régions (Lycées) | Bâtiments, gratuité des TER scolaires, orientation | Financement séjours et permis par G1 et G2 |
+| **P3 : Enseignement Supérieur** | 18 à 25 ans | Universités, CROUS, Chambres consulaires | Bourses, logements rénovés, dotation d'émancipation | Premier vote aux élections républicaines |
+| **P4 : Insertion & Premier Toit** | 25 à 35 ans | Banques, Entreprises, HLM, Notariat | Accès à l'emploi stable (CDI), premier achat | Dons familiaux pour l'apport bancaire |
+| **P5 : Plénitude & « Génération Sandwich »** | 35 à 50 ans | Sécurité Sociale, Fiscalité (État) | Moteur fiscal : 345 Md€ cotis. + 125 Md€ impôts | Double fardeau : aide aux études G3 + aide EHPAD G1 |
+| **P6 : Seconde Carrière & Transmission** | 50 à 65 ans | Branches pro., Régions, Notaires | Maintien seniors 55+, transmission savoirs | Héritage moyen reçu à 52 ans (trop tard pour G3) |
+| **P7 : Retraite Active & Pilier Civique** | 65 à 80 ans | CNAV, Agirc-Arrco, Communes | Pensions par répartition, 68% du bénévolat | 58% des maires ruraux, garde petits-enfants |
+| **P8 : Grand Âge & Dépendance** | 80 à 95+ ans | Départements (APA), CNSA, EHPAD | 5e branche autonomie, soins palliatifs dignes | Clôture de l'existence, transmission successorale |
+
+### 2. Les Flux Croisés Dynamiques et les 5 Fractures Résolues
+
+1. **La génération sandwich (G2) déchargée** :
+   * Pressurée entre les dépenses pour ses enfants étudiants et le reste à charge prohibitif en EHPAD pour ses parents (1 200 à 1 800 €/mois), G2 voit son fardeau tomber de **68 à 42,4/100** grâce au statut de proche aidant indemnisé, au plafonnement du coût des EHPAD et à la baisse de TVA sur l'énergie (-9 Md€).
+2. **Le verrou de l'héritage tardif sauté pour G3** :
+   * En incitant fiscalement aux donations directes entre grands-parents (G1) et petits-enfants (G3) jusqu'à 70 000 € tous les 10 ans, le capital circule dès 20-30 ans au moment où les jeunes fondent leur foyer et lancent leurs activités.
+3. **Le fléau de la précarité étudiante éradiqué** :
+   * Le taux de pauvreté des jeunes (G3) recule de **19,4 % à 13,5 %** grâce à la cantine bio-locale à 1 €, à la rénovation de 100 000 logements étudiants et à la Dotation Républicaine d'Émancipation de 10 000 € attribuée à 18 ans.
+4. **Le grand âge et les petites retraites valorisés pour G1** :
+   * Revalorisation des pensions modestes inférieures à 1 200 € (notamment chez les agriculteurs et artisanes veuves) et abondement direct de la 5e branche Autonomie par la lutte contre la fraude fiscale (+10 Md€ IA CFIA).
+5. **Indice d'Harmonie Intergénérationnelle (IEHI)** :
+   * Passe de **42,0 / 100** (fracture initiale) à **83,1 / 100** en Année 5, prouvant que la consolidation budgétaire républicaine ne sacrifie aucune génération, mais réunit au contraire les aînés, les actifs et la jeunesse dans un même élan souverain.
+
+*Pour une analyse détaillée des équations démographiques, des transferts patrimoniaux, du travail invisible de garde d'enfants et de la modélisation SFC complète, se référer au volume complet :*  
+👉 **[`docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md`](docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md)**.
+
 

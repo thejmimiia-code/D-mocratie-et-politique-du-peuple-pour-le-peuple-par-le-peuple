@@ -62,6 +62,7 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 * **[`docs/06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md`](docs/06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md)** : Recueil intégral des 20+ textes de lois, codes nationaux et directives européennes.
 * **[`docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md`](docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md)** : Architecture républicaine, corps de contrôle et réseau consulaire (CCI, CMA, CA).
 * **[`docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md`](docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md)** : **Toutes les assemblées représentatives et décisionnelles** (AN 577, Sénat 348, Congrès 925, CESE 175, Conventions citoyennes 150, Maires 34 935, EPCI 1 254, Départements 101, Régions 18, Chambres consulaires CCI/CMA/CA, Parlement Européen 720, Conseil de l'Union européenne 27). Fonctionnement constitutionnel, jeux de pouvoirs, seuils de vote et contraintes réelles.
+* **[`docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md`](docs/09_CYCLE_DE_VIE_ET_FLUX_INTERGENERATIONNELS.md)** : **Le pacte républicain du berceau au tombeau sur 3 générations** : Analyse complète des 9 périodes de vie (0 à 95+ ans), matrice des flux croisés dynamiques (G1 Aînés, G2 Actifs, G3 Jeunesse), soins invisibles (care et garde d'enfants), verrou de l'héritage tardif (52 ans) et Indice d'Harmonie Intergénérationnelle (IEHI).
 * **[`docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md`](docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md)** : Architecture technique du simulateur gigogne & audit des 10 redondances systémiques.
 
 ---
@@ -78,10 +79,11 @@ python3 main.py web
 L'interface web accessible sur `http://localhost:8000` (ou en prévisualisation web) propose :
 * **Cockpit des 20 leviers politiques** : Curseurs temps réel avec calcul instantané sur 5 ans.
 * **Visualisation des 4 strates gigognes** : Local, National, Europe, Marchés financiers.
-* **Nouvel onglet « Assemblées & Pouvoirs »** : Suivi parlementaire (Assemblée nationale, Sénat, Congrès), territorial (Maires, Intercommunalités, Départements, Régions), consultatif & citoyen (CESE, Conventions citoyennes, CCI/CMA/CA) et européen (Parlement européen, Conseil UE).
+* **Onglet « Assemblées & Pouvoirs »** : Suivi parlementaire (Assemblée nationale, Sénat, Congrès), territorial (Maires, Intercommunalités, Départements, Régions), consultatif & citoyen (CESE, Conventions citoyennes, CCI/CMA/CA) et européen (Parlement européen, Conseil UE).
+* **Onglet « Cycle de Vie & 3 Générations »** : Pilotage du pacte intergénérationnel (G1 Aînés, G2 Actifs, G3 Jeunesse), matrice des flux croisés (360 Md€ retraites, 165 Md€ éducation, 18 Md€ garde bénévole) et indicateur de fardeau de la génération sandwich.
 * **Explorateur du Corpus Juridique** avec recherche plein texte instantanée et filtres par code.
-* **Lecteur du Dossier de Mandature** : Consultation directe des 9 volumes de référence.
-* **Comparatif multi-scénarios** : Vue d'ensemble sur l'ensemble des métriques institutionnelles et financières.
+* **Lecteur du Dossier de Mandature** : Consultation directe des 10 volumes de référence.
+* **Comparatif multi-scénarios** : Vue d'ensemble sur l'ensemble des métriques institutionnelles, financières et intergénérationnelles.
 
 ### 2. Lancement direct d'un scénario en ligne de commande
 ```bash
@@ -114,8 +116,8 @@ for decision in get_scenario_mandature_5_ans():
     print(
         f"An {res.annee} : Déficit = {res.ratio_deficit_pib:.2f}% | "
         f"OAT = {res.taux_oat_pct:.2f}% | "
-        f"Votes censure AN = {res.assemblees.assemblee_nationale.votes_censure_potentiels}/577 | "
-        f"Hostilité Sénat = {res.assemblees.senat.indice_hostilite:.1f}/100"
+        f"Harmonie 3 Générations = {res.indice_harmonie_intergenerationnelle:.1f}/100 | "
+        f"Fardeau Génération Sandwich = {res.g2_charge_sandwich_indice:.1f}/100"
     )
 ```
 
@@ -136,3 +138,7 @@ for decision in get_scenario_mandature_5_ans():
 | **Départements (Ciseau financier)** | **70,0 / 100** (Crise RSA/APA) | **15,0 / 100** | Réduction drastique via péréquation et recentralisation |
 | **Chambres Consulaires (Confiance PME)** | **40,0 / 100** | **82,0 / 100** | +42 pts (Allotissement 30% PME, allègements ciblés) |
 | **Parlement Européen & Conseil UE** | Alerte PDE & Infraction | Conformité totale | Levée de la procédure PDE, influence retrouvée à Bruxelles |
+| **Harmonie Intergénérationnelle (IEHI)** | **42,0 / 100** (Tension) | **83,1 / 100** (Harmonie) | **+41,1 pts** (Pacte 3 générations réconcilié) |
+| **Fardeau Génération Sandwich (G2)** | **68,0 / 100** (Écrasée) | **42,4 / 100** | **-25,6 pts** (Soulagement TVA énergie, statut aidant) |
+| **Taux de pauvreté de la jeunesse (G3)** | **19,4 %** (Criant) | **13,5 %** | **-5,9 pts** (Cantine à 1€, émancipation, emplois PME) |
+| **Taux de pauvreté des aînés (G1)** | **10,8 %** | **6,8 %** | **-4,0 pts** (Revalorisation petites pensions, 5e branche) |

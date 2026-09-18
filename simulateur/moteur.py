@@ -17,6 +17,11 @@ from simulateur.model import (
     SousSecteurEtatCentral,
     SousSecteurSecuriteSociale,
     SousSecteurParlement,
+    StrateCycleDeVieEtGenerations,
+    CohorteGeneration1Seniors,
+    CohorteGeneration2Actifs,
+    CohorteGeneration3Jeunesse,
+    FluxCroisesIntergenerationnels,
 )
 
 
@@ -33,11 +38,13 @@ class MoteurSimulationSystemique:
         national: EchelonNational = None,
         europe: EchelonEuropeen = None,
         mondial: EchelonMondial = None,
+        generations: StrateCycleDeVieEtGenerations = None,
     ):
         self.local = local or EchelonLocal()
         self.national = national or EchelonNational()
         self.europe = europe or EchelonEuropeen()
         self.mondial = mondial or EchelonMondial()
+        self.generations = generations or StrateCycleDeVieEtGenerations()
         self.historique_etapes: List[ResultatEtapeSimulation] = []
 
         # État cumulatif des réformes constitutionnelles et civiques
@@ -380,6 +387,68 @@ class MoteurSimulationSystemique:
         self.europe.conseil_ue.decision_pde_sanction_active = (ratio_deficit_pib > 3.0) and (not self.europe.bouclier_tpi_bce_eligible)
 
         # =========================================================================
+        # 6bis. CYCLE DE VIE ET 3 GÉNÉRATIONS (Dynamiques et Flux Croisés)
+        # =========================================================================
+        # 1. Évolution démographique des cohortes
+        annee_offset = max(0, decision.annee - 1)
+        pop_g1 = round(14.60 + annee_offset * 0.12, 2)   # Vieillissement démographique naturel (+120 000 / an)
+        pop_g2 = round(26.20 - annee_offset * 0.08, 2)   # Transition active
+        pop_g3 = round(27.60 - annee_offset * 0.04, 2)   # Jeunesse et scolaires
+
+        # 2. Charge de la Génération Sandwich G2 (pression conjointe G1 dépendance et G3 études/logement)
+        soulagement_energie_g2 = 12.0 if decision.baisse_tva_energie_5_5_mde > 0 else 0.0
+        soulagement_aidants = min(15.0, decision.soutien_proches_aidants_autonomie_mde * 1.5)
+        impact_austerite_g2 = 10.0 if (decision.delta_dotation_dgf_mde < -5.0) else 0.0
+        g2_charge_sandwich = max(18.0, min(95.0, 68.0 - soulagement_energie_g2 - soulagement_aidants + impact_austerite_g2 - (effort_structurel_net / 60.0) * 16.0))
+
+        # 3. Taux de pauvreté des générations
+        # G3 (Jeunesse) : 19.4% base -> soulagée par la cantine 1€, baisse TVA énergie, dotation émancipation
+        reduction_pauvrete_g3 = (3.5 if decision.baisse_tva_energie_5_5_mde > 0 else 0.0) + (3.0 if decision.reforme_dotation_emancipation_jeunesse else 0.0) + (decision.commande_publique_massifiee_mde * 0.4)
+        g3_pauvrete = max(8.5, min(26.0, round(19.4 - reduction_pauvrete_g3 + (0.8 if ratio_deficit_pib > 5.0 else 0.0), 1)))
+
+        # G1 (Aînés) : 10.8% base -> revalorisation petites pensions et baisse coût de l'énergie
+        g1_pauvrete = max(5.0, min(16.0, round(10.8 - (2.5 if decision.baisse_tva_energie_5_5_mde > 0 else 0.0) - (1.5 if soulagement_aidants > 0 else 0.0), 1)))
+
+        # 4. Flux croisés intergénérationnels
+        transfert_retraites = round(360.0 + (pib_annee - 3000.0) * 0.12, 1)
+        transfert_education = round(165.0 + (decision.commande_publique_massifiee_mde * 0.5), 1)
+        donations_g3 = round(75.0 + (18.0 if decision.incitation_donations_intergenerationnelles else 0.0) + (annee_offset * 1.5), 1)
+        garde_enfants_g1 = round(18.0 + annee_offset * 0.2, 1)
+
+        # 5. Ratios structurels et équité intergénérationnelle
+        actifs_occupes_g2 = round(22.40 + (decision.commande_publique_massifiee_mde * 0.08) - (0.4 if ratio_deficit_pib > 5.0 else 0.0), 2)
+        ratio_dependance = round((pop_g1 + (pop_g3 - 15.2 * 0.2)) / actifs_occupes_g2, 2)
+        charge_dette_par_jeune = round((self.national.dette_maastricht_stock_mde * 1e9) / (pop_g3 * 1e6), 0)
+
+        # Indice d'harmonie intergénérationnelle (0 à 100)
+        harmonie_score = 50.0 + (68.0 - g2_charge_sandwich) * 0.55 + (19.4 - g3_pauvrete) * 2.2 - (ratio_deficit_pib - 3.0) * 1.8 + (self.national.pouvoir_achat_menages_index - 100.0) * 1.5
+        indice_harmonie = max(10.0, min(95.0, round(harmonie_score, 1)))
+
+        # Mise à jour de l'état interne
+        self.generations.g1_seniors.population_millions = pop_g1
+        self.generations.g1_seniors.taux_pauvrete_pct = g1_pauvrete
+        self.generations.g2_actifs.population_millions = pop_g2
+        self.generations.g2_actifs.indice_charge_sandwich = round(g2_charge_sandwich, 1)
+        self.generations.g3_jeunesse.population_millions = pop_g3
+        self.generations.g3_jeunesse.taux_pauvrete_pct = g3_pauvrete
+        self.generations.flux_croises.ratio_dependance_demographique = ratio_dependance
+        self.generations.flux_croises.indice_harmonie_intergenerationnelle = indice_harmonie
+        self.generations.flux_croises.charge_dette_par_jeune_euros = charge_dette_par_jeune
+
+        if g2_charge_sandwich > 80.0:
+            commentaires.append(
+                f"[Génération Sandwich] Surchauffe de la génération 2 (actifs 35-64) : indice de fardeau à {g2_charge_sandwich:.1f}/100."
+            )
+        if g3_pauvrete > 21.0:
+            commentaires.append(
+                f"[Génération 3] Alerte précarité jeunesse : taux de pauvreté culminant à {g3_pauvrete:.1f} %."
+            )
+        if indice_harmonie >= 75.0:
+            commentaires.append(
+                f"[Pacte Républicain] Harmonie intergénérationnelle consolidée ({indice_harmonie:.1f}/100) : équité 3 générations restaurée."
+            )
+
+        # =========================================================================
         # 7. INSTANTANÉ DE L'ÉTAPE CONSOLIDÉE
         # =========================================================================
         resultat = ResultatEtapeSimulation(
@@ -422,6 +491,20 @@ class MoteurSimulationSystemique:
             cese_consensus_social=round(cese_consensus, 1),
             consulaire_confiance_pme=round(conf_cci, 1),
             convention_citoyenne_consensus=round(consensus_citoyen, 1),
+            # Indicateurs du Cycle de Vie et des 3 Générations
+            g1_seniors_pop_m=pop_g1,
+            g2_actifs_pop_m=pop_g2,
+            g3_jeunesse_pop_m=pop_g3,
+            ratio_dependance_demographique=ratio_dependance,
+            indice_harmonie_intergenerationnelle=indice_harmonie,
+            g2_charge_sandwich_indice=round(g2_charge_sandwich, 1),
+            g3_taux_pauvrete_pct=g3_pauvrete,
+            g1_taux_pauvrete_pct=g1_pauvrete,
+            transfert_retraites_mde=transfert_retraites,
+            transfert_education_mde=transfert_education,
+            donations_vers_g3_mde=donations_g3,
+            garde_enfants_grands_parents_mde=garde_enfants_g1,
+            charge_dette_par_jeune_euros=charge_dette_par_jeune,
             commentaires=commentaires,
         )
 

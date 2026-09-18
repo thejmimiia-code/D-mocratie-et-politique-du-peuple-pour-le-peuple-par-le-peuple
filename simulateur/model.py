@@ -360,6 +360,84 @@ class EchelonMondial:
 
 
 # =============================================================================
+# CYCLE DE VIE ET 3 GÉNÉRATIONS (Dynamiques et Flux Croisés)
+# =============================================================================
+
+@dataclass
+class CohorteGeneration1Seniors:
+    """Génération 1 : Aînés et Retraités (65 à 95+ ans).
+    Piliers de la mémoire républicaine, détenteurs du patrimoine foncier, engagés dans le bénévolat
+    associatif et les mandats de maires ruraux, mais confrontés à la perte d'autonomie et au reste à charge d'EHPAD.
+    """
+    population_millions: float = 14.6
+    pension_moyenne_mensuelle_euros: float = 1620.0
+    taux_pauvrete_pct: float = 10.8
+    part_patrimoine_national_pct: float = 61.5
+    depenses_sante_ald_mde: float = 112.0
+    depenses_apa_dependance_mde: float = 14.5
+    garde_enfants_benevole_mde: float = 18.0          # Économie collective estimée de la garde des petits-enfants
+    taux_maintien_domicile_satisfaisant: float = 58.0 # % des aînés satisfaits de l'aide à domicile
+
+
+@dataclass
+class CohorteGeneration2Actifs:
+    """Génération 2 : Actifs et Parents (35 à 64 ans).
+    Le cœur productif et fiscal de la Nation. Subit la contrainte de la 'génération sandwich' :
+    doit financer à la fois les études et le logement des enfants (G3) tout en assumant la charge morale
+    et le reste à charge d'EHPAD des parents âgés dépendants (G1).
+    """
+    population_millions: float = 26.2
+    actifs_occupes_millions: float = 22.4
+    salaire_moyen_mensuel_euros: float = 2650.0
+    taux_pauvrete_pct: float = 13.2
+    cotisations_sociales_versees_mde: float = 345.0
+    impots_directs_verses_mde: float = 125.0
+    indice_charge_sandwich: float = 68.0              # 0 à 100 : tension subie simultanément pour G1 et G3
+    taux_emploi_seniors_55_64_pct: float = 56.5       # Emploi des seniors (56,5 % en France vs 72 % All.)
+    proches_aidants_millions: float = 4.5             # 4,5M d'actifs aidant un parent vulnérable
+
+
+@dataclass
+class CohorteGeneration3Jeunesse:
+    """Génération 3 : Enfants, Scolaires, Étudiants et Jeunes Travailleurs (0 à 34 ans).
+    L'avenir de la Nation. Fragilisée par la précarité étudiante, le coût exorbitant du logement,
+    l'accès difficile au premier emploi et le fardeau de la dette souveraine léguée sans compensation.
+    """
+    population_millions: float = 27.6
+    scolaires_etudiants_millions: float = 15.2
+    taux_pauvrete_pct: float = 19.4                   # 19,4 % sous le seuil de pauvreté (alerte républicaine)
+    taux_chomage_jeunes_pct: float = 17.5             # % des 15-24 ans actifs au chômage
+    depense_education_recue_mde: float = 165.0        # Budget consolidé Éducation État + Collectivités
+    part_loyer_dans_budget_pct: float = 38.5          # Poids écrasant du loyer dans le reste à vivre
+    taux_abstention_electorale_pct: float = 61.8      # Abstention aux scrutins législatifs et régionaux
+    indice_acces_propriete: float = 28.0              # 0 à 100 : barrière à l'accession sans dotation familiale
+
+
+@dataclass
+class FluxCroisesIntergenerationnels:
+    """Matrice des flux croisés financiers, démographiques, patrimoniaux et de soin (Care)."""
+    transfert_retraites_g2_vers_g1_mde: float = 360.0 # Cotisations vieillesse payées par les actifs
+    transfert_sante_g2_vers_g1_mde: float = 95.0      # Part CSG/cotisations finançant les soins des 60+ ans
+    transfert_education_g2_vers_g3_mde: float = 165.0 # Investissement éducatif mutualisé
+    transfert_aide_familiale_g2_vers_g3_mde: float = 48.0 # Pensions alimentaires et hébergement familial
+    transfert_garde_enfants_g1_vers_g3_mde: float = 18.0  # Garde bénévole (1,2 million de places équivalentes)
+    transfert_successions_g1_vers_g2_mde: float = 225.0   # Successions à 52 ans en moyenne
+    transfert_donations_g1_vers_g3_mde: float = 75.0      # Donations directes vers les petits-enfants
+    ratio_dependance_demographique: float = 0.65       # (Inactifs G1 + G3) / Actifs G2
+    indice_harmonie_intergenerationnelle: float = 42.0 # Indice composite d'équité 0 à 100
+    charge_dette_par_jeune_euros: float = 129275.0     # Stock de dette publique / population G3
+
+
+@dataclass
+class StrateCycleDeVieEtGenerations:
+    """Modèle consolidé des 3 générations et des flux croisés de solidarité."""
+    g1_seniors: CohorteGeneration1Seniors = field(default_factory=CohorteGeneration1Seniors)
+    g2_actifs: CohorteGeneration2Actifs = field(default_factory=CohorteGeneration2Actifs)
+    g3_jeunesse: CohorteGeneration3Jeunesse = field(default_factory=CohorteGeneration3Jeunesse)
+    flux_croises: FluxCroisesIntergenerationnels = field(default_factory=FluxCroisesIntergenerationnels)
+
+
+# =============================================================================
 # VECTEUR DE DÉCISION & RÉSULTAT CONSOLIDÉ
 # =============================================================================
 
@@ -393,6 +471,11 @@ class DecisionPolitique:
     reforme_fin_regimes_speciaux: bool = False
     reforme_anti_pantouflage_lobbys: bool = False
     reforme_non_cumul_mandats: bool = False
+
+    # Politiques d'équité intergénérationnelle & Cycle de Vie
+    reforme_dotation_emancipation_jeunesse: bool = False      # Dotation 10 000 € à 18 ans (études/permis/caution)
+    soutien_proches_aidants_autonomie_mde: float = 0.0        # Budget dédié soulageant G2 et renforçant l'APA de G1
+    incitation_donations_intergenerationnelles: bool = False  # Abattement fiscal ciblé pour dons de G1 vers G3
 
     # Transferts financiers aux collectivités (DGF)
     delta_dotation_dgf_mde: float = 0.0
@@ -455,4 +538,48 @@ class ResultatEtapeSimulation:
     consulaire_confiance_pme: float = 56.0            # Chambres consulaires : confiance patrons PME et artisans
     convention_citoyenne_consensus: float = 84.0      # Convention citoyenne tirée au sort : consensus délibératif
 
+    # Dynamiques du Cycle de Vie et des 3 Générations
+    g1_seniors_pop_m: float = 14.6                    # Génération 1 (65+) en millions
+    g2_actifs_pop_m: float = 26.2                     # Génération 2 (35-64) en millions
+    g3_jeunesse_pop_m: float = 27.6                   # Génération 3 (0-34) en millions
+    ratio_dependance_demographique: float = 0.65      # Ratio inactifs (G1+G3) / Actifs occupés G2
+    indice_harmonie_intergenerationnelle: float = 42.0 # Score d'équité intergénérationnelle (0-100)
+    g2_charge_sandwich_indice: float = 68.0           # Fardeau de la génération sandwich G2 (0-100)
+    g3_taux_pauvrete_pct: float = 19.4                # Taux de pauvreté de la jeunesse (G3)
+    g1_taux_pauvrete_pct: float = 10.8                # Taux de pauvreté des aînés (G1)
+    transfert_retraites_mde: float = 360.0            # Cotisations retraites G2 -> G1
+    transfert_education_mde: float = 165.0            # Budget éducation & enseignement supérieur G2 -> G3
+    donations_vers_g3_mde: float = 75.0               # Flux de transmission patrimoniale directe vers G3
+    garde_enfants_grands_parents_mde: float = 18.0    # Valeur économique de la garde bénévole G1 -> G3
+    charge_dette_par_jeune_euros: float = 129275.0    # Fardeau de dette publique pesant sur chaque citoyen de G3
+
     commentaires: List[str] = field(default_factory=list)
+
+    @property
+    def generations(self) -> "StrateCycleDeVieEtGenerations":
+        """Reconstitue la vue détaillée de la strate intergénérationnelle."""
+        return StrateCycleDeVieEtGenerations(
+            g1_seniors=CohorteGeneration1Seniors(
+                population_millions=self.g1_seniors_pop_m,
+                taux_pauvrete_pct=self.g1_taux_pauvrete_pct,
+                garde_enfants_benevole_mde=self.garde_enfants_grands_parents_mde,
+            ),
+            g2_actifs=CohorteGeneration2Actifs(
+                population_millions=self.g2_actifs_pop_m,
+                indice_charge_sandwich=self.g2_charge_sandwich_indice,
+            ),
+            g3_jeunesse=CohorteGeneration3Jeunesse(
+                population_millions=self.g3_jeunesse_pop_m,
+                taux_pauvrete_pct=self.g3_taux_pauvrete_pct,
+                depense_education_recue_mde=self.transfert_education_mde,
+            ),
+            flux_croises=FluxCroisesIntergenerationnels(
+                transfert_retraites_g2_vers_g1_mde=self.transfert_retraites_mde,
+                transfert_education_g2_vers_g3_mde=self.transfert_education_mde,
+                transfert_donations_g1_vers_g3_mde=self.donations_vers_g3_mde,
+                transfert_garde_enfants_g1_vers_g3_mde=self.garde_enfants_grands_parents_mde,
+                ratio_dependance_demographique=self.ratio_dependance_demographique,
+                indice_harmonie_intergenerationnelle=self.indice_harmonie_intergenerationnelle,
+                charge_dette_par_jeune_euros=self.charge_dette_par_jeune_euros,
+            ),
+        )
