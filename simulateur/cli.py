@@ -16,6 +16,7 @@ from simulateur.scenarios import (
     get_scenario_mandature_5_ans,
     get_scenario_statut_quo,
     get_scenario_austerite_brutale,
+    get_scenario_choc_mondial_stagflation,
 )
 
 
@@ -135,10 +136,12 @@ def lancer_menu_interactif():
             m_res = executer_scenario("mandature")
             sq_res = executer_scenario("statut_quo")
             au_res = executer_scenario("austerite")
+            ch_res = executer_scenario("choc_mondial")
             print("\n>>> SYNTHÈSE CROISÉE À L'ANNÉE 5 :")
             print(f" - Plan Mandature : Déficit = {m_res[-1].ratio_deficit_pib:.2f} % | OAT = {m_res[-1].taux_oat_pct:.2f} % | Tension = {m_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if m_res[-1].statut_pde_europe else 'CONFORME'}")
             print(f" - Statut Quo     : Déficit = {sq_res[-1].ratio_deficit_pib:.2f} % | OAT = {sq_res[-1].taux_oat_pct:.2f} % | Tension = {sq_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if sq_res[-1].statut_pde_europe else 'CONFORME'}")
             print(f" - Austérité      : Déficit = {au_res[-1].ratio_deficit_pib:.2f} % | OAT = {au_res[-1].taux_oat_pct:.2f} % | Tension = {au_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if au_res[-1].statut_pde_europe else 'CONFORME'}")
+            print(f" - Choc Mondial   : Déficit = {ch_res[-1].ratio_deficit_pib:.2f} % | OAT = {ch_res[-1].taux_oat_pct:.2f} % | Tension = {ch_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if ch_res[-1].statut_pde_europe else 'CONFORME'}")
         elif choix == "6":
             print("\nFermeture du simulateur.")
             break
@@ -146,12 +149,30 @@ def lancer_menu_interactif():
             print("Choix invalide.")
 
 
+def comparer_tous_scenarios():
+    """Exécute et compare les 4 scénarios."""
+    print("\n" + "=" * 105)
+    print("COMPARATIF STRATÉGIQUE DES 4 STRATES À L'ANNÉE 5")
+    print("=" * 105)
+    m_res = executer_scenario("mandature")
+    sq_res = executer_scenario("statut_quo")
+    au_res = executer_scenario("austerite")
+    ch_res = executer_scenario("choc_mondial")
+    print("\n>>> SYNTHÈSE CROISÉE À L'ANNÉE 5 :")
+    print(f" - Plan Mandature : Déficit = {m_res[-1].ratio_deficit_pib:.2f} % | OAT = {m_res[-1].taux_oat_pct:.2f} % | Tension = {m_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if m_res[-1].statut_pde_europe else 'CONFORME'}")
+    print(f" - Statut Quo     : Déficit = {sq_res[-1].ratio_deficit_pib:.2f} % | OAT = {sq_res[-1].taux_oat_pct:.2f} % | Tension = {sq_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if sq_res[-1].statut_pde_europe else 'CONFORME'}")
+    print(f" - Austérité      : Déficit = {au_res[-1].ratio_deficit_pib:.2f} % | OAT = {au_res[-1].taux_oat_pct:.2f} % | Tension = {au_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if au_res[-1].statut_pde_europe else 'CONFORME'}")
+    print(f" - Choc Mondial   : Déficit = {ch_res[-1].ratio_deficit_pib:.2f} % | OAT = {ch_res[-1].taux_oat_pct:.2f} % | Tension = {ch_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if ch_res[-1].statut_pde_europe else 'CONFORME'}")
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        scenario = sys.argv[1].lower()
-        if scenario in ("mandature", "statut_quo", "austerite"):
-            executer_scenario(scenario)
+        arg = sys.argv[1].lower()
+        if arg in ("mandature", "statut_quo", "austerite", "choc_mondial"):
+            executer_scenario(arg)
+        elif arg in ("comparatif", "compare"):
+            comparer_tous_scenarios()
         else:
-            print(f"Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite]")
+            print(f"Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite|choc_mondial|comparatif]")
     else:
         lancer_menu_interactif()

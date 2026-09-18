@@ -31,6 +31,7 @@ from simulateur.reglements_lois import (
     get_corpus_lois,
     rechercher_loi,
 )
+from simulateur.web_server import demarrer_serveur_web
 
 __all__ = [
     "EchelonLocal",
@@ -56,4 +57,5 @@ __all__ = [
     "REGISTRE_LEGAL",
     "get_corpus_lois",
     "rechercher_loi",
+    "demarrer_serveur_web",
 ]

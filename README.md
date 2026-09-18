@@ -59,6 +59,9 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 * **[`docs/03_ECONOMIES_ET_EFFICACITE_ETAT.md`](docs/03_ECONOMIES_ET_EFFICACITE_ETAT.md)** : Économies de fonctionnement (**+24 Md€ / an**) sans casse sociale (fusion doublons région/département, achats massifiés allotis 30% PME, niches inefficaces).
 * **[`docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md`](docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md)** : Baisse TVA énergie à 5,5 % (**-9 Md€ / an**, gain 150-300 €/foyer), déficit ramené sous les 3 % du PIB, désendettement net de 51 Md€/an.
 * **[`docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md`](docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md)** : 10 fiches de riposte tactique démontant les pièges des oppositions et éditorialistes.
+* **[`docs/06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md`](docs/06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md)** : Recueil intégral des 20+ textes de lois, codes nationaux et directives européennes.
+* **[`docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md`](docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md)** : Architecture républicaine, corps de contrôle et réseau consulaire (CCI, CMA, CA).
+* **[`docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md`](docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md)** : Architecture technique du simulateur gigogne & audit des 10 redondances systémiques.
 
 ---
 
@@ -66,22 +69,34 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 
 Le simulateur est développé en Python standard sans dépendance externe obligatoire.
 
-### 1. Lancement direct du scénario de mandature
+### 1. Lancement de l'Interface Web Interactive (Dashboard en temps réel)
 ```bash
-python3 main.py mandature
+python3 main.py web
+# ou : python3 -m simulateur.web_server
+```
+L'interface web permet de tester interactivement tous les scénarios, de manipuler les curseurs des 20 leviers politiques, d'observer la réaction immédiate des 4 strates (Local, National, Europe, Marchés) et de consulter l'explorateur juridique.
+
+### 2. Lancement direct d'un scénario en ligne de commande
+```bash
+python3 main.py mandature      # Scénario quinquennal (+60 Md€/an)
+python3 main.py statut_quo     # Scénario d'inertie budgétaire
+python3 main.py austerite      # Scénario d'austérité aveugle
+python3 main.py choc_mondial   # Stress-test choc mondial & stagflation
+python3 main.py comparatif     # Comparatif des 4 scénarios à l'Année 5
 ```
 
-### 2. Menu interactif
+### 3. Menu interactif en terminal
 ```bash
-python3 -m simulateur.cli
+python3 main.py menu
+# ou : python3 -m simulateur.cli
 ```
 
-### 3. Exécution des tests unitaires
+### 4. Exécution de la suite de tests (100 % passants)
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py"
 ```
 
-### 4. Exemple d'utilisation en script Python
+### 5. Exemple d'utilisation en script Python
 ```python
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import get_scenario_mandature_5_ans
