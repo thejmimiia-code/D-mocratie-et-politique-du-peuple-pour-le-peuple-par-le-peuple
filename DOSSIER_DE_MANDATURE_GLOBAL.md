@@ -44,6 +44,10 @@
    * Démontage méthodique des 10 attaques de mauvaise foi des oppositions et éditorialistes
    * Les parades juridiques, arguments constitutionnels et phrases de clôture
 9. **RÉPERTOIRE DES SOURCES OFFICIELLES ET DOCUMENTS DE RÉFÉRENCE VÉRIFIABLES**
+10. **CARTOGRAPHIE DES 12 ASSEMBLÉES REPRÉSENTATIVES ET DÉCISIONNELLES**
+   * Typologie des 12 assemblées (Parlementaires, Territoriales, Citoyennes & Consultatives, Européennes)
+   * Dynamiques induites, jeux de pouvoirs, seuils de vote et contraintes réelles
+   * Rétroactions systémiques sur la trajectoire des 60 Md€ et renvoi vers le Volume 08
 
 ---
 
@@ -491,3 +495,48 @@ Ce plan repose sur des textes juridiques en vigueur, des arrêts constitutionnel
     * *Code de la commande publique* (Articles L. 2112-2 et L. 2113-10).
     * *Code de la consommation* (Article L. 470-2).
     * *Loi n° 88-227 du 11 mars 1988* sur la transparence financière de la vie politique.
+
+---
+
+# CHAPITRE X. CARTOGRAPHIE DES 12 ASSEMBLÉES REPRÉSENTATIVES ET DÉCISIONNELLES
+
+> *« La souveraineté nationale appartient au peuple qui l'exerce par ses représentants et par la voie du référendum. »*  
+> — Constitution du 4 octobre 1958, Article 3.
+
+Pour gouverner de façon réaliste et pérenne, un plan de mandature ne peut pas se limiter à un tableau budgétaire statique : il doit affronter et orchestrer les **jeux de pouvoir, contre-pouvoirs et contraintes réelles des 12 assemblées représentatives et décisionnelles** qui structurent la République française et son ancrage européen.
+
+### Tableau synoptique des 12 assemblées modélisées
+
+| Échelon | Assemblée | Membres | Nature du mandat | Pouvoir décisionnel clé | Contrainte majeure / Risque |
+|---|---|---|---|---|---|
+| **National (Parlement)** | **Assemblée Nationale** | 577 députés | Suffrage universel direct (5 ans) | Vote de la loi, budget PLF/PLFSS, censure (Art. 49 al. 2) | Majorité absolue (289 voix) requise pour censurer le gouvernement |
+| **National (Parlement)** | **Sénat** | 348 sénateurs | Suffrage indirect (grands électeurs, 6 ans) | Représentation des collectivités, veto révision const. (Art. 89) | Navette parlementaire, rejet possible des fusions et recentralisations |
+| **National (Congrès)** | **Parlement réuni en Congrès** | 925 parlementaires | Réunion AN + Sénat à Versailles | Révision de la Constitution (3/5ᵉ des suffrages exprimés) | Blocage si les oppositions coalisées dépassent 40% des suffrages |
+| **Territorial (Bloc communal)** | **Conseils Municipaux** | 34 935 communes (~500 000 élus) | Suffrage universel direct (6 ans) | Services de proximité, voirie, écoles, taux taxe foncière | Règle d'or (équilibre fonctionnement), fronde si baisse de la DGF |
+| **Territorial (Intercommunal)** | **Conseils Communautaires (EPCI)** | 1 254 EPCI (~70 000 délégués) | Fléchage au suffrage direct / indirect | PLUi, transports, GEMAPI, fiscalité économique (CFE) | Lourdeur de gouvernance, empilement fiscal, conflit ville-centre/périphérie |
+| **Territorial (Département)** | **Conseils Départementaux** | 101 départements (4 056 conseillers) | Suffrage universel direct binominal | Solidarités sociales (RSA, APA, PCH, ASE), collèges | **Effet ciseau financier** (dépenses sociales rigides vs effondrement des DMTO) |
+| **Territorial (Région)** | **Conseils Régionaux** | 18 régions (1 757 conseillers) | Suffrage universel direct proportionnel | Développement éco, lycées, mobilités ferroviaires TER | Concurrence avec l'État sur les aides, fragmentation des politiques industrielles |
+| **Consultatif & Corps social** | **CESE** | 175 conseillers | Désignation organisations syndicales/patronales | Avis obligatoires sur projets de lois économiques/sociaux | Risque d'enlisement corporatiste ou d'instrumentalisation politique |
+| **Citoyen & Démocratie directe** | **Conventions Citoyennes** | 150 citoyens | Tirage au sort représentatif | Propositions de lois citoyennes sans filtre, délibération | Risque de dénaturation parlementaire ou de non-application gouvernementale |
+| **Économique & Consulaire** | **Chambres Consulaires (CCI, CMA, CA)** | 120 CCI, 100+ CMA, 90+ CA | Élus socio-professionnels | Représentation des TPE/PME/Agriculteurs, formation, apprentissage | Résistance aux baisses de taxes affectées (TFC) et à la bureaucratie |
+| **Européen (Législatif)** | **Parlement Européen** | 720 eurodéputés (81 FR) | Suffrage universel direct européen (5 ans) | Co-législation, vote du budget pluriannuel UE, investiture | Majorités de coalition transfrontalières, amendements contraignants |
+| **Européen (États membres)** | **Conseil de l'Union européenne** | 27 ministres / chefs d'État | Représentation gouvernementale des États | Co-décision, politique étrangère, sanctions budgétaires (PDE) | Règle de l'unanimité (fiscalité) ou majorité qualifiée (55% États, 65% pop.) |
+
+### Dynamiques causales et articulation avec le Plan de Mandature
+
+1. **Pacification de l'Assemblée nationale** :
+   * En restaurant le pouvoir d'achat (+150 à +300 €/foyer via la baisse de TVA) et en moralisant la vie publique (casier B2, fin du pantouflage), la grogne sociale retombe de 35 à 5/100.
+   * En conséquence, les oppositions ne trouvent plus d'appui populaire pour coaliser les 289 voix nécessaires à une motion de censure : le risque de censure chute de 295 à 140 voix, garantissant une stabilité institutionnelle absolue sans recours au 49 alinéa 3.
+
+2. **Désarmement de l'hostilité sénatoriale** :
+   * Le Sénat s'oppose traditionnellement à toute coupe unilatérale de dotations aux collectivités. En ciblant les économies sur les doublons d'agences et logiciels centraux plutôt que sur la DGF des maires, et en créant un fonds de péréquation territoriale, le Sénat passe d'une posture de veto (65/100) à un partenariat constructif (28/100).
+
+3. **Résorption de la crise financière des Départements** :
+   * Le « ciseau financier » des départements (dépenses d'aide sociale rigides face aux fluctuations immobilières des DMTO) est neutralisé par le conditionnement des aides et la recentralisation de la compensation RSA/APA, ramenant l'indice de détresse de 70/100 à 15/100.
+
+4. **Alliance avec les Chambres consulaires et les PME** :
+   * En réservant 30 % des marchés publics aux PME et artisans locaux (allotissement) et en diminuant leurs charges énergétiques, l'indice de confiance consulaire bondit de 40 à 82/100, transformant les réseaux consulaires en relais actifs de réindustrialisation.
+
+*Pour une analyse détaillée du fonctionnement juridique, des textes fondateurs, des matrices de vote et des dynamiques de chaque assemblée, se référer au volume complet :*  
+👉 **[`docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md`](docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md)**.
+

@@ -54,6 +54,19 @@ def serialize_resultat(r: ResultatEtapeSimulation) -> Dict[str, Any]:
         "taux_change_eur_usd": r.taux_change_eur_usd,
         "facture_energetique_mde": r.facture_energetique_mde,
         "inflation_globale_pct": r.inflation_globale_pct,
+        # Variables dynamiques des Assemblées Représentatives et Décisionnelles
+        "voix_censure_an": getattr(r, "voix_censure_an", 265),
+        "gouvernement_censure": getattr(r, "gouvernement_censure", False),
+        "climat_assemblee_nationale": getattr(r, "climat_assemblee_nationale", "Majorité relative tendue"),
+        "hostilite_senat_indice": getattr(r, "hostilite_senat_indice", 30.0),
+        "senat_veto_art_89": getattr(r, "senat_veto_art_89", False),
+        "congres_majorite_3_5": getattr(r, "congres_majorite_3_5", False),
+        "departements_alerte_ciseau": getattr(r, "departements_alerte_ciseau", 14),
+        "fronde_maires_indice": getattr(r, "fronde_maires_indice", 24.0),
+        "pe_taux_alignement": getattr(r, "pe_taux_alignement", 65.0),
+        "cese_consensus_social": getattr(r, "cese_consensus_social", 48.0),
+        "consulaire_confiance_pme": getattr(r, "consulaire_confiance_pme", 56.0),
+        "convention_citoyenne_consensus": getattr(r, "convention_citoyenne_consensus", 84.0),
         "commentaires": r.commentaires,
     }
 
@@ -118,21 +131,34 @@ def generer_comparatif_global() -> Dict[str, Any]:
     comparatif = {}
     for sc in scenarios:
         trajectoire = executer_simulation_scenario(sc)
+        annee5 = trajectoire[-1]
         comparatif[sc] = {
             "nom": sc,
-            "annee_cible": trajectoire[-1]["annee"],
-            "deficit_nominal_mde": trajectoire[-1]["deficit_nominal_mde"],
-            "ratio_deficit_pib": trajectoire[-1]["ratio_deficit_pib"],
-            "ratio_dette_pib": trajectoire[-1]["ratio_dette_pib"],
-            "taux_oat_pct": trajectoire[-1]["taux_oat_pct"],
-            "spread_bund_bps": trajectoire[-1]["spread_bund_bps"],
-            "note_souveraine": trajectoire[-1]["note_souveraine"],
-            "tension_sociale_locale": trajectoire[-1]["tension_sociale_locale"],
-            "confiance_democratique": trajectoire[-1]["confiance_democratique"],
-            "risque_censure_parlement": trajectoire[-1]["risque_censure_parlement"],
-            "statut_pde_europe": trajectoire[-1]["statut_pde_europe"],
-            "bouclier_tpi_actif": trajectoire[-1]["bouclier_tpi_actif"],
-            "pouvoir_achat_index": trajectoire[-1]["pouvoir_achat_index"],
+            "annee_cible": annee5["annee"],
+            "deficit_nominal_mde": annee5["deficit_nominal_mde"],
+            "ratio_deficit_pib": annee5["ratio_deficit_pib"],
+            "ratio_dette_pib": annee5["ratio_dette_pib"],
+            "taux_oat_pct": annee5["taux_oat_pct"],
+            "spread_bund_bps": annee5["spread_bund_bps"],
+            "note_souveraine": annee5["note_souveraine"],
+            "tension_sociale_locale": annee5["tension_sociale_locale"],
+            "confiance_democratique": annee5["confiance_democratique"],
+            "risque_censure_parlement": annee5["risque_censure_parlement"],
+            "statut_pde_europe": annee5["statut_pde_europe"],
+            "bouclier_tpi_actif": annee5["bouclier_tpi_actif"],
+            "pouvoir_achat_index": annee5["pouvoir_achat_index"],
+            # Assemblées
+            "voix_censure_an": annee5.get("voix_censure_an", 265),
+            "gouvernement_censure": annee5.get("gouvernement_censure", False),
+            "hostilite_senat_indice": annee5.get("hostilite_senat_indice", 30.0),
+            "senat_veto_art_89": annee5.get("senat_veto_art_89", False),
+            "congres_majorite_3_5": annee5.get("congres_majorite_3_5", False),
+            "departements_alerte_ciseau": annee5.get("departements_alerte_ciseau", 14),
+            "fronde_maires_indice": annee5.get("fronde_maires_indice", 24.0),
+            "consulaire_confiance_pme": annee5.get("consulaire_confiance_pme", 56.0),
+            "pe_taux_alignement": annee5.get("pe_taux_alignement", 65.0),
+            "cese_consensus_social": annee5.get("cese_consensus_social", 48.0),
+            "convention_citoyenne_consensus": annee5.get("convention_citoyenne_consensus", 84.0),
         }
     return comparatif
 
@@ -272,7 +298,112 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
                     {"num": "05", "fichier": "05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md", "titre": "Guide tactique d'Autodéfense et Contre-arguments"},
                     {"num": "06", "fichier": "06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md", "titre": "Corpus Juridique et Réglementaire Intégral"},
                     {"num": "07", "fichier": "07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md", "titre": "Institutions de la République, Droits et Chambres Consulaires"},
+                    {"num": "08", "fichier": "08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md", "titre": "Toutes les Assemblées représentatives et décisionnelles (Fonctionnement & Jeux de Pouvoirs)"},
                     {"num": "Audit", "fichier": "PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md", "titre": "Architecture SFC, Matrice causale et Audit des 10 Redondances"},
+                ]
+            })
+            return
+
+        # 7. API Assemblées
+        if path == "/api/assemblees":
+            self._envoyer_json(200, {
+                "assemblees": [
+                    {
+                        "id": "an",
+                        "nom": "Assemblée nationale",
+                        "echelon": "National",
+                        "composition": "577 députés élus au suffrage universel direct",
+                        "pouvoirs": "Vote de la loi, consentement à l'impôt (art. 34/39/47), censure du gouvernement (art. 49.2/3, 289 voix), dernier mot législatif face au Sénat (art. 45).",
+                        "contraintes": "Absence de majorité absolue, risque de motion de censure, irrecevabilité financière (art. 40)."
+                    },
+                    {
+                        "id": "senat",
+                        "nom": "Sénat",
+                        "echelon": "National",
+                        "composition": "348 sénateurs élus au suffrage indirect par les grands électeurs territoriaux",
+                        "pouvoirs": "Représentation constitutionnelle des collectivités (art. 24 al. 3), VETO ABSOLU sur toute révision constitutionnelle (art. 89), commissions d'enquête quasi-judiciaires (art. 51-2).",
+                        "contraintes": "Inertie conservatrice, défense inconditionnelle de la DGF communale."
+                    },
+                    {
+                        "id": "congres",
+                        "nom": "Congrès du Parlement",
+                        "echelon": "National",
+                        "composition": "925 parlementaires réunis au château de Versailles (577 déps + 348 sénateurs)",
+                        "pouvoirs": "Adoption définitive des révisions constitutionnelles (art. 89 al. 3) sans référendum.",
+                        "contraintes": "Règle de majorité qualifiée renforcée des 3/5èmes (555 voix sur 925). Si bloqué, recours nécessaire à l'art. 11."
+                    },
+                    {
+                        "id": "cese",
+                        "nom": "Conseil Économique, Social et Environnemental (CESE)",
+                        "echelon": "National",
+                        "composition": "175 conseillers (syndicats salariés, patronat, artisans, mutualité, associations)",
+                        "pouvoirs": "Avis consultatifs obligatoires sur les lois de plan, saisine citoyenne (dès 150 000 signataires), portage des conventions citoyennes.",
+                        "contraintes": "Avis non contraignants juridiquement mais à forte portée politique."
+                    },
+                    {
+                        "id": "convention_citoyenne",
+                        "nom": "Conventions Citoyennes Tirées au Sort",
+                        "echelon": "Participatif",
+                        "composition": "150 citoyens tirés au sort selon un échantillonnage représentatif de la nation",
+                        "pouvoirs": "Délibération éclairée, propositions de lois républicaines clef en main.",
+                        "contraintes": "Nécessite un engagement sans filtre de l'exécutif pour soumission directe au référendum ou au Parlement."
+                    },
+                    {
+                        "id": "conseil_municipal",
+                        "nom": "Conseils Municipaux",
+                        "echelon": "Local",
+                        "composition": "34 935 assemblées communales",
+                        "pouvoirs": "Vote du budget primitif, fixation des taux de taxe foncière (TFPB), gestion des écoles et voirie.",
+                        "contraintes": "Règle d'or budgétaire stricte (art. L. 1612-4 CGCT : interdiction d'emprunter pour fonctionner)."
+                    },
+                    {
+                        "id": "conseil_intercommunal",
+                        "nom": "Conseils Intercommunaux & Métropolitains (EPCI)",
+                        "echelon": "Local",
+                        "composition": "1 254 assemblées métropolitaines et de communautés de communes",
+                        "pouvoirs": "Transports urbains, eau, assainissement, déchets, Cotisation Foncière des Entreprises (CFE).",
+                        "contraintes": "Tensions récurrentes entre ville-centre et communes périphériques."
+                    },
+                    {
+                        "id": "conseil_departemental",
+                        "nom": "Conseils Départementaux",
+                        "echelon": "Local",
+                        "composition": "101 assemblées départementales",
+                        "pouvoirs": "Chef de file des solidarités sociales : RSA, APA aînés, PCH handicap, ASE enfance, collèges et SDIS.",
+                        "contraintes": "Effet de ciseau mortel : dépenses sociales rigides imposées nationalement vs recettes DMTO effondrées."
+                    },
+                    {
+                        "id": "conseil_regional",
+                        "nom": "Conseils Régionaux",
+                        "echelon": "Local",
+                        "composition": "18 assemblées régionales",
+                        "pouvoirs": "Schéma régional d'aménagement (SRADDET), TER, lycées, développement économique, CPER.",
+                        "contraintes": "Négociation serrée des cofinancements européens et des contrats de plan avec l'État."
+                    },
+                    {
+                        "id": "assemblees_consulaires",
+                        "nom": "Assemblées Consulaires (CCI, CMA, Chambres d'Agriculture)",
+                        "echelon": "Consulaire",
+                        "composition": "Établissements publics gérés par des pairs élus (commerçants, industriels, artisans, paysans)",
+                        "pouvoirs": "Gestion des CFA, aéroports, ports, avis consultatifs décisionnels d'urbanisme (CDAC) et de protection foncière (CDPENAF).",
+                        "contraintes": "Revendiquent la fin des monopoles et l'allotissement obligatoire de la commande publique réservant 30% aux PME."
+                    },
+                    {
+                        "id": "parlement_europeen",
+                        "nom": "Parlement Européen",
+                        "echelon": "Europe",
+                        "composition": "720 eurodéputés (dont 81 élus en France au scrutin proportionnel)",
+                        "pouvoirs": "Codécision législative des directives et règlements, vote du budget de l'UE, investiture de la Commission.",
+                        "contraintes": "Nécessite des coalitions transpartisanes (PPE, S&D, Renew)."
+                    },
+                    {
+                        "id": "conseil_ue",
+                        "nom": "Conseil de l'Union Européenne",
+                        "echelon": "Europe",
+                        "composition": "Conseil des ministres des 27 États membres",
+                        "pouvoirs": "Décisions législatives conjointes, majorité qualifiée (55% États, 65% pop), ouverture et sanctions PDE.",
+                        "contraintes": "Surveillance rigide des plafonds de Maastricht (3% déficit, 60% dette)."
+                    }
                 ]
             })
             return
@@ -954,6 +1085,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       </div>
       <nav>
         <button class="active" onclick="showTab('simulateur')">📊 Simulateur</button>
+        <button onclick="showTab('assemblees')">🏛️ Assemblées & Pouvoirs</button>
         <button onclick="showTab('comparatif')">⚖️ Comparateur</button>
         <button onclick="showTab('architecture')">🏛️ Les 4 Strates</button>
         <button onclick="showTab('corpus')">📜 Corpus Juridique</button>
@@ -1189,6 +1321,14 @@ HTML_DASHBOARD = """<!DOCTYPE html>
             <div class="metric-row"><span>Facture Énergétique Nette</span><strong id="det-facture">64.5 Md€/an</strong></div>
             <div class="metric-row"><span>Note Souveraine</span><strong id="det-note" style="color:var(--accent-emerald)">AA</strong></div>
           </div>
+          <div class="strate-card">
+            <h4>🏛️ Strate Politique : Assemblées & Censure</h4>
+            <div class="metric-row"><span>Projection Voix Censure AN</span><strong id="det-voix-censure">254 / 289</strong></div>
+            <div class="metric-row"><span>Climat Assemblée nationale</span><strong id="det-climat-an">Majorité consolidée</strong></div>
+            <div class="metric-row"><span>Hostilité Territoriale Sénat</span><strong id="det-hostilite-senat">18.0 / 100</strong></div>
+            <div class="metric-row"><span>Veto Constitutionnel Art. 89</span><strong id="det-veto-senat" style="color:var(--accent-emerald)">Veto levé</strong></div>
+            <div class="metric-row"><span>Départements en faillite (ciseau)</span><strong id="det-faillite-dept">2 départements</strong></div>
+          </div>
         </div>
 
         <!-- Flux d'Événements Rétroactifs -->
@@ -1202,6 +1342,157 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         <div class="action-bar">
           <button class="btn-secondary" onclick="exporterRapport('markdown')">📄 Exporter Rapport Markdown</button>
           <button class="btn-secondary" onclick="exporterRapport('json')">💾 Exporter Données JSON</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB : ASSEMBLÉES REPRÉSENTATIVES ET JEUX DE POUVOIRS          -->
+    <!-- ============================================================= -->
+    <div id="tab-assemblees" class="tab-pane">
+      <div class="arch-diagram">
+        <h2>🏛️ CARTOGRAPHIE ET JEUX DE POUVOIRS DES ASSEMBLÉES DÉCISIONNELLES</h2>
+        <p class="subtitle" style="margin-bottom:20px;">Analyse en temps réel des 12 assemblées représentatives de la République face au scénario en cours.</p>
+
+        <div class="kpi-grid" style="margin-bottom:24px;">
+          <!-- 1. Assemblée nationale -->
+          <div class="kpi-card" id="card-ass-an">
+            <div class="kpi-label">Assemblée nationale (577 Députés)</div>
+            <div class="kpi-value" id="ass-an-voix">254 / 289</div>
+            <div class="kpi-sub">
+              <span>Voix Censure (Art. 49.2)</span>
+              <span class="badge badge-success" id="ass-an-badge">STABLE</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;" id="ass-an-climat">Majorité consolidée</div>
+          </div>
+
+          <!-- 2. Sénat -->
+          <div class="kpi-card" id="card-ass-senat">
+            <div class="kpi-label">Sénat (348 Sénateurs)</div>
+            <div class="kpi-value" id="ass-senat-hostilite">18.0 / 100</div>
+            <div class="kpi-sub">
+              <span>Hostilité Territoriale</span>
+              <span class="badge badge-success" id="ass-senat-badge">VETO ART. 89 LEVÉ</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">CMP Taux d'accord : <strong id="ass-senat-cmp">73.3 %</strong></div>
+          </div>
+
+          <!-- 3. Congrès de Versailles -->
+          <div class="kpi-card" id="card-ass-congres">
+            <div class="kpi-label">Congrès de Versailles (925)</div>
+            <div class="kpi-value" id="ass-congres-voix">625 / 555</div>
+            <div class="kpi-sub">
+              <span>Seuil 3/5èmes Révision</span>
+              <span class="badge badge-success" id="ass-congres-badge">QUALIFIÉ (60%)</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;" id="ass-congres-voie">Approbation Congrès possible</div>
+          </div>
+
+          <!-- 4. Conseils Départementaux -->
+          <div class="kpi-card" id="card-ass-dept">
+            <div class="kpi-label">Conseils Départementaux (101)</div>
+            <div class="kpi-value" id="ass-dept-faillite">2 / 101</div>
+            <div class="kpi-sub">
+              <span>Départements en faillite</span>
+              <span class="badge badge-success" id="ass-dept-badge">SOLVABLE</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">Indice Ciseau social : <strong id="ass-dept-ciseau">45.0/100</strong></div>
+          </div>
+
+          <!-- 5. Conseils Municipaux -->
+          <div class="kpi-card" id="card-ass-maires">
+            <div class="kpi-label">Conseils Municipaux (34 935)</div>
+            <div class="kpi-value" id="ass-maires-fronde">12.0 / 100</div>
+            <div class="kpi-sub">
+              <span>Fronde Maires (AMF)</span>
+              <span class="badge badge-success" id="ass-maires-badge">APAISÉ</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">Règle d'or (art. L. 1612-4) : <strong style="color:var(--accent-emerald);">Équilibré</strong></div>
+          </div>
+
+          <!-- 6. Assemblées Consulaires -->
+          <div class="kpi-card" id="card-ass-consulaire">
+            <div class="kpi-label">Assemblées Consulaires (CCI/CMA/CA)</div>
+            <div class="kpi-value" id="ass-consulaire-conf">78.0 %</div>
+            <div class="kpi-sub">
+              <span>Confiance PME (CCI)</span>
+              <span class="badge badge-success">30% PME</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">Adhésion Artisans CMA : <strong id="ass-consulaire-cma">84.0 %</strong></div>
+          </div>
+        </div>
+
+        <!-- Fiches Détaillées des Assemblées -->
+        <div class="strates-grid">
+          <div class="strate-card">
+            <h4>🗳️ Assemblée nationale (577 Députés)</h4>
+            <div class="metric-row"><span>Coalition gouvernementale</span><strong>210 sièges (Majorité relative)</strong></div>
+            <div class="metric-row"><span>Oppositions coalisées</span><strong>320 sièges</strong></div>
+            <div class="metric-row"><span>Députés pivots indépendants</span><strong>47 sièges</strong></div>
+            <div class="metric-row"><span>Seuil d'adoption motion de censure</span><strong>289 voix (Art. 49.2)</strong></div>
+            <div class="metric-row"><span>Projection voix de censure</span><strong id="det-ass-voix-censure">254 voix</strong></div>
+            <div class="metric-row"><span>Statut du Gouvernement</span><strong id="det-ass-statut-gouv" style="color:var(--accent-emerald)">Stable en fonction</strong></div>
+            <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
+              <strong>Dynamique induite :</strong> Si la tension sociale locale dépasse 65/100, les députés indépendants basculent vers la censure. À 289 voix, le gouvernement chute obligatoirement ou déclenche la dissolution (Art. 12).
+            </div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏛️ Le Sénat (348 Sénateurs)</h4>
+            <div class="metric-row"><span>Collège électoral</span><strong>162 000 grands électeurs communaux</strong></div>
+            <div class="metric-row"><span>Majorité sénatoriale</span><strong>Droite et Centre (215 sièges)</strong></div>
+            <div class="metric-row"><span>Indice d'hostilité territoriale</span><strong id="det-ass-senat-hostilite">18.0 / 100</strong></div>
+            <div class="metric-row"><span>Veto Révision Constitutionnelle (Art. 89)</span><strong id="det-ass-senat-veto" style="color:var(--accent-emerald)">Veto levé</strong></div>
+            <div class="metric-row"><span>Taux d'accord CMP</span><strong id="det-ass-senat-cmp">73.3 %</strong></div>
+            <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
+              <strong>Jeu de force :</strong> Le Sénat est le bouclier constitutionnel des maires. Toute coupe unilatérale de DGF déclenche son hostilité (>55/100) et bloque définitivement toute révision par l'article 89.
+            </div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🏢 Conseils Départementaux (101 Départements)</h4>
+            <div class="metric-row"><span>Missions obligatoires</span><strong>RSA, APA (aînés), PCH (handicap), ASE</strong></div>
+            <div class="metric-row"><span>Dépenses sociales de guichet</span><strong id="det-ass-dept-social">44.5 Md€/an</strong></div>
+            <div class="metric-row"><span>Recettes DMTO volatiles</span><strong id="det-ass-dept-dmto">12.5 Md€/an</strong></div>
+            <div class="metric-row"><span>Indice de crise de ciseau financier</span><strong id="det-ass-dept-ciseau">45.0 / 100</strong></div>
+            <div class="metric-row"><span>Départements menacés de faillite</span><strong id="det-ass-dept-faillite" style="color:var(--accent-emerald)">2 départements</strong></div>
+            <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
+              <strong>Contrainte :</strong> Dépenses rigides imposées nationalement sans pouvoir d'ajustement vs recettes d'impôt immobilier très volatiles.
+            </div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🇪🇺 Parlement Européen & Conseil UE</h4>
+            <div class="metric-row"><span>Parlement Européen (720 députés)</span><strong>Coalition PPE-S&D-Renew</strong></div>
+            <div class="metric-row"><span>Taux d'alignement sur directives FR</span><strong id="det-ass-pe-alignement">78.0 %</strong></div>
+            <div class="metric-row"><span>Directive TVA Énergie 2022/542</span><strong style="color:var(--accent-emerald)">100% Conforme (Annexe III)</strong></div>
+            <div class="metric-row"><span>Conseil UE (Majorité qualifiée 55/65)</span><strong id="det-ass-conseil-ue" style="color:var(--accent-emerald)">Sortie PDE validée</strong></div>
+            <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
+              <strong>Contrainte supranationalité :</strong> Si le déficit dépasse 3,0%, le Conseil UE vote des astreintes semestrielles et la BCE suspend le bouclier anti-spéculation TPI.
+            </div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🤝 CESE & Conventions Citoyennes</h4>
+            <div class="metric-row"><span>CESE (175 membres)</span><strong>Dialogue social syndicats & patronat</strong></div>
+            <div class="metric-row"><span>Consensus social et syndical</span><strong id="det-ass-cese-consensus">68.0 %</strong></div>
+            <div class="metric-row"><span>Convention Citoyenne (150 tirés au sort)</span><strong>Démocratie délibérative</strong></div>
+            <div class="metric-row"><span>Consensus délibératif sans filtre</span><strong id="det-ass-citoyen-consensus">94.0 %</strong></div>
+            <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
+              <strong>Légitimité populaire :</strong> Brise les blocages d'appareils et prépare les projets de lois soumis au référendum républicain.
+            </div>
+          </div>
+
+          <div class="strate-card">
+            <h4>🔨 Assemblées Consulaires (CCI, CMA, CA)</h4>
+            <div class="metric-row"><span>Ressortissants représentés</span><strong>6,9 millions d'entreprises</strong></div>
+            <div class="metric-row"><span>Confiance des PME et commerces (CCI)</span><strong id="det-ass-cons-cci">78.0 %</strong></div>
+            <div class="metric-row"><span>Adhésion des artisans (CMA)</span><strong id="det-ass-cons-cma">84.0 %</strong></div>
+            <div class="metric-row"><span>Commande publique allotie 30% PME</span><strong style="color:var(--accent-emerald)">Art. L. 2113-10 CCP Appliqué</strong></div>
+            <div style="margin-top:10px; font-size:0.8rem; color:var(--text-muted);">
+              <strong>Moteur de terroir :</strong> L'accès direct des artisans et PME à la commande publique locale réinjecte les deniers publics dans l'économie réelle.
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1328,6 +1619,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       const clickedBtn = Array.from(document.querySelectorAll('nav button')).find(b => b.getAttribute('onclick')?.includes(tabName));
       if (clickedBtn) clickedBtn.classList.add('active');
 
+      if (tabName === 'assemblees') afficherAssemblees();
       if (tabName === 'comparatif') chargerComparatif();
       if (tabName === 'corpus' && allCorpusArticles.length === 0) chargerCorpus();
       if (tabName === 'dossier') chargerDossier();
@@ -1521,6 +1813,18 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       document.getElementById('det-facture').innerText = r.facture_energetique_mde.toFixed(1) + ' Md€/an';
       document.getElementById('det-note').innerText = r.note_souveraine;
 
+      // Variables des Assemblées dans le panneau de détail
+      const voixCensure = r.voix_censure_an !== undefined ? r.voix_censure_an : 254;
+      document.getElementById('det-voix-censure').innerText = voixCensure + ' / 289';
+      document.getElementById('det-climat-an').innerText = r.climat_assemblee_nationale || 'Majorité relative';
+      const hostiliteSenat = r.hostilite_senat_indice !== undefined ? r.hostilite_senat_indice : 18.0;
+      document.getElementById('det-hostilite-senat').innerText = hostiliteSenat.toFixed(1) + ' / 100';
+      const detVetoSenat = document.getElementById('det-veto-senat');
+      detVetoSenat.innerText = r.senat_veto_art_89 ? 'Veto Sénat Actif' : 'Veto levé (Congrès possible)';
+      detVetoSenat.style.color = r.senat_veto_art_89 ? 'var(--accent-crimson)' : 'var(--accent-emerald)';
+      const failliteDept = r.departements_alerte_ciseau !== undefined ? r.departements_alerte_ciseau : 2;
+      document.getElementById('det-faillite-dept').innerText = failliteDept + ' départements';
+
       const evtBox = document.getElementById('events-container');
       evtBox.innerHTML = '';
       if (r.commentaires && r.commentaires.length > 0) {
@@ -1533,6 +1837,118 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       } else {
         evtBox.innerHTML = '<div class="event-line" style="border-left-color:gray; color:gray;">Aucun incident majeur sur cet exercice.</div>';
       }
+
+      // Mise à jour de l'onglet assemblées
+      afficherAssemblees();
+    }
+
+    // Affichage des assemblées
+    function afficherAssemblees() {
+      const r = currentTrajectory[selectedYearIndex] || currentTrajectory[currentTrajectory.length - 1];
+      if (!r) return;
+
+      // 1. Assemblée nationale
+      const voixAN = r.voix_censure_an !== undefined ? r.voix_censure_an : 254;
+      document.getElementById('ass-an-voix').innerText = voixAN + ' / 289';
+      const badgeAN = document.getElementById('ass-an-badge');
+      const cardAN = document.getElementById('card-ass-an');
+      if (voixAN >= 289) {
+        badgeAN.className = 'badge badge-danger';
+        badgeAN.innerText = 'CENSURE ADOPTÉE';
+        cardAN.className = 'kpi-card danger';
+      } else if (voixAN >= 275) {
+        badgeAN.className = 'badge badge-warning';
+        badgeAN.innerText = 'ALERTE ROUGE';
+        cardAN.className = 'kpi-card warning';
+      } else {
+        badgeAN.className = 'badge badge-success';
+        badgeAN.innerText = 'STABLE (< 289)';
+        cardAN.className = 'kpi-card success';
+      }
+      document.getElementById('ass-an-climat').innerText = r.climat_assemblee_nationale || 'Majorité relative';
+      document.getElementById('det-ass-voix-censure').innerText = voixAN + ' voix sur 577';
+      const statutGouv = document.getElementById('det-ass-statut-gouv');
+      statutGouv.innerText = voixAN >= 289 ? 'GOUVERNEMENT RENVERSÉ (Motion 49.2 adoptée) !' : 'Exécutif stable en fonction';
+      statutGouv.style.color = voixAN >= 289 ? 'var(--accent-crimson)' : 'var(--accent-emerald)';
+
+      // 2. Sénat
+      const hostiliteSenat = r.hostilite_senat_indice !== undefined ? r.hostilite_senat_indice : 18.0;
+      document.getElementById('ass-senat-hostilite').innerText = hostiliteSenat.toFixed(1) + ' / 100';
+      const badgeSenat = document.getElementById('ass-senat-badge');
+      const cardSenat = document.getElementById('card-ass-senat');
+      if (r.senat_veto_art_89) {
+        badgeSenat.className = 'badge badge-danger';
+        badgeSenat.innerText = 'VETO ART. 89 ACTIF';
+        cardSenat.className = 'kpi-card danger';
+      } else {
+        badgeSenat.className = 'badge badge-success';
+        badgeSenat.innerText = 'VETO ART. 89 LEVÉ';
+        cardSenat.className = 'kpi-card success';
+      }
+      const cmpPct = Math.max(10, Math.round(85.0 - hostiliteSenat * 0.65));
+      document.getElementById('ass-senat-cmp').innerText = cmpPct + ' %';
+      document.getElementById('det-ass-senat-hostilite').innerText = hostiliteSenat.toFixed(1) + ' / 100';
+      const detVetoSenat = document.getElementById('det-ass-senat-veto');
+      detVetoSenat.innerText = r.senat_veto_art_89 ? 'VETO SÉNATORIAL ACTIF (Blocage art. 89)' : 'VETO LEVÉ (Congrès de Versailles possible)';
+      detVetoSenat.style.color = r.senat_veto_art_89 ? 'var(--accent-crimson)' : 'var(--accent-emerald)';
+      document.getElementById('det-ass-senat-cmp').innerText = cmpPct + ' % de compromis';
+
+      // 3. Congrès
+      const congresOk = r.congres_majorite_3_5;
+      const badgeCongres = document.getElementById('ass-congres-badge');
+      const cardCongres = document.getElementById('card-ass-congres');
+      badgeCongres.className = congresOk ? 'badge badge-success' : 'badge badge-warning';
+      badgeCongres.innerText = congresOk ? 'QUALIFIÉ (60%)' : 'NON QUALIFIÉ (< 3/5)';
+      cardCongres.className = congresOk ? 'kpi-card success' : 'kpi-card warning';
+      document.getElementById('ass-congres-voie').innerText = congresOk ? 'Approbation Congrès sans référendum' : 'Recours nécessaire à l\'Art. 11 (Référendum)';
+
+      // 4. Départements
+      const failliteDept = r.departements_alerte_ciseau !== undefined ? r.departements_alerte_ciseau : 2;
+      document.getElementById('ass-dept-faillite').innerText = failliteDept + ' / 101';
+      const badgeDept = document.getElementById('ass-dept-badge');
+      const cardDept = document.getElementById('card-ass-dept');
+      if (failliteDept >= 25) {
+        badgeDept.className = 'badge badge-danger';
+        badgeDept.innerText = 'CATASTROPHE ADF';
+        cardDept.className = 'kpi-card danger';
+      } else if (failliteDept >= 10) {
+        badgeDept.className = 'badge badge-warning';
+        badgeDept.innerText = 'TENSION CISAILLES';
+        cardDept.className = 'kpi-card warning';
+      } else {
+        badgeDept.className = 'badge badge-success';
+        badgeDept.innerText = 'SOLVABLE';
+        cardDept.className = 'kpi-card success';
+      }
+      const ciseauScore = Math.min(100, Math.round(failliteDept * 2.2 + 40));
+      document.getElementById('ass-dept-ciseau').innerText = ciseauScore + ' / 100';
+      document.getElementById('det-ass-dept-ciseau').innerText = ciseauScore + ' / 100';
+      document.getElementById('det-ass-dept-faillite').innerText = failliteDept + ' départements en crise';
+
+      // 5. Maires
+      const frondeMaires = (r.fronde_maires_indice !== undefined ? r.fronde_maires_indice : 12.0);
+      document.getElementById('ass-maires-fronde').innerText = frondeMaires.toFixed(1) + ' / 100';
+      const badgeMaires = document.getElementById('ass-maires-badge');
+      badgeMaires.className = frondeMaires > 50 ? 'badge badge-danger' : (frondeMaires > 25 ? 'badge badge-warning' : 'badge badge-success');
+      badgeMaires.innerText = frondeMaires > 50 ? 'FRONDE AMF' : (frondeMaires > 25 ? 'VIGILANCE' : 'APAISÉ');
+
+      // 6. Consulaires
+      const confCons = (r.consulaire_confiance_pme !== undefined ? r.consulaire_confiance_pme : 78.0);
+      document.getElementById('ass-consulaire-conf').innerText = confCons.toFixed(1) + ' %';
+      document.getElementById('ass-consulaire-cma').innerText = Math.min(95, Math.round(confCons + 6)) + ' %';
+      document.getElementById('det-ass-cons-cci').innerText = confCons.toFixed(1) + ' %';
+      document.getElementById('det-ass-cons-cma').innerText = Math.min(95, Math.round(confCons + 6)) + ' %';
+
+      // 7. Parlement Européen
+      const peAlign = (r.pe_taux_alignement !== undefined ? r.pe_taux_alignement : 78.0);
+      document.getElementById('det-ass-pe-alignement').innerText = peAlign.toFixed(1) + ' %';
+      const conseilUE = document.getElementById('det-ass-conseil-ue');
+      conseilUE.innerText = r.statut_pde_europe ? 'Procédure de Déficit Excessif Active (Alerte)' : 'Sortie de la PDE Validée (Conforme < 3%)';
+      conseilUE.style.color = r.statut_pde_europe ? 'var(--accent-crimson)' : 'var(--accent-emerald)';
+
+      // 8. CESE & Citoyen
+      document.getElementById('det-ass-cese-consensus').innerText = (r.cese_consensus_social !== undefined ? r.cese_consensus_social : 68.0).toFixed(1) + ' %';
+      document.getElementById('det-ass-citoyen-consensus').innerText = (r.convention_citoyenne_consensus !== undefined ? r.convention_citoyenne_consensus : 94.0).toFixed(1) + ' %';
     }
 
     // Chargement du comparatif
@@ -1553,7 +1969,12 @@ HTML_DASHBOARD = """<!DOCTYPE html>
           { key: 'confiance_democratique', label: 'Confiance Démocratique', fmt: v => v.toFixed(1) + ' / 100', goodHigh: true },
           { key: 'pouvoir_achat_index', label: 'Pouvoir d\'Achat (Base 100)', fmt: v => v.toFixed(1), goodHigh: true },
           { key: 'statut_pde_europe', label: 'Procédure Déficit (UE)', fmt: v => v ? 'ALERTE (PDE)' : 'CONFORME (<3%)' },
-          { key: 'bouclier_tpi_actif', label: 'Bouclier TPI (BCE)', fmt: v => v ? 'ACTIF' : 'SUSPENDU' }
+          { key: 'bouclier_tpi_actif', label: 'Bouclier TPI (BCE)', fmt: v => v ? 'ACTIF' : 'SUSPENDU' },
+          { key: 'voix_censure_an', label: 'Voix Censure AN (Seuil 289)', fmt: v => (v || 254) + ' voix', goodLow: true, limit: 289 },
+          { key: 'hostilite_senat_indice', label: 'Hostilité du Sénat', fmt: v => (v || 18.0).toFixed(1) + ' / 100', goodLow: true },
+          { key: 'senat_veto_art_89', label: 'Veto Sénat (Art. 89)', fmt: v => v ? 'VETO ACTIF' : 'VETO LEVÉ' },
+          { key: 'departements_alerte_ciseau', label: 'Départements en Crise Ciseau', fmt: v => (v || 2) + ' départements', goodLow: true },
+          { key: 'consulaire_confiance_pme', label: 'Confiance PME (Consulaire)', fmt: v => (v || 78.0).toFixed(1) + ' %', goodHigh: true },
         ];
 
         metrics.forEach(m => {

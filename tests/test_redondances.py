@@ -247,6 +247,22 @@ class TestRedondancesCorpusJuridique(unittest.TestCase):
             "CCOM_L710_1",             # Chambres de Commerce et d'Industrie (CCI)
             "CART_L711_1",             # Chambres de Métiers et de l'Artisanat (CMA)
             "CRURAL_L510_1",           # Chambres d'Agriculture (CA)
+            "CONST_ART_39",            # Initiative des lois et avis Conseil d'État
+            "CONST_ART_45",            # Navette, CMP et dernier mot AN
+            "CONST_ART_48",            # Ordre du jour et niches parlementaires
+            "CONST_ART_51_2",          # Commissions d'enquête parlementaires
+            "CONST_ART_70",            # CESE consultation
+            "CONST_ART_71",            # CESE saisine citoyenne
+            "CONST_ART_72",            # Libre administration des collectivités
+            "CONST_ART_72_1",          # Référendum local décisionnel
+            "CONST_ART_72_2",          # Autonomie financière locale
+            "CONST_ART_89",            # Congrès de Versailles et révision
+            "CGCT_L2121_1",            # Conseil municipal
+            "CGCT_L3121_1",            # Conseil départemental
+            "CGCT_L4131_1",            # Conseil régional
+            "CGCT_L5211_1",            # Conseil communautaire EPCI
+            "TUE_ART_14",              # Parlement Européen
+            "TUE_ART_16",              # Conseil de l'Union Européenne
         ]
         for cle in cles_requises:
             self.assertIn(cle, corpus, msg=f"Article ou directive manquante : {cle}")

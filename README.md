@@ -61,6 +61,7 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 * **[`docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md`](docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md)** : 10 fiches de riposte tactique démontant les pièges des oppositions et éditorialistes.
 * **[`docs/06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md`](docs/06_CORPUS_JURIDIQUE_ET_REGLEMENTAIRE_INTEGRAL.md)** : Recueil intégral des 20+ textes de lois, codes nationaux et directives européennes.
 * **[`docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md`](docs/07_INSTITUTIONS_DE_LA_REPUBLIQUE_DROITS_ET_CHAMBRES_CONSULAIRES.md)** : Architecture républicaine, corps de contrôle et réseau consulaire (CCI, CMA, CA).
+* **[`docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md`](docs/08_ASSEMBLEES_REPRESENTATIVES_ET_DECISIONNELLES.md)** : **Toutes les assemblées représentatives et décisionnelles** (AN 577, Sénat 348, Congrès 925, CESE 175, Conventions citoyennes 150, Maires 34 935, EPCI 1 254, Départements 101, Régions 18, Chambres consulaires CCI/CMA/CA, Parlement Européen 720, Conseil de l'Union européenne 27). Fonctionnement constitutionnel, jeux de pouvoirs, seuils de vote et contraintes réelles.
 * **[`docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md`](docs/PLAN_DU_SIMULATEUR_ET_AUDIT_INSTANT_T.md)** : Architecture technique du simulateur gigogne & audit des 10 redondances systémiques.
 
 ---
@@ -69,12 +70,18 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 
 Le simulateur est développé en Python standard sans dépendance externe obligatoire.
 
-### 1. Lancement de l'Interface Web Interactive (Dashboard en temps réel)
+### 1. Lancement de l'Interface Web Interactive (Cockpit macro-institutionnel en temps réel)
 ```bash
 python3 main.py web
 # ou : python3 -m simulateur.web_server
 ```
-L'interface web permet de tester interactivement tous les scénarios, de manipuler les curseurs des 20 leviers politiques, d'observer la réaction immédiate des 4 strates (Local, National, Europe, Marchés) et de consulter l'explorateur juridique.
+L'interface web accessible sur `http://localhost:8000` (ou en prévisualisation web) propose :
+* **Cockpit des 20 leviers politiques** : Curseurs temps réel avec calcul instantané sur 5 ans.
+* **Visualisation des 4 strates gigognes** : Local, National, Europe, Marchés financiers.
+* **Nouvel onglet « Assemblées & Pouvoirs »** : Suivi parlementaire (Assemblée nationale, Sénat, Congrès), territorial (Maires, Intercommunalités, Départements, Régions), consultatif & citoyen (CESE, Conventions citoyennes, CCI/CMA/CA) et européen (Parlement européen, Conseil UE).
+* **Explorateur du Corpus Juridique** avec recherche plein texte instantanée et filtres par code.
+* **Lecteur du Dossier de Mandature** : Consultation directe des 9 volumes de référence.
+* **Comparatif multi-scénarios** : Vue d'ensemble sur l'ensemble des métriques institutionnelles et financières.
 
 ### 2. Lancement direct d'un scénario en ligne de commande
 ```bash
@@ -104,14 +111,19 @@ from simulateur.scenarios import get_scenario_mandature_5_ans
 moteur = MoteurSimulationSystemique()
 for decision in get_scenario_mandature_5_ans():
     res = moteur.appliquer_etape(decision)
-    print(f"An {res.annee} : Déficit = {res.ratio_deficit_pib:.2f} % du PIB | Taux OAT = {res.taux_oat_pct:.2f} % | Tension = {res.tension_sociale:.1f}/100")
+    print(
+        f"An {res.annee} : Déficit = {res.ratio_deficit_pib:.2f}% | "
+        f"OAT = {res.taux_oat_pct:.2f}% | "
+        f"Votes censure AN = {res.assemblees.assemblee_nationale.votes_censure_potentiels}/577 | "
+        f"Hostilité Sénat = {res.assemblees.senat.indice_hostilite:.1f}/100"
+    )
 ```
 
 ---
 
 ## V. RÉSULTATS DU PLAN DE MANDATURE (ANNÉE 5)
 
-| Indicateur macro-économique | Situation Initiale | Année 5 (Plan de Mandature) | Impact |
+| Indicateur macro-économique & institutionnel | Situation Initiale | Année 5 (Plan de Mandature) | Impact & Lecture systémique |
 |---|---|---|---|
 | **Déficit public (% PIB)** | **5,07 %** (152 Md€) | **2,79 %** (89,8 Md€) | **-2,28 pts** (Sortie de la PDE européenne) |
 | **Dette souveraine (% PIB)** | **118,9 %** | **Stabilisée à ~129 %** | Inversion de la trajectoire exponentielle |
@@ -119,3 +131,8 @@ for decision in get_scenario_mandature_5_ans():
 | **Spread face au Bund** | **85,0 bps** | **46,8 bps** | Prime de risque française divisée par deux |
 | **Tension sociale locale** | **35,0 / 100** | **5,0 / 100** | Apaisement civique par le pouvoir d'achat et le RIC |
 | **Confiance démocratique** | **28,0 / 100** | **78,0 / 100** | Moralisation (B2, vote blanc, anti-pantouflage) |
+| **Assemblée nationale (Votes censure / 577)** | **295 voix** (Majorité absolue franchie) | **140 voix** | Décrue de **-155 voix** (Gouvernement ultra-stable) |
+| **Sénat (Indice d'hostilité)** | **65,0 / 100** | **28,0 / 100** | Climat apaisé grâce à la préservation des bases locales |
+| **Départements (Ciseau financier)** | **70,0 / 100** (Crise RSA/APA) | **15,0 / 100** | Réduction drastique via péréquation et recentralisation |
+| **Chambres Consulaires (Confiance PME)** | **40,0 / 100** | **82,0 / 100** | +42 pts (Allotissement 30% PME, allègements ciblés) |
+| **Parlement Européen & Conseil UE** | Alerte PDE & Infraction | Conformité totale | Levée de la procédure PDE, influence retrouvée à Bruxelles |

@@ -52,6 +52,162 @@ class SousSecteurChambresConsulaires:
     surfaces_agricoles_preservees_pct: float = 98.2       # Rôle CA / CDPENAF contre l'artificialisation des sols
 
 
+# =============================================================================
+# ASSEMBLÉES REPRÉSENTATIVES ET DÉCISIONNELLES (Pouvoirs, Contraintes & Jeux de Force)
+# =============================================================================
+
+@dataclass
+class AssembleeConseilMunicipal:
+    """Les 34 935 Conseils Municipaux (Suffrage universel direct).
+    Décident des budgets communaux, des taux de taxe foncière (TFPB) et des services de proximité.
+    Soumis à la Règle d'or budgétaire (art. L. 1612-4 du CGCT).
+    """
+    communes_total: int = 34935
+    taux_moyen_tfpb_pct: float = 38.5
+    fronde_fiscale_locale_indice: float = 24.0      # 0-100 (explose en cas de baisse de DGF)
+    budget_equilibre_regle_dor: bool = True
+    taux_revolte_maires_amf_pct: float = 18.0
+
+
+@dataclass
+class AssembleeConseilIntercommunal:
+    """Les 1 254 Conseils Communautaires et Métropolitains (EPCI à fiscalité propre).
+    Compétences transférées : mobilité urbaine, eau, assainissement, déchets, CFE intercommunale.
+    """
+    epci_total: int = 1254
+    taux_integration_metropolitaine_pct: float = 74.0
+    tensions_centre_peripherie_indice: float = 32.0
+
+
+@dataclass
+class AssembleeConseilDepartemental:
+    """Les 101 Conseils Départementaux (Suffrage universel binominal paritaire).
+    Gestionnaires des solidarités obligatoires : RSA, APA, PCH, ASE.
+    Soumis au redoutable 'effet de ciseau' (dépenses rigides vs recettes DMTO effondrées).
+    """
+    departements_total: int = 101
+    indice_effet_ciseau_social: float = 52.0        # Alerte rouge si > 70
+    departements_alerte_faillite: int = 14
+    depenses_sociales_rsa_apa_mde: float = 44.5
+    recettes_dmto_volatiles_mde: float = 12.5
+
+
+@dataclass
+class AssembleeConseilRegional:
+    """Les 18 Conseils Régionaux (Suffrage universel direct de liste).
+    Stratèges du territoire : TER, lycées, développement économique, CPER État-Région.
+    """
+    regions_total: int = 18
+    depenses_ter_lycees_mde: float = 33.0
+    taux_engagement_cper_etat_pct: float = 78.0
+    acceptabilite_fusion_doublons_pct: float = 62.0
+
+
+@dataclass
+class AssembleeConsulaireDetail:
+    """Les Assemblées Générales Consulaires (CCI, CMA, Chambres d'Agriculture).
+    6,9 millions d'entreprises, artisans et agriculteurs représentés.
+    Avis consultatifs décisionnels en aménagement commercial (CDAC) et foncier (CDPENAF).
+    """
+    ressortissants_milliers: float = 6900.0
+    cci_confiance_patrons_pct: float = 56.0
+    cma_adhesion_artisans_pct: float = 64.0
+    ca_adhesion_agricole_pct: float = 52.0
+    soutien_allotissement_30pct_pme: float = 88.0
+
+
+@dataclass
+class AssembleeNationaleDetail:
+    """Assemblée nationale (577 députés - Suffrage universel direct).
+    Cœur décisionnel du pouvoir législatif et du consentement à l'impôt (art. 24, 34, 39, 45, 49).
+    """
+    sieges_total: int = 577
+    sieges_majorite: int = 210                      # Coalition présidentielle / gouvernementale
+    sieges_opposition_gauche: int = 180
+    sieges_opposition_droite_nat: int = 140
+    sieges_independants_pivots: int = 47            # Charnière déterminante en majorité relative
+    seuil_majorite_absolue: int = 289
+    voix_censure_projetees: int = 265               # Projection du vote de censure art. 49.2
+    gouvernement_censure: bool = False              # True si voix_censure >= 289
+    recours_49_3_count: int = 0                     # Arme d'adoption forcée sans vote
+    taux_adoption_textes_pct: float = 68.0
+    climat_parlementaire: str = "Majorité relative sous haute tension"
+
+
+@dataclass
+class AssembleeSenatDetail:
+    """Sénat (348 sénateurs - Suffrage universel indirect par les grands électeurs territoriaux).
+    Chambre haute, gardien constitutionnel des collectivités territoriales (art. 24 al. 3).
+    Détient un VETO ABSOLU sur les révisions constitutionnelles (art. 89).
+    """
+    sieges_total: int = 348
+    sieges_majorite_senatoriale: int = 215          # Droite et Centre
+    sieges_opposition_senat: int = 133
+    indice_hostilite_senatoriale: float = 30.0      # 0-100 (flambe si coupes dans la DGF des maires)
+    veto_reforme_constitutionnelle_art_89: bool = False # Si hostilité > 60, bloque la révision
+    taux_accord_cmp_pct: float = 55.0               # Succès des Commissions Mixtes Paritaires
+    commissions_enquete_offensives: int = 2         # Pouvoirs d'investigation quasi-judiciaires
+    posture_senat: str = "Vigilance territoriale républicaine"
+
+
+@dataclass
+class AssembleeCongresDetail:
+    """Congrès du Parlement (925 parlementaires réunis à Versailles).
+    Assemblée décisionnelle suprême pour l'approbation des révisions constitutionnelles (art. 89).
+    """
+    sieges_total: int = 925                         # 577 députés + 348 sénateurs
+    seuil_trois_cinquiemes: int = 555               # 60 % des suffrages exprimés
+    voix_favorables_projetees: int = 485
+    majorite_3_5_atteinte: bool = False
+    voie_referendaire_art_11_requise: bool = True   # Voie gaullienne directe
+
+
+@dataclass
+class AssembleeCESEDetail:
+    """Conseil Économique, Social et Environnemental (175 membres - art. 70 & 71 Constitution).
+    Chambre constitutionnelle de concertation sociale, environnementale et citoyenne.
+    """
+    membres_total: int = 175
+    taux_consensus_social_pct: float = 48.0
+    avis_favorables_rendus: int = 6
+    petitions_citoyennes_instruites: int = 3        # Droit de saisine citoyenne (150 000 signataires)
+    posture_syndicale: str = "Attentisme vigilant"
+
+
+@dataclass
+class AssembleeConventionCitoyenneDetail:
+    """Convention Citoyenne / Assemblée de démocratie délibérative (150 citoyens tirés au sort).
+    Instance d'élaboration de consensus sans filtre sur les tabous de la société.
+    """
+    citoyens_tires_au_sort: int = 150
+    indice_deliberatif_consensus_pct: float = 84.0
+    propositions_clef_en_main: int = 12
+    adhesion_populaire_pct: float = 76.0
+
+
+@dataclass
+class AssembleeParlementEuropeenDetail:
+    """Parlement Européen (720 députés européens - 81 FR).
+    Codécide les directives (TVA taux réduits, CSRD, taxe carbone MACF) et vote le budget de l'UE.
+    """
+    sieges_total: int = 720
+    sieges_france: int = 81
+    coalition_majoritaire: str = "Grand Centre (PPE - S&D - Renew)"
+    taux_alignement_directives_fr_pct: float = 65.0
+    conformite_directive_tva_2022_542: bool = True
+
+
+@dataclass
+class AssembleeConseilUEDetail:
+    """Conseil de l'Union Européenne (Conseil des ministres des 27 États).
+    Assemblée décisionnelle intergouvernementale (règle de majorité qualifiée : 55% États, 65% pop).
+    Déclenche et lève la Procédure de Déficit Excessif (PDE - art. 126 TFUE).
+    """
+    etats_membres: int = 27
+    seuil_majorite_qualifiee_atteint: bool = True
+    decision_pde_sanction_active: bool = False
+
+
 @dataclass
 class EchelonLocal:
     """Strate consolidée des Collectivités Territoriales et Acteurs Économiques de Terroir."""
@@ -59,6 +215,13 @@ class EchelonLocal:
     departements: SousSecteurDepartements = field(default_factory=SousSecteurDepartements)
     regions: SousSecteurRegions = field(default_factory=SousSecteurRegions)
     chambres_consulaires: SousSecteurChambresConsulaires = field(default_factory=SousSecteurChambresConsulaires)
+
+    # Assemblées décisionnelles et représentatives locales
+    conseil_municipal: AssembleeConseilMunicipal = field(default_factory=AssembleeConseilMunicipal)
+    conseil_intercommunal: AssembleeConseilIntercommunal = field(default_factory=AssembleeConseilIntercommunal)
+    conseil_departemental: AssembleeConseilDepartemental = field(default_factory=AssembleeConseilDepartemental)
+    conseil_regional: AssembleeConseilRegional = field(default_factory=AssembleeConseilRegional)
+    assemblees_consulaires: AssembleeConsulaireDetail = field(default_factory=AssembleeConsulaireDetail)
 
     # Indicateurs consolidés de la strate locale
     dette_locale_totale_mde: float = 252.0
@@ -115,6 +278,13 @@ class EchelonNational:
     parlement: SousSecteurParlement = field(default_factory=SousSecteurParlement)
     institutions: SousSecteurInstitutionsRepublique = field(default_factory=SousSecteurInstitutionsRepublique)
 
+    # Assemblées représentatives et délibératives nationales
+    assemblee_nationale: AssembleeNationaleDetail = field(default_factory=AssembleeNationaleDetail)
+    senat: AssembleeSenatDetail = field(default_factory=AssembleeSenatDetail)
+    congres: AssembleeCongresDetail = field(default_factory=AssembleeCongresDetail)
+    cese: AssembleeCESEDetail = field(default_factory=AssembleeCESEDetail)
+    convention_citoyenne: AssembleeConventionCitoyenneDetail = field(default_factory=AssembleeConventionCitoyenneDetail)
+
     # Indicateurs civiques et macro-sociaux
     dette_maastricht_stock_mde: float = 3568.0        # Dette publique consolidée au sens de Maastricht
     confiance_democratique: float = 27.5              # Indice 0-100 (confiance dans les institutions)
@@ -134,6 +304,10 @@ class EchelonEuropeen:
     effort_structurel_requis_annuel_pct: float = 0.50 # 0.5 pt de PIB d'effort annuel sous PDE
     statut_pde_actif: bool = True                     # La France est sous procédure de déficit excessif
     amende_sanction_semestrielle_mde: float = 1.50    # 0,05 % du PIB d'astreinte financière
+
+    # Assemblées décisionnelles européennes
+    parlement_europeen: AssembleeParlementEuropeenDetail = field(default_factory=AssembleeParlementEuropeenDetail)
+    conseil_ue: AssembleeConseilUEDetail = field(default_factory=AssembleeConseilUEDetail)
 
     # Politique Monétaire de la Banque Centrale Européenne (BCE)
     taux_depot_bce_pct: float = 2.50                  # Taux de référence de la BCE
@@ -266,5 +440,19 @@ class ResultatEtapeSimulation:
     taux_change_eur_usd: float = 1.08
     facture_energetique_mde: float = 64.5
     inflation_globale_pct: float = 2.1
+
+    # Dynamiques des Assemblées Représentatives et Décisionnelles
+    voix_censure_an: int = 265                        # Assemblée nationale : projection motion de censure art. 49.2
+    gouvernement_censure: bool = False                # Vrai si voix_censure_an >= 289
+    climat_assemblee_nationale: str = "Majorité relative tendue"
+    hostilite_senat_indice: float = 30.0              # Sénat : indice d'hostilité (défense des collectivités)
+    senat_veto_art_89: bool = False                   # Veto constitutionnel absolu du Sénat sur l'article 89
+    congres_majorite_3_5: bool = False                # Majorité qualifiée des 3/5èmes au Congrès de Versailles
+    departements_alerte_ciseau: int = 14              # Conseils départementaux : départements en crise financière
+    fronde_maires_indice: float = 24.0                # Conseils municipaux : indice de grogne des maires (AMF)
+    pe_taux_alignement: float = 65.0                  # Parlement Européen : soutien de coalition aux directives
+    cese_consensus_social: float = 48.0               # CESE : taux d'adhésion syndicale et socioprofessionnelle
+    consulaire_confiance_pme: float = 56.0            # Chambres consulaires : confiance patrons PME et artisans
+    convention_citoyenne_consensus: float = 84.0      # Convention citoyenne tirée au sort : consensus délibératif
 
     commentaires: List[str] = field(default_factory=list)

@@ -124,7 +124,17 @@ class TestWebServerHTTP(unittest.TestCase):
         with urlopen(f"{self.base_url}/api/dossier") as resp:
             self.assertEqual(resp.status, 200)
             data = json.loads(resp.read().decode("utf-8"))
-            self.assertGreaterEqual(len(data["volumes"]), 8)
+            self.assertGreaterEqual(len(data["volumes"]), 9)
+
+    def test_api_assemblees(self):
+        with urlopen(f"{self.base_url}/api/assemblees") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("assemblees", data)
+            self.assertGreaterEqual(len(data["assemblees"]), 10)
+            noms = [a["nom"] for a in data["assemblees"]]
+            self.assertIn("Assemblée nationale", noms)
+            self.assertIn("Sénat", noms)
 
     def test_post_simuler_mandature(self):
         req = Request(

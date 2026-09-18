@@ -278,6 +278,8 @@ class MoteurSimulationSystemique:
         # =========================================================================
         # 5. STRATE CONTINENTALE / EUROPÉENNE (Pacte de Stabilité, TPI, Sanctions)
         # =========================================================================
+        # 5. STRATE CONTINENTALE / EUROPÉENNE (Pacte de Stabilité, TPI, Sanctions)
+        # =========================================================================
         if ratio_deficit_pib <= self.europe.seuil_deficit_pde_pct:
             self.europe.statut_pde_actif = False
             self.europe.bouclier_tpi_bce_eligible = True
@@ -301,7 +303,84 @@ class MoteurSimulationSystemique:
                 )
 
         # =========================================================================
-        # 6. INSTANTANÉ DE L'ÉTAPE CONSOLIDÉE
+        # 6. DYNAMIQUES DES ASSEMBLÉES REPRÉSENTATIVES ET DÉCISIONNELLES
+        # =========================================================================
+        # 1. Conseils Municipaux (34 935 communes & AMF)
+        perte_dgf_val = abs(decision.delta_dotation_dgf_mde) if decision.delta_dotation_dgf_mde < 0 else 0.0
+        fronde_maires = max(5.0, min(100.0, 18.0 + (perte_dgf_val * 4.5) + (self.local.tension_sociale_territoriale * 0.22)))
+        self.local.conseil_municipal.fronde_fiscale_locale_indice = round(fronde_maires, 1)
+        self.local.conseil_municipal.taux_revolte_maires_amf_pct = min(100.0, round(fronde_maires * 1.15, 1))
+
+        # 2. Conseils Départementaux (101 départements & ADF - Effet de ciseau social)
+        dep_sociales = 44.5 + max(0.0, (self.mondial.inflation_globale_pct - 2.0) * 1.8)
+        rec_dmto = max(8.0, 12.5 - max(0.0, (self.mondial.taux_credit_immobilier_menages - 3.5) * 1.6))
+        ciseau_social = max(10.0, min(100.0, 48.0 + (dep_sociales - 44.5) * 4.0 - (rec_dmto - 12.5) * 4.5 + (perte_dgf_val * 2.2)))
+        dep_faillite = max(2, min(85, int(round(ciseau_social * 0.38))))
+        self.local.conseil_departemental.indice_effet_ciseau_social = round(ciseau_social, 1)
+        self.local.conseil_departemental.departements_alerte_faillite = dep_faillite
+        if dep_faillite >= 25:
+            commentaires.append(
+                f"[Assemblées - Départements ADF] Alerte ciseau financier : {dep_faillite} départements en faillite technique (RSA en hausse, DMTO en berne)."
+            )
+
+        # 3. Assemblées Consulaires (CCI, CMA, Chambres d'Agriculture)
+        gain_pme_commande = decision.commande_publique_massifiee_mde
+        conf_cci = min(95.0, max(20.0, 52.0 + (gain_pme_commande * 3.5) - (self.mondial.taux_credit_pme_entreprises - 4.5) * 5.5))
+        adh_cma = min(95.0, max(25.0, 58.0 + (gain_pme_commande * 3.8) + (2.0 if decision.baisse_tva_energie_5_5_mde > 0 else 0.0)))
+        self.local.assemblees_consulaires.cci_confiance_patrons_pct = round(conf_cci, 1)
+        self.local.assemblees_consulaires.cma_adhesion_artisans_pct = round(adh_cma, 1)
+
+        # 4. Sénat (348 sénateurs - Porte-voix des collectivités territoriales, art. 24)
+        hostilite_senat = max(5.0, min(100.0, 22.0 + (perte_dgf_val * 5.2) + (self.local.tension_sociale_territoriale * 0.28) - (self.national.confiance_democratique * 0.12)))
+        senat_veto = hostilite_senat > 55.0
+        self.national.senat.indice_hostilite_senatoriale = round(hostilite_senat, 1)
+        self.national.senat.veto_reforme_constitutionnelle_art_89 = senat_veto
+        self.national.senat.taux_accord_cmp_pct = max(10.0, round(85.0 - hostilite_senat * 0.65, 1))
+        if senat_veto:
+            commentaires.append(
+                "[Assemblées - Sénat] VETO CONSTITUTIONNEL du Sénat activé (Art. 89 al. 2) : hostilité territoriale > 55/100 -> Recours nécessaire à l'Article 11 (voie référendaire directe)."
+            )
+
+        # 5. Assemblée nationale (577 députés - Vote de censure art. 49.2 & 49.3)
+        base_censure = 240.0 + (self.local.tension_sociale_territoriale * 0.88) - (self.national.confiance_democratique * 0.42)
+        voix_censure = max(180, min(577, int(round(base_censure))))
+        gouv_censure = voix_censure >= 289
+        self.national.assemblee_nationale.voix_censure_projetees = voix_censure
+        self.national.assemblee_nationale.gouvernement_censure = gouv_censure
+
+        if gouv_censure:
+            climat_an = "GOUVERNEMENT CENSURÉ (Majorité absolue de 289 voix franchie)"
+            commentaires.append(
+                f"[Assemblées - Assemblée nationale] MOTION DE CENSURE ADOPTÉE ({voix_censure} voix >= 289) : Renversement de l'Exécutif ou dissolution (Art. 12) !"
+            )
+        elif voix_censure >= 275:
+            climat_an = "Alerte rouge : majorité fragile à portée de motion de censure"
+        elif voix_censure >= 250:
+            climat_an = "Majorité relative sous haute tension parlementaire"
+        else:
+            climat_an = "Majorité consolidée et apaisement parlementaire républicain"
+        self.national.assemblee_nationale.climat_parlementaire = climat_an
+
+        # 6. Congrès du Parlement (Versailles - 925 membres, règle des 3/5èmes = 555 voix)
+        voix_congres = max(300, min(850, int(round(925 * (0.38 + (self.national.confiance_democratique / 100.0) * 0.35 - (hostilite_senat / 320.0))))))
+        congres_ok = (voix_congres >= 555) and (not senat_veto)
+        self.national.congres.voix_favorables_projetees = voix_congres
+        self.national.congres.majorite_3_5_atteinte = congres_ok
+        self.national.congres.voie_referendaire_art_11_requise = not congres_ok
+
+        # 7. CESE et Conventions Citoyennes délibératives
+        cese_consensus = min(92.0, max(25.0, 44.0 + (10.0 if decision.baisse_tva_energie_5_5_mde > 0 else 0.0) + (decision.extinction_niches_inefficaces_mde * 1.4)))
+        self.national.cese.taux_consensus_social_pct = round(cese_consensus, 1)
+        consensus_citoyen = min(98.0, max(45.0, 72.0 + (12.0 if self.reforme_ric_active else 0.0) + (8.0 if self.reforme_casier_b2_active else 0.0)))
+        self.national.convention_citoyenne.indice_deliberatif_consensus_pct = round(consensus_citoyen, 1)
+
+        # 8. Parlement Européen et Conseil de l'Union Européenne
+        pe_alignement = min(95.0, max(30.0, 62.0 + (8.0 if ratio_deficit_pib <= 3.0 else -10.0) + (5.0 if decision.recettes_macf_carbone_mde > 0 else 0.0)))
+        self.europe.parlement_europeen.taux_alignement_directives_fr_pct = round(pe_alignement, 1)
+        self.europe.conseil_ue.decision_pde_sanction_active = (ratio_deficit_pib > 3.0) and (not self.europe.bouclier_tpi_bce_eligible)
+
+        # =========================================================================
+        # 7. INSTANTANÉ DE L'ÉTAPE CONSOLIDÉE
         # =========================================================================
         resultat = ResultatEtapeSimulation(
             annee=decision.annee,
@@ -330,6 +409,19 @@ class MoteurSimulationSystemique:
             taux_change_eur_usd=round(self.mondial.taux_change_eur_usd, 3),
             facture_energetique_mde=round(self.mondial.facture_energetique_nette_mde, 1),
             inflation_globale_pct=round(self.mondial.inflation_globale_pct, 2),
+            # Indicateurs des Assemblées
+            voix_censure_an=voix_censure,
+            gouvernement_censure=gouv_censure,
+            climat_assemblee_nationale=climat_an,
+            hostilite_senat_indice=round(hostilite_senat, 1),
+            senat_veto_art_89=senat_veto,
+            congres_majorite_3_5=congres_ok,
+            departements_alerte_ciseau=dep_faillite,
+            fronde_maires_indice=round(fronde_maires, 1),
+            pe_taux_alignement=round(pe_alignement, 1),
+            cese_consensus_social=round(cese_consensus, 1),
+            consulaire_confiance_pme=round(conf_cci, 1),
+            convention_citoyenne_consensus=round(consensus_citoyen, 1),
             commentaires=commentaires,
         )
 
