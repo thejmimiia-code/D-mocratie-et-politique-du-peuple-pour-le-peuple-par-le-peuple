@@ -171,6 +171,33 @@ class TestWebServerHTTP(unittest.TestCase):
             self.assertIn("referendums", data)
             self.assertEqual(len(data["referendums"]), 4)
 
+    def test_api_arbitrages_budget(self):
+        with urlopen(f"{self.base_url}/api/arbitrages_budget") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("gouvernance", data)
+            self.assertEqual(data["gouvernance"]["titre"], "Arbitrages Budgétaires et Survie Ministérielle")
+            self.assertIn("jauges_survie", data)
+            self.assertEqual(data["jauges_survie"]["censure_assemblee"]["seuil_chute"], 289)
+            self.assertEqual(len(data["profils_ministre"]), 3)
+            self.assertEqual(len(data["directeurs_cabinet"]), 3)
+            self.assertEqual(len(data["cycle_annuel_12_episodes"]), 12)
+
+    def test_api_sources(self):
+        with urlopen(f"{self.base_url}/api/sources") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertGreaterEqual(data["total"], 20)
+            self.assertIn("sources", data)
+
+    def test_api_audit(self):
+        with urlopen(f"{self.base_url}/api/audit") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("audit", data)
+            self.assertEqual(data["audit"]["statut_reproductibilite"], "Bit-à-bit déterministe et vérifié")
+            self.assertGreaterEqual(data["audit"]["nb_sources_officielles_certifiees"], 20)
+
     def test_post_simuler_mandature(self):
         req = Request(
             f"{self.base_url}/api/simuler",

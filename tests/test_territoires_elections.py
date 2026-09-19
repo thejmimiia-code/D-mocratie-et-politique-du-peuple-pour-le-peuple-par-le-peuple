@@ -144,5 +144,119 @@ class TestStratesTerritorialesEtElections(unittest.TestCase):
         self.assertGreater(res_choc.triangulaires_legislatives_count, 85)
 
 
+    def test_typologie_communale_insee_9_strates(self):
+        """Vérifie la répartition intégrale des 34 935 communes en 9 strates démographiques."""
+        terr = StrateTerritorialeContinuum()
+
+        self.assertEqual(terr.communes_moins_100_hab_count, 3400)
+        self.assertEqual(terr.communes_100_a_499_hab_count, 17000)
+        self.assertEqual(terr.communes_500_a_999_hab_count, 5400)
+        self.assertEqual(terr.communes_1000_a_3499_hab_count, 5900)
+        self.assertEqual(terr.communes_3500_a_9999_hab_count, 1750)
+        self.assertEqual(terr.communes_10000_a_19999_hab_count, 580)
+        self.assertEqual(terr.communes_20000_a_49999_hab_count, 460)
+        self.assertEqual(terr.communes_50000_a_99999_hab_count, 88)
+        self.assertEqual(terr.communes_100000_a_199999_hab_count, 30)
+        self.assertEqual(terr.communes_200000_et_plus_hab_count, 11)
+
+        # Somme des communes rurales (< 1000 hab.)
+        total_rural = terr.communes_moins_100_hab_count + terr.communes_100_a_499_hab_count + terr.communes_500_a_999_hab_count
+        self.assertEqual(total_rural, terr.communes_rurales_count)
+        self.assertEqual(terr.communes_rurales_count, 25800)
+
+        # Vérification du total général communal
+        somme_toutes_strates = (
+            terr.communes_rurales_count
+            + terr.bourgs_centres_count
+            + terr.villes_moyennes_count
+            + terr.grandes_agglomerations_count
+            + terr.communes_100000_a_199999_hab_count
+            + terr.communes_200000_et_plus_hab_count
+            + 5  # Communes spécifiques d'outre-mer / arrondissements
+        )
+        self.assertAlmostEqual(terr.communes_total, 34935, delta=15)
+
+    def test_epci_et_deconcentration_etat(self):
+        """Vérifie l'exhaustivité des 1 254 EPCI et des services déconcentrés de l'État."""
+        terr = StrateTerritorialeContinuum()
+
+        self.assertEqual(terr.communautes_de_communes_count, 991)
+        self.assertEqual(terr.communautes_agglomeration_count, 228)
+        self.assertEqual(terr.communautes_urbaines_count, 14)
+        self.assertEqual(terr.metropoles_droit_commun_count, 21)
+        self.assertEqual(terr.metropole_lyon_statut_particulier, 1)
+        self.assertEqual(
+            terr.communautes_de_communes_count
+            + terr.communautes_agglomeration_count
+            + terr.communautes_urbaines_count
+            + terr.metropoles_droit_commun_count,
+            terr.epci_total,
+        )
+        self.assertEqual(terr.epci_total, 1254)
+
+        # Déconcentration
+        self.assertEqual(terr.arrondissements_deconcentres_count, 332)
+        self.assertEqual(terr.cantons_electoraux_count, 2054)
+        self.assertEqual(terr.circonscriptions_legislatives_count, 577)
+        self.assertEqual(terr.academies_scolaires_count, 30)
+        self.assertEqual(terr.agences_regionales_sante_ars, 18)
+        self.assertEqual(terr.cours_appel_judiciaires_count, 36)
+        self.assertEqual(terr.zones_defense_securite_count, 12)
+
+    def test_souverainete_maritime_zee_par_oceans(self):
+        """Vérifie la décomposition par bassin océanique des 10,2M km² de ZEE."""
+        om = StrateOutreMerDetail()
+
+        self.assertAlmostEqual(om.zee_pacifique_millions_km2, 6.8)
+        self.assertAlmostEqual(om.zee_indien_millions_km2, 2.6)
+        self.assertAlmostEqual(om.zee_atlantique_antilles_guyane_km2, 0.5)
+        self.assertAlmostEqual(om.zee_metropole_facade_europeenne_km2, 0.3)
+        total_zee = (
+            om.zee_pacifique_millions_km2
+            + om.zee_indien_millions_km2
+            + om.zee_atlantique_antilles_guyane_km2
+            + om.zee_metropole_facade_europeenne_km2
+        )
+        self.assertAlmostEqual(total_zee, om.zee_maritime_millions_km2, delta=0.01)
+
+    def test_nouveaux_textes_fondateurs_republicains(self):
+        """Vérifie la présence et le contenu des 90 textes légaux et constitutionnels majeurs."""
+        ids = list(REGISTRE_LEGAL.keys())
+        self.assertGreaterEqual(len(ids), 90)
+
+        # Vérification des textes constitutionnels et déclarations
+        textes_obligatoires = [
+            "DDHC_ART_1", "DDHC_ART_3", "DDHC_ART_13", "DDHC_ART_16",
+            "PREAMBULE_1946_AL3", "PREAMBULE_1946_AL9", "PREAMBULE_1946_AL11",
+            "CHARTE_ENV_ART_4", "CHARTE_ENV_ART_5",
+            "CONST_ART_4", "CONST_ART_5", "CONST_ART_6", "CONST_ART_12",
+            "CONST_ART_34", "CONST_ART_37", "CONST_ART_40", "CONST_ART_47",
+            "CONST_ART_72_4", "CONST_ART_88_1",
+            "CODE_ELEC_L1", "CODE_ELEC_L52_4", "CODE_ELEC_L71",
+            "CGCT_L1111_1", "CGCT_L2143_1", "CGCT_L5217_1",
+            "CNUDM_ART_56_ZEE", "LOI_55_1052_TAAF",
+        ]
+        for t_id in textes_obligatoires:
+            self.assertIn(t_id, ids, f"Le texte {t_id} doit être présent dans le registre légal.")
+
+    def test_elections_seuils_et_voies_referendaires(self):
+        """Vérifie les critères mathématiques des scrutins et des référendums."""
+        elec = StrateFonctionsElectorales()
+
+        self.assertAlmostEqual(elec.seuil_second_tour_legislatives_pct_inscrits, 12.5)
+        self.assertAlmostEqual(elec.seuil_second_tour_departementales_pct_inscrits, 12.5)
+        self.assertAlmostEqual(elec.seuil_second_tour_regionales_pct_exprimes, 10.0)
+        self.assertAlmostEqual(elec.seuil_fusion_regionales_pct_exprimes, 5.0)
+        self.assertAlmostEqual(elec.seuil_representation_europeennes_pct, 5.0)
+        self.assertAlmostEqual(elec.prime_majoritaire_municipales_pct, 50.0)
+        self.assertAlmostEqual(elec.prime_majoritaire_regionales_pct, 25.0)
+        self.assertEqual(elec.parrainages_presidentiels_requis, 500)
+        self.assertEqual(elec.departements_minimum_parrainages, 30)
+        self.assertEqual(elec.rip_seuil_parlementaires, 185)
+        self.assertAlmostEqual(elec.rip_seuil_electeurs_millions, 4.95)
+        self.assertEqual(elec.congres_versailles_majorite_trois_cinquiemes, 555)
+        self.assertAlmostEqual(elec.referendum_local_seuil_participation_pct, 50.0)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -335,6 +335,66 @@ class TestRedondancesStabiliteNumeriqueEtStress(unittest.TestCase):
             self.assertEqual(r1.tension_sociale_locale, r2.tension_sociale_locale)
             self.assertEqual(r1.facture_energetique_mde, r2.facture_energetique_mde)
 
+    def test_invariant_deciles_et_gini(self):
+        """Invariant d'équité : Gini borné [0.20, 0.40], en baisse sous mandature, en hausse sous austérité."""
+        m_mand = MoteurSimulationSystemique()
+        for d in get_scenario_mandature_5_ans():
+            m_mand.appliquer_etape(d)
+        res_m5 = m_mand.historique_etapes[-1]
+
+        m_aust = MoteurSimulationSystemique()
+        for d in get_scenario_austerite_brutale():
+            m_aust.appliquer_etape(d)
+        res_a5 = m_aust.historique_etapes[-1]
+
+        self.assertLess(res_m5.indice_gini, res_a5.indice_gini)
+        self.assertLess(res_m5.taux_pauvrete_monetaire_pct, res_a5.taux_pauvrete_monetaire_pct)
+        self.assertGreater(res_m5.gain_pouvoir_achat_d1_d3_annuel_euros, 0.0)
+        self.assertLess(res_a5.gain_pouvoir_achat_d1_d3_annuel_euros, 0.0)
+
+    def test_invariant_boule_de_neige_et_dette(self):
+        """Invariant macro-financier : l'écart r - g sous mandature est négatif (g > r), garantissant la décrue."""
+        moteur = MoteurSimulationSystemique()
+        for d in get_scenario_mandature_5_ans():
+            moteur.appliquer_etape(d)
+        res5 = moteur.historique_etapes[-1]
+        self.assertLess(res5.ecart_boule_de_neige_r_moins_g, 0.0)
+        self.assertGreater(res5.part_dette_non_residents_pct, 40.0)
+        self.assertLess(res5.part_dette_non_residents_pct, 65.0)
+
+    def test_exhaustivite_sources_officielles_et_audit(self):
+        """Invariant de traçabilité : toutes les catégories macroéconomiques sont couvertes par des sources officielles certifiées."""
+        from simulateur.sources_officielles import REGISTRE_SOURCES_OFFICIELLES, lister_sources_par_categorie
+        self.assertGreaterEqual(len(REGISTRE_SOURCES_OFFICIELLES), 20)
+        categories = ["Macroéconomie", "Marchés", "Fiscalité", "Social", "Territoires", "International", "Institutions"]
+        for cat in categories:
+            sources = lister_sources_par_categorie(cat)
+            self.assertGreater(len(sources), 0, f"Catégorie orpheline sans source : {cat}")
+
+    def test_invariant_audit_contradictoire_think_tanks(self):
+        """Invariant de robustesse contradictoire : les 23 think tanks répertoriés sont tous rattachés aux 5 stress-tests."""
+        from simulateur.think_tanks import (
+            REGISTRE_THINK_TANKS,
+            PARADIGMES_STRESS_TEST,
+            executer_stress_tests_mandature,
+        )
+        self.assertEqual(len(REGISTRE_THINK_TANKS), 23)
+        self.assertEqual(len(PARADIGMES_STRESS_TEST), 5)
+
+        # Vérifie que chaque think tank a un paradigme valide et un champ pourquoi/reponse
+        for tt_id, tt in REGISTRE_THINK_TANKS.items():
+            self.assertIn(tt.stress_test_associe, PARADIGMES_STRESS_TEST)
+            self.assertTrue(len(tt.pourquoi_integration) > 30)
+            self.assertTrue(len(tt.reponse_du_simulateur) > 30)
+            self.assertTrue(len(tt.objections_anticipees) >= 1)
+
+        # Vérifie l'exécution des stress-tests
+        res = executer_stress_tests_mandature(None, None, None, None, None)
+        self.assertEqual(len(res), 5)
+        for p_id, st in res.items():
+            self.assertEqual(st.statut, "SOLIDE")
+            self.assertGreaterEqual(st.score_robustesse_sur_100, 95.0)
+
 
 if __name__ == "__main__":
     unittest.main()

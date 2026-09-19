@@ -612,6 +612,297 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
         strate_impactee="Local",
         effet_simulation="Finance l'aide à la mobilité aérienne (LADOM) et les tarifs régulés pour les étudiants et familles d'Outre-mer.",
     ),
+    # -------------------------------------------------------------------------
+    # BLOC DE CONSTITUTIONNALITÉ ÉLARGI & GRANDS TEXTES RÉPUBLICAINS
+    # -------------------------------------------------------------------------
+    "DDHC_ART_1": ArticleDeLoi(
+        identifiant="DDHC_ART_1",
+        code_ou_traite="Déclaration des Droits de l'Homme et du Citoyen de 1789",
+        article="Article 1er",
+        titre="Égalité républicaine fondamentale",
+        texte_integral="Les hommes naissent et demeurent libres et égaux en droits. Les distinctions sociales ne peuvent être fondées que sur l'utilité commune.",
+        strate_impactee="Transversal",
+        effet_simulation="Principe matriciel interdisant toute rupture injustifiée d'égalité entre citoyens et territoires.",
+    ),
+    "DDHC_ART_3": ArticleDeLoi(
+        identifiant="DDHC_ART_3",
+        code_ou_traite="Déclaration des Droits de l'Homme et du Citoyen de 1789",
+        article="Article 3",
+        titre="Principe de Souveraineté nationale",
+        texte_integral="Le principe de toute Souveraineté réside essentiellement dans la Nation. Nul corps, nul individu ne peut exercer d'autorité qui n'en émane expressément.",
+        strate_impactee="National",
+        effet_simulation="Fonde la légitimité démocratique exclusive du suffrage universel et du référendum.",
+    ),
+    "DDHC_ART_13": ArticleDeLoi(
+        identifiant="DDHC_ART_13",
+        code_ou_traite="Déclaration des Droits de l'Homme et du Citoyen de 1789",
+        article="Article 13",
+        titre="Nécessité de la contribution commune et progressivité",
+        texte_integral="Pour l'entretien de la force publique, et pour les dépenses d'administration, une contribution commune est indispensable : elle doit être également répartie entre tous les citoyens, en raison de leurs facultés.",
+        strate_impactee="National",
+        effet_simulation="Justifie la progressivité de l'impôt, la taxe sur les superprofits et la justice fiscale.",
+    ),
+    "DDHC_ART_16": ArticleDeLoi(
+        identifiant="DDHC_ART_16",
+        code_ou_traite="Déclaration des Droits de l'Homme et du Citoyen de 1789",
+        article="Article 16",
+        titre="Garantie des Droits et Séparation des Pouvoirs",
+        texte_integral="Toute Société dans laquelle la garantie des Droits n'est pas assurée, ni la séparation des Pouvoirs déterminée, n'a point de Constitution.",
+        strate_impactee="Transversal",
+        effet_simulation="Garantit l'indépendance de la Justice, le contrôle parlementaire et la protection constitutionnelle.",
+    ),
+    "PREAMBULE_1946_AL3": ArticleDeLoi(
+        identifiant="PREAMBULE_1946_AL3",
+        code_ou_traite="Préambule de la Constitution de 1946",
+        article="Alinéa 3",
+        titre="Égalité stricte entre les femmes et les hommes",
+        texte_integral="La loi garantit à la femme, dans tous les domaines, des droits égaux à ceux de l'homme.",
+        strate_impactee="National",
+        effet_simulation="Fonde la parité obligatoire aux scrutins municipaux, départementaux, régionaux et consulaires.",
+    ),
+    "PREAMBULE_1946_AL9": ArticleDeLoi(
+        identifiant="PREAMBULE_1946_AL9",
+        code_ou_traite="Préambule de la Constitution de 1946",
+        article="Alinéa 9",
+        titre="Nationalisation des monopoles de fait et services publics",
+        texte_integral="Tout bien, toute entreprise, dont l'exploitation a ou acquiert les caractères d'un service public national ou d'un monopole de fait, doit devenir la propriété de la collectivité.",
+        strate_impactee="National",
+        effet_simulation="Légitime la régulation des tarifs de l'énergie, de l'eau, des transports et des infrastructures stratégiques.",
+    ),
+    "PREAMBULE_1946_AL11": ArticleDeLoi(
+        identifiant="PREAMBULE_1946_AL11",
+        code_ou_traite="Préambule de la Constitution de 1946",
+        article="Alinéa 11",
+        titre="Garantie de la santé, de la sécurité matérielle et de la retraite",
+        texte_integral="La Nation garantit à tous, notamment à l'enfant, à la mère et aux vieux travailleurs, la protection de la santé, la sécurité matérielle, le repos et les loisirs. Tout être humain qui se trouve dans l'incapacité de travailler a le droit d'obtenir de la collectivité des moyens convenables d'existence.",
+        strate_impactee="National",
+        effet_simulation="Fonde le pacte du berceau au tombeau, la Sécurité sociale par répartition et la 5e branche Autonomie.",
+    ),
+    "CHARTE_ENV_ART_4": ArticleDeLoi(
+        identifiant="CHARTE_ENV_ART_4",
+        code_ou_traite="Charte de l'environnement de 2004",
+        article="Article 4",
+        titre="Principe Pollueur-Payeur et réparation écologique",
+        texte_integral="Toute personne doit contribuer à la réparation des dommages qu'elle cause à l'environnement, dans les conditions définies par la loi.",
+        strate_impactee="National",
+        effet_simulation="Encadre la fiscalité écologique, la taxe carbone MACF et le conditionnement environnemental des aides.",
+    ),
+    "CHARTE_ENV_ART_5": ArticleDeLoi(
+        identifiant="CHARTE_ENV_ART_5",
+        code_ou_traite="Charte de l'environnement de 2004",
+        article="Article 5",
+        titre="Principe de précaution environnementale et sanitaire",
+        texte_integral="Lorsque la réalisation d'un dommage, bien qu'incertaine en l'état des connaissances scientifiques, pourrait affecter de manière grave et irréversible l'environnement, les autorités publiques veillent à l'adoption de mesures provisoires et proportionnées.",
+        strate_impactee="Transversal",
+        effet_simulation="Permet à l'État et aux collectivités d'interdire les substances écotoxiques et de protéger les écosystèmes.",
+    ),
+    "CONST_ART_4": ArticleDeLoi(
+        identifiant="CONST_ART_4",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 4",
+        titre="Pluralisme politique et égale participation des citoyens",
+        texte_integral="Les partis et groupements politiques concourent à l'expression du suffrage. Ils se forment et exercent leur activité librement. Ils doivent respecter les principes de la souveraineté nationale et de la démocratie. La loi favorise l'égal accès des femmes et des hommes aux mandats électoraux et fonctions électives.",
+        strate_impactee="National",
+        effet_simulation="Encadre le financement public des partis politiques et la parité électorale.",
+    ),
+    "CONST_ART_5": ArticleDeLoi(
+        identifiant="CONST_ART_5",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 5",
+        titre="Rôle d'arbitre et garant de l'indépendance nationale du Président de la République",
+        texte_integral="Le Président de la République veille au respect de la Constitution. Il assure, par son arbitrage, le fonctionnement régulier des pouvoirs publics ainsi que la continuité de l'État. Il est le garant de l'indépendance nationale, de l'intégrité du territoire et du respect des traités.",
+        strate_impactee="National",
+        effet_simulation="Définit les pouvoirs propres présidentiels en matière d'arbitrage, de diplomatie et de défense nationale.",
+    ),
+    "CONST_ART_6": ArticleDeLoi(
+        identifiant="CONST_ART_6",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 6",
+        titre="Élection du Président au suffrage universel direct pour 5 ans",
+        texte_integral="Le Président de la République est élu pour cinq ans au suffrage universel direct. Nul ne peut exercer plus de deux mandats consécutifs.",
+        strate_impactee="National",
+        effet_simulation="Fixe la clé de voûte électorale du quinquennat et la limitation à deux mandats consécutifs.",
+    ),
+    "CONST_ART_12": ArticleDeLoi(
+        identifiant="CONST_ART_12",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 12",
+        titre="Droit de dissolution de l'Assemblée nationale",
+        texte_integral="Le Président de la République peut, après consultation du Premier ministre et des Présidents des Assemblées, prononcer la dissolution de l'Assemblée nationale. Les élections générales ont lieu vingt jours au moins et quarante jours au plus après la dissolution.",
+        strate_impactee="National",
+        effet_simulation="Permet de dénouer une crise parlementaire aiguë en renvoyant l'arbitrage devant le peuple souverain.",
+    ),
+    "CONST_ART_34": ArticleDeLoi(
+        identifiant="CONST_ART_34",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 34",
+        titre="Domaine réservé de la Loi votée par le Parlement",
+        texte_integral="La loi fixe les règles concernant les droits civiques, la nationalité, l'assiette, le taux et les modalités de recouvrement des impositions de toutes natures. La loi détermine les principes fondamentaux de la libre administration des collectivités territoriales, de l'enseignement, du droit du travail et de la sécurité sociale.",
+        strate_impactee="National",
+        effet_simulation="Délimite le monopole législatif sur les impôts, les libertés publiques et les budgets de la Nation.",
+    ),
+    "CONST_ART_37": ArticleDeLoi(
+        identifiant="CONST_ART_37",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 37",
+        titre="Domaine réglementaire autonome du Gouvernement",
+        texte_integral="Les matières autres que celles qui sont du domaine de la loi ont un caractère réglementaire. Les textes de forme législative intervenus en ces matières peuvent être modifiés par décrets pris après avis du Conseil d'État.",
+        strate_impactee="National",
+        effet_simulation="Permet au Premier ministre et au Gouvernement d'exécuter rapidement les réformes réglementaires sans blocage.",
+    ),
+    "CONST_ART_40": ArticleDeLoi(
+        identifiant="CONST_ART_40",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 40",
+        titre="Irrecevabilité financière parlementaire",
+        texte_integral="Les propositions et amendements formulés par les membres du Parlement ne sont pas recevables lorsque leur adoption aurait pour conséquence soit une diminution des ressources publiques, soit la création ou l'aggravation d'une charge publique.",
+        strate_impactee="National",
+        effet_simulation="Impose le gage financier obligatoire de tout amendement parlementaire et protège l'équilibre budgétaire.",
+    ),
+    "CONST_ART_47": ArticleDeLoi(
+        identifiant="CONST_ART_47",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 47",
+        titre="Procédure et délai de 70 jours pour le vote du Budget de l'État",
+        texte_integral="Le Parlement vote les projets de loi de finances dans les conditions prévues par une loi organique. Si l'Assemblée nationale ne s'est pas prononcée en première lecture dans le délai de quarante jours, le Gouvernement saisit le Sénat. Si le Parlement ne s'est pas prononcé dans un délai de soixante-dix jours, les dispositions du projet peuvent être mises en vigueur par ordonnance.",
+        strate_impactee="National",
+        effet_simulation="Cadre d'urgence temporelle interdisant le shutdown budgétaire de l'État républicain.",
+    ),
+    "CONST_ART_72_4": ArticleDeLoi(
+        identifiant="CONST_ART_72_4",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 72-4",
+        titre="Consultation obligatoire des populations ultramarines pour tout changement statutaire",
+        texte_integral="Aucun changement, pour tout ou partie de l'une des collectivités mentionnées au deuxième alinéa de l'article 72-3, de l'un vers l'autre des régimes prévus par les articles 73 et 74, ne peut intervenir sans que le consentement des électeurs de la collectivité intéressée ait été préalablement recueilli dans les conditions fixées par la loi.",
+        strate_impactee="Local",
+        effet_simulation="Garantie de souveraineté populaire démocratique pour toute évolution institutionnelle d'Outre-mer.",
+    ),
+    "CONST_ART_88_1": ArticleDeLoi(
+        identifiant="CONST_ART_88_1",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 88-1",
+        titre="Participation de la France à l'Union Européenne",
+        texte_integral="La République participe à l'Union européenne constituée d'États qui ont choisi librement d'exercer en commun certaines de leurs compétences en vertu du traité sur l'Union européenne et du traité sur le fonctionnement de l'Union européenne.",
+        strate_impactee="Europe",
+        effet_simulation="Articule l'ordre juridique constitutionnel national avec le droit communautaire européen.",
+    ),
+    "CODE_ELEC_L1": ArticleDeLoi(
+        identifiant="CODE_ELEC_L1",
+        code_ou_traite="Code électoral",
+        article="Article L. 1",
+        titre="Qualité d'électeur et universalité du suffrage",
+        texte_integral="Sont électeurs tous les nationaux français majeurs des deux sexes, jouissant de leurs droits civils et politiques.",
+        strate_impactee="National",
+        effet_simulation="Définit l'universalité démocratique du corps électoral républicain (49,5 millions d'inscrits).",
+    ),
+    "CODE_ELEC_L52_4": ArticleDeLoi(
+        identifiant="CODE_ELEC_L52_4",
+        code_ou_traite="Code électoral",
+        article="Article L. 52-4",
+        titre="Plafonnement des dépenses électorales et contrôle de la CNCCFP",
+        texte_integral="Pendant l'année précédant le premier jour du mois d'une élection, aucun candidat ne peut recueillir de fonds pour le financement de sa campagne que par l'intermédiaire d'un mandataire financier ou d'une association de financement électorale. Les comptes de campagne sont vérifiés par la Commission nationale des comptes de campagne.",
+        strate_impactee="National",
+        effet_simulation="Interdit la ploutocratie électorale, plafonne les dépenses de propagande et annule les scrutins frauduleux.",
+    ),
+    "CODE_ELEC_L71": ArticleDeLoi(
+        identifiant="CODE_ELEC_L71",
+        code_ou_traite="Code électoral",
+        article="Article L. 71",
+        titre="Vote par procuration dématérialisée et sécurisée",
+        texte_integral="Tout électeur peut, sur sa demande, exercer son droit de vote par procuration lorsqu'il ne peut se rendre au bureau de vote le jour du scrutin. La procuration peut être établie par téléprocédure certifiée via l'identité numérique républicaine.",
+        strate_impactee="National",
+        effet_simulation="Favorise la participation civique et limite l'abstention des jeunes et personnes dépendantes.",
+    ),
+    "CGCT_L1111_1": ArticleDeLoi(
+        identifiant="CGCT_L1111_1",
+        code_ou_traite="Code général des collectivités territoriales (CGCT)",
+        article="Article L. 1111-1",
+        titre="Libre administration des collectivités territoriales",
+        texte_integral="Les communes, les départements et les régions s'administrent librement par des conseils élus et disposent d'un pouvoir réglementaire pour l'exercice de leurs compétences, dans les conditions prévues par la loi.",
+        strate_impactee="Local",
+        effet_simulation="Protège l'autonomie de décision locale face aux interventions abusives du pouvoir central.",
+    ),
+    "CGCT_L2143_1": ArticleDeLoi(
+        identifiant="CGCT_L2143_1",
+        code_ou_traite="Code général des collectivités territoriales (CGCT)",
+        article="Article L. 2143-1",
+        titre="Conseils de quartier obligatoires dans les grandes villes",
+        texte_integral="Dans les communes de 80 000 habitants et plus, le conseil municipal crée des conseils de quartier. Le conseil de quartier peut être consulté par le maire sur toute question concernant le quartier ou la ville et peut émettre des propositions.",
+        strate_impactee="Local",
+        effet_simulation="Institutionnalise la démocratie participative locale dans les 1 550 quartiers des grandes villes de France.",
+    ),
+    "CGCT_L5217_1": ArticleDeLoi(
+        identifiant="CGCT_L5217_1",
+        code_ou_traite="Code général des collectivités territoriales (CGCT)",
+        article="Article L. 5217-1",
+        titre="Statut des 22 Métropoles de droit commun et intégration urbaine",
+        texte_integral="La métropole est un établissement public de coopération intercommunale à fiscalité propre regroupant plusieurs communes d'un seul tenant et sans enclave qui s'associent au sein d'un espace de solidarité pour élaborer et conduire ensemble un projet d'aménagement et de développement économique, écologique, éducatif, culturel et social de leur territoire.",
+        strate_impactee="Local",
+        effet_simulation="Régit les 22 métropoles françaises, leur gouvernance et le transfert des compétences départementales.",
+    ),
+    "CNUDM_ART_56_ZEE": ArticleDeLoi(
+        identifiant="CNUDM_ART_56_ZEE",
+        code_ou_traite="Convention des Nations Unies sur le droit de la mer (Montego Bay)",
+        article="Article 56",
+        titre="Droits souverains de la France sur sa Zone Économique Exclusive (10,2M km²)",
+        texte_integral="Dans la zone économique exclusive, l'État côtier a des droits souverains aux fins d'exploration et d'exploitation, de conservation et de gestion des ressources naturelles, biologiques ou non biologiques, des eaux surjacentes aux fonds marins, des fonds marins et de leur sous-sol.",
+        strate_impactee="Mondial",
+        effet_simulation="Consacre la souveraineté maritime française sur le 2e domaine mondial (10,2M km²), principalement en Outre-Mer.",
+    ),
+    "LOI_55_1052_TAAF": ArticleDeLoi(
+        identifiant="LOI_55_1052_TAAF",
+        code_ou_traite="Loi n° 55-1052 du 6 août 1955",
+        article="Article 1er",
+        titre="Statut des Terres Australes et Antarctiques Françaises (TAAF) et de Clipperton",
+        texte_integral="Les îles Saint-Paul et Amsterdam, l'archipel Crozet, l'archipel Kerguelen et la terre Adélie forment un territoire d'outre-mer doté de la personnalité morale et de l'autonomie administrative et financière. L'île de Clipperton est placée sous l'autorité directe du ministre chargé de l'outre-mer.",
+        strate_impactee="Local",
+        effet_simulation="Garantit la souveraineté polaire, antarctique et scientifique de la France sur les sanctuaires écologiques austraux.",
+    ),
+    "CONST_ART_61": ArticleDeLoi(
+        identifiant="CONST_ART_61",
+        code_ou_traite="Constitution du 4 octobre 1958",
+        article="Article 61, alinéa 2",
+        titre="Contrôle de constitutionnalité a priori des lois ordinaires et de finances",
+        texte_integral="Les lois peuvent être déférées au Conseil constitutionnel, avant leur promulgation, par le Président de la République, le Premier ministre, le Président de l'Assemblée nationale, le Président du Sénat ou soixante députés ou soixante sénateurs.",
+        strate_impactee="National",
+        effet_simulation="Garantit la censure immédiate de tout cavalier budgétaire ou disposition violant l'égalité devant les charges publiques.",
+    ),
+    "LOLF_ART_34": ArticleDeLoi(
+        identifiant="LOLF_ART_34",
+        code_ou_traite="Loi organique n° 2001-692 du 1er août 2001 (LOLF)",
+        article="Article 34",
+        titre="Domaine exclusif et ordonnancement obligatoire de la Loi de Finances",
+        texte_integral="La loi de finances comprend deux parties distinctes : la première partie autorise la perception des ressources publiques et comporte les voies et moyens ; la seconde partie fixe le montant des crédits de l'État.",
+        strate_impactee="National",
+        effet_simulation="Interdit juridiquement le vote des dépenses tant que l'équilibre des recettes n'a pas été formellement adopté par l'Assemblée.",
+    ),
+    "DIRECTIVE_UE_2022_542": ArticleDeLoi(
+        identifiant="DIRECTIVE_UE_2022_542",
+        code_ou_traite="Directive (UE) 2022/542 du Conseil du 5 avril 2022",
+        article="Article 98 et Annexe III (points 22 et 23)",
+        titre="Légalité européenne du taux réduit de TVA à 5,5 % sur l'électricité et le gaz",
+        texte_integral="Les États membres peuvent appliquer des taux réduits non inférieurs à 5 % aux livraisons d'électricité, de gaz naturel et de réseaux de chaleur urbains, dans le cadre de la protection du pouvoir d'achat des consommateurs finals.",
+        strate_impactee="Europe",
+        effet_simulation="Immunise juridiquement la baisse de TVA sur l'énergie à 5,5 % contre tout recours ou sanction de la Commission européenne.",
+    ),
+    "REGLEMENT_UE_2023_956": ArticleDeLoi(
+        identifiant="REGLEMENT_UE_2023_956",
+        code_ou_traite="Règlement (UE) 2023/956 du Parlement européen et du Conseil",
+        article="Articles 1er et 22",
+        titre="Mécanisme d'Ajustement Carbone aux Frontières (MACF / CBAM)",
+        texte_integral="Le présent règlement établit un mécanisme d'ajustement carbone aux frontières pour remédier aux émissions de gaz à effet de serre incorporées dans les marchandises importées dans l'Union (acier, ciment, engrais, aluminium, électricité, hydrogène).",
+        strate_impactee="Mondial",
+        effet_simulation="Rétablit l'équité concurrentielle des entreprises françaises face aux importations polluantes extra-européennes.",
+    ),
+    "LOI_ORG_2009_403": ArticleDeLoi(
+        identifiant="LOI_ORG_2009_403",
+        code_ou_traite="Loi organique n° 2009-403 du 15 avril 2009",
+        article="Article 8",
+        titre="Obligation légale d'étude d'impact préalable pour tout projet de loi",
+        texte_integral="Les projets de loi sont accompagnés d'une étude d'impact définissant les objectifs poursuivis, exposant les motifs du recours à une nouvelle législation et évaluant les conséquences économiques, financières, sociales et environnementales prévisibles.",
+        strate_impactee="National",
+        effet_simulation="Conditionne la recevabilité de tout projet de loi à un chiffrage rigoureux et vérifiable de ses impacts macroéconomiques.",
+    ),
 }
 
 
@@ -622,15 +913,42 @@ def get_corpus_lois() -> Dict[str, ArticleDeLoi]:
 
 # Export direct des instances clés pour import immédiat
 CONST_ART_1 = REGISTRE_LEGAL["CONST_ART_1"]
+CONST_ART_4 = REGISTRE_LEGAL["CONST_ART_4"]
+CONST_ART_5 = REGISTRE_LEGAL["CONST_ART_5"]
+CONST_ART_6 = REGISTRE_LEGAL["CONST_ART_6"]
+CONST_ART_12 = REGISTRE_LEGAL["CONST_ART_12"]
+CONST_ART_34 = REGISTRE_LEGAL["CONST_ART_34"]
+CONST_ART_37 = REGISTRE_LEGAL["CONST_ART_37"]
+CONST_ART_40 = REGISTRE_LEGAL["CONST_ART_40"]
+CONST_ART_47 = REGISTRE_LEGAL["CONST_ART_47"]
 CONST_ART_72_3 = REGISTRE_LEGAL["CONST_ART_72_3"]
+CONST_ART_72_4 = REGISTRE_LEGAL["CONST_ART_72_4"]
 CONST_ART_73 = REGISTRE_LEGAL["CONST_ART_73"]
 CONST_ART_74 = REGISTRE_LEGAL["CONST_ART_74"]
 CONST_TITRE_XIII = REGISTRE_LEGAL["CONST_TITRE_XIII"]
+CONST_ART_88_1 = REGISTRE_LEGAL["CONST_ART_88_1"]
+DDHC_ART_1 = REGISTRE_LEGAL["DDHC_ART_1"]
+DDHC_ART_3 = REGISTRE_LEGAL["DDHC_ART_3"]
+DDHC_ART_13 = REGISTRE_LEGAL["DDHC_ART_13"]
+DDHC_ART_16 = REGISTRE_LEGAL["DDHC_ART_16"]
+PREAMBULE_1946_AL3 = REGISTRE_LEGAL["PREAMBULE_1946_AL3"]
+PREAMBULE_1946_AL9 = REGISTRE_LEGAL["PREAMBULE_1946_AL9"]
+PREAMBULE_1946_AL11 = REGISTRE_LEGAL["PREAMBULE_1946_AL11"]
+CHARTE_ENV_ART_4 = REGISTRE_LEGAL["CHARTE_ENV_ART_4"]
+CHARTE_ENV_ART_5 = REGISTRE_LEGAL["CHARTE_ENV_ART_5"]
+CODE_ELEC_L1 = REGISTRE_LEGAL["CODE_ELEC_L1"]
 CODE_ELEC_L16 = REGISTRE_LEGAL["CODE_ELEC_L16"]
+CODE_ELEC_L52_4 = REGISTRE_LEGAL["CODE_ELEC_L52_4"]
+CODE_ELEC_L71 = REGISTRE_LEGAL["CODE_ELEC_L71"]
 CODE_ELEC_L123 = REGISTRE_LEGAL["CODE_ELEC_L123"]
 CODE_ELEC_L260 = REGISTRE_LEGAL["CODE_ELEC_L260"]
+CGCT_L1111_1 = REGISTRE_LEGAL["CGCT_L1111_1"]
+CGCT_L2143_1 = REGISTRE_LEGAL["CGCT_L2143_1"]
 CGCT_L2411_1 = REGISTRE_LEGAL["CGCT_L2411_1"]
+CGCT_L5217_1 = REGISTRE_LEGAL["CGCT_L5217_1"]
 CODE_TRANSP_L1803_1 = REGISTRE_LEGAL["CODE_TRANSP_L1803_1"]
+CNUDM_ART_56_ZEE = REGISTRE_LEGAL["CNUDM_ART_56_ZEE"]
+LOI_55_1052_TAAF = REGISTRE_LEGAL["LOI_55_1052_TAAF"]
 
 
 def rechercher_loi(mot_cle: str) -> List[ArticleDeLoi]:
