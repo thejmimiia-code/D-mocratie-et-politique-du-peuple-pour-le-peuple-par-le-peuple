@@ -579,7 +579,105 @@ CHOMAGE_FRANCE: List[Dict] = [
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# SECTION 8 : THINK TANKS COMPLÉMENTAIRES
+# SECTION 8 : PRÉLÈVEMENTS OBLIGATOIRES — FRANCE (1960→2024)
+# Source : INSEE (Tableaux de l'Économie Française), Wikipedia, FIPECO
+# Méthodologie : ensemble des prélèvements obligatoires en % du PIB
+# Note : hors cotisations sociales imputées et crédits d'impôt
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PRELEVEMENTS_OBLIGATOIRES_FRANCE: List[Dict] = [
+    # Source : INSEE — Tableaux de l'Économie Française
+    # Pic historique : 45.5% (1999) — Minimum : 30.0% (1960)
+    {"annee": 1960, "taux_pct_pib": 30.0, "source": "INSEE",
+     "contexte": "Début des Trente Glorieuses"},
+    {"annee": 1965, "taux_pct_pib": 33.1, "source": "INSEE"},
+    {"annee": 1970, "taux_pct_pib": 33.3, "source": "INSEE"},
+    {"annee": 1975, "taux_pct_pib": 35.1, "source": "INSEE",
+     "contexte": "1er choc pétrolier"},
+    {"annee": 1980, "taux_pct_pib": 39.4, "source": "INSEE"},
+    {"annee": 1985, "taux_pct_pib": 41.6, "source": "INSEE"},
+    {"annee": 1990, "taux_pct_pib": 40.6, "source": "INSEE"},
+    {"annee": 1995, "taux_pct_pib": 41.7, "source": "INSEE"},
+    {"annee": 1999, "taux_pct_pib": 44.0, "source": "INSEE / FIPECO",
+     "contexte": "PIC HISTORIQUE : 45.5% (incl. cotisations)"},
+    {"annee": 2000, "taux_pct_pib": 42.8, "source": "INSEE"},
+    {"annee": 2005, "taux_pct_pib": 42.5, "source": "INSEE"},
+    {"annee": 2007, "taux_pct_pib": 42.1, "source": "INSEE"},
+    {"annee": 2009, "taux_pct_pib": 41.0, "source": "INSEE",
+     "contexte": "Crise : baisse mécanique (dénominateur PIB)"},
+    {"annee": 2010, "taux_pct_pib": 41.3, "source": "INSEE"},
+    {"annee": 2012, "taux_pct_pib": 43.7, "source": "INSEE"},
+    {"annee": 2014, "taux_pct_pib": 44.8, "source": "INSEE"},
+    {"annee": 2017, "taux_pct_pib": 45.2, "source": "INSEE / Wikipedia",
+     "contexte": "Record : 45.2% du PIB"},
+    {"annee": 2018, "taux_pct_pib": 45.0, "source": "INSEE",
+     "contexte": "Suppress ISF, CICE transformé"},
+    {"annee": 2024, "taux_pct_pib": 43.6, "source": "INSEE / HCFP",
+     "contexte": "DERNIÈRE ESTIMATION — baisse depuis 2017"},
+]
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 9 : INFLATION (IPC) — FRANCE (1901→2025)
+# Source : INSEE, france-inflation.com, MoneyVox
+# Méthodologie : évolution annuelle moyenne de l'indice des prix
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+INFLATION_FRANCE: List[Dict] = [
+    # Source : INSEE, france-inflation.com (convertisseur franc-euros)
+    # Sélection de points clés sur 124 ans
+    # Pic historique : >50% (1946-1947, reconstruction)
+    {"annee": 1901, "inflation_pct": 0.0, "source": "INSEE (convertisseur)"},
+    {"annee": 1914, "inflation_pct": 0.0, "source": "INSEE"},
+    {"annee": 1917, "inflation_pct": 20.0, "source": "INSEE",
+     "contexte": "WWI : financement monétaire"},
+    {"annee": 1920, "inflation_pct": 39.5, "source": "INSEE",
+     "contexte": "Pic post-WWI"},
+    {"annee": 1926, "inflation_pct": 31.7, "source": "INSEE",
+     "contexte": "Crise du franc"},
+    {"annee": 1930, "inflation_pct": -5.0, "source": "INSEE",
+     "contexte": "Déflation Grande Dépression"},
+    {"annee": 1946, "inflation_pct": 55.0, "source": "INSEE",
+     "contexte": "RECORD : reconstruction post-WWII"},
+    {"annee": 1947, "inflation_pct": 50.0, "source": "INSEE",
+     "contexte": "Hyperinflation de reconstruction"},
+    {"annee": 1949, "inflation_pct": 6.0, "source": "INSEE",
+     "contexte": "Début de la série officielle INSEE"},
+    {"annee": 1958, "inflation_pct": 15.1, "source": "france-inflation.com",
+     "contexte": "Crise algérienne"},
+    {"annee": 1960, "inflation_pct": 3.6, "source": "INSEE"},
+    {"annee": 1968, "inflation_pct": 4.5, "source": "INSEE",
+     "contexte": "Mai 68 : accords de Grenelle"},
+    {"annee": 1969, "inflation_pct": 6.5, "source": "INSEE"},
+    {"annee": 1974, "inflation_pct": 13.7, "source": "INSEE / france-inflation",
+     "contexte": "1er choc pétrolier : RECORD MODERNE"},
+    {"annee": 1975, "inflation_pct": 11.8, "source": "INSEE"},
+    {"annee": 1980, "inflation_pct": 13.3, "source": "INSEE",
+     "contexte": "2e choc pétrolier"},
+    {"annee": 1985, "inflation_pct": 5.8, "source": "INSEE"},
+    {"annee": 1990, "inflation_pct": 3.4, "source": "INSEE"},
+    {"annee": 1995, "inflation_pct": 1.9, "source": "INSEE"},
+    {"annee": 2000, "inflation_pct": 1.7, "source": "INSEE"},
+    {"annee": 2005, "inflation_pct": 1.7, "source": "INSEE"},
+    {"annee": 2008, "inflation_pct": 2.8, "source": "INSEE"},
+    {"annee": 2009, "inflation_pct": 0.1, "source": "INSEE",
+     "contexte": "Déflation post-crise"},
+    {"annee": 2015, "inflation_pct": 0.0, "source": "INSEE",
+     "contexte": "Zéro inflation"},
+    {"annee": 2020, "inflation_pct": 0.5, "source": "INSEE",
+     "contexte": "COVID"},
+    {"annee": 2022, "inflation_pct": 5.2, "source": "INSEE",
+     "contexte": "RECORD 30 ANS : énergie, alimentation"},
+    {"annee": 2023, "inflation_pct": 4.9, "source": "INSEE"},
+    {"annee": 2024, "inflation_pct": 2.0, "source": "INSEE",
+     "contexte": "Retour à la normale BCE"},
+    {"annee": 2025, "inflation_pct": 0.9, "source": "INSEE / MoneyVox",
+     "contexte": "DERNIÈRE MESURE — désinflation"},
+]
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 10 : THINK TANKS COMPLÉMENTAIRES
 # Source : rapports IGF, HCFP, OFCE, Nova Terra, Jean-Jaurès
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -750,6 +848,16 @@ def obtenir_chomage(annee_debut: int = 1975, annee_fin: int = 2025) -> List[Dict
     return [c for c in CHOMAGE_FRANCE if annee_debut <= c["annee"] <= annee_fin]
 
 
+def obtenir_prelevements(annee_debut: int = 1960, annee_fin: int = 2024) -> List[Dict]:
+    """Retourne les prélèvements obligatoires pour la période spécifiée."""
+    return [p for p in PRELEVEMENTS_OBLIGATOIRES_FRANCE if annee_debut <= p["annee"] <= annee_fin]
+
+
+def obtenir_inflation(annee_debut: int = 1901, annee_fin: int = 2025) -> List[Dict]:
+    """Retourne l'inflation pour la période spécifiée."""
+    return [i for i in INFLATION_FRANCE if annee_debut <= i["annee"] <= annee_fin]
+
+
 def obtenir_fecondite() -> List[Dict]:
     """Retourne la série de fécondité complète."""
     return FECONDITE_FRANCE
@@ -804,6 +912,12 @@ def generer_synthese_enrichissement() -> str:
         f"🏛️ Think tanks enrichis : {len(THINK_TANKS_ENRICHIS)}",
         "   IGF, HCFP, OFCE, Nova Terra, Jean-Jaurès, RESF AN, Commission européenne",
         "",
+        f"🏛️ Prélèvements obligatoires : {len(PRELEVEMENTS_OBLIGATOIRES_FRANCE)} points (1960→2024)",
+        f"   Min : 30,0% (1960) | Max : 45,2% (2017) | Dernier : 43,6% (2024)",
+        "",
+        f"📈 Inflation (IPC) : {len(INFLATION_FRANCE)} points (1901→2025)",
+        f"   Record : 55% (1946) | Record moderne : 13,7% (1974) | Dernier : 0,9% (2025)",
+        "",
         "═" * 80,
     ]
     return "\n".join(lignes)
@@ -822,15 +936,18 @@ def exporter_json_enrichissement() -> str:
         "pib_nominal_france": PIB_NOMINAL_FRANCE,
         "croissance_pib_france": CROISSANCE_PIB_FRANCE,
         "chomage_france": CHOMAGE_FRANCE,
+        "prelevements_france": PRELEVEMENTS_OBLIGATOIRES_FRANCE,
+        "inflation_france": INFLATION_FRANCE,
         "think_tanks_enrichis": THINK_TANKS_ENRICHIS,
         "metadata": {
-            "nb_series": 10,
+            "nb_series": 12,
             "nb_points_total": (
                 len(GINI_FRANCE) + len(PAUVRETE_FRANCE) + len(DETTE_PIB_FRANCE)
                 + len(SOLDE_BUDGETAIRE_FRANCE) + len(DEMOGRAPHIE_FRANCE)
                 + len(FECONDITE_FRANCE) + len(ESPERANCE_VIE_FRANCE)
                 + len(PIB_NOMINAL_FRANCE) + len(CROISSANCE_PIB_FRANCE)
-                + len(CHOMAGE_FRANCE)
+                + len(CHOMAGE_FRANCE) + len(PRELEVEMENTS_OBLIGATOIRES_FRANCE)
+                + len(INFLATION_FRANCE)
             ),
             "nb_think_tanks": len(THINK_TANKS_ENRICHIS),
             "couverture": "1901→2026",
