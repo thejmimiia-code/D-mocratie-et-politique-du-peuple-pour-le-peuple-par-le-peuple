@@ -430,7 +430,156 @@ ESPERANCE_VIE_FRANCE: List[Dict] = [
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-# SECTION 6 : THINK TANKS COMPLÉMENTAIRES
+# SECTION 6 : PIB NOMINAL — FRANCE (1949→2024)
+# Source : Wikipedia (comptes nationaux INSEE), eco3min, france-inflation
+# Méthodologie : PIB en milliards d'euros courants
+# Note : données avant 1999 converties en euros (1 FRF = 0.15245 EUR)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+PIB_NOMINAL_FRANCE: List[Dict] = [
+    # Source : Wikipedia / INSEE comptes nationaux
+    # Données en milliards d'euros courants
+    {"annee": 1949, "pib_mds_euros": 13.2, "source": "INSEE (rétropolation)"},
+    {"annee": 1950, "pib_mds_euros": 15.5, "source": "INSEE"},
+    {"annee": 1955, "pib_mds_euros": 27.0, "source": "INSEE"},
+    {"annee": 1960, "pib_mds_euros": 47.0, "source": "INSEE"},
+    {"annee": 1965, "pib_mds_euros": 76.6, "source": "INSEE"},
+    {"annee": 1970, "pib_mds_euros": 146.1, "source": "INSEE"},
+    {"annee": 1975, "pib_mds_euros": 273.6, "source": "INSEE"},
+    {"annee": 1980, "pib_mds_euros": 453.0, "source": "INSEE"},
+    {"annee": 1985, "pib_mds_euros": 624.8, "source": "INSEE"},
+    {"annee": 1989, "pib_mds_euros": 1001.9, "source": "INSEE"},
+    {"annee": 1990, "pib_mds_euros": 1058.6, "source": "INSEE"},
+    {"annee": 1995, "pib_mds_euros": 1225.0, "source": "INSEE"},
+    {"annee": 2000, "pib_mds_euros": 1485.3, "source": "INSEE"},
+    {"annee": 2005, "pib_mds_euros": 1772.0, "source": "INSEE"},
+    {"annee": 2008, "pib_mds_euros": 1995.8, "source": "INSEE"},
+    {"annee": 2009, "pib_mds_euros": 1941.7, "source": "INSEE"},
+    {"annee": 2010, "pib_mds_euros": 2000.7, "source": "INSEE"},
+    {"annee": 2015, "pib_mds_euros": 2198.4, "source": "INSEE"},
+    {"annee": 2019, "pib_mds_euros": 2425.7, "source": "INSEE"},
+    {"annee": 2020, "pib_mds_euros": 2318.1, "source": "INSEE", "contexte": "COVID : -7.9%"},
+    {"annee": 2021, "pib_mds_euros": 2500.8, "source": "INSEE"},
+    {"annee": 2022, "pib_mds_euros": 2639.0, "source": "INSEE"},
+    {"annee": 2023, "pib_mds_euros": 2804.2, "source": "INSEE"},
+    {"annee": 2024, "pib_mds_euros": 2955.0, "source": "INSEE (est.)"},
+]
+
+# Taux de croissance annuel du PIB en volume (%)
+CROISSANCE_PIB_FRANCE: List[Dict] = [
+    # Source : Wikipedia / INSEE / eco3min
+    # Trente Glorieuses : moyenne 5.3%/an (1949-1974)
+    # Ralentissement : moyenne 2.2%/an (1974-2007)
+    # Post-2007 : moyenne ~0.8%/an (2007-2024)
+    {"annee": 1950, "croissance_pct": 8.6, "source": "INSEE"},
+    {"annee": 1955, "croissance_pct": 5.4, "source": "INSEE"},
+    {"annee": 1960, "croissance_pct": 8.0, "source": "INSEE"},
+    {"annee": 1965, "croissance_pct": 4.8, "source": "INSEE"},
+    {"annee": 1969, "croissance_pct": 7.1, "source": "INSEE"},
+    {"annee": 1970, "croissance_pct": 5.7, "source": "INSEE"},
+    {"annee": 1974, "croissance_pct": 3.1, "source": "INSEE"},
+    {"annee": 1975, "croissance_pct": -0.9, "source": "INSEE", "contexte": "1er choc pétrolier"},
+    {"annee": 1980, "croissance_pct": 1.6, "source": "INSEE"},
+    {"annee": 1985, "croissance_pct": 1.7, "source": "INSEE"},
+    {"annee": 1990, "croissance_pct": 2.9, "source": "INSEE"},
+    {"annee": 1993, "croissance_pct": -0.6, "source": "INSEE", "contexte": "Récession SME"},
+    {"annee": 1995, "croissance_pct": 2.1, "source": "INSEE"},
+    {"annee": 2000, "croissance_pct": 3.9, "source": "INSEE"},
+    {"annee": 2005, "croissance_pct": 1.6, "source": "INSEE"},
+    {"annee": 2008, "croissance_pct": 0.2, "source": "INSEE", "contexte": "Crise financière"},
+    {"annee": 2009, "croissance_pct": -2.9, "source": "INSEE", "contexte": "Grande Récession"},
+    {"annee": 2010, "croissance_pct": 1.9, "source": "INSEE"},
+    {"annee": 2012, "croissance_pct": 0.3, "source": "INSEE"},
+    {"annee": 2015, "croissance_pct": 1.0, "source": "INSEE"},
+    {"annee": 2017, "croissance_pct": 2.4, "source": "INSEE"},
+    {"annee": 2019, "croissance_pct": 1.8, "source": "INSEE"},
+    {"annee": 2020, "croissance_pct": -7.9, "source": "INSEE", "contexte": "COVID-19"},
+    {"annee": 2021, "croissance_pct": 6.8, "source": "INSEE", "contexte": "Rebond post-COVID"},
+    {"annee": 2022, "croissance_pct": 2.6, "source": "INSEE"},
+    {"annee": 2023, "croissance_pct": 0.7, "source": "INSEE"},
+    {"annee": 2024, "croissance_pct": 1.1, "source": "INSEE (est.)"},
+]
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 7 : TAUX DE CHÔMAGE — FRANCE (1975→2025)
+# Source : INSEE BIT (Bureau International du Travail)
+# Méthodologie : chômage au sens du BIT, population active 15-64 ans
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CHOMAGE_FRANCE: List[Dict] = [
+    # Source : INSEE — « L'essentiel sur le chômage » (août 2026)
+    # « Activité, emploi et chômage en 2024 et en séries longues » (mars 2025)
+    # Min historique : 3.1% (T1 1975) — Max historique : 10.6% (1994/1997)
+    {"annee": 1975, "taux_pct": 3.6, "source": "INSEE BIT",
+     "contexte": "1er choc pétrolier, début du chômage de masse"},
+    {"annee": 1976, "taux_pct": 4.0, "source": "INSEE BIT"},
+    {"annee": 1977, "taux_pct": 4.5, "source": "INSEE BIT"},
+    {"annee": 1978, "taux_pct": 4.7, "source": "INSEE BIT"},
+    {"annee": 1979, "taux_pct": 5.3, "source": "INSEE BIT"},
+    {"annee": 1980, "taux_pct": 5.6, "source": "INSEE BIT"},
+    {"annee": 1981, "taux_pct": 6.6, "source": "INSEE BIT",
+     "contexte": "Élection Mitterrand"},
+    {"annee": 1982, "taux_pct": 7.1, "source": "INSEE BIT"},
+    {"annee": 1983, "taux_pct": 7.4, "source": "INSEE BIT"},
+    {"annee": 1984, "taux_pct": 8.7, "source": "INSEE BIT"},
+    {"annee": 1985, "taux_pct": 9.1, "source": "INSEE BIT"},
+    {"annee": 1986, "taux_pct": 9.1, "source": "INSEE BIT"},
+    {"annee": 1987, "taux_pct": 9.2, "source": "INSEE BIT"},
+    {"annee": 1988, "taux_pct": 8.9, "source": "INSEE BIT"},
+    {"annee": 1989, "taux_pct": 8.2, "source": "INSEE BIT"},
+    {"annee": 1990, "taux_pct": 8.0, "source": "INSEE BIT"},
+    {"annee": 1991, "taux_pct": 8.2, "source": "INSEE BIT"},
+    {"annee": 1992, "taux_pct": 9.0, "source": "INSEE BIT"},
+    {"annee": 1993, "taux_pct": 10.0, "source": "INSEE BIT",
+     "contexte": "Récession, dépassement des 10%"},
+    {"annee": 1994, "taux_pct": 10.6, "source": "INSEE BIT",
+     "contexte": "MAXIMUM HISTORIQUE"},
+    {"annee": 1995, "taux_pct": 10.0, "source": "INSEE BIT"},
+    {"annee": 1996, "taux_pct": 10.5, "source": "INSEE BIT"},
+    {"annee": 1997, "taux_pct": 10.6, "source": "INSEE BIT",
+     "contexte": "Égal du maximum"},
+    {"annee": 1998, "taux_pct": 10.2, "source": "INSEE BIT"},
+    {"annee": 1999, "taux_pct": 9.9, "source": "INSEE BIT"},
+    {"annee": 2000, "taux_pct": 8.5, "source": "INSEE BIT",
+     "contexte": "Croissance forte, bulle Internet"},
+    {"annee": 2001, "taux_pct": 7.8, "source": "INSEE BIT"},
+    {"annee": 2002, "taux_pct": 7.9, "source": "INSEE BIT"},
+    {"annee": 2003, "taux_pct": 8.5, "source": "INSEE BIT"},
+    {"annee": 2004, "taux_pct": 8.9, "source": "INSEE BIT"},
+    {"annee": 2005, "taux_pct": 8.9, "source": "INSEE BIT"},
+    {"annee": 2006, "taux_pct": 8.9, "source": "INSEE BIT"},
+    {"annee": 2007, "taux_pct": 8.0, "source": "INSEE BIT"},
+    {"annee": 2008, "taux_pct": 7.4, "source": "INSEE BIT",
+     "contexte": "Crise financière"},
+    {"annee": 2009, "taux_pct": 9.1, "source": "INSEE BIT",
+     "contexte": "Grande Récession"},
+    {"annee": 2010, "taux_pct": 9.3, "source": "INSEE BIT"},
+    {"annee": 2011, "taux_pct": 9.2, "source": "INSEE BIT"},
+    {"annee": 2012, "taux_pct": 9.8, "source": "INSEE BIT"},
+    {"annee": 2013, "taux_pct": 10.3, "source": "INSEE BIT"},
+    {"annee": 2014, "taux_pct": 10.3, "source": "INSEE BIT"},
+    {"annee": 2015, "taux_pct": 10.4, "source": "INSEE BIT"},
+    {"annee": 2016, "taux_pct": 10.1, "source": "INSEE BIT"},
+    {"annee": 2017, "taux_pct": 9.4, "source": "INSEE BIT",
+     "contexte": "Début de la décrue"},
+    {"annee": 2018, "taux_pct": 9.1, "source": "INSEE BIT"},
+    {"annee": 2019, "taux_pct": 8.5, "source": "INSEE BIT"},
+    {"annee": 2020, "taux_pct": 8.1, "source": "INSEE BIT",
+     "contexte": "COVID : activité partielle massive"},
+    {"annee": 2021, "taux_pct": 7.9, "source": "INSEE BIT"},
+    {"annee": 2022, "taux_pct": 7.3, "source": "INSEE BIT",
+     "contexte": "MINIMUM POST-1982"},
+    {"annee": 2023, "taux_pct": 7.4, "source": "INSEE BIT"},
+    {"annee": 2024, "taux_pct": 7.4, "source": "INSEE BIT (mars 2025)",
+     "contexte": "DERNIÈRE MESURE — stable"},
+    {"annee": 2025, "taux_pct": 7.7, "source": "INSEE BIT (août 2026)",
+     "contexte": "Légère remontée"},
+]
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# SECTION 8 : THINK TANKS COMPLÉMENTAIRES
 # Source : rapports IGF, HCFP, OFCE, Nova Terra, Jean-Jaurès
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -586,6 +735,21 @@ def obtenir_demographie() -> List[Dict]:
     return DEMOGRAPHIE_FRANCE
 
 
+def obtenir_pib_nominal() -> List[Dict]:
+    """Retourne la série du PIB nominal."""
+    return PIB_NOMINAL_FRANCE
+
+
+def obtenir_croissance_pib() -> List[Dict]:
+    """Retourne la série de croissance du PIB."""
+    return CROISSANCE_PIB_FRANCE
+
+
+def obtenir_chomage(annee_debut: int = 1975, annee_fin: int = 2025) -> List[Dict]:
+    """Retourne le taux de chômage pour la période spécifiée."""
+    return [c for c in CHOMAGE_FRANCE if annee_debut <= c["annee"] <= annee_fin]
+
+
 def obtenir_fecondite() -> List[Dict]:
     """Retourne la série de fécondité complète."""
     return FECONDITE_FRANCE
@@ -628,6 +792,15 @@ def generer_synthese_enrichissement() -> str:
         f"⏳ Espérance de vie : {len(ESPERANCE_VIE_FRANCE)} points (1994→2024)",
         f"   Dernier : F=85.6 ans / H=80.0 ans (2024)",
         "",
+        f"📈 PIB nominal : {len(PIB_NOMINAL_FRANCE)} points (1949→2024)",
+        f"   1949 : 13,2 Md€ | 2024 : 2 955 Md€ | Facteur : ×224",
+        "",
+        f"📈 Croissance PIB : {len(CROISSANCE_PIB_FRANCE)} points (1950→2024)",
+        f"   Trente Glorieuses : 5,3%/an | 1974→2007 : 2,2%/an | 2007→2024 : 0,8%/an",
+        "",
+        f"👷 Chômage : {len(CHOMAGE_FRANCE)} points (1975→2025)",
+        f"   Min : 3,6% (1975) | Max : 10,6% (1994) | Dernier : 7,4% (2024)",
+        "",
         f"🏛️ Think tanks enrichis : {len(THINK_TANKS_ENRICHIS)}",
         "   IGF, HCFP, OFCE, Nova Terra, Jean-Jaurès, RESF AN, Commission européenne",
         "",
@@ -646,13 +819,18 @@ def exporter_json_enrichissement() -> str:
         "demographie_france": DEMOGRAPHIE_FRANCE,
         "fecondite_france": FECONDITE_FRANCE,
         "esperance_vie_france": ESPERANCE_VIE_FRANCE,
+        "pib_nominal_france": PIB_NOMINAL_FRANCE,
+        "croissance_pib_france": CROISSANCE_PIB_FRANCE,
+        "chomage_france": CHOMAGE_FRANCE,
         "think_tanks_enrichis": THINK_TANKS_ENRICHIS,
         "metadata": {
-            "nb_series": 7,
+            "nb_series": 10,
             "nb_points_total": (
                 len(GINI_FRANCE) + len(PAUVRETE_FRANCE) + len(DETTE_PIB_FRANCE)
                 + len(SOLDE_BUDGETAIRE_FRANCE) + len(DEMOGRAPHIE_FRANCE)
                 + len(FECONDITE_FRANCE) + len(ESPERANCE_VIE_FRANCE)
+                + len(PIB_NOMINAL_FRANCE) + len(CROISSANCE_PIB_FRANCE)
+                + len(CHOMAGE_FRANCE)
             ),
             "nb_think_tanks": len(THINK_TANKS_ENRICHIS),
             "couverture": "1901→2026",
