@@ -16,6 +16,24 @@ from simulateur.scenarios import (
     get_scenario_mandature_5_ans,
     get_scenario_statut_quo,
     get_scenario_austerite_brutale,
+    get_scenario_choc_mondial_stagflation,
+)
+from simulateur.think_tanks import (
+    REGISTRE_THINK_TANKS,
+    PARADIGMES_STRESS_TEST,
+    executer_stress_tests_mandature,
+)
+from simulateur.histoire_france import (
+    PERIODES_HISTORIQUES,
+    SERIES_ANNUELLES,
+    REFORMES_MAJEURES,
+    CRISES_HISTORIQUES,
+    generer_synthese_historique,
+    comparer_periodes,
+)
+from simulateur.societe_domaines import (
+    DOMAINES_SOCIETAUX,
+    generer_synthese_societale,
 )
 
 
@@ -72,8 +90,24 @@ def afficher_detail_annee(r: ResultatEtapeSimulation):
     print(f"   * Taux de crédit aux PME        : {r.taux_credit_pme:.2f} %")
     print(f"   * Pétrole Brent mondial         : {r.cours_petrole_usd:.1f} $/baril (Change EUR/USD : {r.taux_change_eur_usd:.3f})")
     print(f"   * Facture énergétique nette     : {r.facture_energetique_mde:.1f} Md€/an (Inflation IPC : {r.inflation_globale_pct:.2f} %)")
+    print(f"   * Solde commercial extérieur    : {r.solde_commercial_mde:.1f} Md€ (Export: {r.exportations_biens_services_mde:.1f} Md€ / Import: {r.importations_biens_services_mde:.1f} Md€)")
+    print(f"   * Détention dette non-résidents : {r.part_dette_non_residents_pct:.1f} % ({r.volume_dette_non_residents_mde:.1f} Md€)")
+    print(f"   * Dynamique dette boule de neige: r - g = {r.ecart_boule_de_neige_r_moins_g:+.2f} pt ({'DÉCRUE SPONTANÉE' if r.ecart_boule_de_neige_r_moins_g < 0 else 'EXPLOSION SPONTANÉE'})")
 
-    print("\n5. JOURNAL DES ÉVÉNEMENTS & RÉTROACTIONS :")
+    print("\n5. STRATE SOCIALE, DÉCILES & INÉGALITÉS (Données certifiées ERFS / INSEE) :")
+    print(f"   * Indice d'inégalité de Gini    : {r.indice_gini:.3f} (Réf. base: 0.298)")
+    print(f"   * Taux de pauvreté monétaire 60%: {r.taux_pauvrete_monetaire_pct:.1f} % (Réf. base: 14.4 %)")
+    print(f"   * Rapport interdécile D9 / D1   : {r.ratio_interdecile_d9_d1:.2f} (Réf. base: 3.90)")
+    print(f"   * Gain pouvoir d'achat D1-D3    : {r.gain_pouvoir_achat_d1_d3_annuel_euros:+.0f} €/an par ménage modeste")
+    print(f"   * Confiance Ouvriers / Artisans : Ouvriers {r.csp_ouvriers_confiance:.1f}/100 | Artisans {r.csp_artisans_commercants_confiance:.1f}/100")
+
+    print("\n6. PISTE D'AUDITABILITÉ & TRAÇABILITÉ SCIENTIFIQUE :")
+    print(f"   * Empreinte intégrité SHA256    : {r.signature_integrite_sha256}")
+    print(f"   * Sources officielles certifiées: {r.nb_sources_officielles_mobilisees} indicateurs reliés (INSEE, DGFIP, AFT, BCE)")
+    print(f"   * Taux de couverture légale     : {r.taux_couverture_legale_pct:.1f} % (95 articles de loi sans paramètre orphelin)")
+    print(f"   * Conformité organique LOLF/CGCT: {'CONFORME' if r.conformite_organique_lolf else 'ALERTE'}")
+
+    print("\n7. JOURNAL DES ÉVÉNEMENTS & RÉTROACTIONS :")
     for comm in r.commentaires:
         print(f"   - {comm}")
     print("=" * 76)
@@ -113,9 +147,14 @@ def lancer_menu_interactif():
         print("  3. Lancer l'Austérité aveugle (Coupes territoriales et fronde fiscale)")
         print("  4. Lancer le Stress-Test Choc Mondial (Stagflation, Pétrole, Fed)")
         print("  5. Comparer les scénarios côte-à-côte à l'Année 5")
-        print("  6. Quitter")
+        print("  6. Exécuter l'audit contradictoire des 5 stress-tests (23 Think Tanks)")
+        print("  7. Consulter le répertoire mondial des 23 Think Tanks")
+        print("  8. Synthèse historique (234 ans : 1792→2026)")
+        print("  9. Comparer deux régimes historiques")
+        print("  10. Société — 18 domaines (Éducation, Santé, Justice, Défense...)")
+        print("  11. Quitter")
 
-        choix = input("\nVotre choix (1-6) : ").strip()
+        choix = input("\nVotre choix (1-8) : ").strip()
         if choix == "1":
             res = executer_scenario("mandature")
             afficher_detail_annee(res[-1])
@@ -129,29 +168,124 @@ def lancer_menu_interactif():
             res = executer_scenario("choc_mondial")
             afficher_detail_annee(res[-1])
         elif choix == "5":
-            print("\n" + "=" * 105)
-            print("COMPARATIF STRATÉGIQUE DES 4 STRATES À L'ANNÉE 5")
-            print("=" * 105)
-            m_res = executer_scenario("mandature")
-            sq_res = executer_scenario("statut_quo")
-            au_res = executer_scenario("austerite")
-            print("\n>>> SYNTHÈSE CROISÉE À L'ANNÉE 5 :")
-            print(f" - Plan Mandature : Déficit = {m_res[-1].ratio_deficit_pib:.2f} % | OAT = {m_res[-1].taux_oat_pct:.2f} % | Tension = {m_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if m_res[-1].statut_pde_europe else 'CONFORME'}")
-            print(f" - Statut Quo     : Déficit = {sq_res[-1].ratio_deficit_pib:.2f} % | OAT = {sq_res[-1].taux_oat_pct:.2f} % | Tension = {sq_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if sq_res[-1].statut_pde_europe else 'CONFORME'}")
-            print(f" - Austérité      : Déficit = {au_res[-1].ratio_deficit_pib:.2f} % | OAT = {au_res[-1].taux_oat_pct:.2f} % | Tension = {au_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if au_res[-1].statut_pde_europe else 'CONFORME'}")
+            comparer_tous_scenarios()
         elif choix == "6":
+            afficher_stress_tests_cli()
+        elif choix == "7":
+            afficher_think_tanks_cli()
+        elif choix == "8":
+            afficher_histoire_cli()
+        elif choix == "9":
+            print("\nPériodes disponibles :")
+            for i, p in enumerate(PERIODES_HISTORIQUES, 1):
+                print(f"  {i}. {p.nom} ({p.annee_debut}-{p.annee_fin}) [id: {p.id}]")
+            a_idx = input("Choisir la période A (numéro) : ").strip()
+            b_idx = input("Choisir la période B (numéro) : ").strip()
+            try:
+                a_id = PERIODES_HISTORIQUES[int(a_idx) - 1].id
+                b_id = PERIODES_HISTORIQUES[int(b_idx) - 1].id
+                afficher_comparaison_historique_cli(a_id, b_id)
+            except (ValueError, IndexError):
+                print("Choix invalide.")
+        elif choix == "10":
+            afficher_societe_cli()
+        elif choix == "11":
             print("\nFermeture du simulateur.")
             break
         else:
             print("Choix invalide.")
 
 
+def afficher_stress_tests_cli():
+    """Affiche les résultats d'évaluation des 5 paradigmes de stress-test."""
+    print("\n" + "=" * 105)
+    print("AUDIT CONTRADICTOIRE : ÉVALUATION DES 5 PARADIGMES DE STRESS-TEST (23 THINK TANKS)")
+    print("=" * 105)
+    res = executer_stress_tests_mandature(None, None, None, None, None)
+    for k, st in res.items():
+        print(f"\n[{st.statut}] {st.titre} — Score: {st.score_robustesse_sur_100:.0f} %")
+        print(f"  * Rationale scientifique : {st.justification_scientifique}")
+        print("  * Critères audités :")
+        for ck, cv in st.criteres_analyses.items():
+            conf_str = "OK" if cv["conforme"] else "ÉCHEC"
+            print(f"    - {ck:<42}: {cv['valeur']} {cv['unite']} [{conf_str}]")
+        print("  * Réponses aux brèches soulevées :")
+        for rep in st.reponses_systemiques:
+            print(f"    -> {rep}")
+
+
+def afficher_think_tanks_cli():
+    """Affiche le répertoire synthétique des 23 think tanks répertoriés."""
+    print("\n" + "=" * 105)
+    print("RÉPERTOIRE MONDIAL DES 23 THINK TANKS AUDITÉS (LOCAL À MONDIAL)")
+    print("=" * 105)
+    for tt_id, tt in REGISTRE_THINK_TANKS.items():
+        print(f"\n• [{tt.echelon.upper()}] {tt.nom} ({tt.sigle}) — Siège: {tt.pays_siege}")
+        print(f"  Orientation : {tt.epistemologie} | Direction: {tt.directeur_ou_fondateur}")
+        print(f"  Objection   : {tt.objections_anticipees[0]}")
+        print(f"  Pourquoi    : {tt.pourquoi_integration}")
+        print(f"  Réponse     : {tt.reponse_du_simulateur}")
+
+
+def afficher_histoire_cli():
+    """Affiche la synthèse historique et les périodes de référence."""
+    print(generer_synthese_historique())
+    print(f"\n{len(PERIODES_HISTORIQUES)} périodes historiques | {len(SERIES_ANNUELLES)} points chronologiques | {len(REFORMES_MAJEURES)} réformes majeures | {len(CRISES_HISTORIQUES)} crises systémiques")
+
+
+def afficher_societe_cli():
+    """Affiche la synthèse des 18 domaines sociétaux."""
+    print(generer_synthese_societale())
+
+
+def afficher_comparaison_historique_cli(a_id: str, b_id: str):
+    """Compare deux périodes historiques en mode CLI."""
+    comp = comparer_periodes(a_id, b_id)
+    print(f"\n{'=' * 80}")
+    print(f"COMPARAISON : {comp.periode_a}  ↔  {comp.periode_b}")
+    print('=' * 80)
+    for dim_key, indicateurs in comp.dimensions.items():
+        print(f"\n--- {dim_key.upper()} ---")
+        for attr, vals in indicateurs.items():
+            delta_str = f"{vals['delta']:+.2f}" if vals['delta'] is not None else "-"
+            print(f"  {vals.get('label', attr):<45} A={vals['a']:<12} B={vals['b']:<12} Δ={delta_str}")
+    if comp.enseignements:
+        print(f"\n{'=' * 80}")
+        print("ENSEIGNEMENTS :")
+        for e in comp.enseignements:
+            print(f"  💡 {e}")
+
+
+def comparer_tous_scenarios():
+    """Exécute et compare les 4 scénarios."""
+    print("\n" + "=" * 105)
+    print("COMPARATIF STRATÉGIQUE DES 4 STRATES À L'ANNÉE 5")
+    print("=" * 105)
+    m_res = executer_scenario("mandature")
+    sq_res = executer_scenario("statut_quo")
+    au_res = executer_scenario("austerite")
+    ch_res = executer_scenario("choc_mondial")
+    print("\n>>> SYNTHÈSE CROISÉE À L'ANNÉE 5 :")
+    print(f" - Plan Mandature : Déficit = {m_res[-1].ratio_deficit_pib:.2f} % | OAT = {m_res[-1].taux_oat_pct:.2f} % | Tension = {m_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if m_res[-1].statut_pde_europe else 'CONFORME'}")
+    print(f" - Statut Quo     : Déficit = {sq_res[-1].ratio_deficit_pib:.2f} % | OAT = {sq_res[-1].taux_oat_pct:.2f} % | Tension = {sq_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if sq_res[-1].statut_pde_europe else 'CONFORME'}")
+    print(f" - Austérité      : Déficit = {au_res[-1].ratio_deficit_pib:.2f} % | OAT = {au_res[-1].taux_oat_pct:.2f} % | Tension = {au_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if au_res[-1].statut_pde_europe else 'CONFORME'}")
+    print(f" - Choc Mondial   : Déficit = {ch_res[-1].ratio_deficit_pib:.2f} % | OAT = {ch_res[-1].taux_oat_pct:.2f} % | Tension = {ch_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if ch_res[-1].statut_pde_europe else 'CONFORME'}")
+
+
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-        scenario = sys.argv[1].lower()
-        if scenario in ("mandature", "statut_quo", "austerite"):
-            executer_scenario(scenario)
+        arg = sys.argv[1].lower()
+        if arg in ("mandature", "statut_quo", "austerite", "choc_mondial"):
+            executer_scenario(arg)
+        elif arg in ("comparatif", "compare"):
+            comparer_tous_scenarios()
+        elif arg in ("stress", "stress-tests", "--stress-tests"):
+            afficher_stress_tests_cli()
+        elif arg in ("thinktanks", "think-tanks", "--think-tanks"):
+            afficher_think_tanks_cli()
+        elif arg in ("histoire", "history", "--histoire"):
+            afficher_histoire_cli()
         else:
-            print(f"Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite]")
+            print(f"Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite|choc_mondial|comparatif|--stress-tests|--think-tanks|--histoire]")
     else:
         lancer_menu_interactif()

@@ -21,7 +21,27 @@ RACINE = Path(__file__).resolve().parents[2]
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
-from eva.extensions.bus import EventBus  # noqa: E402
+try:
+    from eva.extensions.bus import EventBus  # noqa: E402
+except ImportError:
+    # Mode autonome / fallback hors superviseur ÉVA
+    class EventBus:  # type: ignore
+        """Bus d'événements local pour exécution autonome et tests."""
+        _handlers: Dict[str, List[Any]] = {}
+
+        @classmethod
+        def subscribe(cls, topic: str, handler: Any, extension_id: str = ""):
+            cls._handlers.setdefault(topic, []).append((extension_id, handler))
+
+        @classmethod
+        def publier(cls, topic: str, message: dict) -> dict:
+            handlers = cls._handlers.get(topic, [])
+            for _, h in handlers:
+                try:
+                    h(message)
+                except Exception:
+                    pass
+            return {"destinataires": len(handlers)}
 
 EVENEMENT_DEMANDE = "politique.simulation.demande.v1"
 EVENEMENT_REPONSE = "politique.simulation.reponse.v1"
