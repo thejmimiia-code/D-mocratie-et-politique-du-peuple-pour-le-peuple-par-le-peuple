@@ -269,4 +269,117 @@ def distance_geometrique_mediane(resultats_election, positions_electeurs):
 
 ---
 
-*Document généré automatiquement — Cycles de recherche & développement du 20/09/2026*
+---
+
+## 8. Cycle 3 — Civic Tech, Modèles Macro & VIe République (20/09/2026)
+
+### 8.1 Decidim — Framework de démocratie participative
+- **URL** : https://github.com/decidim/decidim
+- **Stars** : 1 700+
+- **Langage** : Ruby on Rails
+- **Origine** : Mairie de Barcelone, 2016
+- **Description** : Framework open-source de démocratie participative citoyenne. Générateur d'applications web avec espaces de participation (processus, assemblées, initiatives, budgets participatifs).
+- **Synergie** : Référence architecturale pour nos assemblées territoriales MRSC. Leur modèle d'espaces (processus délibératifs, assemblées, initiatives) correspond directement au fonctionnement participatif décrit à l'Article 11.9 des statuts MRSC.
+- **Action recommandée** : Étudier leur architecture modulaire (composants : réunions, propositions, budgets) pour concevoir le système de vote par domaine de compétence
+
+### 8.2 Consul Democracy — Participation citoyenne ouverte
+- **URL** : https://github.com/consuldemocracy/consuldemocracy
+- **Stars** : 1 500+
+- **Langage** : Ruby on Rails
+- **Origine** : Mairie de Madrid, 2015
+- **Description** : Plateforme open-source de participation citoyenne et gouvernement ouvert. Budgets participatifs, propositions, votes, débats, législation collaborative.
+- **Synergie** : Modèle direct pour notre Chambre Citoyenne. Leur système de vérification d'identité (2FA, document officiel) est transférable au tirage au sort citoyen. Plus de 100 villes dans le monde l'utilisent.
+- **Action recommandée** : Référencer leur système de vérification pour notre mécanisme de RIC (Référendum d'Initiative Citoyenne)
+
+### 8.3 CivicDash — Plateforme politique citoyenne française
+- **URL** : https://github.com/CivicDash/democratie
+- **Licence** : AGPL-3.0
+- **Origine** : Association Civis-Consilium, déployée sur civicdash.fr
+- **Description** : Plateforme open-source française de démocratie participative. Suivi temps réel AN (577 députés, 30 000+ votes, 200 000+ amendements) + Sénat (348 sénateurs). Forum sans starification, vote anonyme chiffré (AES-256), budget participatif, hub communal 36 000 communes.
+- **Synergie** : DIRECTEMENT complémentaire à notre projet. Leur suivi parlementaire temps réel + notre simulateur macro-politique = couverture complète. Potentiel de partenariat technique.
+- **Points forts** :
+  - FranceConnect+ intégré (95% — finalisation en cours)
+  - Vote anonyme chiffré avec séparation identité/bulletin
+  - Suivi parlementaire complet (AN + Sénat)
+  - Hub communal pour 36 000 communes
+  - 24 badges, XP, niveaux (gamification citoyenne)
+- **Action recommandée** : Évaluer une intégration de notre moteur de simulation dans leur écosystème
+
+### 8.4 Liquid Democracy (liqd) — Démocratie liquide Berlin
+- **URL** : https://github.com/liqd/adhocracy4
+- **Stars** : 113
+- **Langage** : Python (Django)
+- **Origine** : Liquid Democracy e.V., Berlin
+- **Description** : Bibliothèque de participation en ligne pour les projets de Liquid Democracy. Permet la délégation de vote par domaine de compétence — exactement le principe de vote par domaine des statuts MRSC (Art. 3).
+- **Synergie** : Architecture technique directement applicable à notre Chambre Citoyenne : délégation de vote sur des sujets spécifiques à des citoyens de confiance, avec révocation permanente.
+- **Action recommandée** : Étudier leur modèle de délégation par thème pour notre système de vote à la carte
+
+### 8.5 Modèle Mésange — INSEE / DG Trésor
+- **URL** : https://github.com/InseeFr/Mesange
+- **Organisme** : INSEE + Direction Générale du Trésor
+- **Description** : Modèle macro-économétrique officiel français. Évaluation ex ante de l'impact des mesures de politique économique sur l'emploi, le PIB et les prix. Prend en compte les chocs externes (taux de change, prix du pétrole).
+- **Synergie** : Référence de calibration principale pour notre moteur SFC. Les équations de Mésange servent de benchmark pour vérifier la cohérence de nos coefficients multiplicateurs.
+- **Action recommandée** : Intégrer les équations clés de Mésange comme tests de validation croisée
+
+### 8.6 Modèle Mélèze — INSEE (DSGE zone euro)
+- **URL** : https://github.com/InseeFr/Meleze
+- **Organisme** : INSEE
+- **Description** : Modèle macroéconomique DSGE (Dynamic Stochastic General Equilibrium) représentant la zone euro, distinguant France et reste de la zone euro. Modélise les comportements agrégés à partir du cadre micro-économique.
+- **Synergie** : Directement pertinent pour notre Strate 3 (Continental/Européen). Leur modélisation des anticipations des agents et des rigidités nominales enrichit notre contrainte PDE.
+- **Options de simulation** :
+  - Règle budgétaire (convergence dette/PIB)
+  - Gouvernement optimisateur (maximisation bien-être)
+  - Absence de réaction (référence)
+- **Action recommandée** : Utiliser comme référence pour nos scénarios européens
+
+### 8.7 Soutenabilité budgétaire France — Modèle de Domar étendu
+- **URL** : https://github.com/gunout/soutenabilite-budgetaire-France
+- **Licence** : MIT
+- **Description** : Simulateur de trajectoire de dette publique. Modèle de Domar étendu, analyse stochastique Monte Carlo, CAPB, multiplicateur budgétaire et matrice de sensibilité (tornado).
+- **Synergie** : Validation croisée directe de notre équation r−g (effet boule de neige de la dette). Leurs 6 scénarios prédéfinis (statu quo, consolidation, austérité, réformes structurelles, choc inflationniste, Maastricht 60%) correspondent à nos 5 paradigmes de stress-test.
+- **Points forts** :
+  - Matrice pb* × (r−g) : heatmap du solde stabilisant
+  - Analyse de sensibilité tornado sur 11 paramètres
+  - Données historiques France 1980→2025
+  - 10 scénarios prédéfinis
+- **Action recommandée** : Comparer nos résultats r−g avec leurs projections Monte Carlo
+
+---
+
+## 9. Synthèse Élargie — Écosystème de R&D
+
+### 9.1 Cartographie des complémentarités
+
+```
+NOTRE PROJET (Simulateur Macro-Politique)
+    │
+    ├── Strate 1 (Local) ◄── PolicySpace, Decidim, Consul Democracy, CivicDash
+    ├── Strate 2 (National) ◄── Mésange (INSEE), france-budget-simulateur, OpenFisca
+    ├── Strate 3 (Européen) ◄── Mélèze (INSEE), ESL
+    ├── Strate 4 (Mondial) ◄── AI-Geopol-Projects, OASIS
+    │
+    ├── Module Multi-Agents ◄── Mesa, Concordia, AgentTorch, wealth-inequality-abm
+    ├── Module Démocratie ◄── electoral_sim, Liquid Democracy (liqd)
+    ├── Module Dette / Finance ◄── SFC_models, soutenabilite-budgetaire-France
+    ├── Module Société (18 domaines) ◄── SocioVerse, AgentSociety
+    └── Documentation ◄── monetary-economics, METHODOLOGIE.md
+```
+
+### 9.2 Nouvelles priorités (mise à jour)
+
+| Priorité | Dépôt | Action |
+|:---|:---|:---|
+| **Critique** | CivicDash/democratie | Évaluer un partenariat technique (suivi AN + notre simulateur) |
+| **Critique** | InseeFr/Mesange | Intégrer comme benchmark de calibration |
+| **Haute** | InseeFr/Meleze | Référence pour nos scénarios européens |
+| **Haute** | decidim/decidim | Architecture modulaire pour les assemblées territoriales |
+| **Haute** | consuldemocracy | Système de vérification pour le RIC |
+| **Haute** | liqd/adhocracy4 | Délégation de vote par domaine de compétence |
+| **Haute** | gunout/soutenabilite | Validation croisée de notre équation r−g |
+| **Moyenne** | cturkieh/france-budget-simulateur | Architecture handlers (déjà documenté cycle 1) |
+| **Moyenne** | mesa/mesa | Framework ABM (déjà intégré cycle 2) |
+| **Basse** | AgentTorch | Scalabilité future |
+
+---
+
+*Document généré automatiquement — Cycles de recherche & développement du 20/09/2026 — Cycle 3 : Civic Tech, Modèles INSEE & VIe République*
