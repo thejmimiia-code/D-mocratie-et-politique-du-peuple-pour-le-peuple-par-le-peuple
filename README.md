@@ -236,7 +236,7 @@ Le simulateur ne propose pas UN scénario. Il confronte **5 trajectoires contrad
 
 ### Déclaration de paternité
 
-L'intégralité des concepts, textes, architectures institutionnelles, modèles de simulation algorithmique, corpus juridiques, bases de données historiques, propositions de réformes et éléments de doctrine politique contenus dans ce dépôt **émanent de l'initiative de terrain indépendante de Monsieur B. Jean-Marie, fondateur du Mouvement Représentatif de la Société Civile (M.R.S.C.)**, association loi 1901 déclarée à la Préfecture de l'Isère, dont le siège social est fixé au 995 route de Jarcieu, 38270 Beaurepaire.
+L'intégralité des concepts, textes, architectures institutionnelles, modèles de simulation algorithmique, corpus juridiques, bases de données historiques, propositions de réformes et éléments de doctrine politique contenus dans ce dépôt **émanent de l'initiative de terrain indépendante de Monsieur B. Jean Marie, fondateur du MRSC.fr**, association loi 1901 déclarée à la Préfecture de l'Isère, dont le siège social est fixé au 995 route de Jarcieu, 38270 Beaurepaire.
 
 ### Date de fondation
 
@@ -244,8 +244,8 @@ Les statuts fondateurs du MRSC ont été adoptés le **24 mars 2016** et modifi�
 
 ### Interdiction formelle de récupération
 
-- **Aucune récupération mercantile** : Ce dépôt, ses idées, ses modèles et ses textes ne peuvent être exploités à des fins commerciales sans accord écrit et exprès du fondateur du MRSC.
-- **Aucune récupération idéologique** : Aucun parti, mouvement, think tank, organisation ou institution ne peut s'approprier, déformer ou réutiliser les concepts et propositions de ce dépôt pour les intégrer à un programme partisan sans accord écrit et exprès du fondateur du MRSC.
+- **Aucune récupération mercantile** : Ce dépôt, ses idées, ses modèles et ses textes ne peuvent être exploités à des fins commerciales sans accord écrit et exprès du fondateur du MRSC.fr.
+- **Aucune récupération idéologique** : Aucun parti, mouvement, think tank, organisation ou institution ne peut s'approprier, déformer ou réutiliser les concepts et propositions de ce dépôt pour les intégrer à un programme partisan sans accord écrit et exprès du fondateur du MRSC.fr.
 - **Aucune récupération institutionnelle** : Aucune entité publique ou privée ne peut se prévaloir de ce travail comme d'un apport collaboratif anonyme. La paternité est individuelle et vérifiable.
 - **Toute modification, fork ou adaptation** doit conserver cette mention de paternité intégralement et sans altération.
 
@@ -326,7 +326,7 @@ Aucune décision publique ne peut être prise sans que chaque phase ait été re
 **Article 17** — Un Conseil d'Éthique est constitué en cas de manquement grave aux principes fondamentaux.
 
 **Article 18** — Le Conseil d'Éthique est composé de 25 membres :
-- Moitié désignés par le fondateur du MRSC (ou le membre le plus ancien en fonction).
+- Moitié désignés par le fondateur du MRSC.fr (ou le membre le plus ancien en fonction).
 - Moitié tirés au sort parmi les membres volontaires.
 
 **Article 19** — Les décisions du Conseil d'Éthique **prévalent sur celles du Bureau Exécutif**. Le Conseil peut écarter tout membre visé par une procédure éthique, jusqu'à la résolution de l'objet de sa création.
@@ -588,5 +588,5 @@ Une preuve que la Ve République n'a pas besoin d'être « réformée ». Elle a
 <strong>Fondé sur les valeurs de responsabilité, de loyauté, d'humanité, d'empathie, de moralité et d'éthique.</strong><br>
 <a href="http://www.mrsc.fr?utm_source=github">Mouvement Représentatif de la Société Civile (M.R.S.C) — La force citoyenne</a><br><br>
 <em>Fondé le 24 mars 2016 — Beaurepaire, Isère (38270)</em><br>
-<em>Fondateur : Monsieur B. Jean-Marie</em>
+<em>Fondateur : Monsieur B. Jean Marie</em>
 </p>
