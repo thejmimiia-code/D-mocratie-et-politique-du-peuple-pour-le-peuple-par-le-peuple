@@ -383,3 +383,136 @@ NOTRE PROJET (Simulateur Macro-Politique)
 ---
 
 *Document généré automatiquement — Cycles de recherche & développement du 20/09/2026 — Cycle 3 : Civic Tech, Modèles INSEE & VIe République*
+
+---
+
+## 10. Cycle 4 — Microsimulation Fiscale, ABM Institutionnel & LLM (20/09/2026)
+
+### 10.1 OpenFisca France — Micro-simulateur socio-fiscal officiel
+- **URL** : https://github.com/openfisca/openfisca-france
+- **Stars** : 304
+- **Organisme** : DGFIP + Etalab (gouvernement français)
+- **Licence** : AGPL-3.0
+- **Description** : Le micro-simulateur officiel du système socio-fiscal français. Code source ouvert par la DGFIP le 1er avril 2016 en collaboration avec Etalab. Modélise l'intégralité du système d'impôts et de prestations sociales français.
+- **Synergie** : SOURCE PRIMAIRE pour notre barème IR (CGI art. 197). OpenFisca calcule effectivement l'IR pour chaque situation familiale. Notre simulateur macro peut s'adosser à OpenFisca pour la micro-simulation fiscale (passage du top-down au bottom-up).
+- **Écosystème complet** :
+  - `openfisca-france` : Modèle principal (304 stars)
+  - `openfisca-france-entreprises` : Micro-simulation fiscale entreprises
+  - `openfisca-france-indirect-taxation` : Taxation indirecte (TVA, énergie)
+  - `openfisca-france-extension-revenu-de-base` : Extension revenu de base
+  - `calculette-impots-python` : Traduction Python du code source DGFIP (langage M)
+- **Action recommandée** : Intégrer OpenFisca comme micro-simulateur fiscal de référence pour notre module Strate 2 (National)
+
+### 10.2 PolicyEngine — Micro-simulation fiscale internationale
+- **URL** : https://github.com/PolicyEngine
+- **Stars** : policyengine-us (144), policyengine-uk (42)
+- **Organisme** : PolicyEngine (nonprofit US)
+- **Description** : Plateforme open-source de micro-simulation fiscale et sociale basée sur OpenFisca. Couvre US, UK, Canada. Modélise l'impact des réformes fiscales sur le budget, la pauvreté et les inégalités.
+- **Synergie** : Modèle de référence pour l'architecture de notre module fiscal. Leur approche "reform → budget + distribution + marginal tax rates" correspond exactement à notre besoin.
+- **Points forts** :
+  - Co-fondateur Nikhil Woodruff : Innovation Fellow à 10 Downing Street
+  - Partenariat NBER : émulateur TAXSIM open-source
+  - Partenariat Atlanta Fed : Policy Rules Database
+  - Couverture des 50 États US + DC
+- **Action recommandée** : Étudier leur architecture de reforme (YAML config → micro-simulation → résultats distributifs) pour notre simulateur
+
+### 10.3 Policy Simulation Library (PSLmodels)
+- **URL** : https://github.com/PSLmodels
+- **Organisme** : PSLmodels.org (USA)
+- **Description** : Bibliothèque de modèles open-source pour l'analyse des politiques publiques. Couvre la micro-simulation fiscale, les modèles OLG (générations imbriquées), les modèles CGE (équilibre général calculable).
+- **Modèles clés** :
+  - **Tax-Calculator** (311 stars) : Micro-simulation fiscale US fédérale
+  - **OG-Core** (85 stars) : Modèle OLG pour évaluer les politiques fiscales
+  - **CGE** (39 stars) : Modèle d'équilibre général calculable open-source
+  - **Cost-of-Capital-Calculator** (19 stars) : Calculateur taux d'imposition effectif
+  - **InverseOptimalTax** : Modélisation de l'impôt optimal inverse
+- **Synergie** : L'OG-Core est DIRECTEMENT pertinent pour notre module intergénérationnel (IEHI — Indice d'Équité Harmonieuse Intergénérationnelle). Leur cadre OLG permet de modéliser les effets des réformes sur les 9 périodes de vie.
+- **Action recommandée** : Intégrer le cadre OLG de OG-Core pour enrichir notre module Cycle de vie & Générations
+
+### 10.4 Institutional Representation ABM — arXiv:2608.24554
+- **URL** : https://github.com/tofuadmiral/institutional-representation-abm
+- **Auteur** : Fuad Ali (MIT)
+- **Licence** : MIT
+- **Article** : arXiv:2608.24554 — *Why fragmented parliaments stop passing legislation: Opposition discipline and representation across four democratic institutions*
+- **Description** : ABM comparant 4 institutions démocratiques (parlementaire, présidentielle, premier-présidentielle, président-parlementaire). Trouve que la fragmentation seule ne bloque pas la législation : il faut une discipline d'opposition cohésive. Identifie un compromis passage-représentation entre le débit législatif et la distance des politiques aux préférences des électeurs.
+- **Synergie** : DIRECTEMENT pertinent pour notre ébauche de VIe République (Chambre Citoyenne, Chambre Territoriale). Leurs résultats sur le compromis passage/représentation éclaire notre architecture bicamérale.
+- **Points forts** :
+  - Modèle Mesa (Python) avec Streamlit UI
+  - 200 seeds par scénario, analyse de sensibilité complète
+  - Protocole ODD (Overview, Design, Concepts) documenté
+  - Dépôt figué DOI: 10.5281/zenodo.22119501
+- **Action recommandée** : Appliquer leur méthodologie pour tester notre architecture institutionnelle MRSC (Chambre Citoyenne vs Chambre Territoriale vs Conseil d'Éthique)
+
+### 10.5 GPLab — Framework ABM génératif pour simulation de politiques
+- **URL** : https://github.com/SmartLegislation/GPLab
+- **Article** : JASSS (Journal of Artificial Societies and Social Simulation), Vol. 29, No. 1, 2026
+- **Description** : Plateforme de simulation de politiques publiques intégrant des agents LLM avec modules cognitifs dynamiques (mémoire + émotions). Architecture modulaire de sous-systèmes sociaux (environnement économique, transmission d'opinion). Théorie de la rationalité limitée intégrée.
+- **Synergie** : Cadre théorique pour enrichir nos agents multi-agents avec des capacités cognitives (mémoire, émotions, rationalité limitée). Actuellement nos agents sont purement rationnels — GPLab montre comment intégrer la dimension comportementale.
+- **Points forts** :
+  - Agents LLM avec personnalités distinctes
+  - Modularité : chaque sous-système social est indépendant
+  - Métriques de cohérence formelles
+  - Transferabilité cross-domaine validée (5 scénarios de politique)
+- **Action recommandée** : Étudier l'architecture cognitive pour enrichir le module multi-agents avec de la rationalité limitée
+
+### 10.6 Budget Lab Yale — Tax-Simulator
+- **URL** : https://github.com/Budget-Lab-Yale/Tax-Simulator
+- **Organisme** : The Budget Lab at Yale University
+- **Langage** : R
+- **Description** : Micro-simulation du système fiscal US fédéral. Architecture YAML pour les paramètres fiscaux, modules comportementaux optionnels. Produit estimations de revenus, tables de distribution, taux marginaux effectifs.
+- **Synergie** : Architecture de configuration (YAML pour paramètres fiscaux) est transférable à notre système. Leur approche "baseline + reform" avec scénarios YAML correspond à notre structure de scénarios.
+- **Action recommandée** : Inspirer l'architecture de configuration de nos réformes fiscales
+
+---
+
+## 11. Cartographie Complète de l'Écosystème R&D (4 Cycles)
+
+### 11.1 Écosystème mis à jour
+
+```
+NOTRE PROJET (Simulateur Macro-Politique MRSC)
+    │
+    ├── Strate 1 (Local) ◄── PolicySpace, Decidim, Consul Democracy, CivicDash
+    ├── Strate 2 (National) ◄── Mésange, france-budget-simulateur, OpenFisca, PolicyEngine
+    ├── Strate 3 (Européen) ◄── Mélèze (INSEE), ESL, OG-Core (PSL)
+    ├── Strate 4 (Mondial) ◄── AI-Geopol-Projects, OASIS, World-Geopol-Fora
+    │
+    ├── Module Multi-Agents ◄── Mesa, Concordia, AgentTorch, wealth-inequality-abm, GPLab
+    ├── Module Démocratie ◄── electoral_sim, Liquid Democracy, institutional-representation-abm
+    ├── Module Fiscal ◄── OpenFisca, PolicyEngine, PSLmodels/Tax-Calculator, Budget-Lab-Yale
+    ├── Module Intergénérationnel ◄── PSLmodels/OG-Core, IEHI
+    ├── Module Dette / Finance ◄── SFC_models, soutenabilite-budgetaire-France
+    ├── Module Société (18 domaines) ◄── SocioVerse, AgentSociety, GPLab
+    └── Documentation ◄── monetary-economics, METHODOLOGIE.md, ODD protocol
+```
+
+### 11.2 Statistiques de recherche
+
+| Métrique | Cycle 1 | Cycle 2 | Cycle 3 | Cycle 4 | **Total** |
+|:---|:---:|:---:|:---:|:---:|:---:|
+| Dépôts découverts | 7 | 10 | 7 | 6 | **30** |
+| Sources INSEE/DG Trésor | 0 | 0 | 2 | 1 | **3** |
+| Frameworks ABM | 0 | 5 | 0 | 2 | **7** |
+| Plateformes civic tech | 0 | 0 | 4 | 1 | **5** |
+| Modèles micro-sim | 0 | 0 | 0 | 5 | **5** |
+| Articles académiques | 1 | 0 | 0 | 2 | **3** |
+
+### 11.3 Priorités finales (mise à jour cycle 4)
+
+| Priorité | Dépôt | Action |
+|:---|:---|:---|
+| **Critique** | openfisca/openfisca-france | Micro-simulateur fiscal officiel — source primaire IR |
+| **Critique** | tofuadmiral/institutional-representation-abm | Tester notre architecture VIe République |
+| **Haute** | CivicDash/democratie | Partenariat technique (suivi AN + simulateur) |
+| **Haute** | InseeFr/Mesange | Benchmark calibration moteur SFC |
+| **Haute** | PSLmodels/OG-Core | Cadre OLG pour le module intergénérationnel |
+| **Haute** | PolicyEngine | Architecture de réforme (YAML → micro-sim → distribution) |
+| **Haute** | SmartLegislation/GPLab | Rationalité limitée pour le module multi-agents |
+| **Moyenne** | PSLmodels/Tax-Calculator | Référence micro-sim fiscale |
+| **Moyenne** | decidim/decidim | Architecture assemblées territoriales |
+| **Moyenne** | gunout/soutenabilite | Validation croisée r−g |
+| **Basse** | AgentTorch | Scalabilité future |
+
+---
+
+*Document généré automatiquement — Cycles de recherche & développement du 20/09/2026 — Cycle 4 : Microsimulation Fiscale (OpenFisca, PolicyEngine, PSL), ABM Institutionnel (arXiv:2608.24554), LLM Policy Sim (GPLab)*

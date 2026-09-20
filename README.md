@@ -406,6 +406,23 @@ Ce projet ne travaille pas en silo. Il s'inscrit dans un écosystème mondial d'
 | [**BAFurtado/PolicySpace**](https://github.com/BAFurtado/PolicySpace) | 23 | ABM de redistribution fiscale entre municipalités. Directement applicable. |
 | [**INET-Complexity/ESL**](https://github.com/INET-Complexity/ESL) | 76 | Simulation économique avec calcul parallèle. Référence de calibration. |
 
+### Microsimulation fiscale & sociale (OpenFisca / PolicyEngine / PSL)
+
+| Dépôt | Stars | Pertinence MRSC |
+|:---|:---:|:---|
+| [**openfisca/openfisca-france**](https://github.com/openfisca/openfisca-france) | 304 | Micro-simulateur socio-fiscal officiel français (DGFIP + Etalab). Source primaire pour notre barème IR (CGI art. 197). |
+| [**PolicyEngine/policyengine-us**](https://github.com/PolicyEngine/policyengine-us) | 144 | Micro-simulation fiscale US basée sur OpenFisca. Modèle de référence pour l'architecture de notre module fiscal. |
+| [**PSLmodels/Tax-Calculator**](https://github.com/PSLmodels/Tax-Calculator) | 311 | Micro-simulation fiscale US fédérale. Library of open source models for public policy analysis. |
+| [**PSLmodels/OG-Core**](https://github.com/PSLmodels/OG-Core) | 85 | Modèle OLG (générations imbriquées) pour évaluer les politiques fiscales. Référence pour notre module intergénérationnel (IEHI). |
+| [**Budget-Lab-Yale/Tax-Simulator**](https://github.com/Budget-Lab-Yale/Tax-Simulator) | — | Micro-simulation Yale. Architecture YAML pour les paramètres fiscaux, modules comportementaux optionnels. |
+
+### Simulation institutionnelle par agents (ABM politique)
+
+| Dépôt | Stars | Pertinence MRSC |
+|:---|:---:|:---|
+| [**tofuadmiral/institutional-representation-abm**](https://github.com/tofuadmiral/institutional-representation-abm) | — | ABM comparant 4 institutions démocratiques (parlementaire, présidentielle, etc.) — arXiv:2608.24554. Modèle Mesa. |
+| [**SmartLegislation/GPLab**](https://github.com/SmartLegislation/GPLab) | — | Framework ABM génératif avec agents LLM. Théorie de la rationalité limitée pour simuler les effets des politiques publiques. |
+
 ### Évaluation des politiques publiques
 
 | Dépôt | Stars | Pertinence MRSC |
@@ -495,7 +512,7 @@ Chaque donnée intégrée au simulateur est adossée à une **source publique ce
 
 ---
 
-## X. CHARTTE TECHNIQUE
+## X. CHARTE TECHNIQUE
 
 | Critère | Valeur |
 |:---|:---|
