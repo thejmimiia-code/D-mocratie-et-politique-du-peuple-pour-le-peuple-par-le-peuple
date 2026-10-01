@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run unit tests
+        run: |
+          python -m unittest discover -s tests -p "test_*.py" -v
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint with ruff
+        run: ruff check .
+
+  smoke-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Run mandature simulation
+        run: python3 main.py mandature
+
+      - name: Run choc_mondial simulation
+        run: python3 main.py choc_mondial
+
+      - name: Verify JSON export
+        run: |
+          python3 main.py mandature --export /tmp/smoke_test.json
+          python3 -c "import json; data=json.load(open('/tmp/smoke_test.json')); assert data['nombre_etapes']==5; assert len(data['resultats'])==5; print('JSON export OK')"
+
+      - name: Verify CSV export
+        run: |
+          python3 main.py mandature --export /tmp/smoke_test.csv
+          python3 -c "import csv; rows=list(csv.DictReader(open('/tmp/smoke_test.csv'))); assert len(rows)==5; print(f'CSV export OK ({len(rows)} rows)')"

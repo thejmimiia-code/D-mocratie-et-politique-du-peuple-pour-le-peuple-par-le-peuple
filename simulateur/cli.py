@@ -3,7 +3,11 @@ simulateur/cli.py — Interface terminale pour le simulateur multi-strates (Loca
 """
 
 import sys
-from typing import List
+import json
+import csv
+from pathlib import Path
+from typing import List, Optional
+from dataclasses import asdict, fields
 from simulateur.model import (
     EchelonLocal,
     EchelonNational,
@@ -16,17 +20,18 @@ from simulateur.scenarios import (
     get_scenario_mandature_5_ans,
     get_scenario_statut_quo,
     get_scenario_austerite_brutale,
+    get_scenario_choc_mondial_stagflation,
 )
 
 
-def afficher_banniere():
+def afficher_banniere() -> None:
     print("=" * 105)
     print("   SIMULATEUR MACRO-POLITIQUE SYSTÉMIQUE : DYNAMIQUE DES 4 STRATES INTERCONNECTÉES   ")
     print("    [1. Local / Collectivités] -> [2. National / État] -> [3. Europe / PDE] -> [4. Mondial / Marchés]    ")
     print("=" * 105)
 
 
-def afficher_tableau_resultats(titre: str, resultats: List[ResultatEtapeSimulation]):
+def afficher_tableau_resultats(titre: str, resultats: List[ResultatEtapeSimulation]) -> None:
     print(f"\n>>> RÉSULTATS DE LA SIMULATION : {titre}")
     print("-" * 115)
     header = (
@@ -46,7 +51,7 @@ def afficher_tableau_resultats(titre: str, resultats: List[ResultatEtapeSimulati
     print("-" * 115)
 
 
-def afficher_detail_annee(r: ResultatEtapeSimulation):
+def afficher_detail_annee(r: ResultatEtapeSimulation) -> None:
     print(f"\n====================== ANALYSE DÉTAILLÉE : ANNÉE {r.annee} ======================")
     print("1. STRATE LOCALE (Collectivités territoriales & Baromètre civique) :")
     print(f"   * Tension sociale territoriale : {r.tension_sociale_locale:.1f} / 100")
@@ -79,7 +84,10 @@ def afficher_detail_annee(r: ResultatEtapeSimulation):
     print("=" * 76)
 
 
-def executer_scenario(nom_scenario: str) -> List[ResultatEtapeSimulation]:
+def executer_scenario(
+    nom_scenario: str,
+    export_path: Optional[str] = None,
+) -> List[ResultatEtapeSimulation]:
     moteur = MoteurSimulationSystemique()
 
     if nom_scenario == "mandature":
@@ -101,10 +109,76 @@ def executer_scenario(nom_scenario: str) -> List[ResultatEtapeSimulation]:
         moteur.appliquer_etape(dec)
 
     afficher_tableau_resultats(titre, moteur.historique_etapes)
+
+    if export_path:
+        export_scenario(nom_scenario, moteur.historique_etapes, export_path)
+
     return moteur.historique_etapes
 
 
-def lancer_menu_interactif():
+def export_scenario(
+    nom_scenario: str,
+    resultats: List[ResultatEtapeSimulation],
+    export_path: str,
+) -> str:
+    """
+    Exporte les résultats de simulation vers un fichier.
+
+    Détecte le format à partir de l'extension du fichier (.json ou .csv).
+    Retourne le chemin absolu du fichier généré.
+    """
+    chemin = Path(export_path).expanduser().resolve()
+
+    if chemin.suffix.lower() == ".json":
+        return exporter_json(nom_scenario, resultats, str(chemin))
+    elif chemin.suffix.lower() == ".csv":
+        return exporter_csv(nom_scenario, resultats, str(chemin))
+    else:
+        raise ValueError(
+            f"Format d'export non supporté : '{chemin.suffix}'. "
+            "Utilisez .json ou .csv"
+        )
+
+
+def exporter_json(
+    nom_scenario: str,
+    resultats: List[ResultatEtapeSimulation],
+    chemin: str,
+) -> str:
+    """Exporte les résultats vers un fichier JSON structuré."""
+    payload = {
+        "scenario": nom_scenario,
+        "modele": "Gigogne 4 échelons (Local, National, Europe, Mondial)",
+        "nombre_etapes": len(resultats),
+        "resultats": [asdict(r) for r in resultats],
+    }
+    with open(chemin, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    print(f"\n>>> Export JSON : {chemin}")
+    return chemin
+
+
+def exporter_csv(
+    nom_scenario: str,
+    resultats: List[ResultatEtapeSimulation],
+    chemin: str,
+) -> str:
+    """Exporte les résultats vers un fichier CSV (une ligne par année)."""
+    champs = [f.name for f in fields(ResultatEtapeSimulation)]
+    with open(chemin, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=champs, extrasaction="ignore")
+        writer.writeheader()
+        for r in resultats:
+            d = asdict(r)
+            # Convertit la liste de commentaires en chaîne pour le CSV
+            if isinstance(d.get("commentaires"), list):
+                d["commentaires"] = "; ".join(d["commentaires"])
+            writer.writerow(d)
+    print(f"\n>>> Export CSV : {chemin}")
+    return chemin
+
+
+def lancer_menu_interactif() -> None:
     afficher_banniere()
     while True:
         print("\nCHOISISSEZ UN SCÉNARIO À TESTER :")
@@ -113,9 +187,11 @@ def lancer_menu_interactif():
         print("  3. Lancer l'Austérité aveugle (Coupes territoriales et fronde fiscale)")
         print("  4. Lancer le Stress-Test Choc Mondial (Stagflation, Pétrole, Fed)")
         print("  5. Comparer les scénarios côte-à-côte à l'Année 5")
-        print("  6. Quitter")
+        print("  6. Exporter le Plan de Mandature en JSON")
+        print("  7. Exporter le Plan de Mandature en CSV")
+        print("  8. Quitter")
 
-        choix = input("\nVotre choix (1-6) : ").strip()
+        choix = input("\nVotre choix (1-8) : ").strip()
         if choix == "1":
             res = executer_scenario("mandature")
             afficher_detail_annee(res[-1])
@@ -135,11 +211,21 @@ def lancer_menu_interactif():
             m_res = executer_scenario("mandature")
             sq_res = executer_scenario("statut_quo")
             au_res = executer_scenario("austerite")
+            cm_res = executer_scenario("choc_mondial")
             print("\n>>> SYNTHÈSE CROISÉE À L'ANNÉE 5 :")
             print(f" - Plan Mandature : Déficit = {m_res[-1].ratio_deficit_pib:.2f} % | OAT = {m_res[-1].taux_oat_pct:.2f} % | Tension = {m_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if m_res[-1].statut_pde_europe else 'CONFORME'}")
             print(f" - Statut Quo     : Déficit = {sq_res[-1].ratio_deficit_pib:.2f} % | OAT = {sq_res[-1].taux_oat_pct:.2f} % | Tension = {sq_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if sq_res[-1].statut_pde_europe else 'CONFORME'}")
             print(f" - Austérité      : Déficit = {au_res[-1].ratio_deficit_pib:.2f} % | OAT = {au_res[-1].taux_oat_pct:.2f} % | Tension = {au_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if au_res[-1].statut_pde_europe else 'CONFORME'}")
+            print(f" - Choc Mondial   : Déficit = {cm_res[-1].ratio_deficit_pib:.2f} % | OAT = {cm_res[-1].taux_oat_pct:.2f} % | Tension = {cm_res[-1].tension_sociale_locale:.1f}/100 | PDE = {'ALERTE' if cm_res[-1].statut_pde_europe else 'CONFORME'}")
         elif choix == "6":
+            res = executer_scenario("mandature")
+            export_scenario("mandature", res, "mandature_simulateur.json")
+            print("Export JSON terminé.")
+        elif choix == "7":
+            res = executer_scenario("mandature")
+            export_scenario("mandature", res, "mandature_simulateur.csv")
+            print("Export CSV terminé.")
+        elif choix == "8":
             print("\nFermeture du simulateur.")
             break
         else:
@@ -148,10 +234,23 @@ def lancer_menu_interactif():
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
+        # Supporte : scenario [scenario] [--export <path.json|csv>]
         scenario = sys.argv[1].lower()
-        if scenario in ("mandature", "statut_quo", "austerite"):
-            executer_scenario(scenario)
+        if scenario in ("mandature", "statut_quo", "austerite", "choc_mondial"):
+            export_path = None
+            if "--export" in sys.argv:
+                idx = sys.argv.index("--export")
+                if idx + 1 < len(sys.argv):
+                    export_path = sys.argv[idx + 1]
+                else:
+                    print("Usage: python3 -m simulateur.cli [scenario] [--export <path.json|csv>]")
+                    sys.exit(1)
+            executer_scenario(scenario, export_path=export_path)
+        elif scenario == "--export":
+            print("Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite|choc_mondial] [--export <path.json|csv>]")
+            sys.exit(1)
         else:
-            print(f"Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite]")
+            print(f"Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite|choc_mondial] [--export <path.json|csv>]")
+            sys.exit(1)
     else:
         lancer_menu_interactif()
