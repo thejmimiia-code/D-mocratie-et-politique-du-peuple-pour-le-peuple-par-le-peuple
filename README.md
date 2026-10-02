@@ -96,11 +96,14 @@ for decision in get_scenario_mandature_5_ans():
 
 ## V. RÉSULTATS DU PLAN DE MANDATURE (ANNÉE 5)
 
-| Indicateur macro-économique | Situation Initiale | Année 5 (Plan de Mandature) | Impact |
-|---|---|---|---|
-| **Déficit public (% PIB)** | **5,07 %** (152 Md€) | **2,79 %** (89,8 Md€) | **-2,28 pts** (Sortie de la PDE européenne) |
-| **Dette souveraine (% PIB)** | **118,9 %** | **Stabilisée à ~129 %** | Inversion de la trajectoire exponentielle |
-| **Taux OAT 10 ans** | **4,15 %** | **3,22 %** | Détente de **93 points de base** |
-| **Spread face au Bund** | **85,0 bps** | **46,8 bps** | Prime de risque française divisée par deux |
-| **Tension sociale locale** | **35,0 / 100** | **5,0 / 100** | Apaisement civique par le pouvoir d'achat et le RIC |
-| **Confiance démocratique** | **28,0 / 100** | **78,0 / 100** | Moralisation (B2, vote blanc, anti-pantouflage) |
+> Les valeurs ci-dessous sont Issues d'une exécution réelle du simulateur (`d06b6a0`) et validées contre l'export JSON.
+> Voir [`docs/RESULTATS_SIMULATION.md`](docs/RESULTATS_SIMULATION.md) pour le rapport complet des 4 scénarios.
+
+|| Indicateur macro-économique | Situation Initiale | Année 5 (Plan de Mandature) | Impact |
+||---|---|---|---|
+|| **Déficit public (% PIB)** | **5,07 %** (152 Md€) | **2,84 %** (92,5 Md€) | **-2,23 pts** (Sortie de la PDE européenne) |
+|| **Dette souveraine (% PIB)** | **118,9 %** | **128,1 %** | Stabilisation de la trajectoire (inversion de la spirale) |
+|| **Taux OAT 10 ans** | **4,15 %** | **3,35 %** | Détente de **80 points de base** |
+|| **Spread face au Bund** | **85,0 bps** | **47,2 bps** | Prime de risque française divisée par deux |
+|| **Tension sociale locale** | **35,0 / 100** | **5,0 / 100** | Apaisement civique par le pouvoir d'achat et le RIC |
+|| **Confiance démocratique** | **28,0 / 100** | **77,5 / 100** | Moralisation (B2, vote blanc, anti-pantouflage) |
