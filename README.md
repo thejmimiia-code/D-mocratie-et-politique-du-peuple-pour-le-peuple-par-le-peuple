@@ -42,9 +42,9 @@ Le simulateur repose sur l'interconnexion dynamique de **4 échelons de contrain
 $$\text{Décision Politique} \rightarrow \text{Impact Local} \rightarrow \text{Réaction Sociale} \rightarrow \text{Sanction Parlementaire} \rightarrow \text{Alerte Européenne} \rightarrow \text{Réaction Marchés} \rightarrow \text{Nouveau Budget}$$
 
 1. **Échelon Local (Cellule de base)** : Règle d'or budgétaire imposant l'équilibre de fonctionnement. Si l'État coupe les dotations (DGF), la taxe foncière flambe, déclenchant une fronde fiscale immédiate.
-2. **Échelon National (Moteur)** : PIB nominal ~3 000 Md€, dépenses ~57% PIB, recettes ~43.6% (PO) / ~52% (total), dette 3 568 Md€ (~119% PIB), charge de la dette 65 Md€/an. Risque permanent de motion de censure en cas de contestation populaire.
+2. **Échelon National (Moteur)** : PIB nominal ~3 015 Md€ (3 000 Md€), dépenses ~57 % PIB, recettes ~43,6 % (PO) / ~52 % (total), dette 3 568 Md€ (~118,3 % PIB), charge de la dette 66,5 Md€/an. Risque permanent de motion de censure en cas de contestation populaire.
 3. **Échelon Continental (Cadre UE)** : Procédure de Déficit Excessif (PDE) activée au-dessus de 3,0 % du PIB avec menaces de sanctions.
-4. **Échelon Mondial (Marchés financiers)** : 56 % de la dette souveraine détenue par des non-résidents. Le taux de l'OAT 10 ans et le spread face au Bund allemand déterminent le coût de refinancement de l'État.
+4. **Échelon Mondial (Marchés financiers)** : 55,8 % de la dette souveraine détenue par des non-résidents. Le taux de l'OAT 10 ans et le spread face au Bund allemand déterminent le coût de refinancement de l'État.
 
 ---
 
@@ -90,6 +90,15 @@ moteur = MoteurSimulationSystemique()
 for decision in get_scenario_mandature_5_ans():
     res = moteur.appliquer_etape(decision)
     print(f"An {res.annee} : Déficit = {res.ratio_deficit_pib:.2f} % du PIB | Taux OAT = {res.taux_oat_pct:.2f} % | Tension = {res.tension_sociale:.1f}/100")
+```
+
+---
+
+### 5. Lancer le dashboard web interactif (en direct)
+```bash
+python -m simulateur.dashboard --port 8080
+# ou, après installation via pip :
+simulateur-mpol-dashboard
 ```
 
 ---
