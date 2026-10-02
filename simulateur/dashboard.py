@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 simulateur/dashboard.py — Dashboard web interactif pour le Simulateur Macro-Politique.
 
@@ -17,25 +16,22 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import threading
-import time
 import traceback
-from http.server import HTTPServer, BaseHTTPRequestHandler
-from typing import Any, Dict, List, Optional, Tuple
+from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
     get_scenario_austerite_brutale,
     get_scenario_choc_mondial_stagflation,
+    get_scenario_mandature_5_ans,
+    get_scenario_statut_quo,
 )
-from simulateur.cli import export_scenario
 
 # ─── Catalogue des scénarios ──────────────────────────────────────────────────
 
-SCENARIOS: Dict[str, Dict[str, Any]] = {
+SCENARIOS: dict[str, dict[str, Any]] = {
     "mandature": {
         "nom": "Plan de Mandature Républicaine",
         "description": "Réformes structurelles +60 Md€/an en Année 5. Déficit < 3% PIB.",
@@ -487,7 +483,7 @@ renderScenarios();
 
 # ─── API Responses ───────────────────────────────────────────────────────────
 
-def run_simulation_api(scenario: str) -> Dict[str, Any]:
+def run_simulation_api(scenario: str) -> dict[str, Any]:
     """Exécute une simulation et retourne les résultats en format API."""
     if scenario not in SCENARIOS:
         return {"error": f"Scénario inconnu : {scenario}"}
@@ -554,7 +550,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
-    def _send_json(self, data: Dict[str, Any]) -> None:
+    def _send_json(self, data: dict[str, Any]) -> None:
         body = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -583,7 +579,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         if path == "/" or path == "":
             scenarios_json = json.dumps(
-                {k: v for k, v in SCENARIOS.items()},
+                dict(SCENARIOS),
                 ensure_ascii=False,
             )
             html = HTML_PAGE.replace('===SCENARIOS_JSON===', scenarios_json)
@@ -675,7 +671,7 @@ def main() -> None:
     server = create_server(args.host, args.port)
     print(f"  Dashboard lancé : http://{args.host}:{args.port}")
     print(f"  Scénarios : {', '.join(SCENARIOS.keys())}")
-    print(f"  Appuyez sur Ctrl+C pour arrêter.")
+    print("  Appuyez sur Ctrl+C pour arrêter.")
     print(f"  {'=' * 60}")
     try:
         server.serve_forever()

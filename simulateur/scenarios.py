@@ -2,11 +2,11 @@
 simulateur/scenarios.py — Catalogue des scénarios types de simulation sur 5 ans.
 """
 
-from typing import List
+
 from simulateur.model import DecisionPolitique
 
 
-def get_scenario_mandature_5_ans() -> List[DecisionPolitique]:
+def get_scenario_mandature_5_ans() -> list[DecisionPolitique]:
     """
     Le scénario du Dossier de Mandature Globale (+60 Md€ en Année 5).
     Répartition graduelle et réaliste sur 5 exercices.
@@ -91,7 +91,7 @@ def get_scenario_mandature_5_ans() -> List[DecisionPolitique]:
     ]
 
 
-def get_scenario_statut_quo() -> List[DecisionPolitique]:
+def get_scenario_statut_quo() -> list[DecisionPolitique]:
     """Scénario du Statut Quo : aucune réforme d'envergure, immobilisme."""
     return [
         DecisionPolitique(annee=i, description=f"Année {i} : Statut Quo (Immobilisme politique)")
@@ -99,7 +99,7 @@ def get_scenario_statut_quo() -> List[DecisionPolitique]:
     ]
 
 
-def get_scenario_austerite_brutale() -> List[DecisionPolitique]:
+def get_scenario_austerite_brutale() -> list[DecisionPolitique]:
     """Scénario d'austérité aveugle : coupes dans la DGF et dégradation des services."""
     return [
         DecisionPolitique(
@@ -113,7 +113,7 @@ def get_scenario_austerite_brutale() -> List[DecisionPolitique]:
     ]
 
 
-def get_scenario_choc_mondial_stagflation() -> List[DecisionPolitique]:
+def get_scenario_choc_mondial_stagflation() -> list[DecisionPolitique]:
     """
     Scénario de crise et de stress-test mondial :
     Choc pétrolier exogène (+30 $/bbl), dépréciation de l'euro (-0.08) et resserrement Fed (+75 bps).

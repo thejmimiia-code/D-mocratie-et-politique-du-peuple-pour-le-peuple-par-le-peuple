@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Point d'entrée principal du Simulateur Macro-Politique & Démocratique.
 Projet : Démocratie et politique, du peuple, pour le peuple, par le peuple.
 """
 
 import sys
-from simulateur.cli import executer_scenario, lancer_menu_interactif
+
+from simulateur.cli import executer_scenario
+
 
 def main() -> None:
     if len(sys.argv) > 1:
@@ -26,7 +27,7 @@ def main() -> None:
             sys.exit(1)
     else:
         print("Lancement de la simulation du Plan de Mandature quinquennal...")
-        res = executer_scenario("mandature")
+        executer_scenario("mandature")
         print("\nSimulation exécutée avec succès !")
 
 

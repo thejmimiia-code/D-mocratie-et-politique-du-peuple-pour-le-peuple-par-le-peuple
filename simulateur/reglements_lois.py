@@ -4,7 +4,6 @@ Permet d'interroger les articles de lois et leurs contraintes mathématiques dan
 """
 
 from dataclasses import dataclass
-from typing import Dict, List, Optional
 
 
 @dataclass
@@ -18,7 +17,7 @@ class ArticleDeLoi:
     effet_simulation: str
 
 
-REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
+REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
     # -------------------------------------------------------------------------
     # BLOC CONSTITUTIONNEL
     # -------------------------------------------------------------------------
@@ -378,12 +377,12 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
 }
 
 
-def get_corpus_lois() -> Dict[str, ArticleDeLoi]:
+def get_corpus_lois() -> dict[str, ArticleDeLoi]:
     """Retourne l'intégralité du registre légal."""
     return REGISTRE_LEGAL
 
 
-def rechercher_loi(mot_cle: str) -> List[ArticleDeLoi]:
+def rechercher_loi(mot_cle: str) -> list[ArticleDeLoi]:
     """Recherche des textes par mot-clé dans le titre, le code ou l'effet."""
     mot_cle_lower = mot_cle.lower()
     resultats = []

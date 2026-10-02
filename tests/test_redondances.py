@@ -8,24 +8,20 @@ tests/test_redondances.py — Banc de test exhaustif de toutes les redondances s
 6. Redondances de stabilité numérique et non-divergence sous stress-tests extrêmes.
 """
 
-import unittest
 import math
+import unittest
+
 from simulateur.model import (
-    EchelonLocal,
-    EchelonNational,
-    EchelonEuropeen,
-    EchelonMondial,
     DecisionPolitique,
-    ResultatEtapeSimulation,
 )
 from simulateur.moteur import MoteurSimulationSystemique
+from simulateur.reglements_lois import get_corpus_lois
 from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
     get_scenario_austerite_brutale,
     get_scenario_choc_mondial_stagflation,
+    get_scenario_mandature_5_ans,
+    get_scenario_statut_quo,
 )
-from simulateur.reglements_lois import get_corpus_lois, rechercher_loi
 
 
 class TestRedondancesComptables(unittest.TestCase):
@@ -217,7 +213,7 @@ class TestRedondancesCorpusJuridique(unittest.TestCase):
     def test_couverture_des_quatre_strates_dans_le_registre(self):
         """Le registre légal doit couvrir obligatoirement les 4 strates."""
         corpus = get_corpus_lois()
-        strates_presentes = set(art.strate_impactee for art in corpus.values())
+        strates_presentes = {art.strate_impactee for art in corpus.values()}
         self.assertIn("Local", strates_presentes)
         self.assertIn("National", strates_presentes)
         self.assertIn("Européen", strates_presentes)

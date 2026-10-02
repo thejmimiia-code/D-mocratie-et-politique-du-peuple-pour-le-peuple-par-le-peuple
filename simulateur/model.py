@@ -5,8 +5,6 @@ Données réelles calées à l'instant T (septembre 2026).
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional, Any
-
 
 # =============================================================================
 # STRATE 1 : ÉCHELON LOCAL (La Cellule de Base Territoriale)
@@ -267,4 +265,4 @@ class ResultatEtapeSimulation:
     facture_energetique_mde: float = 64.5
     inflation_globale_pct: float = 2.1
 
-    commentaires: List[str] = field(default_factory=list)
+    commentaires: list[str] = field(default_factory=list)

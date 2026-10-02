@@ -3,20 +3,13 @@ simulateur/moteur.py — Moteur de simulation systémique à poupées russes (4 
 Calé rigoureusement sur les données et contraintes à l'instant T (AFT, INSEE, Eurostat, CGCT).
 """
 
-from typing import List, Dict, Any, Tuple
 from simulateur.model import (
-    EchelonLocal,
-    EchelonNational,
-    EchelonEuropeen,
-    EchelonMondial,
     DecisionPolitique,
+    EchelonEuropeen,
+    EchelonLocal,
+    EchelonMondial,
+    EchelonNational,
     ResultatEtapeSimulation,
-    SousSecteurBlocCommunal,
-    SousSecteurDepartements,
-    SousSecteurRegions,
-    SousSecteurEtatCentral,
-    SousSecteurSecuriteSociale,
-    SousSecteurParlement,
 )
 
 
@@ -38,7 +31,7 @@ class MoteurSimulationSystemique:
         self.national = national or EchelonNational()
         self.europe = europe or EchelonEuropeen()
         self.mondial = mondial or EchelonMondial()
-        self.historique_etapes: List[ResultatEtapeSimulation] = []
+        self.historique_etapes: list[ResultatEtapeSimulation] = []
 
         # État cumulatif des réformes constitutionnelles et civiques
         self.reforme_casier_b2_active = False
@@ -52,7 +45,7 @@ class MoteurSimulationSystemique:
         """
         Exécute la chaîne causale multi-strates pour un exercice fiscal.
         """
-        commentaires: List[str] = []
+        commentaires: list[str] = []
 
         # =========================================================================
         # 0. CHOCS MONDIAUX (Matières Premières, Devises, Taux Mondiaux) & PIB
@@ -173,12 +166,18 @@ class MoteurSimulationSystemique:
             self.reforme_non_cumul_active = True
 
         gains_civiques = 0.0
-        if self.reforme_casier_b2_active: gains_civiques += 10.0
-        if self.reforme_vote_blanc_active: gains_civiques += 8.0
-        if self.reforme_ric_active: gains_civiques += 14.0
-        if self.reforme_regimes_speciaux_active: gains_civiques += 6.0
-        if self.reforme_anti_pantouflage_active: gains_civiques += 7.0
-        if self.reforme_non_cumul_active: gains_civiques += 5.0
+        if self.reforme_casier_b2_active:
+            gains_civiques += 10.0
+        if self.reforme_vote_blanc_active:
+            gains_civiques += 8.0
+        if self.reforme_ric_active:
+            gains_civiques += 14.0
+        if self.reforme_regimes_speciaux_active:
+            gains_civiques += 6.0
+        if self.reforme_anti_pantouflage_active:
+            gains_civiques += 7.0
+        if self.reforme_non_cumul_active:
+            gains_civiques += 5.0
 
         self.national.confiance_democratique = min(100.0, 27.5 + gains_civiques)
 

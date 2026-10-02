@@ -2,25 +2,21 @@
 simulateur/cli.py — Interface terminale pour le simulateur multi-strates (Local, National, Europe, Marchés).
 """
 
-import sys
-import json
 import csv
-from pathlib import Path
-from typing import List, Optional
+import json
+import sys
 from dataclasses import asdict, fields
+from pathlib import Path
+
 from simulateur.model import (
-    EchelonLocal,
-    EchelonNational,
-    EchelonEuropeen,
-    EchelonMondial,
     ResultatEtapeSimulation,
 )
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
     get_scenario_austerite_brutale,
     get_scenario_choc_mondial_stagflation,
+    get_scenario_mandature_5_ans,
+    get_scenario_statut_quo,
 )
 
 
@@ -31,7 +27,7 @@ def afficher_banniere() -> None:
     print("=" * 105)
 
 
-def afficher_tableau_resultats(titre: str, resultats: List[ResultatEtapeSimulation]) -> None:
+def afficher_tableau_resultats(titre: str, resultats: list[ResultatEtapeSimulation]) -> None:
     print(f"\n>>> RÉSULTATS DE LA SIMULATION : {titre}")
     print("-" * 115)
     header = (
@@ -86,8 +82,8 @@ def afficher_detail_annee(r: ResultatEtapeSimulation) -> None:
 
 def executer_scenario(
     nom_scenario: str,
-    export_path: Optional[str] = None,
-) -> List[ResultatEtapeSimulation]:
+    export_path: str | None = None,
+) -> list[ResultatEtapeSimulation]:
     moteur = MoteurSimulationSystemique()
 
     if nom_scenario == "mandature":
@@ -118,7 +114,7 @@ def executer_scenario(
 
 def export_scenario(
     nom_scenario: str,
-    resultats: List[ResultatEtapeSimulation],
+    resultats: list[ResultatEtapeSimulation],
     export_path: str,
 ) -> str:
     """
@@ -142,7 +138,7 @@ def export_scenario(
 
 def exporter_json(
     nom_scenario: str,
-    resultats: List[ResultatEtapeSimulation],
+    resultats: list[ResultatEtapeSimulation],
     chemin: str,
 ) -> str:
     """Exporte les résultats vers un fichier JSON structuré."""
@@ -160,7 +156,7 @@ def exporter_json(
 
 def exporter_csv(
     nom_scenario: str,
-    resultats: List[ResultatEtapeSimulation],
+    resultats: list[ResultatEtapeSimulation],
     chemin: str,
 ) -> str:
     """Exporte les résultats vers un fichier CSV (une ligne par année)."""
@@ -250,7 +246,7 @@ if __name__ == "__main__":
             print("Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite|choc_mondial] [--export <path.json|csv>]")
             sys.exit(1)
         else:
-            print(f"Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite|choc_mondial] [--export <path.json|csv>]")
+            print("Usage: python3 -m simulateur.cli [mandature|statut_quo|austerite|choc_mondial] [--export <path.json|csv>]")
             sys.exit(1)
     else:
         lancer_menu_interactif()

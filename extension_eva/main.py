@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 main.py — Extension ÉVA : Simulateur Macro-Politique & Démocratique (Protocole 4.2.3)
 =====================================================================================
@@ -15,7 +14,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Dict, Any, List
+from typing import Any
 
 RACINE = Path(__file__).resolve().parents[2]
 if str(RACINE) not in sys.path:
@@ -86,14 +85,14 @@ class ExtensionSimulateurPolitique:
         rapport = EventBus.publier(EVENEMENT_REPONSE, reponse)
         return {"publie": True, "destinataires": rapport.get("destinataires", 0), "reponse": reponse}
 
-    def _executer_simulation(self, scenario: str) -> List[Dict[str, Any]]:
+    def _executer_simulation(self, scenario: str) -> list[dict[str, Any]]:
         """Moteur de calcul des 4 échelons (Local, National, Europe, Monde)."""
         from simulateur.moteur import MoteurSimulationSystemique
         from simulateur.scenarios import (
-            get_scenario_mandature_5_ans,
-            get_scenario_statut_quo,
             get_scenario_austerite_brutale,
             get_scenario_choc_mondial_stagflation,
+            get_scenario_mandature_5_ans,
+            get_scenario_statut_quo,
         )
 
         moteur = MoteurSimulationSystemique()

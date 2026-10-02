@@ -3,18 +3,13 @@ tests/test_simulateur.py — Tests d'intégration et de cohérence des 4 strates
 """
 
 import unittest
+
 from simulateur.model import (
-    EchelonLocal,
-    EchelonNational,
-    EchelonEuropeen,
-    EchelonMondial,
     DecisionPolitique,
 )
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
     get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
-    get_scenario_austerite_brutale,
 )
 
 
@@ -46,7 +41,7 @@ class TestSimulateurQuatreStrates(unittest.TestCase):
             self.moteur.appliquer_etape(dec)
 
         res_final = self.moteur.historique_etapes[-1]
-        
+
         # Validation Strate Nationale & Européenne : Déficit < 3.0%
         self.assertLess(res_final.ratio_deficit_pib, 3.0)
         self.assertFalse(res_final.statut_pde_europe)
