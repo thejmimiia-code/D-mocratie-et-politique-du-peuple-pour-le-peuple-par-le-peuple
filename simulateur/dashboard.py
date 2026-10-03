@@ -180,7 +180,12 @@ from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
     get_scenario_austerite_brutale,
     get_scenario_choc_mondial_stagflation,
+    get_scenario_convergence_ww3,
+    get_scenario_crise_taiwan,
+    get_scenario_escalade_nucleaire_tactique,
+    get_scenario_fermeture_hormuz,
     get_scenario_mandature_5_ans,
+    get_scenario_resilience_republicaine,
     get_scenario_statut_quo,
 )
 
@@ -210,6 +215,36 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "description": "Chocs exogènes : pétrole +30$, Fed +75 bps, EUR déprécié.",
         "couleur": "#8b5cf6",
         "fn": get_scenario_choc_mondial_stagflation,
+    },
+    "crise_taiwan": {
+        "nom": "Scénario A — Crise de Taïwan",
+        "description": "Blocus du détroit : 60 % des semi-conducteurs mondiaux coupés, Chips Act souverain.",
+        "couleur": "#06b6d4",
+        "fn": get_scenario_crise_taiwan,
+    },
+    "hormuz": {
+        "nom": "Scénario C — Fermeture d'Hormuz",
+        "description": "20 % du pétrole mondial bloqué, Brent > 150 $, déstockage stratégique AIE.",
+        "couleur": "#f97316",
+        "fn": get_scenario_fermeture_hormuz,
+    },
+    "escalade_nucleaire": {
+        "nom": "Scénario B — Escalade nucléaire tactique",
+        "description": "Franchissement du seuil nucléaire en Europe : stress-test ultime du modèle.",
+        "couleur": "#dc2626",
+        "fn": get_scenario_escalade_nucleaire_tactique,
+    },
+    "convergence_ww3": {
+        "nom": "Scénario D — Convergence Chine-Russie-Iran",
+        "description": "Trois théâtres embrasés simultanément : borne supérieure de risque mondial.",
+        "couleur": "#7f1d1d",
+        "fn": get_scenario_convergence_ww3,
+    },
+    "resilience": {
+        "nom": "Résilience Républicaine",
+        "description": "Mandature + réarmement OTAN 3,50 % du PIB + souveraineté industrielle.",
+        "couleur": "#2563eb",
+        "fn": get_scenario_resilience_republicaine,
     },
 }
 
@@ -279,6 +314,8 @@ HTML_PAGE = r"""<!DOCTYPE html>
         .strate-3 .strate-badge { background: var(--purple); color: #fff; }
         .strate-4 { background: rgba(245,158,11,0.15); border-color: var(--amber); }
         .strate-4 .strate-badge { background: var(--amber); color: #0f172a; }
+        .strate-5 { background: rgba(220,38,38,0.15); border-color: #dc2626; }
+        .strate-5 .strate-badge { background: #dc2626; color: #fff; }
         .strates-arrow {
             text-align: center; color: var(--text-dim);
             font-size: 1.5rem; padding: 0 20px;
@@ -439,6 +476,18 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 Taux de crédit PME, Pétrole Brent, EUR/USD.
             </p>
         </div>
+        <div class="strates-arrow">↓ Conflits, chokepoints, dissuasion & effort de défense</div>
+        <div class="strate strate-5">
+            <div class="strate-title">
+                <span class="strate-badge">5</span>
+                ÉCHELON GÉOPOLITIQUE — Taïwan, Hormuz, OTAN, Dissuasion nucléaire
+            </div>
+            <p style="color:var(--text-dim);font-size:0.85rem;">
+                Indices heuristiques non calibrés de tension, escalade et nucléaire (pas des probabilités),
+                7 chokepoints stratégiques, semi-conducteurs, effort de défense (cible OTAN 3,50 % du PIB),
+                clause de sauvegarde nationale du Pacte de stabilité.
+            </p>
+        </div>
     </div>
 
     <div class="action-bar">
@@ -540,6 +589,18 @@ function renderResults(data) {
             <div><span class="status-badge ${tpiClass}">${last.bouclier_tpi_actif ? 'Actif' : 'Suspendu'}</span></div></div>
         <div class="metric-card"><div class="label">Pouvoir d'Achat</div>
             <div><span class="value">${last.pouvoir_achat_index.toFixed(1)}</span><span class="unit"> (base 100)</span></div></div>
+        <div class="metric-card"><div class="label">Tension Géopolitique</div>
+            <div><span class="value">${last.indice_tension_geopolitique.toFixed(1)}</span><span class="unit">/100</span></div></div>
+        <div class="metric-card"><div class="label">Indice Escalade (heuristique)</div>
+            <div><span class="value">${last.probabilite_escalade_mondiale_pct.toFixed(1)}</span><span class="unit">/100</span></div></div>
+        <div class="metric-card"><div class="label">Indice Nucléaire (heuristique)</div>
+            <div><span class="value">${last.risque_nucleaire_tactique_pct.toFixed(1)}</span><span class="unit">/100</span></div></div>
+        <div class="metric-card"><div class="label">Semi-conducteurs</div>
+            <div><span class="value">${last.disponibilite_semiconducteurs_pct.toFixed(0)}</span><span class="unit">% dispo.</span></div></div>
+        <div class="metric-card"><div class="label">Effort de Défense</div>
+            <div><span class="value">${last.effort_defense_pct_pib.toFixed(2)}</span><span class="unit">% PIB</span></div></div>
+        <div class="metric-card"><div class="label">Chokepoints sous tension</div>
+            <div><span class="value">${last.chokepoints_sous_tension}</span><span class="unit">/ 7</span></div></div>
     </div>`;
 
     // Graphique : Déficit & Taux OAT par an
@@ -678,6 +739,15 @@ def run_simulation_api(scenario: str) -> dict[str, Any]:
             "taux_change_eur_usd": round(r.taux_change_eur_usd, 3),
             "facture_energetique_mde": round(r.facture_energetique_mde, 2),
             "inflation_globale_pct": round(r.inflation_globale_pct, 2),
+            "indice_tension_geopolitique": round(r.indice_tension_geopolitique, 1),
+            "probabilite_escalade_mondiale_pct": round(r.probabilite_escalade_mondiale_pct, 1),
+            "risque_nucleaire_tactique_pct": round(r.risque_nucleaire_tactique_pct, 1),
+            "disponibilite_semiconducteurs_pct": round(r.disponibilite_semiconducteurs_pct, 1),
+            "effort_defense_pct_pib": round(r.effort_defense_pct_pib, 2),
+            "depenses_defense_mde": round(r.depenses_defense_mde, 2),
+            "prime_risque_geopolitique_bps": round(r.prime_risque_geopolitique_bps, 1),
+            "chokepoints_sous_tension": r.chokepoints_sous_tension,
+            "stocks_strategiques_petrole_jours": round(r.stocks_strategiques_petrole_jours, 1),
             "commentaires": r.commentaires,
         })
 

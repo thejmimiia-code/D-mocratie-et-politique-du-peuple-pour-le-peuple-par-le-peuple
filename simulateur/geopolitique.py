@@ -15,6 +15,25 @@ from simulateur.model import DecisionPolitique
 from simulateur.moteur import MoteurSimulationSystemique
 
 
+# Compatibilité avec les imports publics de la strate annuelle de la PR #10.
+# Le chargement différé évite une dépendance circulaire avec le moteur macro.
+def __getattr__(nom: str):
+    from simulateur import geopolitique_annuelle
+
+    publics = {
+        'BRENT_REFERENCE_USD', 'PART_PETROLE_HORMUZ_PCT', 'PRIME_PETROLE_HORMUZ_TOTALE',
+        'PART_SEMICONDUCTEURS_TAIWAN', 'PERTE_PIB_BLOCUS_TOTAL_PCT',
+        'PERTE_PIB_NUCLEAIRE_TACTIQUE', 'EFFORT_DEFENSE_INSTANT_T_PCT',
+        'CIBLE_OTAN_DEFENSE_PCT', 'CIBLE_OTAN_SECURITE_ELARGIE_PCT',
+        'PLAFOND_CLAUSE_SAUVEGARDE_PCT', 'PointDePassageStrategique',
+        'chokepoints_par_defaut', 'EchelonGeopolitique', 'EffetsGeopolitiques',
+        'propager_geopolitique',
+    }
+    if nom in publics:
+        return getattr(geopolitique_annuelle, nom)
+    raise AttributeError(f'{__name__} ne définit pas {nom}')
+
+
 def borne(nom: str, valeur: float, minimum: float, maximum: float) -> None:
     if (not isinstance(valeur, (int, float)) or isinstance(valeur, bool)
             or not math.isfinite(valeur) or not minimum <= valeur <= maximum):

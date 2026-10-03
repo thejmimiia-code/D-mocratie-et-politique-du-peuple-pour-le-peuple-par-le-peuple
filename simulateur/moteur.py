@@ -5,6 +5,10 @@ Calé rigoureusement sur les données et contraintes à l'instant T (AFT, INSEE,
 
 import math
 
+from simulateur.geopolitique_annuelle import (
+    EchelonGeopolitique,
+    propager_geopolitique,
+)
 from simulateur.model import (
     DecisionPolitique,
     EchelonEuropeen,
@@ -28,11 +32,13 @@ class MoteurSimulationSystemique:
         national: EchelonNational = None,
         europe: EchelonEuropeen = None,
         mondial: EchelonMondial = None,
+        geo: EchelonGeopolitique = None,
     ):
         self.local = local or EchelonLocal()
         self.national = national or EchelonNational()
         self.europe = europe or EchelonEuropeen()
         self.mondial = mondial or EchelonMondial()
+        self.geo = geo or EchelonGeopolitique()
         self.historique_etapes: list[ResultatEtapeSimulation] = []
 
         # État cumulatif des réformes constitutionnelles et civiques
@@ -59,6 +65,40 @@ class MoteurSimulationSystemique:
         # =========================================================================
         # 0. CHOCS MONDIAUX (Matières Premières, Devises, Taux Mondiaux) & PIB
         # =========================================================================
+        # -------------------------------------------------------------------------
+        # 0.a STRATE 5 : GÉOPOLITIQUE (conflits, chokepoints, dissuasion, défense)
+        # La strate 5 est résolue EN PREMIER : elle alimente les chocs d'offre
+        # (pétrole, semi-conducteurs), la prime de risque souverain et l'effort
+        # de défense avant toute propagation vers les strates 4 -> 1.
+        # -------------------------------------------------------------------------
+        pib_tendanciel = self.national.pib_nominal_mde * (
+            (1.0 + self.national.taux_croissance_potentiel) ** (decision.annee - 1)
+        )
+        pib_tendanciel *= facteur_activite
+        effets_geo = propager_geopolitique(self.geo, decision, pib_tendanciel)
+        commentaires.extend(effets_geo.commentaires)
+
+        # Prime pétrolière géopolitique appliquée EN NIVEAU (retrait puis réapplication)
+        # afin de garantir l'idempotence et la non-divergence des stress-tests longs.
+        self.mondial.cours_petrole_brent_usd = max(
+            35.0,
+            round(
+                self.mondial.cours_petrole_brent_usd
+                - self.geo.prime_petrole_geopolitique_usd
+                + effets_geo.prime_petrole_usd,
+                2,
+            ),
+        )
+        self.geo.prime_petrole_geopolitique_usd = effets_geo.prime_petrole_usd
+
+        # Renchérissement du fret maritime conteneurisé en cas de chokepoint fermé
+        if self.geo.nombre_chokepoints_sous_tension > 0:
+            self.mondial.indice_fret_maritime_scfi = round(
+                2450.0 + 850.0 * self.geo.nombre_chokepoints_sous_tension, 1
+            )
+        else:
+            self.mondial.indice_fret_maritime_scfi = 2450.0
+
         # Prise en compte des chocs exogènes mondiaux (Pétrole Brent, EUR/USD, Fed)
         if decision.choc_petrole_brent_usd != 0.0:
             self.mondial.cours_petrole_brent_usd = max(35.0, round(self.mondial.cours_petrole_brent_usd + decision.choc_petrole_brent_usd, 2))
@@ -81,7 +121,16 @@ class MoteurSimulationSystemique:
         # Inflation globale française (IPC) répercutant l'énergie mondiale et le bouclier TVA 5,5%
         surcroit_inflation_energie = (delta_facture / 10.0) * 0.45
         rabais_inflation_tva = (decision.baisse_tva_energie_5_5_mde / 9.0) * 0.35
-        self.mondial.inflation_globale_pct = max(0.5, round(2.1 + surcroit_inflation_energie - rabais_inflation_tva, 2))
+        self.mondial.inflation_globale_pct = max(
+            0.5,
+            round(
+                2.1
+                + surcroit_inflation_energie
+                - rabais_inflation_tva
+                + effets_geo.inflation_additionnelle_pct,
+                2,
+            ),
+        )
 
         # Croissance nominale tendancielle du PIB
         pib_t = self.national.pib_nominal_mde * ((1.0 + self.national.taux_croissance_potentiel) ** (decision.annee - 1)) * facteur_activite
@@ -97,8 +146,9 @@ class MoteurSimulationSystemique:
             - ((decision.recettes_fraude_ia_mde + decision.taxe_superprofits_rachats_mde + decision.extension_ttf_mde + decision.recettes_pilier2_ocde_mde + decision.recettes_macf_carbone_mde) * 0.12)
             + (decision.delta_dotation_dgf_mde * 0.85 if decision.delta_dotation_dgf_mde < 0 else 0)
             + impact_choc_inflation
+            + effets_geo.choc_pib_mde
         )
-        pib_annee = round(pib_t + impact_multiplicateur, 2)
+        pib_annee = round(max(500.0, pib_t + impact_multiplicateur), 2)
 
         # =========================================================================
         # 1. STRATE LOCALE (Règle d'or CGCT art. L. 1612-4 & Fiscalité foncière)
@@ -190,6 +240,16 @@ class MoteurSimulationSystemique:
 
         self.national.confiance_democratique = min(100.0, 27.5 + gains_civiques)
 
+        # Rétroaction de la strate 5 sur le corps social et la confiance institutionnelle
+        if effets_geo.tension_sociale_delta != 0.0:
+            self.local.tension_sociale_territoriale = min(
+                100.0, max(0.0, self.local.tension_sociale_territoriale + effets_geo.tension_sociale_delta)
+            )
+        if effets_geo.confiance_delta != 0.0:
+            self.national.confiance_democratique = min(
+                100.0, max(0.0, self.national.confiance_democratique + effets_geo.confiance_delta)
+            )
+
         # =========================================================================
         # 3. STRATE NATIONALE (État, Sécurité Sociale, Déficit au sens de Maastricht)
         # =========================================================================
@@ -217,7 +277,9 @@ class MoteurSimulationSystemique:
         # Indexation des recettes fiscales de base sur la croissance du PIB nominal
         # (En réalité, la TVA, l'IR, l'IS et les cotisations suivent l'activité économique)
         pib_base = self.national.pib_nominal_mde
-        indexation_pib = pib_t / pib_base
+        # L'assiette fiscale suit l'activité réelle : les pertes (ou gains) de PIB induits
+        # par la strate 5 (blocus, chokepoints, réarmement) se répercutent sur les recettes.
+        indexation_pib = (pib_t + effets_geo.choc_pib_mde) / pib_base
         recettes_base_indexees = round(1565.0 * indexation_pib, 2)
 
         # Recettes publiques totales consolidées (APU)
@@ -250,7 +312,9 @@ class MoteurSimulationSystemique:
             detente_bund = (effort_structurel_net / 60.0) * 0.50
             self.mondial.taux_bund_allemagne_10ans = max(2.50, round(3.30 - detente_bund + delta_bund_fed, 2))
             self.mondial.spread_oat_bund_bps = max(38.0, 88.0 - (effort_structurel_net / 60.0) * 48.0)
-            self.mondial.note_souveraine = "AA"
+            # Mémoire du risque : après un franchissement du seuil nucléaire, les agences
+            # ne restituent pas immédiatement la catégorie AA (plancher post-choc : A-).
+            self.mondial.note_souveraine = "A-" if self.geo.usage_nucleaire_constate else "AA"
             self.mondial.prime_risque_politique_bps = max(5.0, 25.0 - (self.national.confiance_democratique / 4.0))
         elif effort_structurel_net <= 0.0:
             # Dérive budgétaire et défiance
@@ -264,6 +328,24 @@ class MoteurSimulationSystemique:
         else:
             self.mondial.taux_bund_allemagne_10ans = round(3.30 + delta_bund_fed, 2)
             self.mondial.spread_oat_bund_bps = max(50.0, 88.0 - (effort_structurel_net / 50.0) * 20.0)
+
+        # Prime de risque géopolitique (strate 5) ajoutée AU SPREAD lui-même afin de
+        # préserver strictement l'équation de parité OAT = Bund + spread / 100.
+        if effets_geo.prime_spread_bps > 0.0:
+            self.mondial.spread_oat_bund_bps = min(
+                600.0, self.mondial.spread_oat_bund_bps + effets_geo.prime_spread_bps
+            )
+        if effets_geo.degradation_notation:
+            self.mondial.note_souveraine = "BBB+"
+            commentaires.append(
+                "[Strate 4 - Marchés] Guerre nucléaire tactique : dégradation souveraine à 'BBB+' et "
+                "fermeture temporaire du marché primaire long (recours massif aux BTF court terme)."
+            )
+        elif self.mondial.spread_oat_bund_bps > 180.0 and self.mondial.note_souveraine != "BBB+":
+            self.mondial.note_souveraine = "A"
+            commentaires.append(
+                "[Strate 4 - Marchés] Prime géopolitique > 180 bps : dégradation de la note souveraine à 'A'."
+            )
 
         # Taux souverain OAT à 10 ans rigoureusement articulé au Bund et au spread
         self.mondial.taux_oat_france_10ans = round(self.mondial.taux_bund_allemagne_10ans + (self.mondial.spread_oat_bund_bps / 100.0), 2)
@@ -288,7 +370,11 @@ class MoteurSimulationSystemique:
         )
 
         # Dépenses consolidées effectives des APU
-        depenses_primaires_apu = (1718.0 - self.national.etat.charge_nette_dette_mde) - economies_volet3
+        depenses_primaires_apu = (
+            (1718.0 - self.national.etat.charge_nette_dette_mde)
+            - economies_volet3
+            + effets_geo.surcout_defense_mde
+        )
         depenses_totales_apu = depenses_primaires_apu + charge_dette_effective
 
         # Déficit public nominal consolidé (au sens de Maastricht)
@@ -302,12 +388,15 @@ class MoteurSimulationSystemique:
         # =========================================================================
         # 5. STRATE CONTINENTALE / EUROPÉENNE (Pacte de Stabilité, TPI, Sanctions)
         # =========================================================================
-        if ratio_deficit_pib <= self.europe.seuil_deficit_pde_pct:
+        # Déficit retenu par la Commission pour l'évaluation PDE : la clause de sauvegarde
+        # nationale (dérogation défense du Pacte de stabilité) en neutralise une fraction.
+        ratio_deficit_pde = round(ratio_deficit_pib - effets_geo.derogation_pde_pct_pib, 2)
+        if ratio_deficit_pde <= self.europe.seuil_deficit_pde_pct:
             self.europe.statut_pde_actif = False
             self.europe.bouclier_tpi_bce_eligible = True
             self.europe.amende_sanction_semestrielle_mde = 0.0
             commentaires.append(
-                f"[Strate 3 - Europe] Déficit à {ratio_deficit_pib:.2f} % <= 3.00 % : Sortie de la PDE et activation pleine du bouclier TPI de la BCE."
+                f"[Strate 3 - Europe] Déficit PDE à {ratio_deficit_pde:.2f} % <= 3.00 % : Sortie de la PDE et activation pleine du bouclier TPI de la BCE."
             )
         else:
             self.europe.statut_pde_actif = True
@@ -354,6 +443,15 @@ class MoteurSimulationSystemique:
             taux_change_eur_usd=round(self.mondial.taux_change_eur_usd, 3),
             facture_energetique_mde=round(self.mondial.facture_energetique_nette_mde, 1),
             inflation_globale_pct=round(self.mondial.inflation_globale_pct, 2),
+            indice_tension_geopolitique=self.geo.indice_tension_globale,
+            probabilite_escalade_mondiale_pct=round(self.geo.probabilite_escalade_mondiale_pct, 1),
+            risque_nucleaire_tactique_pct=round(self.geo.risque_usage_nucleaire_tactique_pct, 1),
+            disponibilite_semiconducteurs_pct=round(self.geo.disponibilite_semiconducteurs_pct, 1),
+            effort_defense_pct_pib=round(self.geo.effort_defense_pct_pib, 2),
+            depenses_defense_mde=round(self.geo.depenses_defense_mde, 2),
+            prime_risque_geopolitique_bps=round(self.geo.prime_risque_geopolitique_bps, 1),
+            chokepoints_sous_tension=self.geo.nombre_chokepoints_sous_tension,
+            stocks_strategiques_petrole_jours=round(self.geo.stocks_strategiques_petrole_jours, 1),
             commentaires=commentaires,
         )
 

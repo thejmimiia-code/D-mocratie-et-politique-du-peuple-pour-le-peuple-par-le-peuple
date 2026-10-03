@@ -6,24 +6,28 @@ Projet : Démocratie et politique, du peuple, pour le peuple, par le peuple.
 
 import sys
 
-from simulateur.cli import executer_scenario
+from simulateur.cli import SCENARIOS_DISPONIBLES, USAGE_SCENARIOS, executer_scenario
 
 
 def main() -> None:
+    usage = f"Usage: python3 main.py [{USAGE_SCENARIOS}] [--export <path.json|csv>]"
     if len(sys.argv) > 1:
         scenario = sys.argv[1].lower()
-        if scenario in ("mandature", "statut_quo", "austerite", "choc_mondial"):
+        if scenario in ("--help", "-h"):
+            print(usage)
+            return
+        if scenario in SCENARIOS_DISPONIBLES:
             export_path = None
             if "--export" in sys.argv:
                 idx = sys.argv.index("--export")
                 if idx + 1 < len(sys.argv):
                     export_path = sys.argv[idx + 1]
                 else:
-                    print("Usage: python3 main.py [mandature|statut_quo|austerite|choc_mondial] [--export <path.json|csv>]")
+                    print(usage)
                     sys.exit(1)
             executer_scenario(scenario, export_path=export_path)
         else:
-            print("Usage: python3 main.py [mandature|statut_quo|austerite|choc_mondial] [--export <path.json|csv>]")
+            print(usage)
             sys.exit(1)
     else:
         print("Lancement de la simulation du Plan de Mandature quinquennal...")

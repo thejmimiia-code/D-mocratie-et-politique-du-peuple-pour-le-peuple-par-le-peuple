@@ -1,5 +1,5 @@
 # DÉMOCRATIE ET POLITIQUE : DU PEUPLE, POUR LE PEUPLE, PAR LE PEUPLE
-> **Plateforme de réflexion républicaine et Simulateur macro-politique systémique (Modèle gigogne à 4 échelons)**
+> **Plateforme de réflexion républicaine et Simulateur macro-politique systémique (Modèle gigogne à 5 échelons)**
 
 ---
 
@@ -14,10 +14,16 @@ Ce dépôt rassemble les travaux complets de doctrine institutionnelle, le plan 
 
 ## II. LE MODÈLE SYSTÉMIQUE GIGOGNE (POUPÉES RUSSES)
 
-Le simulateur repose sur l'interconnexion dynamique de **4 échelons de contrainte** :
+Le simulateur repose sur l'interconnexion dynamique de **5 échelons de contrainte** :
 
 ```
   ┌─────────────────────────────────────────────────────────────────────────┐
+  │ ÉCHELON 5 : LE GÉOPOLITIQUE                                             │
+  │ Conflits (Taïwan, Ukraine-OTAN, Iran-Hormuz), 7 chokepoints mondiaux,   │
+  │ dissuasion nucléaire (SIPRI 2026), effort de défense (cible OTAN 3,5 %) │
+  └────────────────────────────────────┬────────────────────────────────────┘
+                                       │ Chocs d'offre, prime de risque, réarmement
+  ┌────────────────────────────────────▼────────────────────────────────────┐
   │ ÉCHELON 4 : LE MONDIAL                                                  │
   │ Marchés obligataires (Taux OAT 10 ans, Spread Bund, Note souveraine)   │
   └────────────────────────────────────┬────────────────────────────────────┘
@@ -45,6 +51,7 @@ $$\text{Décision Politique} \rightarrow \text{Impact Local} \rightarrow \text{R
 2. **Échelon National (Moteur)** : PIB nominal ~3 015 Md€ (3 000 Md€), dépenses ~57 % PIB, recettes ~43,6 % (PO) / ~52 % (total), dette 3 568 Md€ (~118,3 % PIB), charge de la dette 66,5 Md€/an. Risque permanent de motion de censure en cas de contestation populaire.
 3. **Échelon Continental (Cadre UE)** : Procédure de Déficit Excessif (PDE) activée au-dessus de 3,0 % du PIB avec menaces de sanctions.
 4. **Échelon Mondial (Marchés financiers)** : 55,8 % de la dette souveraine détenue par des non-résidents. Le taux de l'OAT 10 ans et le spread face au Bund allemand déterminent le coût de refinancement de l'État.
+5. **Échelon Géopolitique (Conflits et chaînes d'approvisionnement)** : indices de tension des 4 théâtres majeurs, 7 points de passage stratégiques (Hormuz = 20 % du pétrole mondial, Taïwan = 60 % des semi-conducteurs), arsenal nucléaire mondial (12 187 têtes, SIPRI 2026), effort de défense et trajectoire OTAN de La Haye (3,5 % + 1,5 % du PIB en 2035), clause de sauvegarde nationale du Pacte de stabilité, cyber-résilience (NIS 2) et réserves stratégiques pétrolières (AIE, 90 jours).
 
 ---
 
@@ -59,6 +66,8 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 * **[`docs/03_ECONOMIES_ET_EFFICACITE_ETAT.md`](docs/03_ECONOMIES_ET_EFFICACITE_ETAT.md)** : Économies de fonctionnement (**+24 Md€ / an**) sans casse sociale (fusion doublons région/département, achats massifiés allotis 30% PME, niches inefficaces).
 * **[`docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md`](docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md)** : Baisse TVA énergie à 5,5 % (**-9 Md€ / an**, gain 150-300 €/foyer), déficit ramené sous les 3 % du PIB, désendettement net de 51 Md€/an.
 * **[`docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md`](docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md)** : 10 fiches de riposte tactique démontant les pièges des oppositions et éditorialistes.
+* **[`docs/ANALYSE_TENSION_GLOBALE_2026.md`](docs/ANALYSE_TENSION_GLOBALE_2026.md)** : analyse des tensions géopolitiques mondiales (conflits actifs, arsenaux nucléaires, chokepoints, chemins d'escalade vers une guerre mondiale).
+* **[`docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`](docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md)** : **strate 5** — audit des éléments manquants, phases de recherche et calibrage sourcé (SIPRI, OTAN La Haye, AIE, PSE, OCDE), équations de transmission, 5 nouveaux scénarios et validation par 61 tests.
 
 ---
 
@@ -66,9 +75,17 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 
 Le simulateur est développé en Python standard sans dépendance externe obligatoire.
 
-### 1. Lancement direct du scénario de mandature
+### 1. Lancement direct d'un scénario (9 disponibles)
 ```bash
-python3 main.py mandature
+python3 main.py mandature            # Plan de mandature quinquennal (+60 Md€/an)
+python3 main.py statut_quo           # Immobilisme et dérive financière
+python3 main.py austerite            # Austérité aveugle et fronde fiscale
+python3 main.py choc_mondial         # Stagflation : pétrole, Fed, euro déprécié
+python3 main.py crise_taiwan         # Strate 5 — Blocus de Taïwan et semi-conducteurs
+python3 main.py hormuz               # Strate 5 — Fermeture du détroit d'Hormuz
+python3 main.py escalade_nucleaire   # Strate 5 — Seuil nucléaire tactique OTAN-Russie
+python3 main.py convergence_ww3      # Strate 5 — Convergence Chine-Russie-Iran (WW3)
+python3 main.py resilience           # Mandature + réarmement OTAN 3,50 % du PIB
 ```
 
 ### 2. Menu interactif
@@ -106,7 +123,7 @@ simulateur-mpol-dashboard
 ## V. RÉSULTATS DU PLAN DE MANDATURE (ANNÉE 5)
 
 > Les valeurs ci-dessous sont Issues d'une exécution réelle du simulateur (`2d36d3a`) et validées contre l'export JSON.
-> Voir [`docs/RESULTATS_SIMULATION.md`](docs/RESULTATS_SIMULATION.md) pour le rapport complet des 4 scénarios.
+> Voir [`docs/RESULTATS_SIMULATION.md`](docs/RESULTATS_SIMULATION.md) pour le rapport des 4 scénarios budgétaires et [`docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`](docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md) pour les 5 scénarios géopolitiques.
 
 || Indicateur macro-économique | Situation Initiale | Année 5 (Plan de Mandature) | Impact |
 ||---|---|---|---|
@@ -188,3 +205,9 @@ python -m simulateur.import_ucdp \
 
 [Corrections et vérifications](docs/AUDIT_PR_CORRECTIONS.md) : installation Python,
 protection des sources, cohérence des arrêts et empreinte du flux CSV réellement lu.
+
+### Intégration des travaux parallèles
+
+[Inventaire des commits, conflits résolus et tests](docs/INTEGRATION_COMMITS_EN_ATTENTE.md).
+La strate géopolitique annuelle et le laboratoire mensuel sont conservés séparément ;
+leurs indices exploratoires ne sont pas des probabilités de guerre mesurées.
