@@ -4,6 +4,28 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] — 2026-10-03
+
+### Correction — Dashboard web : grille de scénarios vide
+- **Bug principal** : dans `renderScenarios()`, l'appel `grid.appendChild(card)` était absent.
+  Les cartes de scénarios étaient bien créées en mémoire mais jamais insérées dans le DOM :
+  la grille restait vide et **aucun scénario n'était cliquable** dans le dashboard web.
+- **Événement explicite** : `runScenario()` s'appuyait sur la variable globale implicite `event`,
+  non disponible de façon fiable hors des navigateurs qui l'exposent sur `window`.
+  L'événement est désormais transmis explicitement (`card.onclick = (ev) => runScenario(key, ev)`),
+  avec un repli sur `card.dataset.key` pour la surbrillance de la carte sélectionnée.
+- **Exports** : les boutons « Exporter JSON / CSV » sont activés dès qu'une simulation a tourné
+  (fonction `activerExports()`, appelée après le rendu des résultats).
+- **Auto-run** : le scénario `mandature` est lancé automatiquement au chargement de la page.
+- **Serveur** : passage à `ThreadingHTTPServer` (`daemon_threads = True`) et `protocol_version`
+  `HTTP/1.1`, pour rester réactif derrière un proxy qui maintient des connexions persistantes.
+  Toutes les réponses annoncent désormais un `Content-Length` exact, y compris les 404/405
+  (sans quoi un client keep-alive attendrait indéfiniment la fin de la réponse).
+- **6 tests de non-régression d'interface** ajoutés dans `tests/test_dashboard.py` :
+  `appendChild` présent, événement explicite sans globale `event`, auto-run de `mandature`,
+  9 scénarios exposés, balises `<div>` équilibrées, serveur multi-thread/HTTP 1.1 keep-alive.
+  **Total : 147 tests verts** (141 précédents + 6), `ruff check .` OK.
+
 ## [1.2.0] — 2026-10-03
 
 ### Ajout — STRATE 5 : GÉOPOLITIQUE, SÉCURITÉ & CHAÎNES D'APPROVISIONNEMENT

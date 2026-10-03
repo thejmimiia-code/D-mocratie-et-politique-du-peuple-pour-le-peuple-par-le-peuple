@@ -144,7 +144,10 @@ TECHNICAL NOTES
     sous Python 3.14 (qui causait une fermeture silencieuse de connexion).
   - Un appel explicite à wfile.flush() garantit que la réponse est bien
     envoyée au client.
-  - Le serveur HTTPServer est single-threaded (suffisant pour un usage local).
+  - Le serveur est un ThreadingHTTPServer (daemon_threads=True) en HTTP/1.1 :
+    il reste réactif derrière un proxy qui maintient des connexions persistantes,
+    là où un HTTPServer mono-thread se bloquait sur une connexion keep-alive.
+    Chaque réponse annonce donc un Content-Length exact, y compris les 404/405.
   - Aucun framework web externe (Flask, FastAPI, etc.) — 100% standard library.
 
 DÉPANNAGE
@@ -172,7 +175,7 @@ import argparse
 import json
 import os
 import traceback
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
@@ -514,10 +517,13 @@ let currentResults = null;
 // Rend la grille de scénarios
 function renderScenarios() {
     const grid = document.getElementById('scenario-grid');
+    if (!grid) return;
     grid.innerHTML = '';
     Object.entries(SCENARIOS).forEach(([key, info]) => {
         const card = document.createElement('div');
         card.className = 'scenario-card';
+        card.dataset.key = key;
+        card.setAttribute('data-key', key);
         card.innerHTML = `
             <div class="scenario-name">
                 <span class="dot" style="background:${info.couleur}"></span>
@@ -525,14 +531,26 @@ function renderScenarios() {
             </div>
             <div class="scenario-desc">${info.description}</div>
         `;
-        card.onclick = () => runScenario(key);
+        card.onclick = (ev) => runScenario(key, ev);
+        grid.appendChild(card);
+    });
+}
+
+// Active les boutons d'export dès qu'une simulation a tourné
+function activerExports() {
+    ['btn-export-json', 'btn-export-csv'].forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) btn.disabled = false;
     });
 }
 
 // Lance une simulation
-async function runScenario(scenario) {
+// L'événement DOM est transmis explicitement (plus de globale implicite `event`,
+// indisponible de façon fiable hors des navigateurs qui l'exposent sur window).
+async function runScenario(scenario, ev) {
     currentScenario = scenario;
-    const card = event?.target?.closest?.('.scenario-card');
+    const card = ev?.target?.closest?.('.scenario-card')
+        || document.querySelector(`.scenario-card[data-key="${scenario}"]`);
     if (card) {
         document.querySelectorAll('.scenario-card').forEach(c => c.classList.remove('selected'));
         card.classList.add('selected');
@@ -545,6 +563,7 @@ async function runScenario(scenario) {
         if (data.error) throw new Error(data.error);
         currentResults = data.resultats;
         renderResults(data);
+        activerExports();
     } catch(e) {
         document.getElementById('results-area').innerHTML =
             `<div class="loading">Erreur : ${e.message}</div>`;
@@ -683,14 +702,14 @@ function renderResults(data) {
     html += `</ul></div>`;
 
     // Enable export buttons
-    document.getElementById('btn-export-json').disabled = false;
-    document.getElementById('btn-export-csv').disabled = false;
+    activerExports();
 
     document.getElementById('results-area').innerHTML = html;
 }
 
-// Init
+// Init : la grille est rendue puis le scénario de mandature est lancé au chargement.
 renderScenarios();
+runScenario('mandature');
 </script>
 </body>
 </html>
@@ -763,9 +782,21 @@ def run_simulation_api(scenario: str) -> dict[str, Any]:
 class DashboardHandler(BaseHTTPRequestHandler):
     """Handler HTTP pour le dashboard web."""
 
+    # HTTP/1.1 + serveur multi-thread : indispensable derrière un proxy qui
+    # maintient des connexions persistantes (preview, reverse-proxy...), sinon
+    # une seule connexion conserve occupé un serveur mono-thread.
+    # Corollaire : chaque réponse DOIT annoncer un Content-Length exact.
+    protocol_version = "HTTP/1.1"
+
     def log_message(self, format: str, *args) -> None:
         """Silence les logs serveur pour une sortie propre."""
         pass
+
+    def _send_status(self, status: int) -> None:
+        """Réponse sans corps, mais avec Content-Length (obligatoire en HTTP/1.1)."""
+        self.send_response(status)
+        self.send_header("Content-Length", "0")
+        self.end_headers()
 
     def _send_html(self, content: str) -> None:
         body = content.encode("utf-8")
@@ -787,8 +818,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def _send_file(self, path: str) -> None:
         if not os.path.exists(path):
-            self.send_response(404)
-            self.end_headers()
+            self._send_status(404)
             return
         with open(path, "rb") as f:
             content = f.read()
@@ -877,19 +907,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": str(e), "traceback": traceback.format_exc()})
 
         else:
-            self.send_response(404)
-            self.end_headers()
+            self._send_status(404)
 
     def do_POST(self) -> None:
-        self.send_response(405)
-        self.end_headers()
+        self._send_status(405)
 
 
 # ─── Server ──────────────────────────────────────────────────────────────────
 
-def create_server(host: str = "0.0.0.0", port: int = 8080) -> HTTPServer:
-    """Crée le serveur HTTP du dashboard."""
-    server = HTTPServer((host, port), DashboardHandler)
+def create_server(host: str = "0.0.0.0", port: int = 8080) -> ThreadingHTTPServer:
+    """Crée le serveur HTTP du dashboard (multi-thread, HTTP/1.1)."""
+    server = ThreadingHTTPServer((host, port), DashboardHandler)
+    server.daemon_threads = True
     return server
 
 
