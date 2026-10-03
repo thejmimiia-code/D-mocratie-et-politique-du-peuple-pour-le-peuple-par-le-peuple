@@ -164,8 +164,10 @@ Les entrées et sorties ne peuvent pas désigner le même chemin. Les exports
 `rd-resultats*.jsonl` et les archives sous `data/externe/` sont ignorés par Git.
 L'importateur lit en flux mais garde en mémoire les empreintes des identifiants et
 les lignées retenues : ce n'est pas encore une solution optimisée pour tous les
-volumes. Le CSV n'est pas verrouillé pendant les deux passes de lecture ; il doit
-rester immuable pendant l'import pour que l'empreinte corresponde au contenu traité.
+volumes. Depuis l'audit de la PR, l'empreinte est calculée sur les octets transmis au parseur
+au cours d'une seule lecture (BOM et fins de ligne compris). Le fichier n'est pas
+verrouillé contre une modification concurrente : une archive d'entrée immuable
+reste nécessaire pour la provenance, même si le hash décrit désormais le flux lu.
 
 Cette version produit une révision mensuelle numéro 1 pour **un seul snapshot**.
 Fusionner plusieurs snapshots exigera une couche d'historisation et de retrait des

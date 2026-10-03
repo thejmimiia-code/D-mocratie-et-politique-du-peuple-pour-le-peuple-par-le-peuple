@@ -13,6 +13,8 @@ from datetime import date, timedelta
 from pathlib import Path
 from statistics import mean
 
+from simulateur.fichiers import verifier_chemins_distincts
+
 CIBLE = 'presence_affrontement_organise_v1'
 CIBLE_UCDP = 'presence_evenement_letal_ucdp_v1'
 CIBLES = (CIBLE, CIBLE_UCDP)
@@ -270,12 +272,13 @@ def main() -> None:
     parser.add_argument('--sortie', type=Path, default=Path('rd-resultats-validation.json'))
     args = parser.parse_args()
     try:
+        verifier_chemins_distincts(args.observations, args.sortie)
         registre = importer_jsonl(args.observations)
         resultat = evaluer(registre, args.debut, args.fin, args.evaluation_au,
                            tuple(args.unites), args.minimum, args.mode)
+        args.sortie.write_text(json.dumps(resultat, ensure_ascii=False, indent=2, allow_nan=False) + '\n', encoding='utf-8')
     except (ValueError, OSError) as erreur:
         parser.error(str(erreur))
-    args.sortie.write_text(json.dumps(resultat, ensure_ascii=False, indent=2, allow_nan=False) + '\n', encoding='utf-8')
     print(json.dumps({'nature': resultat['nature'], 'scores': resultat['scores'],
                       'abstentions': len(resultat['abstentions']),
                       'exclusions': len(resultat['exclusions'])}, ensure_ascii=False, indent=2))

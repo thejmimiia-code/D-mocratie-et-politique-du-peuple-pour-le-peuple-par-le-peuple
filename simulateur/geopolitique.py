@@ -225,6 +225,18 @@ def coupler_macro(rapport: dict) -> dict:
 
     Ne projette que les années entièrement simulées avant une éventuelle rupture.
     """
+    horizon = rapport['hypotheses']['horizon']
+    entier('horizon', horizon, 1, 120)
+    arret = rapport['arret']
+    if arret is None:
+        attendu = horizon
+    else:
+        entier('mois_arret', arret['mois'], 1, horizon)
+        if arret.get('motif') != 'emploi_nucleaire_impose_hors_validite':
+            raise ValueError('Motif d’arrêt géopolitique inconnu')
+        attendu = arret['mois'] - 1
+    if len(rapport['mois']) != attendu:
+        raise ValueError('Trajectoire incompatible avec l’horizon ou l’arrêt déclaré')
     expose, temoin = MoteurSimulationSystemique(), MoteurSimulationSystemique()
     facteur = 1.0
     elasticite = rapport['hypotheses']['parametres']['elasticite_penurie']

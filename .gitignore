@@ -13,3 +13,7 @@ rd-resultats*.json
 # Exports R&D et archives brutes : ne pas versionner les gros jeux externes.
 rd-resultats*.jsonl
 data/externe/
+
+# Artefacts de construction Python
+build/
+dist/

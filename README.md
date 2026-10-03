@@ -183,3 +183,8 @@ python -m simulateur.import_ucdp \
   --csv tests/fixtures/ged_schema_synthetique.csv \
   --contrat tests/fixtures/contrat_ged_synthetique.json
 ```
+
+### Audit technique de la PR
+
+[Corrections et vérifications](docs/AUDIT_PR_CORRECTIONS.md) : installation Python,
+protection des sources, cohérence des arrêts et empreinte du flux CSV réellement lu.

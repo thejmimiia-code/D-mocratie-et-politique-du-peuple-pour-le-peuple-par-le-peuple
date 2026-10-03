@@ -6,12 +6,14 @@ Pas de téléchargement implicite, pas d'antidatage, pas de somme de victimes im
 import argparse
 import csv
 import hashlib
+import io
 import json
 import re
 from dataclasses import asdict, dataclass
 from datetime import date
 from pathlib import Path
 
+from simulateur.fichiers import verifier_chemins_distincts
 from simulateur.validation_temporelle import (
     CIBLE_UCDP,
     Observation,
@@ -85,6 +87,23 @@ def entier_csv(texte: str, nom: str, minimum: int = 0) -> int:
     return int(texte)
 
 
+class LecteurEmpreinte(io.RawIOBase):
+    """Calcule le SHA-256 des octets transmis au parseur, sans seconde lecture."""
+
+    def __init__(self, source, empreinte):
+        self.source = source
+        self.empreinte = empreinte
+
+    def readable(self):
+        return True
+
+    def readinto(self, tampon):
+        n = self.source.readinto(tampon)
+        if n:
+            self.empreinte.update(memoryview(tampon)[:n])
+        return n
+
+
 def convertir(csv_path: Path, contrat: ContratImport) -> dict:
     """Valide toutes les lignes ; ne remplace jamais un fichier partiel par une absence réelle."""
     cellules = {}
@@ -94,13 +113,13 @@ def convertir(csv_path: Path, contrat: ContratImport) -> dict:
             cellules[(pays, mois.strftime('%Y-%m'))] = {'certains': [], 'ambigus': []}
             mois = mois_suivant(mois)
     empreinte = hashlib.sha256()
-    with csv_path.open('rb') as f:
-        for morceau in iter(lambda: f.read(1024 * 1024), b''):
-            empreinte.update(morceau)
     ids = {}
     comptes = {'lignes_lues': 0, 'evenements_uniques': 0, 'doublons_identiques': 0,
                'evenements_retenus': 0, 'hors_perimetre': 0}
-    with csv_path.open(encoding='utf-8-sig', newline='') as fichier:
+    with csv_path.open('rb') as source, io.TextIOWrapper(
+        io.BufferedReader(LecteurEmpreinte(source, empreinte)),
+        encoding='utf-8-sig', newline='',
+    ) as fichier:
         lecteur = csv.DictReader(fichier, strict=True)
         colonnes = lecteur.fieldnames
         if not colonnes or len(set(colonnes)) != len(colonnes) or not CHAMPS <= set(colonnes):
@@ -197,9 +216,7 @@ def main() -> None:
     parser.add_argument('--rapport', type=Path, default=Path('rd-resultats-import-ucdp.json'))
     args = parser.parse_args()
     try:
-        chemins = [p.resolve() for p in (args.csv, args.contrat, args.sortie, args.rapport)]
-        if len(set(chemins)) != 4:
-            raise ValueError('Entrées et sorties doivent être des fichiers distincts')
+        verifier_chemins_distincts(args.csv, args.contrat, args.sortie, args.rapport)
         donnees = json.loads(args.contrat.read_text(encoding='utf-8'), object_pairs_hook=_objet_unique)
         contrat = ContratImport(**donnees)
         resultat = convertir(args.csv, contrat)
