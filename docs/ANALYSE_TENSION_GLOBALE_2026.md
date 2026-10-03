@@ -260,11 +260,22 @@
 
 ---
 
-## 9. Recommandations de suivi EVA
+## 9. Recommandations de suivi EVA — ✅ TOUTES IMPLÉMENTÉES (3 octobre 2026)
 
-1. **Intégrer un scénario "Taïwan Crisis"** dans le simulateur — ajouter un paramètre `tension_strait_taiwan` qui affecte les semi-conducteurs et la production industrielle
-2. **Ajouter un scénario "Nuke Escalation"** — un paramètre `risque_nucleaire` qui, si déclenché, applique un coût économique massif
-3. **Suivre la Chine-Russie alliance metrics** — un indicateur combiné des exercices militaires conjoints
+> Ces trois recommandations sont désormais **intégrées au moteur** sous la forme de la
+> **strate 5 (`simulateur/geopolitique.py`)**. Voir
+> [`08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`](08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md).
+
+| # | Recommandation | Implémentation | Scénario exécutable |
+|---|---------------|----------------|---------------------|
+| 1 | Scénario « Taïwan Crisis » + paramètre `tension_strait_taiwan` affectant les semi-conducteurs et la production industrielle | `EchelonGeopolitique.tension_taiwan`, `DecisionPolitique.blocus_taiwan_intensite`, `disponibilite_semiconducteurs_pct`, atténuation Chips Act | `python3 main.py crise_taiwan` |
+| 2 | Scénario « Nuke Escalation » + paramètre `risque_nucleaire` appliquant un coût économique massif | `risque_usage_nucleaire_tactique_pct`, `DecisionPolitique.usage_nucleaire_tactique` (PIB -4,2 %, +180 bps de spread, dégradation BBB+, rémanence pluriannuelle) | `python3 main.py escalade_nucleaire` |
+| 3 | Métriques d'alliance Chine-Russie (exercices conjoints) | `convergence_chine_russie_iran` + `probabilite_escalade_mondiale_pct` (indice composite pondéré des 4 théâtres) | `python3 main.py convergence_ww3` |
+
+**Compléments intégrés au-delà des recommandations initiales** : les 7 chokepoints du §4 (dont
+Hormuz et sa prime de +78 $/bbl), l'effort de défense et la trajectoire OTAN de La Haye,
+la clause de sauvegarde nationale du Pacte de stabilité, la cyber-résilience NIS 2 et les
+réserves stratégiques pétrolières de l'AIE.
 
 ---
 

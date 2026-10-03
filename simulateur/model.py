@@ -227,6 +227,26 @@ class DecisionPolitique:
     choc_taux_fed_bps: float = 0.0                    # Exogène : resserrement Fed en bps (ex: +50 bps)
     choc_change_eur_usd: float = 0.0                  # Exogène : variation de la parité (ex: -0.08)
 
+    # --- STRATE 5 : GÉOPOLITIQUE, SÉCURITÉ & CHAÎNES D'APPROVISIONNEMENT -----
+    # Variations annuelles des indices de tension des 4 théâtres (points d'indice)
+    delta_tension_taiwan: float = 0.0
+    delta_tension_ukraine_otan: float = 0.0
+    delta_tension_iran_hormuz: float = 0.0
+    delta_convergence_blocs: float = 0.0              # Axe Chine-Russie-Iran (exercices conjoints)
+
+    # Chocs d'approvisionnement et franchissement de seuils (0.0 = rien, 1.0 = total)
+    fermeture_hormuz_intensite: float = 0.0           # Chokepoint Hormuz (20 % du pétrole mondial)
+    blocus_taiwan_intensite: float = 0.0              # Chokepoint Taïwan (60 % des semi-conducteurs)
+    usage_nucleaire_tactique: bool = False            # Franchissement du seuil nucléaire tactique
+    cyberattaque_systemique: bool = False             # Attaque majeure sur les OIV (NIS2 / ANSSI)
+
+    # Leviers de réponse souveraine
+    effort_defense_cible_pct_pib: float = 0.0         # 0 = inchangé ; cible OTAN La Haye : 3,50 %
+    mobilisation_economie_de_guerre: bool = False     # Cadences industrielles & commandes pluriannuelles
+    liberation_stocks_strategiques: bool = False      # Déstockage coordonné AIE (90 j minimum)
+    plan_souverainete_semiconducteurs_mde: float = 0.0  # Chips Act / relocalisation (Md€/an)
+    activation_clause_sauvegarde_nationale_ue: bool = False  # Dérogation défense du Pacte de stabilité
+
 
 @dataclass
 class ResultatEtapeSimulation:
@@ -265,5 +285,16 @@ class ResultatEtapeSimulation:
     taux_change_eur_usd: float = 1.08
     facture_energetique_mde: float = 64.5
     inflation_globale_pct: float = 2.1
+
+    # Échelon Géopolitique (strate 5)
+    indice_tension_geopolitique: float = 63.0
+    probabilite_escalade_mondiale_pct: float = 0.0
+    risque_nucleaire_tactique_pct: float = 12.0
+    disponibilite_semiconducteurs_pct: float = 100.0
+    effort_defense_pct_pib: float = 2.10
+    depenses_defense_mde: float = 63.3
+    prime_risque_geopolitique_bps: float = 12.0
+    chokepoints_sous_tension: int = 0
+    stocks_strategiques_petrole_jours: float = 98.0
 
     commentaires: list[str] = field(default_factory=list)

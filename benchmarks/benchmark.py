@@ -25,7 +25,12 @@ from simulateur.moteur import MoteurSimulationSystemique  # noqa: E402
 from simulateur.scenarios import (  # noqa: E402
     get_scenario_austerite_brutale,
     get_scenario_choc_mondial_stagflation,
+    get_scenario_convergence_ww3,
+    get_scenario_crise_taiwan,
+    get_scenario_escalade_nucleaire_tactique,
+    get_scenario_fermeture_hormuz,
     get_scenario_mandature_5_ans,
+    get_scenario_resilience_republicaine,
     get_scenario_statut_quo,
 )
 
@@ -34,6 +39,11 @@ SCENARIOS: list[tuple[str, callable]] = [
     ("statut_quo", get_scenario_statut_quo),
     ("austerite", get_scenario_austerite_brutale),
     ("choc_mondial", get_scenario_choc_mondial_stagflation),
+    ("crise_taiwan", get_scenario_crise_taiwan),
+    ("hormuz", get_scenario_fermeture_hormuz),
+    ("escalade_nucleaire", get_scenario_escalade_nucleaire_tactique),
+    ("convergence_ww3", get_scenario_convergence_ww3),
+    ("resilience", get_scenario_resilience_republicaine),
 ]
 
 
