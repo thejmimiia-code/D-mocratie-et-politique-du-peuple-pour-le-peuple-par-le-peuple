@@ -3,7 +3,7 @@
 main.py — Extension ÉVA : Simulateur Macro-Politique & Démocratique (Protocole 4.2.3)
 =====================================================================================
 
-Cette extension intègre le modèle systémique gigogne à 4 échelons (Local, National,
+Cette extension intègre le modèle systémique gigogne à 5 échelons (Local, National,
 Europe, Marchés) au cœur cognitif d'ÉVA.
 Elle permet à ÉVA de tester des scénarios budgétaires, d'évaluer la trajectoire de la
 dette souveraine, et de mesurer les impacts sur le pouvoir d'achat et la tension sociale.
@@ -58,14 +58,16 @@ class ExtensionSimulateurPolitique:
         """Vérification de l'état de santé du simulateur."""
         if not self._initialized:
             return {"status": "degraded", "message": "Simulateur non initialisé"}
-        return {"status": "healthy", "pid": self.pid, "modele": "Gigogne 4 échelons (FR/UE/Monde)"}
+        return {"status": "healthy", "pid": self.pid, "modele": "Gigogne 5 échelons (FR/UE/Monde/Géopolitique)"}
 
     def on_event(self, donnees: dict) -> dict:
         """
         Traite une demande de simulation soumise par ÉVA.
         Format d'entrée attendu :
         {
-            "scenario": "mandature" | "statut_quo" | "austerite",
+            "scenario": "mandature" | "statut_quo" | "austerite" | "choc_mondial"
+                        | "crise_taiwan" | "hormuz" | "escalade_nucleaire"
+                        | "convergence_ww3" | "resilience",
             "annee_cible": 5 (optionnel, 1-5)
         }
         """
@@ -86,24 +88,34 @@ class ExtensionSimulateurPolitique:
         return {"publie": True, "destinataires": rapport.get("destinataires", 0), "reponse": reponse}
 
     def _executer_simulation(self, scenario: str) -> list[dict[str, Any]]:
-        """Moteur de calcul des 4 échelons (Local, National, Europe, Monde)."""
+        """Moteur de calcul des 5 échelons (Local, National, Europe, Monde, Géopolitique)."""
         from simulateur.moteur import MoteurSimulationSystemique
         from simulateur.scenarios import (
             get_scenario_austerite_brutale,
             get_scenario_choc_mondial_stagflation,
+            get_scenario_convergence_ww3,
+            get_scenario_crise_taiwan,
+            get_scenario_escalade_nucleaire_tactique,
+            get_scenario_fermeture_hormuz,
             get_scenario_mandature_5_ans,
+            get_scenario_resilience_republicaine,
             get_scenario_statut_quo,
         )
 
+        fabriques = {
+            "mandature": get_scenario_mandature_5_ans,
+            "statut_quo": get_scenario_statut_quo,
+            "austerite": get_scenario_austerite_brutale,
+            "choc_mondial": get_scenario_choc_mondial_stagflation,
+            "crise_taiwan": get_scenario_crise_taiwan,
+            "hormuz": get_scenario_fermeture_hormuz,
+            "escalade_nucleaire": get_scenario_escalade_nucleaire_tactique,
+            "convergence_ww3": get_scenario_convergence_ww3,
+            "resilience": get_scenario_resilience_republicaine,
+        }
+
         moteur = MoteurSimulationSystemique()
-        if scenario == "mandature":
-            decisions = get_scenario_mandature_5_ans()
-        elif scenario == "austerite":
-            decisions = get_scenario_austerite_brutale()
-        elif scenario == "choc_mondial":
-            decisions = get_scenario_choc_mondial_stagflation()
-        else:
-            decisions = get_scenario_statut_quo()
+        decisions = fabriques.get(scenario, get_scenario_statut_quo)()
 
         historique = []
         for dec in decisions:
@@ -134,6 +146,15 @@ class ExtensionSimulateurPolitique:
                 "taux_change_eur_usd": res.taux_change_eur_usd,
                 "facture_energetique_mde": res.facture_energetique_mde,
                 "inflation_globale_pct": res.inflation_globale_pct,
+                "indice_tension_geopolitique": res.indice_tension_geopolitique,
+                "probabilite_escalade_mondiale_pct": res.probabilite_escalade_mondiale_pct,
+                "risque_nucleaire_tactique_pct": res.risque_nucleaire_tactique_pct,
+                "disponibilite_semiconducteurs_pct": res.disponibilite_semiconducteurs_pct,
+                "effort_defense_pct_pib": res.effort_defense_pct_pib,
+                "depenses_defense_mde": res.depenses_defense_mde,
+                "prime_risque_geopolitique_bps": res.prime_risque_geopolitique_bps,
+                "chokepoints_sous_tension": res.chokepoints_sous_tension,
+                "stocks_strategiques_petrole_jours": res.stocks_strategiques_petrole_jours,
                 "commentaires": res.commentaires,
             })
 

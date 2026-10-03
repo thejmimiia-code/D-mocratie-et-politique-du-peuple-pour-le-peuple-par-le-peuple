@@ -206,3 +206,44 @@ Afin d'éliminer toute faille, régression ou dérive mathématique, un banc d'e
 | **10. Ancrage légal sans paramètre orphelin** | Chaque levier d'action est mappé à un article de loi dans `REGISTRE_LEGAL` | 100 % mappé | **VALIDÉ (100 %)** |
 
 Le simulateur macro-politique est ainsi mathématiquement, juridiquement et économiquement blindé face à l'ensemble des scénarios de crise mondiale et nationale.
+
+
+---
+
+## VI. QUATRIÈME BRAINSTORMING : AUDIT DES ÉLÉMENTS MANQUANTS ET AJOUT DE LA STRATE 5 (3 octobre 2026)
+
+L'audit croisé du moteur, des tests et du document de R&D `ANALYSE_TENSION_GLOBALE_2026.md` a
+révélé que **l'intégralité du risque géopolitique restait hors modèle** : les recommandations du
+§9 de l'analyse (paramètres `tension_strait_taiwan`, `risque_nucleaire`, métriques de convergence
+Chine-Russie-Iran) n'étaient mappées sur **aucune variable du simulateur**. Cinq familles de
+simulations étaient donc **mathématiquement impossibles** :
+
+1. un blocus de Taïwan et la rupture de 60 % de l'offre mondiale de semi-conducteurs ;
+2. une fermeture du détroit d'Hormuz (20 % du pétrole mondial) et l'usage des réserves AIE ;
+3. le franchissement du seuil nucléaire tactique en Europe ;
+4. la convergence simultanée des trois théâtres (scénario de guerre mondiale) ;
+5. la question centrale du moment : **« peut-on réarmer à 3,50 % du PIB (engagement du sommet
+   OTAN de La Haye) tout en sortant de la procédure de déficit excessif et en restituant du
+   pouvoir d'achat ? »**
+
+La **strate 5 — Géopolitique, Sécurité et Chaînes d'approvisionnement** (`simulateur/geopolitique.py`)
+comble ces lacunes. Le modèle gigogne devient :
+
+```
+  STRATE 5 (Géopolitique) → STRATE 4 (Marchés) → STRATE 3 (Europe) → STRATE 2 (National) → STRATE 1 (Local)
+```
+
+La strate 5 est résolue **en premier** à chaque exercice : elle produit les chocs d'offre
+(pétrole, semi-conducteurs), la prime de risque souverain, le surcoût de défense et la dérogation
+PDE avant toute propagation descendante. La prime de risque géopolitique est injectée **dans le
+spread** (préservant la parité OAT = Bund + spread/100) et la prime pétrolière est appliquée
+**en niveau** (jamais cumulée), ce qui garantit l'idempotence et la non-divergence.
+
+**Résultat de non-régression** : les 4 scénarios historiques produisent des valeurs numériques
+**strictement identiques** à la version antérieure (seul le journal d'événements s'enrichit d'une
+ligne de strate 5), grâce à la neutralisation de la prime géopolitique de référence déjà
+incorporée dans les 88 bps calés à l'instant T.
+
+Le détail complet — audit, phases de recherche, calibrage sourcé, équations de transmission,
+résultats des 9 scénarios et validation par 61 tests — figure dans
+[`08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`](08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md).

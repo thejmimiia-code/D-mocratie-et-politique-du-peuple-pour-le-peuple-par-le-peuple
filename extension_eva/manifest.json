@@ -3,9 +3,9 @@
   "identification": {
     "id": "politique.simulateur",
     "name": "Simulateur Macro-Politique & Démocratique",
-    "version": "1.0.0",
+    "version": "1.2.0",
     "author": "ÉVA_locale & Jean",
-    "description": "Simulateur systémique gigogne à 4 échelons (Local, National, Europe, Marchés) issu du projet 'Démocratie et politique du peuple pour le peuple par le peuple'."
+    "description": "Simulateur systémique gigogne à 5 échelons (Local, National, Europe, Marchés, Géopolitique) issu du projet 'Démocratie et politique du peuple pour le peuple par le peuple'."
   },
   "entry_point": {
     "file": "main.py",

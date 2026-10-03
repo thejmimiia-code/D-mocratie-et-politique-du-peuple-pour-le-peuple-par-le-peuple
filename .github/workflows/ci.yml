@@ -60,6 +60,14 @@ jobs:
       - name: Run choc_mondial simulation
         run: python3 main.py choc_mondial
 
+      - name: Run geopolitical scenarios (strate 5)
+        run: |
+          python3 main.py crise_taiwan
+          python3 main.py hormuz
+          python3 main.py escalade_nucleaire
+          python3 main.py convergence_ww3
+          python3 main.py resilience
+
       - name: Verify JSON export
         run: |
           python3 main.py mandature --export /tmp/smoke_test.json
