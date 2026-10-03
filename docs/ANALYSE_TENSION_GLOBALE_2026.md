@@ -1,4 +1,13 @@
 # Analyse des Tensions Géopolitiques Globale — Octobre 2026
+
+> **Note d'intégration PR #11 :** les scores d'escalade et nucléaires de la strate
+> annuelle sont des indices heuristiques non calibrés, et non des probabilités
+> mesurées. Les paramètres post-nucléaires et l'évaluation PDE restent des
+> conventions simplifiées, pas des prévisions ni une décision juridique.
+> Le code annuel est désormais dans `simulateur/geopolitique_annuelle.py` ; le
+> laboratoire mensuel distinct conserve son arrêt de projection après emploi imposé.
+> Voir [le bilan d'intégration](INTEGRATION_COMMITS_EN_ATTENTE.md).
+
 > Document de R&D — Sources vérifiées (SIPRI 2026, ODNI, ISW, CSIS, takshashila)
 
 ## 1. Synthèse exécutive
@@ -123,7 +132,7 @@
 
 ### Scénario A: Cascade Taïwan → Chine (2027-2028)
 
-**Déclencheur** : 
+**Déclencheur** :
 - Une opération militaire chinoise contre Taïwan (invasion amphibie ou blocus)
 - Date plausible : **2027** (centenaire de l'APL) — 7% de probabilité selon Janes
 

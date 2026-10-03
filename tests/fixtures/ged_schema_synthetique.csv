@@ -1,0 +1,7 @@
+id,country,country_id,type_of_violence,date_start,date_end,date_prec,low,best,high,source_article
+1001,FICTIF,101,1,2024-01-10,2024-01-10,1,1,2,3,"Source fictive, jamais observée"
+1002,FICTIF,101,2,2024-01-31,2024-02-02,2,0,1,2,Source fictive
+1003,FICTIF,101,3,2024-02-10 00:00:00.000,2024-02-10 00:00:00.000,1,1,1,1,Source fictive
+1004,FICTIF,101,1,2024-03-01,2024-04-15,5,1,3,5,Source fictive
+1005,AUTRE_FICTIF,202,1,2024-01-10,2024-01-10,1,1,1,1,Source fictive
+1001,FICTIF,101,1,2024-01-10,2024-01-10,1,1,2,3,"Source fictive, jamais observée"

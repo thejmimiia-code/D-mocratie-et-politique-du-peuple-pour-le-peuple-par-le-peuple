@@ -49,9 +49,7 @@ simulateur-mpol-dashboard = "simulateur.dashboard:main"
 
 [tool.setuptools]
 packages = ["simulateur"]
-
-[tool.setuptools.py-modules]
-"main" = "main"
+py-modules = ["main"]
 
 [tool.ruff]
 line-length = 100

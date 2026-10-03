@@ -7,3 +7,16 @@ venv*/
 benchmarks/benchmark_report.json
 *.log
 resultats_*.json
+
+rd-resultats*.json
+
+# Exports R&D et archives brutes : ne pas versionner les gros jeux externes.
+rd-resultats*.jsonl
+data/externe/
+
+# Artefacts de construction Python
+build/
+dist/
+
+# Scratch local d audit, jamais livre
+.arena/

@@ -22,6 +22,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Verify package installation
+        run: |
+          python -m pip install .
+          simulateur-mpol-run --help
+
       - name: Run unit tests
         run: |
           python -m unittest discover -s tests -p "test_*.py" -v
@@ -77,3 +82,9 @@ jobs:
         run: |
           python3 main.py mandature --export /tmp/smoke_test.csv
           python3 -c "import csv; rows=list(csv.DictReader(open('/tmp/smoke_test.csv'))); assert len(rows)==5; print(f'CSV export OK ({len(rows)} rows)')"
+
+      - name: Verify R&D import and chronological validation
+        run: |
+          python -m simulateur.import_ucdp --csv tests/fixtures/ged_schema_synthetique.csv --contrat tests/fixtures/contrat_ged_synthetique.json --sortie /tmp/rd-observations.jsonl --rapport /tmp/rd-import.json
+          python -m simulateur.validation_temporelle --observations /tmp/rd-observations.jsonl --debut 2024-01-01 --fin 2024-06-01 --evaluation-au 2026-10-03 --unites UCDP_COUNTRY_101 --minimum 1 --sortie /tmp/rd-validation.json
+          python -c "import json; r=json.load(open('/tmp/rd-validation.json')); assert r['predictions']==[]; assert len(r['abstentions'])==6; assert r['scores']['frequence_lissee']['brier'] is None"

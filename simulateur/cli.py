@@ -115,8 +115,8 @@ def afficher_detail_annee(r: ResultatEtapeSimulation) -> None:
 
     print("\n5. STRATE GÉOPOLITIQUE (Conflits, Chokepoints, Dissuasion & Défense) :")
     print(f"   * Indice de tension composite   : {r.indice_tension_geopolitique:.1f} / 100")
-    print(f"   * Probabilité d'escalade mondiale: {r.probabilite_escalade_mondiale_pct:.1f} %")
-    print(f"   * Risque nucléaire tactique     : {r.risque_nucleaire_tactique_pct:.1f} %")
+    print(f"   * Indice heuristique d'escalade : {r.probabilite_escalade_mondiale_pct:.1f}/100")
+    print(f"   * Indice nucléaire (heuristique): {r.risque_nucleaire_tactique_pct:.1f}/100")
     print(f"   * Chokepoints sous tension      : {r.chokepoints_sous_tension} / 7")
     print(f"   * Disponibilité semi-conducteurs: {r.disponibilite_semiconducteurs_pct:.1f} %")
     print(f"   * Réserves stratégiques pétrole : {r.stocks_strategiques_petrole_jours:.0f} jours (minimum AIE : 90 j)")
@@ -264,7 +264,7 @@ def lancer_menu_interactif() -> None:
                 print(
                     f" - {nom_court:<38} : Déficit = {r.ratio_deficit_pib:>6.2f} % | OAT = {r.taux_oat_pct:>5.2f} % | "
                     f"Tension = {r.tension_sociale_locale:>5.1f}/100 | Géo = {r.indice_tension_geopolitique:>5.1f}/100 | "
-                    f"Escalade = {r.probabilite_escalade_mondiale_pct:>5.1f} % | "
+                    f"Indice escalade = {r.probabilite_escalade_mondiale_pct:>5.1f}/100 | "
                     f"PDE = {'ALERTE' if r.statut_pde_europe else 'CONFORME'}"
                 )
         elif choix == "11":

@@ -2,7 +2,7 @@
 Package simulateur — Moteur macro-politique et systémique.
 """
 
-from simulateur.geopolitique import (
+from simulateur.geopolitique_annuelle import (
     EchelonGeopolitique,
     EffetsGeopolitiques,
     PointDePassageStrategique,

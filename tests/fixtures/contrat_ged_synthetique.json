@@ -1,0 +1,15 @@
+{
+  "version_source": "26.1",
+  "nature": "synthetique",
+  "source": "synthetic://ged-schema-test",
+  "licence": "MIT",
+  "publication": "2026-10-03",
+  "disponibilite": "2026-10-03",
+  "ingestion": "2026-10-03",
+  "preuve_disponibilite": "synthetic://disponibilite-imposee-2026-10-03",
+  "debut": "2024-01",
+  "fin": "2024-06",
+  "pays_ids": [101],
+  "couverture_exhaustive": false,
+  "preuve_exhaustivite": ""
+}

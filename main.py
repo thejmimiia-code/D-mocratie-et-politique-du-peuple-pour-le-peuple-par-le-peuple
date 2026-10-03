@@ -13,6 +13,9 @@ def main() -> None:
     usage = f"Usage: python3 main.py [{USAGE_SCENARIOS}] [--export <path.json|csv>]"
     if len(sys.argv) > 1:
         scenario = sys.argv[1].lower()
+        if scenario in ("--help", "-h"):
+            print(usage)
+            return
         if scenario in SCENARIOS_DISPONIBLES:
             export_path = None
             if "--export" in sys.argv:

@@ -1,4 +1,13 @@
 # STRATE 5 — GÉOPOLITIQUE, SÉCURITÉ & CHAÎNES D'APPROVISIONNEMENT
+
+> **Note d'intégration PR #11 :** les scores d'escalade et nucléaires de la strate
+> annuelle sont des indices heuristiques non calibrés, et non des probabilités
+> mesurées. Les paramètres post-nucléaires et l'évaluation PDE restent des
+> conventions simplifiées, pas des prévisions ni une décision juridique.
+> Le code annuel est désormais dans `simulateur/geopolitique_annuelle.py` ; le
+> laboratoire mensuel distinct conserve son arrêt de projection après emploi imposé.
+> Voir [le bilan d'intégration](INTEGRATION_COMMITS_EN_ATTENTE.md).
+
 > Phases de recherche, audit des éléments manquants et intégration complète au simulateur
 > Date de l'audit : **3 octobre 2026** — Statut : **INTÉGRÉ ET TESTÉ (61 tests verts)**
 

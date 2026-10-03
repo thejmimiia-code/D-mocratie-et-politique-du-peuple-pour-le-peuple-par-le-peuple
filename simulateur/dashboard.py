@@ -483,7 +483,7 @@ HTML_PAGE = r"""<!DOCTYPE html>
                 ÉCHELON GÉOPOLITIQUE — Taïwan, Hormuz, OTAN, Dissuasion nucléaire
             </div>
             <p style="color:var(--text-dim);font-size:0.85rem;">
-                Indice de tension composite, probabilité d'escalade mondiale, risque nucléaire tactique,
+                Indices heuristiques non calibrés de tension, escalade et nucléaire (pas des probabilités),
                 7 chokepoints stratégiques, semi-conducteurs, effort de défense (cible OTAN 3,50 % du PIB),
                 clause de sauvegarde nationale du Pacte de stabilité.
             </p>
@@ -591,10 +591,10 @@ function renderResults(data) {
             <div><span class="value">${last.pouvoir_achat_index.toFixed(1)}</span><span class="unit"> (base 100)</span></div></div>
         <div class="metric-card"><div class="label">Tension Géopolitique</div>
             <div><span class="value">${last.indice_tension_geopolitique.toFixed(1)}</span><span class="unit">/100</span></div></div>
-        <div class="metric-card"><div class="label">Escalade Mondiale</div>
-            <div><span class="value">${last.probabilite_escalade_mondiale_pct.toFixed(1)}</span><span class="unit">%</span></div></div>
-        <div class="metric-card"><div class="label">Risque Nucléaire Tactique</div>
-            <div><span class="value">${last.risque_nucleaire_tactique_pct.toFixed(1)}</span><span class="unit">%</span></div></div>
+        <div class="metric-card"><div class="label">Indice Escalade (heuristique)</div>
+            <div><span class="value">${last.probabilite_escalade_mondiale_pct.toFixed(1)}</span><span class="unit">/100</span></div></div>
+        <div class="metric-card"><div class="label">Indice Nucléaire (heuristique)</div>
+            <div><span class="value">${last.risque_nucleaire_tactique_pct.toFixed(1)}</span><span class="unit">/100</span></div></div>
         <div class="metric-card"><div class="label">Semi-conducteurs</div>
             <div><span class="value">${last.disponibilite_semiconducteurs_pct.toFixed(0)}</span><span class="unit">% dispo.</span></div></div>
         <div class="metric-card"><div class="label">Effort de Défense</div>
