@@ -122,3 +122,64 @@ simulateur-mpol-dashboard
 ## License
 
 Ce projet est publié sous licence **MIT** — voir le fichier [LICENSE](LICENSE) pour les détails.
+
+## Laboratoire R&D exploratoire
+
+Stress-tests appariés, réalisation partielle des réformes et mesure des interactions :
+voir [le protocole et les résultats exécutés](docs/LABORATOIRE_RD.md).
+
+```bash
+python -m simulateur.laboratoire --nombre 500 --graine 20261003
+```
+
+Ces expériences interrogent le modèle ; elles ne constituent pas des prévisions.
+
+## Conflits et risques systémiques
+
+[Dossier prospectif daté du 3 octobre 2026](docs/CONFLITS_RISQUES_SYSTEMIQUES_2026.md) :
+précédents historiques, théâtres de crise, interdépendances, scénarios conditionnels
+et signaux de désescalade. Les horizons de veille ne sont pas des dates prédites de guerre.
+
+### Prototype géopolitique R&D exécutable
+
+Alliances conditionnelles, stocks et blocus, escalade heuristique et pont macro :
+[protocole, limites et résultats des 113 expériences](docs/RD_GEOPOLITIQUE.md).
+
+```bash
+python -m simulateur.geopolitique --sortie rd-resultats-geopolitique.json
+```
+
+Modèle exploratoire non calibré : les mois simulés ne sont pas des dates de guerre prédites.
+
+### Audit des lacunes et résilience (R&D v2)
+
+[Manques identifiés, corrections et résultats](docs/AUDIT_LACUNES_GEOPOLITIQUES.md) :
+crises répétées, reconstitution des stocks, reprise d’activité et données manquantes.
+
+```bash
+python -m simulateur.audit_geopolitique --sortie rd-resultats-audit-geopolitique.json
+```
+
+### Registre et validation chronologique (R&D v3)
+
+[Contrat de données, contrôles temporels et résultats synthétiques](docs/RD_VALIDATION_TEMPORELLE.md).
+
+```bash
+python -m simulateur.validation_temporelle \
+  --observations tests/fixtures/observations_synthetiques.jsonl \
+  --debut 2020-07-01 --fin 2021-12-01 --evaluation-au 2022-02-01 \
+  --unites FICTIF_A FICTIF_B FICTIF_C
+```
+
+Cette démonstration vérifie le protocole, pas une capacité de prévision réelle.
+
+### Adaptateur UCDP et dates ambiguës (R&D v4)
+
+[Schéma vérifié, import local et limites de disponibilité](docs/RD_IMPORT_UCDP.md).
+Démonstration **synthétique**, sans téléchargement automatique ni score réel revendiqué :
+
+```bash
+python -m simulateur.import_ucdp \
+  --csv tests/fixtures/ged_schema_synthetique.csv \
+  --contrat tests/fixtures/contrat_ged_synthetique.json
+```

@@ -3,6 +3,8 @@ simulateur/moteur.py — Moteur de simulation systémique à poupées russes (4 
 Calé rigoureusement sur les données et contraintes à l'instant T (AFT, INSEE, Eurostat, CGCT).
 """
 
+import math
+
 from simulateur.model import (
     DecisionPolitique,
     EchelonEuropeen,
@@ -41,10 +43,17 @@ class MoteurSimulationSystemique:
         self.reforme_anti_pantouflage_active = False
         self.reforme_non_cumul_active = False
 
-    def appliquer_etape(self, decision: DecisionPolitique) -> ResultatEtapeSimulation:
+    def appliquer_etape(
+        self, decision: DecisionPolitique, *, facteur_activite: float = 1.0
+    ) -> ResultatEtapeSimulation:
         """
         Exécute la chaîne causale multi-strates pour un exercice fiscal.
         """
+        # Pont R&D optionnel : facteur de niveau relatif à la trajectoire de référence.
+        # Ne modifie ni le PIB de base ni les décisions politiques ; neutre par défaut.
+        if (isinstance(facteur_activite, bool) or not math.isfinite(facteur_activite)
+                or not 0 < facteur_activite <= 1):
+            raise ValueError("facteur_activite doit être fini et dans ]0, 1]")
         commentaires: list[str] = []
 
         # =========================================================================
@@ -75,7 +84,7 @@ class MoteurSimulationSystemique:
         self.mondial.inflation_globale_pct = max(0.5, round(2.1 + surcroit_inflation_energie - rabais_inflation_tva, 2))
 
         # Croissance nominale tendancielle du PIB
-        pib_t = self.national.pib_nominal_mde * ((1.0 + self.national.taux_croissance_potentiel) ** (decision.annee - 1))
+        pib_t = self.national.pib_nominal_mde * ((1.0 + self.national.taux_croissance_potentiel) ** (decision.annee - 1)) * facteur_activite
 
         # Multiplicateurs keynésiens différenciés :
         # - Rentes/Fraude/Superprofits/Pilier2 : multiplicateur récessif très faible (-0.12)
