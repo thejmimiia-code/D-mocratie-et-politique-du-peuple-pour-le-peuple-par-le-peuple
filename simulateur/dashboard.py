@@ -2,11 +2,166 @@
 """
 simulateur/dashboard.py — Dashboard web interactif pour le Simulateur Macro-Politique.
 
-Serveur HTTP léger (bibliothèque standard uniquement) offrant une interface
-visuelle pour faire tourner le simulateur en direct, visualiser la cascade
-des 4 strates, et exporter les résultats.
+=====================================================================================
+NOTICE D'UTILISATION COMPLÈTE — Dashboard Web Interactif du Simulateur Systémique
+=====================================================================================
 
-Usage :
+OBJECTIF
+--------
+Ce module fournit un serveur HTTP léger (bibliothèque standard Python, aucune
+dépendance externe) qui rend le simulateur macro-politique accessible via une
+interface web interactive. Il permet de :
+
+  - Visualiser la cascade des 4 strates (Local → National → Européen → Mondial)
+  - Lancer des scénarios de simulation en temps réel via l'API
+  - Afficher des graphiques à barres dynamiques (déficit, OAT, tension, confiance)
+  - Consulter un tableau détaillé des résultats par étape
+  - Lire le journal des événements générés par la simulation
+  - Exporter les résultats au format JSON ou CSV
+
+PRÉREQUIS
+---------
+  - Python 3.11+ (testé sur 3.11, 3.12, 3.13, 3.14)
+  - Le package `simulateur` installé ou disponible dans le PYTHONPATH
+  - Aucune dépendance externe (utilise uniquement la bibliothèque standard)
+
+INSTALLATION
+------------
+  Le dashboard est inclus avec le simulateur. Aucune installation supplémentaire
+  n'est nécessaire. Si le projet est installé via pip :
+
+    pip install -e .
+
+  Un point d'entrée est disponible : `simulateur-mpol-dashboard`
+
+LANCEMENT
+---------
+  Mode simple (port par défaut 8080) :
+
+    python -m simulateur.dashboard
+    # ou
+    simulateur-mpol-dashboard
+
+  Mode personnalisé :
+
+    python -m simulateur.dashboard --host 0.0.0.0 --port 9090
+
+  Une fois lancé, ouvrez : http://localhost:8080
+
+INTERFACE UTILISATEUR
+---------------------
+  La page d'accueil (GET /) présente :
+
+  1. EN-TÊTE : Titre du simulateur et description.
+  2. CASCADE DES STRATES : Visualisation hiérarchique des 4 échelons :
+     - Strate 1 — Local (Communes, Départements, Régions, Chambres)
+     - Strate 2 — National (État, Sécurité Sociale, Parlement, Institutions)
+     - Strate 3 — Européen (UE, BCE, PDE, TPI)
+     - Strate 4 — Mondial (AFT, Marchés, Spreads, Pétrole)
+  3. GRILLE DE SCÉNARIOS : 4 cartes cliquables :
+     - Plan de Mandature Républicaine (vert) — Réformes structurelles, déficit < 3%
+     - Statut Quo (ambre) — Immobilisme, dérive budgétaire
+     - Austérité Brute (rouge) — Coupes, fronde fiscale, tension sociale
+     - Choc Mondial (violet) — Stagflation, pétrole +30$, taux +75 bps
+  4. TABLEAU DE BORD : Cartes de métriques en temps réel :
+     - Déficit (% PIB)
+     - Taux OAT (spread Bund)
+     - Tension sociale (indice 0-100)
+     - Confiance démocratique (indice 0-100)
+     - Note souveraine (ex: AA-, AA, AAA)
+     - Taux de crédit PME (%)
+     - Cours pétrole (USD/barrel)
+     - Taux change EUR/USD
+     - Inflation globale (%)
+     - PIB nominal (Mds€)
+     - Dette nominale (% PIB)
+  5. GRAPHIQUES À BARRES : Visualisation SVG dynamique des indicateurs clés.
+  6. TABLEAU DÉTAILLÉ : Par ligne d'étape (Année 1 à 5).
+  7. JOURNAL DES ÉVÈNEMENTS : Commentaires générés par la simulation.
+  8. BOUTONS D'EXPORT : JSON (téléchargement) et CSV (téléchargement).
+
+API ENDPOINTS
+-------------
+  GET /
+    Page HTML du dashboard interactif.
+
+  GET /api/scenarios
+    Retourne la liste des scénarios disponibles avec leurs métadonnées.
+    Exemple de réponse :
+      {
+        "scenarios": {
+          "mandature": {"nom": "...", "description": "...", "couleur": "..."},
+          ...
+        }
+      }
+
+  GET /api/run?scenario=<nom_du_scenario>
+    Exécute une simulation et retourne les résultats en JSON.
+    Paramètres :
+      - scenario : mandature | statut_quo | austerite | choc_mondial
+                   (défaut : mandature)
+    Exemple de réponse :
+      {
+        "scenario": "mandature",
+        "nom": "Plan de Mandature Républicaine",
+        "resultats": [
+          {"annee": 1, "pib_nominal_mde": 3020.43, "ratio_deficit_pib": 4.86, ...},
+          ...
+        ]
+      }
+
+  GET /api/export?scenario=<nom>&format=<json|csv>
+    Exporte les résultats de simulation au format JSON ou CSV.
+    Paramètres :
+      - scenario : mandature | statut_quo | austerite | choc_mondial
+      - format  : json | csv
+    Retourne un fichier téléchargeable (Content-Disposition: attachment).
+
+ARCHITECTURE
+------------
+  Le module est organisé en 4 parties :
+
+  1. SCENARIOS : Dictionnaire des 4 scénarios avec leur nom, description,
+     couleur et fonction de génération de décisions.
+
+  2. HTML_PAGE : Template HTML brut (string) contenant :
+     - CSS : Thème sombre (Tailwind-like custom properties)
+     - SVG : Graphiques à barres dynamiques (pas de Chart.js)
+     - JS  : fetch() vers l'API, rendu dynamique côté client
+
+  3. run_simulation_api() : Fonction qui exécute une simulation complète
+     via MoteurSimulationSystemique et retourne les résultats formatés.
+
+  4. DashboardHandler(BaseHTTPRequestHandler) : Handler HTTP qui route
+     les requêtes vers les bons endpoints.
+
+  5. main() : Point d'entrée CLI avec argparse (--host, --port).
+
+TECHNICAL NOTES
+---------------
+  - Le serveur utilise send_response_only() au lieu de send_response() pour
+    éviter un bug de compatibilité avec le logging de BaseHTTPRequestHandler
+    sous Python 3.14 (qui causait une fermeture silencieuse de connexion).
+  - Un appel explicite à wfile.flush() garantit que la réponse est bien
+    envoyée au client.
+  - Le serveur HTTPServer est single-threaded (suffisant pour un usage local).
+  - Aucun framework web externe (Flask, FastAPI, etc.) — 100% standard library.
+
+DÉPANNAGE
+---------
+  - Port 8080 occupé : utilisez --port <autre_port>
+  - CORS depuis un autre domaine : le serveur n'envoie pas d'en-têtes CORS
+  - Simulation lente : le moteur est synchrone, le dashboard attend la réponse
+  - Logs serveur : le handler silencie log_message() ; activez pour debug
+
+DÉVELOPPEUR
+-----------
+  Auteur : thejmimiia-code
+  Projet   : Démocratie et politique, du peuple, pour le peuple, par le peuple
+  Repo     : https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple
+  CI/        :  ✅ Lint (ruff) | ✅ Tests (20/20) | ✅ Smoke-test
+
+Usage:
     python -m simulateur.dashboard [--host 0.0.0.0] [--port 8080]
     python3 -m simulateur.dashboard
 """
@@ -544,19 +699,21 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     def _send_html(self, content: str) -> None:
         body = content.encode("utf-8")
-        self.send_response(200)
+        self.send_response_only(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+        self.wfile.flush()
 
     def _send_json(self, data: dict[str, Any]) -> None:
         body = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
-        self.send_response(200)
+        self.send_response_only(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
+        self.wfile.flush()
 
     def _send_file(self, path: str) -> None:
         if not os.path.exists(path):
@@ -578,12 +735,18 @@ class DashboardHandler(BaseHTTPRequestHandler):
         query = parse_qs(parsed.query)
 
         if path == "/" or path == "":
-            scenarios_json = json.dumps(
-                dict(SCENARIOS),
-                ensure_ascii=False,
-            )
-            html = HTML_PAGE.replace('===SCENARIOS_JSON===', scenarios_json)
-            self._send_html(html)
+            try:
+                scenarios_json = json.dumps(
+                    {k: {kk: vv for kk, vv in v.items() if kk != "fn"} for k, v in SCENARIOS.items()},
+                    ensure_ascii=False,
+                )
+                html = HTML_PAGE.replace('===SCENARIOS_JSON===', scenarios_json)
+                self._send_html(html)
+            except Exception:
+                self._send_json({
+                    "error": traceback.format_exc(),
+                    "route": path,
+                })
 
         elif path == "/api/run":
             scenario = query.get("scenario", ["mandature"])[0]

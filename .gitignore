@@ -6,3 +6,4 @@ venv*/
 *.egg-info/
 benchmarks/benchmark_report.json
 *.log
+resultats_*.json

@@ -95,6 +95,52 @@ class TestSimulateurQuatreStrates(unittest.TestCase):
         self.assertGreater(len(resultats_tva), 0)
         self.assertTrue(any(r.identifiant == "DIR_TVA_2022_542" for r in resultats_tva))
 
+    def test_indexation_pib_recettes_fiscales(self):
+        """Issue #4 : les recettes fiscales de base sont indexées sur la croissance du PIB."""
+        moteur = MoteurSimulationSystemique()
+
+        # An 1 : aucune croissance → indexation = 1.0 → recettes = 1565.0
+        dec1 = DecisionPolitique(annee=1)
+        r1 = moteur.appliquer_etape(dec1)
+        # Les recettes de base sont 1565.0 * 1.0 (aucune croissance en An 1)
+        self.assertAlmostEqual(r1.recettes_publiques_totales_mde, 1565.0, delta=0.1)
+
+        # An 5 : PIB a croi en 1.9%/an → recettes indexées > 1565.0
+        # pib_t = 3015 * 1.019^4 = 3249.2 → indexation = 1.0776
+        # recettes_base = 1565.0 * 1.0776 = 1686.4
+        dec5 = DecisionPolitique(annee=5)
+        r5 = moteur.appliquer_etape(dec5)
+        self.assertGreater(r5.recettes_publiques_totales_mde, 1565.0)
+        self.assertGreater(r5.recettes_publiques_totales_mde, 1650.0)
+
+    def test_transmission_progressive_taux_oat_vers_charge_dette(self):
+        """Issue #4 : seulement ~35 % du changement de taux OAT impacte la charge de dette (roll-over 8,5 ans)."""
+        moteur = MoteurSimulationSystemique()
+        # Décision vide An 1 → effort_structurel_net = 0 (≤ 0) → spread OAT-Bund = 96 bp, OAT = 4.26 %
+        dec = DecisionPolitique(annee=1)
+        r = moteur.appliquer_etape(dec)
+
+        # Transmission progressive : ecart = 4.26 - 4.18 = +0.08
+        # Ajustement sans transmission = 0.08 * 11.5 = 0.92
+        # Ajustement avec transmission = 0.92 * 0.35 = 0.32
+        # charge = max(48.0, 66.5 + 0.32) = 66.82
+        self.assertAlmostEqual(r.charge_dette_mde, 66.82, delta=0.1)
+        # Vérifie que le taux OAT et le spread sont bien calculés
+        self.assertEqual(r.taux_oat_pct, 4.26)
+        self.assertEqual(r.spread_bund_bps, 96.0)
+
+    def test_mandature_an5_superavit_hors_pde(self):
+        """Issue #4 : le scénario mandature atteint un superavit à l'An 5 (-0,73 %) grâce à l'indexation PIB."""
+        decisions = get_scenario_mandature_5_ans()
+        for dec in decisions:
+            self.moteur.appliquer_etape(dec)
+        res_final = self.moteur.historique_etapes[-1]
+        # Après le fix #4, le déficit est sous 3% et atteint un superavit
+        self.assertAlmostEqual(res_final.ratio_deficit_pib, -0.73, delta=0.1)
+        self.assertLess(res_final.ratio_deficit_pib, 0.0)  # Superavit
+        self.assertFalse(res_final.statut_pde_europe)
+        self.assertEqual(res_final.note_souveraine, "AA")
+
 
 if __name__ == "__main__":
     unittest.main()

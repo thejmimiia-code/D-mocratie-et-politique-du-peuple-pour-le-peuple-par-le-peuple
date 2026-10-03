@@ -205,8 +205,14 @@ class MoteurSimulationSystemique:
         # Coût net de la baisse de TVA énergie
         cout_tva = decision.baisse_tva_energie_5_5_mde
 
+        # Indexation des recettes fiscales de base sur la croissance du PIB nominal
+        # (En réalité, la TVA, l'IR, l'IS et les cotisations suivent l'activité économique)
+        pib_base = self.national.pib_nominal_mde
+        indexation_pib = pib_t / pib_base
+        recettes_base_indexees = round(1565.0 * indexation_pib, 2)
+
         # Recettes publiques totales consolidées (APU)
-        recettes_totales_apu = 1565.0 + recettes_volet2 - cout_tva
+        recettes_totales_apu = round(recettes_base_indexees + recettes_volet2 - cout_tva, 2)
 
         # Effort structurel net
         effort_structurel_net = recettes_volet2 + economies_volet3 - cout_tva
@@ -258,9 +264,19 @@ class MoteurSimulationSystemique:
         self.mondial.taux_credit_immobilier_menages = round(self.mondial.taux_oat_france_10ans - 0.30, 2)
 
         # Règle de sensibilité de la charge de la dette (AFT - roll-over de maturité moyenne 8.5 ans)
+        # Transmission progressive : seulement ~35 % du changement de taux impacte la
+        # charge d'intérêts de l'année courante (le reste est amorti via le roll-over sur 8.5 ans)
         ecart_taux_base = self.mondial.taux_oat_france_10ans - 4.18
-        ajustement_charge_interets = ecart_taux_base * 11.5
+        ajustement_charge_interets = round(
+            (ecart_taux_base * 11.5) * self.mondial.part_dette_refinancement_annuel_pct, 2
+        )
         charge_dette_effective = max(48.0, round(self.national.etat.charge_nette_dette_mde + ajustement_charge_interets, 2))
+        commentaires.append(
+            f"[Strate 4 - Financement] Taux OAT à {self.mondial.taux_oat_france_10ans:.2f} % "
+            f"-> charge d'intérêts ajustée de {ajustement_charge_interets:+.2f} Md€ "
+            f"(transmission progressive {self.mondial.part_dette_refinancement_annuel_pct * 100:.0f} %, "
+            f"maturité moyenne {self.mondial.maturite_moyenne_dette_ans:.1f} a)."
+        )
 
         # Dépenses consolidées effectives des APU
         depenses_primaires_apu = (1718.0 - self.national.etat.charge_nette_dette_mde) - economies_volet3

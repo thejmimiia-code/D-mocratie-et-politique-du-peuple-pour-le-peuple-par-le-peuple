@@ -152,6 +152,7 @@ class EchelonMondial:
     # Structure de détention et refinancement de la dette d'État
     part_dette_detenue_non_residents: float = 0.558   # 55,8 % de la dette d'État entre les mains de non-résidents
     maturite_moyenne_dette_ans: float = 8.5           # Durée de vie moyenne du portefeuille de l'AFT
+    part_dette_refinancement_annuel_pct: float = 0.35 # ~35 % de la dette est refinancée chaque année (1/maturité≈11.8%)
     besoin_financement_brut_annuel_mde: float = 435.0 # ~285 Md€ dette échue à renouveler + ~150 Md€ déficit
 
     # Taux, Spreads et Notation financière souveraine

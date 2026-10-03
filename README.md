@@ -105,14 +105,20 @@ simulateur-mpol-dashboard
 
 ## V. RÉSULTATS DU PLAN DE MANDATURE (ANNÉE 5)
 
-> Les valeurs ci-dessous sont Issues d'une exécution réelle du simulateur (`d06b6a0`) et validées contre l'export JSON.
+> Les valeurs ci-dessous sont Issues d'une exécution réelle du simulateur (`2d36d3a`) et validées contre l'export JSON.
 > Voir [`docs/RESULTATS_SIMULATION.md`](docs/RESULTATS_SIMULATION.md) pour le rapport complet des 4 scénarios.
 
 || Indicateur macro-économique | Situation Initiale | Année 5 (Plan de Mandature) | Impact |
 ||---|---|---|---|
-|| **Déficit public (% PIB)** | **5,07 %** (152 Md€) | **2,84 %** (92,5 Md€) | **-2,23 pts** (Sortie de la PDE européenne) |
-|| **Dette souveraine (% PIB)** | **118,9 %** | **128,1 %** | Stabilisation de la trajectoire (inversion de la spirale) |
+||| **Déficit public (% PIB)** | **5,07 %** (152 Md€) | **-0,73 %** (-23,7 Md€) | **-5,80 pts** (Superavit, sortie de la PDE) |
+||| **Dette souveraine (% PIB)** | **118,9 %** | **119,1 %** | Stabilisation nette (+0,2 pts en 5 ans) |
 || **Taux OAT 10 ans** | **4,15 %** | **3,35 %** | Détente de **80 points de base** |
 || **Spread face au Bund** | **85,0 bps** | **47,2 bps** | Prime de risque française divisée par deux |
 || **Tension sociale locale** | **35,0 / 100** | **5,0 / 100** | Apaisement civique par le pouvoir d'achat et le RIC |
-|| **Confiance démocratique** | **28,0 / 100** | **77,5 / 100** | Moralisation (B2, vote blanc, anti-pantouflage) |
+|**Confiance démocratique**|**28,0 / 100**|**77,5 / 100**|Moralisation (B2, vote blanc, anti-pantouflage) |
+
+---
+
+## License
+
+Ce projet est publié sous licence **MIT** — voir le fichier [LICENSE](LICENSE) pour les détails.
