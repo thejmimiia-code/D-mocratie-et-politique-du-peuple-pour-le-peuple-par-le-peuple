@@ -41,6 +41,24 @@ class MoteurSimulationSystemique:
         self.geo = geo or EchelonGeopolitique()
         self.historique_etapes: list[ResultatEtapeSimulation] = []
 
+        # ── Références de calibrage « instant T » ─────────────────────────────
+        # Centralisées ici pour que `moteur_parametrique.calibrer_contexte` puisse
+        # recaler le moteur sur des données publiques réelles sans toucher à la
+        # logique causale. Les valeurs par défaut reproduisent le calage du projet
+        # (septembre 2026) : les tests et scénarios historiques sont inchangés.
+        self.reference: dict[str, float] = {
+            "brent_usd": 82.5,
+            "eur_usd": 1.08,
+            "inflation_pct": 2.1,
+            "taux_oat_pct": 4.18,
+            "taux_bund_pct": 3.30,
+            "spread_bps": 88.0,
+            "facture_energetique_mde": 64.5,
+            "recettes_base_mde": 1565.0,
+            "depenses_primaires_mde": 1718.0,
+            "effort_structurel_cible_mde": 50.0,
+        }
+
         # État cumulatif des réformes constitutionnelles et civiques
         self.reforme_casier_b2_active = False
         self.reforme_vote_blanc_active = False
@@ -99,24 +117,48 @@ class MoteurSimulationSystemique:
         else:
             self.mondial.indice_fret_maritime_scfi = 2450.0
 
-        # Prise en compte des chocs exogènes mondiaux (Pétrole Brent, EUR/USD, Fed)
-        if decision.choc_petrole_brent_usd != 0.0:
-            self.mondial.cours_petrole_brent_usd = max(35.0, round(self.mondial.cours_petrole_brent_usd + decision.choc_petrole_brent_usd, 2))
-            commentaires.append(
-                f"[Strate 4 - Mondial] Choc pétrolier exogène : Brent à {self.mondial.cours_petrole_brent_usd:.1f} $/bbl ({decision.choc_petrole_brent_usd:+.1f} $)."
-            )
+        # Prise en compte des chocs exogènes mondiaux (Pétrole Brent, EUR/USD).
+        # Les chocs sont appliqués EN NIVEAU : le choc de l'année précédente est
+        # d'abord retiré, puis le nouveau est appliqué. Sans ce retrait, un choc
+        # maintenu sur 5 ans s'accumulerait (un Brent à +45 $ pendant cinq ans
+        # finissait à +225 $) et la trajectoire divergerait.
+        memo = getattr(self, "_chocs_appliques", None)
+        if memo is None:
+            memo = self._chocs_appliques = {}
 
-        if decision.choc_change_eur_usd != 0.0:
-            self.mondial.taux_change_eur_usd = max(0.75, round(self.mondial.taux_change_eur_usd + decision.choc_change_eur_usd, 3))
-            commentaires.append(
-                f"[Strate 4 - Forex] Choc de change : Parité EUR/USD à {self.mondial.taux_change_eur_usd:.3f} ({decision.choc_change_eur_usd:+.3f})."
+        choc_petrole = round(decision.choc_petrole_brent_usd, 3)
+        if choc_petrole != memo.get("petrole", 0.0):
+            self.mondial.cours_petrole_brent_usd = max(
+                35.0,
+                round(self.mondial.cours_petrole_brent_usd
+                      - memo.get("petrole", 0.0) + choc_petrole, 2),
             )
+            memo["petrole"] = choc_petrole
+            if choc_petrole != 0.0:
+                commentaires.append(
+                    f"[Strate 4 - Mondial] Choc pétrolier exogène : Brent à {self.mondial.cours_petrole_brent_usd:.1f} $/bbl ({choc_petrole:+.1f} $)."
+                )
+
+        choc_change = round(decision.choc_change_eur_usd, 4)
+        if choc_change != memo.get("change", 0.0):
+            self.mondial.taux_change_eur_usd = max(
+                0.75,
+                round(self.mondial.taux_change_eur_usd
+                      - memo.get("change", 0.0) + choc_change, 4),
+            )
+            memo["change"] = choc_change
+            if choc_change != 0.0:
+                commentaires.append(
+                    f"[Strate 4 - Forex] Choc de change : Parité EUR/USD à {self.mondial.taux_change_eur_usd:.3f} ({choc_change:+.3f})."
+                )
 
         # Calcul de la facture énergétique nationale nette (importations nettes d'hydrocarbures)
-        delta_brent = self.mondial.cours_petrole_brent_usd - 82.5
-        delta_change = self.mondial.taux_change_eur_usd - 1.08
+        delta_brent = self.mondial.cours_petrole_brent_usd - self.reference["brent_usd"]
+        delta_change = self.mondial.taux_change_eur_usd - self.reference["eur_usd"]
         delta_facture = (delta_brent / 10.0) * 4.50 - (delta_change / 0.05) * 2.80
-        self.mondial.facture_energetique_nette_mde = max(25.0, round(64.5 + delta_facture, 2))
+        self.mondial.facture_energetique_nette_mde = max(
+            25.0, round(self.reference["facture_energetique_mde"] + delta_facture, 2)
+        )
 
         # Inflation globale française (IPC) répercutant l'énergie mondiale et le bouclier TVA 5,5%
         surcroit_inflation_energie = (delta_facture / 10.0) * 0.45
@@ -124,7 +166,7 @@ class MoteurSimulationSystemique:
         self.mondial.inflation_globale_pct = max(
             0.5,
             round(
-                2.1
+                self.reference["inflation_pct"]
                 + surcroit_inflation_energie
                 - rabais_inflation_tva
                 + effets_geo.inflation_additionnelle_pct,
@@ -147,6 +189,11 @@ class MoteurSimulationSystemique:
             + (decision.delta_dotation_dgf_mde * 0.85 if decision.delta_dotation_dgf_mde < 0 else 0)
             + impact_choc_inflation
             + effets_geo.choc_pib_mde
+            # Leviers libres du simulateur interactif : la dépense publique a un
+            # multiplicateur positif (0,55), les recettes nouvelles un effet
+            # légèrement récessif (−0,12), comme les prélèvements existants.
+            + (decision.depenses_prioritaires_mde * 0.55)
+            - (decision.recettes_nouvelles_mde * 0.12)
         )
         pib_annee = round(max(500.0, pib_t + impact_multiplicateur), 2)
 
@@ -161,6 +208,19 @@ class MoteurSimulationSystemique:
         self.local.bloc_communal.dgf_recue_mde += part_dgf_communes
         self.local.departements.dgf_departementale_mde += part_dgf_departements
         self.local.regions.dgf_regionale_mde += part_dgf_regions
+
+        # Effet direct des leviers libres sur le climat social : lever l'impôt
+        # tend la société (+0,012 pt de tension par Md€), dépenser l'apaise
+        # (−0,006 pt par Md€), avant les effets propres à chaque politique.
+        self.local.tension_sociale_territoriale = min(
+            100.0,
+            max(
+                0.0,
+                self.local.tension_sociale_territoriale
+                + decision.recettes_nouvelles_mde * 0.012
+                - decision.depenses_prioritaires_mde * 0.006,
+            ),
+        )
 
         if decision.delta_dotation_dgf_mde < 0:
             # Transfert de charges : les collectivités ont l'interdiction d'emprunter pour fonctionner
@@ -280,13 +340,20 @@ class MoteurSimulationSystemique:
         # L'assiette fiscale suit l'activité réelle : les pertes (ou gains) de PIB induits
         # par la strate 5 (blocus, chokepoints, réarmement) se répercutent sur les recettes.
         indexation_pib = (pib_t + effets_geo.choc_pib_mde) / pib_base
-        recettes_base_indexees = round(1565.0 * indexation_pib, 2)
+        recettes_base_indexees = round(self.reference["recettes_base_mde"] * indexation_pib, 2)
 
         # Recettes publiques totales consolidées (APU)
-        recettes_totales_apu = round(recettes_base_indexees + recettes_volet2 - cout_tva, 2)
+        recettes_totales_apu = round(
+            recettes_base_indexees + recettes_volet2 - cout_tva
+            + decision.recettes_nouvelles_mde,
+            2,
+        )
 
         # Effort structurel net
-        effort_structurel_net = recettes_volet2 + economies_volet3 - cout_tva
+        effort_structurel_net = (
+            recettes_volet2 + economies_volet3 - cout_tva
+            + decision.recettes_nouvelles_mde - decision.depenses_prioritaires_mde
+        )
 
         # Stabilité parlementaire et risque de motion de censure
         if self.local.tension_sociale_territoriale > 65.0:
@@ -310,16 +377,24 @@ class MoteurSimulationSystemique:
             # Trajectoire de désendettement crédible reconnue par les investisseurs :
             # Détente conjointe du taux sans risque de la Zone Euro (Bund) et contraction du spread français
             detente_bund = (effort_structurel_net / 60.0) * 0.50
-            self.mondial.taux_bund_allemagne_10ans = max(2.50, round(3.30 - detente_bund + delta_bund_fed, 2))
-            self.mondial.spread_oat_bund_bps = max(38.0, 88.0 - (effort_structurel_net / 60.0) * 48.0)
+            self.mondial.taux_bund_allemagne_10ans = max(
+                2.50, round(self.reference["taux_bund_pct"] - detente_bund + delta_bund_fed, 2)
+            )
+            self.mondial.spread_oat_bund_bps = max(
+                38.0, self.reference["spread_bps"] - (effort_structurel_net / 60.0) * 48.0
+            )
             # Mémoire du risque : après un franchissement du seuil nucléaire, les agences
             # ne restituent pas immédiatement la catégorie AA (plancher post-choc : A-).
             self.mondial.note_souveraine = "A-" if self.geo.usage_nucleaire_constate else "AA"
             self.mondial.prime_risque_politique_bps = max(5.0, 25.0 - (self.national.confiance_democratique / 4.0))
         elif effort_structurel_net <= 0.0:
             # Dérive budgétaire et défiance
-            self.mondial.taux_bund_allemagne_10ans = round(3.30 + delta_bund_fed, 2)
-            self.mondial.spread_oat_bund_bps = min(135.0, 88.0 + decision.annee * 8.0)
+            self.mondial.taux_bund_allemagne_10ans = round(
+                self.reference["taux_bund_pct"] + delta_bund_fed, 2
+            )
+            self.mondial.spread_oat_bund_bps = min(
+                135.0, self.reference["spread_bps"] + decision.annee * 8.0
+            )
             if self.mondial.spread_oat_bund_bps > 105.0:
                 self.mondial.note_souveraine = "A+"
                 commentaires.append(
@@ -327,7 +402,9 @@ class MoteurSimulationSystemique:
                 )
         else:
             self.mondial.taux_bund_allemagne_10ans = round(3.30 + delta_bund_fed, 2)
-            self.mondial.spread_oat_bund_bps = max(50.0, 88.0 - (effort_structurel_net / 50.0) * 20.0)
+            self.mondial.spread_oat_bund_bps = max(
+                50.0, self.reference["spread_bps"] - (effort_structurel_net / 50.0) * 20.0
+            )
 
         # Prime de risque géopolitique (strate 5) ajoutée AU SPREAD lui-même afin de
         # préserver strictement l'équation de parité OAT = Bund + spread / 100.
@@ -357,7 +434,7 @@ class MoteurSimulationSystemique:
         # Règle de sensibilité de la charge de la dette (AFT - roll-over de maturité moyenne 8.5 ans)
         # Transmission progressive : seulement ~35 % du changement de taux impacte la
         # charge d'intérêts de l'année courante (le reste est amorti via le roll-over sur 8.5 ans)
-        ecart_taux_base = self.mondial.taux_oat_france_10ans - 4.18
+        ecart_taux_base = self.mondial.taux_oat_france_10ans - self.reference["taux_oat_pct"]
         ajustement_charge_interets = round(
             (ecart_taux_base * 11.5) * self.mondial.part_dette_refinancement_annuel_pct, 2
         )
@@ -371,9 +448,10 @@ class MoteurSimulationSystemique:
 
         # Dépenses consolidées effectives des APU
         depenses_primaires_apu = (
-            (1718.0 - self.national.etat.charge_nette_dette_mde)
+            (self.reference["depenses_primaires_mde"] - self.national.etat.charge_nette_dette_mde)
             - economies_volet3
             + effets_geo.surcout_defense_mde
+            + decision.depenses_prioritaires_mde
         )
         depenses_totales_apu = depenses_primaires_apu + charge_dette_effective
 
@@ -412,6 +490,18 @@ class MoteurSimulationSystemique:
                 commentaires.append(
                     f"[Strate 3 - Europe] Alerte PDE : Ajustement insuffisant ({ajustement_realise_pct:.2f} % < 0.50 %) -> Risque d'astreinte financière."
                 )
+
+        # Bornage des indices sociaux : la tension est un indice 0-100, elle ne
+        # peut pas « déborder » même sous chocs cumulés (défense en profondeur).
+        self.local.tension_sociale_territoriale = min(
+            100.0, max(0.0, self.local.tension_sociale_territoriale)
+        )
+        self.local.qualite_services_proximite = min(
+            100.0, max(0.0, self.local.qualite_services_proximite)
+        )
+        self.national.confiance_democratique = min(
+            100.0, max(0.0, self.national.confiance_democratique)
+        )
 
         # =========================================================================
         # 6. INSTANTANÉ DE L'ÉTAPE CONSOLIDÉE
