@@ -206,10 +206,12 @@ class TestDashboardInterface(unittest.TestCase):
         self.assertIn('.scenario-card[data-key="${scenario}"]', js)
 
     def test_mandature_auto_lance_et_exports_actives(self):
-        """Le scénario mandature est lancé au chargement, exports activés."""
+        """Le préréglage mandature est chargé au démarrage, exports activés."""
         js = self._script(self.page)
         self.assertIn("renderScenarios();", js)
-        self.assertIn("runScenario('mandature');", js)
+        # Au démarrage, la page charge le préréglage paramétrable (et non le
+        # moteur d'origine) : c'est le simulateur qui doit être prêt à l'emploi.
+        self.assertIn("chargerPreset('mandature', null);", js)
         # Les boutons d'export partent désactivés...
         self.assertIn('id="btn-export-json"', self.page)
         self.assertIn("disabled", self.page)
@@ -281,3 +283,146 @@ class TestDashboardInterface(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestAPIparametrique(unittest.TestCase):
+    """API du simulateur paramétrable (leviers, contexte réel, impacts croisés).
+
+    Ces routes remplacent les cartes généralistes du premier tableau de bord :
+    elles servent la table des 93 leviers, la grille des 20 domaines, le contexte
+    « instant T » et la matrice d'impacts calculée par le modèle.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str, corps: dict | None = None, methode: str | None = None):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        donnees = None if corps is None else json.dumps(corps).encode("utf-8")
+        requete = urllib.request.Request(url, data=donnees, method=methode or ("POST" if corps else "GET"))
+        if donnees:
+            requete.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(requete, timeout=60) as reponse:
+            return reponse.status, json.loads(reponse.read().decode("utf-8"))
+
+    def test_catalogue_complet(self):
+        statut, donnees = self._appel("/api/catalogue")
+        self.assertEqual(statut, 200)
+        self.assertEqual(len(donnees["domaines"]), 20)
+        familles = donnees["parametres"]["familles"]
+        leviers = [levier for famille in familles for levier in famille["leviers"]]
+        self.assertGreaterEqual(len(leviers), 90)
+        self.assertEqual(len(donnees["parametres"]["presets"]), 13)
+
+    def test_contexte_avec_sources_navigateur(self):
+        statut, donnees = self._appel("/api/contexte")
+        self.assertEqual(statut, 200)
+        contexte = donnees["contexte"]
+        self.assertIn(contexte["mode"], {"live", "reference", "mixte"})
+        self.assertGreater(contexte["pib_nominal_mde"], 2000)
+        self.assertTrue(contexte["provenance"])
+        # Le navigateur doit recevoir de quoi interroger les API publiques.
+        self.assertTrue(donnees["browser"])
+        un_indicateur = next(iter(donnees["browser"].values()))
+        self.assertIn("sources", un_indicateur)
+        self.assertIn("proxy_url", un_indicateur)
+        for source in un_indicateur["sources"]:
+            self.assertTrue(source["url"].startswith("https://"))
+            self.assertTrue(source["licence"])
+        self.assertIn("diagnostic", donnees)
+
+    def test_presets(self):
+        statut, donnees = self._appel("/api/presets")
+        self.assertEqual(statut, 200)
+        self.assertIn("mandature", donnees["presets"])
+        self.assertIn("crise_taiwan", donnees["presets"])
+
+    def test_simuler_get_avec_parametres(self):
+        params = json.dumps({"tva_taux_normal": 1.0})
+        statut, donnees = self._appel(f"/api/simuler?params={urllib.parse.quote(params)}")
+        self.assertEqual(statut, 200)
+        self.assertEqual(len(donnees["etapes"]), 5)
+        self.assertEqual(len(donnees["domaines"]), 20)
+        self.assertIn("synthese", donnees)
+
+    def test_simuler_post_avec_impacts(self):
+        statut, donnees = self._appel("/api/simuler", {
+            "parametres": {"tva_taux_normal": 1.0, "hopital_public": 6.0,
+                           "lutte_fraude_fiscale_ia": 10.0},
+            "avec_impacts": True,
+            "max_impacts": 5,
+        })
+        self.assertEqual(statut, 200)
+        self.assertTrue(donnees["impacts"])
+        self.assertLessEqual(len(donnees["impacts"]), 5)
+        for impact in donnees["impacts"]:
+            self.assertTrue(impact["effets"])
+            self.assertTrue(any(abs(e["effet_score"]) > 0 for e in impact["effets"]))
+
+    def test_simuler_levier_inconnu_refuse(self):
+        try:
+            statut, donnees = self._appel("/api/simuler", {"parametres": {"levier_bidon": 1.0}})
+        except urllib.error.HTTPError as erreur:  # 400 attendu
+            statut, donnees = erreur.code, json.loads(erreur.read().decode("utf-8"))
+        self.assertEqual(statut, 400)
+        self.assertIn("error", donnees)
+
+    def test_comparer_les_presets(self):
+        statut, donnees = self._appel("/api/comparer")
+        self.assertEqual(statut, 200)
+        self.assertEqual(len(donnees["comparaison"]), 13)
+        for entree in donnees["comparaison"]:
+            self.assertEqual(len(entree["scores"]), 20)
+
+    def test_proxy_refuse_un_indicateur_inconnu(self):
+        try:
+            statut, _ = self._appel("/api/proxy?indicateur=inexistant")
+        except urllib.error.HTTPError as erreur:
+            statut = erreur.code
+        self.assertEqual(statut, 400)
+
+    def test_proxy_accepte_un_indicateur_du_registre(self):
+        statut, donnees = self._appel("/api/proxy?indicateur=taux_oat_france_10ans")
+        self.assertEqual(statut, 200)
+        self.assertIn("lecture", donnees)
+        self.assertIn("valeur", donnees["lecture"])
+
+    def test_donnees_du_navigateur_recalibrent_le_contexte(self):
+        """Un relevé posté par le navigateur doit remonter dans le contexte."""
+        from unittest import mock
+
+        releve = {
+            "lectures": {
+                "taux_oat_france_10ans": {
+                    "valeur": 4.37, "periode": "2026-10", "fournisseur": "test",
+                    "url": "https://example.org/", "statut": "live",
+                }
+            }
+        }
+        with mock.patch("simulateur.dashboard.charger_cache", return_value={}), \
+             mock.patch("simulateur.dashboard.sauver_cache") as sauvegarde:
+            statut, donnees = self._appel("/api/donnees", releve)
+        self.assertEqual(statut, 200)
+        self.assertTrue(sauvegarde.called)
+        self.assertIn("contexte", donnees)
+        self.assertAlmostEqual(donnees["contexte"]["taux_oat_10ans"], 4.37, places=2)
+
+    def test_routes_inconnues_et_methodes_invalides(self):
+        try:
+            self._appel("/api/inexistant")
+        except urllib.error.HTTPError as erreur:
+            self.assertEqual(erreur.code, 404)
+        else:  # pragma: no cover - garde-fou
+            self.fail("une route inconnue doit répondre 404")

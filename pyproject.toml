@@ -46,6 +46,7 @@ benchmark = [
 simulateur-mpol = "simulateur.cli:lancer_menu_interactif"
 simulateur-mpol-run = "main:main"
 simulateur-mpol-dashboard = "simulateur.dashboard:main"
+simulateur-mpol-simuler = "simulateur.moteur_parametrique:main"
 
 [tool.setuptools]
 packages = ["simulateur"]

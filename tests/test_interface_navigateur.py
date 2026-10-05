@@ -1,0 +1,182 @@
+"""
+tests/test_interface_navigateur.py — exécute le JavaScript de la page pour de vrai.
+
+`tests/test_interface.py` contrôle la page comme un texte ; ici, on la fait
+tourner : un DOM et un `fetch` minimaux sont fournis à Node.js, les réponses
+des routes sont celles du vrai serveur (collectées juste avant), et le script
+parcourt le trajet d'un utilisateur — chargement, modification d'un levier,
+scénario du dépôt, filtre, réinitialisation, exports, rafraîchissement des
+données publiques.
+
+Ce test saute proprement si Node.js n'est pas installé (le reste de la suite
+couvre alors le rendu statique).
+"""
+
+import json
+import socket
+import subprocess
+import tempfile
+import threading
+import unittest
+import urllib.request
+from pathlib import Path
+
+from simulateur.dashboard import create_server
+from simulateur.parametres import LEVIERS
+
+RACINE = Path(__file__).resolve().parent.parent
+HARNAIS = RACINE / "tests" / "navigateur_interface.mjs"
+NODE = __import__("shutil").which("node")
+
+
+class TestInterfaceDansNode(unittest.TestCase):
+    """Parcours utilisateur complet, exécuté par Node sur la page servie."""
+
+    @classmethod
+    def setUpClass(cls):
+        if NODE is None:
+            raise unittest.SkipTest("Node.js absent : parcours navigateur non exécutable")
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("127.0.0.1", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.serveur = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.serveur.serve_forever, daemon=True)
+        cls.thread.start()
+        cls.charge = cls._construire_charge()
+        cls._jouer_le_parcours()
+
+    @classmethod
+    def tearDownClass(cls):
+        if getattr(cls, "serveur", None) is not None:
+            cls.serveur.shutdown()
+            cls.serveur.server_close()
+
+    # ── Collecte des réponses réelles du serveur ──────────────────────────
+    @classmethod
+    def _get(cls, chemin):
+        url = f"http://127.0.0.1:{cls.port}{chemin}"
+        with urllib.request.urlopen(url, timeout=60) as reponse:
+            return reponse.read().decode("utf-8")
+
+    @classmethod
+    def _post(cls, chemin, corps):
+        requete = urllib.request.Request(
+            f"http://127.0.0.1:{cls.port}{chemin}",
+            data=json.dumps(corps).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+            method="POST",
+        )
+        with urllib.request.urlopen(requete, timeout=120) as reponse:
+            return reponse.read().decode("utf-8")
+
+    @classmethod
+    def _simuler(cls, parametres):
+        return json.loads(cls._post(
+            "/api/simuler",
+            {"parametres": parametres, "avec_impacts": True, "max_impacts": 16},
+        ))
+
+    @classmethod
+    def _construire_charge(cls):
+        page = cls._get("/")
+        catalogue = json.loads(cls._get("/api/catalogue"))
+        contexte = json.loads(cls._get("/api/contexte"))
+
+        # Paramètres du préréglage de démarrage, puis le même jeu avec un
+        # levier modifié : les deux réponses sont calculées ici par le serveur,
+        # comme le ferait le navigateur.
+        defauts = catalogue["parametres"]["defauts"]
+        prereglage = dict(defauts)
+        prereglage.update(catalogue["parametres"]["presets"]["mandature"]["parametres"])
+        cle = "tva_taux_normal"
+        assert cle in LEVIERS, f"levier attendu absent : {cle}"
+        variante = dict(prereglage)
+        variante[cle] = defauts[cle] + 1.0
+
+        sortie_prereglage = cls._simuler(prereglage)
+        sortie_variante = cls._simuler(variante)
+
+        # Sources publiques : le navigateur les interroge directement, sauf
+        # celles qui ne renvoient pas d'en-tête CORS (relais /api/proxy).
+        externes = {}
+        for indicateur in (contexte.get("browser") or {}).values():
+            for source in indicateur.get("sources", []):
+                url = source.get("url")
+                if url:
+                    externes[url] = source.get("adaptateur")
+        proxy = json.loads(cls._get("/api/proxy?indicateur=brent_usd"))
+
+        return {
+            "page": page,
+            "api": {
+                "GET /api/catalogue": catalogue,
+                "GET /api/contexte": contexte,
+                "GET /api/presets": json.loads(cls._get("/api/presets")),
+                "GET /api/comparer": json.loads(cls._get("/api/comparer")),
+                "GET /api/scenarios": json.loads(cls._get("/api/scenarios")),
+                "GET /api/run": json.loads(cls._get("/api/run?scenario=choc_mondial")),
+                "GET /api/proxy": proxy,
+                "POST /api/simuler": sortie_prereglage,
+                "POST /api/simuler#variante": sortie_variante,
+                "POST /api/donnees": {"ok": True},
+            },
+            "externe": externes,
+            "discriminant": {"cle": cle, "valeur": variante[cle]},
+            "attendu": {"recettes_nouvelles_mde": sortie_variante["synthese"]["recettes_nouvelles_mde"]},
+        }
+
+    # ── Exécution ─────────────────────────────────────────────────────────
+    @classmethod
+    def _jouer_le_parcours(cls):
+        """Joue le parcours une seule fois, pour toute la classe de tests."""
+        dossier = tempfile.mkdtemp(prefix="interface-navigateur-")
+        chemin_charge = Path(dossier) / "charge.json"
+        chemin_rapport = Path(dossier) / "rapport.json"
+        chemin_charge.write_text(json.dumps(cls.charge), encoding="utf-8")
+        cls.proc = subprocess.run(
+            [NODE, str(HARNAIS), str(chemin_charge), str(chemin_rapport)],
+            capture_output=True, text=True, timeout=600, cwd=str(RACINE),
+        )
+        cls.rapport = (json.loads(chemin_rapport.read_text(encoding="utf-8"))
+                       if chemin_rapport.exists() else {})
+
+    def test_le_parcours_ne_leve_aucune_exception(self):
+        """Le script servi s'exécute de bout en bout sans erreur ni alerte."""
+        self.assertEqual(self.proc.returncode, 0,
+                         f"sortie Node :\n{self.proc.stdout}\n{self.proc.stderr}")
+        self.assertEqual(self.rapport.get("erreurs"), [])
+        self.assertEqual(self.rapport.get("alertes"), [])
+
+    def test_toutes_les_etapes_du_parcours_reussissent(self):
+        """Chaque étape contrôlée par le harnais est verte."""
+        etapes = self.rapport.get("etapes", [])
+        self.assertGreaterEqual(len(etapes), 25, f"parcours trop court : {len(etapes)} étapes")
+        echecs = [etape for etape in etapes if not etape["ok"]]
+        self.assertEqual(echecs, [], f"étapes en échec : {echecs}")
+
+    def test_les_donnees_publiques_sont_interrogees_et_relayees(self):
+        """Le rafraîchissement passe par les API publiques puis /api/proxy."""
+        appels = self.rapport.get("appels", [])
+        externes = [appel for appel in appels if not appel.startswith(("GET /api/", "POST /api/"))]
+        self.assertGreater(len(externes), 0, "aucune API publique interrogée depuis le navigateur")
+        self.assertTrue(any(appel.startswith("POST /api/donnees") for appel in appels),
+                        "le relevé n'est pas transmis au serveur")
+        self.assertTrue(any("/api/proxy" in appel for appel in appels),
+                        "les sources sans CORS ne sont pas relayées")
+
+    def test_la_simulation_affichee_vient_du_serveur(self):
+        """Le levier modifié est bien envoyé au serveur, et sa réponse affichée."""
+        postes = [appel for appel in self.rapport.get("appels", [])
+                  if appel.startswith("POST /api/simuler")]
+        self.assertGreaterEqual(len(postes), 2,
+                                "le levier modifié n'a pas déclenché de nouvelle simulation")
+
+    def test_les_exports_sont_produits(self):
+        """Les deux boutons d'export déclenchent un téléchargement."""
+        telechargements = self.rapport.get("telechargements", [])
+        self.assertEqual(len(telechargements), 2, f"téléchargements : {telechargements}")
+
+
+if __name__ == "__main__":
+    unittest.main()
