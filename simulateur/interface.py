@@ -11,7 +11,11 @@ aucun CDN) qui contient :
   * la cascade des 5 échelons systémiques, recalculée à chaque simulation ;
   * la grille des scénarios types (9 situations historiques du dépôt) ;
   * les préréglages doctrinaux additionnels ;
-  * 93 leviers de politique publique réglables (curseurs, interrupteurs) ;
+  * 93 leviers de politique publique réglables (curseurs, interrupteurs), chacun
+    annoté d'une **aide au survol** (plage, défaut, valeur courante, effets
+    déclarés, mesures en direct) et d'une **bulle explicative** dépliable ;
+  * des infobulles instantanées sur les boutons, cases à cocher, cartes de
+    domaine, préréglages et scénarios (couche passive : aucun clic capté) ;
   * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;
   * la matrice croisée levier × domaine (impacts calculés par le modèle) ;
   * le journal causal du moteur et les exports JSON/CSV ;
@@ -98,6 +102,15 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .levier input[type=range]{width:100%;margin-top:5px;accent-color:var(--accent)}
 .levier .source{font-size:.66rem;color:#7b8aa5;font-style:italic;margin-top:3px}
 .levier .ligne .bascule{margin-bottom:0}
+/* Infobulle instantanée : tout réglage ou bouton annoté s'explique au survol
+   (et au focus clavier), sans jamais recouvrir les leviers durablement. */
+.infobulle{position:fixed;z-index:120;max-width:352px;background:#0d1526;border:1px solid var(--accent);
+  border-radius:11px;padding:9px 11px;font-size:.74rem;line-height:1.5;color:var(--texte);
+  box-shadow:0 16px 38px rgba(2,6,23,.6);pointer-events:none;opacity:0;transition:opacity .08s}
+.infobulle.visible{opacity:1}
+.infobulle b{color:var(--accent)}
+.infobulle .aide-titre{display:block;margin-bottom:3px;font-weight:600;color:var(--texte)}
+[data-aide],[data-aide-levier]{cursor:help}
 .levier .bulle-bouton{margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:999px;
   color:var(--texte-dim);font-size:.64rem;padding:1px 8px;line-height:1.5;white-space:nowrap}
 .levier .bulle-bouton:hover{border-color:var(--accent);color:var(--accent);transform:none}
@@ -253,11 +266,11 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <span class="pastille" id="badge-contexte">contexte : chargement…</span>
       <span class="pastille" id="badge-date">—</span>
       <span class="pastille" id="badge-leviers">—</span>
-      <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()">Rafraîchir les données (API publiques)</button>
-      <button class="discret" onclick="reinitialiser()">Réinitialiser les leviers</button>
-      <button class="primaire" id="btn-simuler" onclick="simuler(true)">Simuler avec impacts croisés</button>
-      <button id="btn-export-json" disabled onclick="exporter('json')">Export JSON</button>
-      <button id="btn-export-csv" disabled onclick="exporter('csv')">Export CSV</button>
+      <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données (API publiques)</button>
+      <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène les 93 réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
+      <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule les 5 années, les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Compter moins d'une seconde.">Simuler avec impacts croisés</button>
+      <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
+      <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
     </div>
   </header>
 
@@ -267,13 +280,15 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <span class="ruban-strates" id="ruban-strates"></span>
     <span class="ruban-pop" id="ruban-population">risque population —</span>
     <span class="ruban-actions">
-      <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()">Masquer le détail des seuils</button>
-      <button class="discret" id="btn-densite" onclick="basculerDensite()">Vue compacte</button>
-      <button class="primaire" onclick="allerAuxLeviers()">Régler les 93 leviers</button>
+      <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()" data-aide="<b>Détail des seuils</b>Replie ou déplie le corps de la console de veille pour libérer l'écran : le verdict et les cinq strates restent affichés.">Masquer le détail des seuils</button>
+      <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : les 93 paramètres tiennent à l'écran, tous réglables en direct.">Vue compacte</button>
+      <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les 93 leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct.">Régler les 93 leviers</button>
     </span>
   </div>
 
   <div id="zone-alertes"></div>
+
+  <div class="infobulle" id="infobulle" role="tooltip" aria-hidden="true"></div>
 
   <section class="bloc">
     <h2>Contexte « instant T » <span class="aide">données publiques réellement collectées, avec provenance et licence</span></h2>
@@ -326,9 +341,9 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   <section class="bloc" id="section-leviers">
     <h2>Vos leviers <span class="aide">les 93 paramètres, tous visibles et actionnables — chaque geste se répercute en direct</span></h2>
     <div class="barre-leviers">
-      <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)">
+      <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre les 93 leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
-      <label title="Une ligne par levier : les 93 paramètres tiennent à l'écran">
+      <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : les 93 paramètres tiennent à l'écran tout en restant actionnables en direct.">
         <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> Vue compacte (une ligne par levier)
       </label>
     </div>
@@ -630,6 +645,122 @@ function allerAuxLeviers(){
   const section = document.getElementById('section-leviers');
   if (section && section.scrollIntoView) section.scrollIntoView({behavior:'smooth', block:'start'});
 }
+/* ── Aides au survol (infobulles) ─────────────────────────────────────────
+   Tout élément portant `data-aide` (bouton, case à cocher, champ) ou
+   `data-aide-levier` (réglage : curseur, interrupteur, étiquette de valeur)
+   s'explique au survol et au focus clavier. L'infobulle est une couche fixe
+   qui ne capte aucun clic (`pointer-events:none`) et disparaît au départ de
+   la souris : les leviers restent visibles et actionnables.                    */
+function elementInfobulle(){ return document.getElementById('infobulle'); }
+function levierParCle(cle){
+  if (!CATALOGUE) return null;
+  return CATALOGUE.parametres.familles.flatMap(f => f.leviers).find(l => l.cle === cle) || null;
+}
+function texteAideLevier(cle){
+  const levier = levierParCle(cle);
+  if (!levier) return '';
+  const valeur = PARAMS[cle];
+  const famille = (CATALOGUE.familles || []).find(f => f.cle === levier.famille);
+  const actif = levier.type === 'interrupteur' ? (valeur >= 0.5 ? 'activé' : 'désactivé')
+    : `${fmt(valeur, levier.precision)} ${levier.unite === 'bool' ? '' : levier.unite}`.trim();
+  const defaut = levier.type === 'interrupteur'
+    ? (levier.defaut >= 0.5 ? 'activé' : 'désactivé')
+    : `${fmt(levier.defaut, levier.precision)} ${levier.unite === 'bool' ? '' : levier.unite}`.trim();
+  const lignes = [`<span class="aide-titre">${levier.libelle}</span>`];
+  lignes.push(`${famille ? famille.libelle : levier.famille} · ${levier.type}`
+    + (levier.unite && levier.unite !== 'bool' ? ` · unité : ${levier.unite}` : ''));
+  lignes.push(`valeur actuelle <b>${actif}</b> (défaut ${defaut})`);
+  if (levier.type === 'interrupteur'){
+    lignes.push('interrupteur : activé ou désactivé');
+  } else {
+    lignes.push(`plage ${fmt(levier.minimum, levier.precision)} → `
+      + `${fmt(levier.maximum, levier.precision)} ${levier.unite} · pas ${fmt(levier.pas, 2)}`);
+  }
+  if (levier.description) lignes.push(levier.description);
+  const declares = Object.entries(levier.effets_directs || {}).slice(0, 4).map(([theme, coefficient]) =>
+    `${theme} ${coefficient > 0 ? '+' : ''}${fmt(coefficient, 2)}`);
+  if (declares.length) lignes.push(`Effets déclarés : ${declares.join(' ; ')}`);
+  const puces = (DERNIERES_PUCES[cle] || []).slice(0, 3).map(puce =>
+    `${puce.libelle} ${puce.effet_score > 0 ? '+' : ''}${fmt(puce.effet_score, 1)} pt`);
+  if (puces.length) lignes.push(`Mesuré à l'instant sur ce réglage : ${puces.join(' ; ')}`);
+  const bulle = BULLES[cle];
+  if (bulle && bulle.bilan_domaines){
+    const mouvements = bulle.bilan_domaines.filter(domaine => domaine.touche).slice(0, 3).map(domaine => {
+      const ecart = Math.abs(domaine.maximum) >= Math.abs(domaine.minimum) ? domaine.maximum : domaine.minimum;
+      return `${domaine.libelle} ${ecart > 0 ? '+' : ''}${fmt(ecart, 1)} pt`;
+    });
+    if (mouvements.length) lignes.push(`Aux bornes du réglage : ${mouvements.join(' ; ')}`);
+    if (bulle.lecture && bulle.lecture.phrase){
+      lignes.push(bulle.lecture.phrase.slice(0, 190) + (bulle.lecture.phrase.length > 190 ? '…' : ''));
+    }
+  } else {
+    lignes.push('Cliquez sur « interactions » pour la chaîne complète : médiateurs touchés, '
+      + 'répercussions par domaine, garde-fous et strates.');
+  }
+  return lignes.join('<br>');
+}
+function texteAideElement(cible){
+  if (!cible || !cible.getAttribute) return '';
+  if (cible.getAttribute('data-aide-levier')) return texteAideLevier(cible.getAttribute('data-aide-levier'));
+  return cible.getAttribute('data-aide') || '';
+}
+function positionnerInfobulle(cible){
+  const bulle = elementInfobulle();
+  if (!bulle) return;
+  const rect = (cible && typeof cible.getBoundingClientRect === 'function')
+    ? cible.getBoundingClientRect() : null;
+  if (!rect || (!rect.width && !rect.height)) return;
+  const largeur = (typeof innerWidth === 'number') ? innerWidth : 1200;
+  const hauteur = (typeof innerHeight === 'number') ? innerHeight : 900;
+  const gauche = Math.max(8, Math.min(rect.left, largeur - 364));
+  const enBas = rect.bottom + 12;
+  bulle.style.left = `${gauche}px`;
+  bulle.style.top = `${(enBas + 220 > hauteur ? Math.max(8, rect.top - 12) : enBas)}px`;
+}
+function afficherInfobulle(html, cible){
+  const bulle = elementInfobulle();
+  if (!bulle || !html) return;
+  bulle.innerHTML = html;
+  bulle.classList.add('visible');
+  bulle.setAttribute('aria-hidden', 'false');
+  positionnerInfobulle(cible);
+}
+function masquerInfobulle(){
+  const bulle = elementInfobulle();
+  if (!bulle) return;
+  bulle.classList.remove('visible');
+  bulle.setAttribute('aria-hidden', 'true');
+}
+function survoler(cible){
+  const texte = texteAideElement(cible);
+  if (!texte){ masquerInfobulle(); return; }
+  afficherInfobulle(texte, cible);
+}
+function initialiserInfobulles(){
+  if (!document.addEventListener) return;
+  const cherche = (noeud) => {
+    if (!noeud || !noeud.closest) return null;
+    // La bulle dépliée reste lisible : pas d'infobulle par-dessus son contenu.
+    if (noeud.closest('.bulle-levier')) return null;
+    return noeud.closest('[data-aide], [data-aide-levier]');
+  };
+  document.addEventListener('mouseover', (evenement) => {
+    const cible = cherche(evenement.target);
+    if (cible) survoler(cible);
+  });
+  document.addEventListener('mouseout', (evenement) => {
+    if (cherche(evenement.relatedTarget)) return;
+    masquerInfobulle();
+  });
+  document.addEventListener('focusin', (evenement) => {
+    const cible = cherche(evenement.target);
+    if (cible) survoler(cible);
+  });
+  document.addEventListener('focusout', () => masquerInfobulle());
+  document.addEventListener('mousedown', () => masquerInfobulle());
+  document.addEventListener('scroll', () => masquerInfobulle(), true);
+}
+
 /* ── Bulles explicatives par levier ────────────────────────────────────────
    Chaque réglage porte un bouton « interactions » : la bulle s'ouvre dans la
    carte du levier (jamais par-dessus), avec la chaîne technique, les
@@ -774,7 +905,11 @@ function bulleHtml(cle){
 function bulleBoutonHtml(cle){
   const actif = BULLE_OUVERTE === cle;
   return `<button class="bulle-bouton${actif ? ' actif' : ''}" data-bulle="${cle}" `
-    + `onclick="ouvrirBulle('${cle}')" title="Expliquer les interactions de ce réglage">`
+    + `data-aide="<b>Bulle explicative</b>Ouvre la fiche du réglage : chaîne d'interaction `
+    + '(médiateurs → indicateurs → domaines), répercussions mesurées à chaque borne, '
+    + 'garde-fous et strates concernées, puis opportunités, désagréments et pistes de '
+    + 'compensation. La fiche s\'ouvre dans la carte, sans recouvrir les leviers." '
+    + `onclick="ouvrirBulle('${cle}')">`
     + `${actif ? '▾ interactions' : '▸ interactions'}</button>`;
 }
 async function chargerBulle(cle){
@@ -799,13 +934,18 @@ async function ouvrirBulle(cle){
   renderLeviers(filtreCourant());
   await chargerBulle(cle);
 }
+function puceHtml(effet){
+  const sens = effet.effet_score > 0 ? 'amélioration' : 'dégradation';
+  const texteAide = `<b>${effet.libelle}</b>Effet mesuré après votre dernière modification : ${sens} de `
+    + `${fmt(Math.abs(effet.effet_score), 1)} pt de score (différences finies, réglage isolé, `
+    + 'comparaison à la trajectoire neutre).';
+  return `<span class="puce-effect ${effet.effet_score > 0 ? 'pos' : 'neg'}" data-aide="${texteAide}">`
+    + `${effet.libelle} ${effet.effet_score > 0 ? '+' : ''}${fmt(effet.effet_score, 1)}</span>`;
+}
 function pucesHtml(cle){
   const effets = DERNIERES_PUCES[cle] || [];
   if (!effets.length) return '';
-  return '<div class="puces">' + effets.map(effet =>
-    `<span class="puce-effect ${effet.effet_score > 0 ? 'pos' : 'neg'}"
-       title="${effet.libelle}">${effet.libelle} ${effet.effet_score > 0 ? '+' : ''}${fmt(effet.effet_score, 1)}</span>`
-  ).join('') + '</div>';
+  return '<div class="puces">' + effets.map(puceHtml).join('') + '</div>';
 }
 function renderLeviers(filtre){
   const recherche = (filtre || '').toLowerCase();
@@ -822,31 +962,31 @@ function renderLeviers(filtre){
         ? (valeur >= 0.5 ? 'activé' : 'désactivé')
         : `${fmt(valeur, levier.precision)} ${levier.unite === 'bool' ? '' : levier.unite}`;
       const bouton = bulleBoutonHtml(levier.cle);
-      const bascule = `<div class="ligne"><label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
+      const bascule = `<div class="ligne" data-aide-levier="${levier.cle}"><label class="bascule"><input type="checkbox" aria-label="${levier.libelle}" ${valeur >= 0.5 ? 'checked' : ''}
              onchange="majLevier('${levier.cle}', this.checked ? 1 : 0)"> ${levier.libelle}
-             <span class="valeur">${valeurTexte}</span></label>${bouton}</div>`;
-      const curseur = `<div class="ligne"><span class="nom">${levier.libelle}</span>
-             <span class="valeur">${valeurTexte}</span>${bouton}</div>
-           <input type="range" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
+             <span class="valeur" data-aide-levier="${levier.cle}">${valeurTexte}</span></label>${bouton}</div>`;
+      const curseur = `<div class="ligne" data-aide-levier="${levier.cle}"><span class="nom" data-aide-levier="${levier.cle}">${levier.libelle}</span>
+             <span class="valeur" data-aide-levier="${levier.cle}">${valeurTexte}</span>${bouton}</div>
+           <input type="range" data-aide-levier="${levier.cle}" aria-label="${levier.libelle}" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
                   value="${valeur}" oninput="majLevier('${levier.cle}', parseFloat(this.value))"
                   onchange="terminerReglage()">`;
-      const curseurCompact = `<span class="nom" title="${levier.description}">${levier.libelle}</span>
-           <input type="range" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
+      const curseurCompact = `<span class="nom" data-aide-levier="${levier.cle}">${levier.libelle}</span>
+           <input type="range" data-aide-levier="${levier.cle}" aria-label="${levier.libelle}" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
                   value="${valeur}" oninput="majLevier('${levier.cle}', parseFloat(this.value))"
                   onchange="terminerReglage()">
-           <span class="valeur">${valeurTexte}</span>${bouton}`;
+           <span class="valeur" data-aide-levier="${levier.cle}">${valeurTexte}</span>${bouton}`;
       if (VUE_COMPACTE){
         const contenuLevier = levier.type === 'interrupteur'
-          ? `<span class="nom">${levier.libelle}</span>
-             <label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
+          ? `<span class="nom" data-aide-levier="${levier.cle}">${levier.libelle}</span>
+             <label class="bascule" data-aide-levier="${levier.cle}"><input type="checkbox" data-aide-levier="${levier.cle}" aria-label="${levier.libelle}" ${valeur >= 0.5 ? 'checked' : ''}
                onchange="majLevier('${levier.cle}', this.checked ? 1 : 0); terminerReglage()"></label>
-             <span class="valeur">${valeurTexte}</span>${bouton}`
+             <span class="valeur" data-aide-levier="${levier.cle}">${valeurTexte}</span>${bouton}`
           : curseurCompact;
-        return `<div class="levier compact${modifie ? ' modifie' : ''}" data-cle="${levier.cle}">
+        return `<div class="levier compact${modifie ? ' modifie' : ''}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
           ${contenuLevier}${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}</div>`;
       }
       const commande = levier.type === 'interrupteur' ? bascule : curseur;
-      return `<div class="levier${modifie ? ' modifie' : ''}" data-cle="${levier.cle}">
+      return `<div class="levier${modifie ? ' modifie' : ''}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
         ${commande}
         <div class="desc">${levier.description}</div>
         ${levier.source ? `<div class="source">Source : ${levier.source}</div>` : ''}
@@ -913,6 +1053,8 @@ function renderScenarios(){
     card.className = 'scenario-card carte';
     card.style.borderLeftColor = scenario.couleur || '#38bdf8';
     card.dataset.key = key;
+    card.setAttribute('data-aide', `<b>${scenario.nom}</b>${scenario.description}`
+      + '<br>Cliquez pour rejouer ce scénario historique du dépôt (moteur d\'origine).');
     card.innerHTML = `<h3>${scenario.nom}</h3><p>${scenario.description}</p>`;
     card.onclick = (ev) => runScenario(key, ev);
     grid.appendChild(card);
@@ -925,6 +1067,8 @@ function renderPresets(){
     const card = document.createElement('div');
     card.className = 'scenario-card carte';
     card.style.borderLeftColor = preset.couleur || '#38bdf8';
+    card.setAttribute('data-aide', `<b>${preset.libelle}</b>${preset.description}`
+      + '<br>Cliquez pour charger ces réglages dans la console : chacun reste ensuite ajustable au curseur.');
     card.innerHTML = `<h3>${preset.libelle}</h3><p>${preset.description}</p>`;
     card.onclick = (ev) => chargerPreset(key, ev);
     grid.appendChild(card);
@@ -1054,7 +1198,7 @@ function renderConsole(donnees){
       + (verdict.nombre_hors_sol ? ` · ${verdict.nombre_hors_sol} HORS-SOL` : '');
     document.getElementById('ruban-strates').innerHTML = (diagnostic.strates || []).map(strate =>
       `<span class="ruban-strate ${classeNiveau(strate.niveau)}"
-             title="${strate.libelle} — ${etiquetteNiveau(strate.niveau)} (${strate.alertes.length} seuil(s) en alerte)">S${strate.strate}</span>`
+             data-aide="<b>${strate.libelle}</b>${etiquetteNiveau(strate.niveau)} — ${strate.alertes.length} seuil(s) en alerte. Cliquez sur « détails » pour le détail des seuils.">S${strate.strate}</span>`
     ).join('');
     const risque = (diagnostic.population || {}).valeur;
     document.getElementById('ruban-population').innerHTML =
@@ -1332,7 +1476,11 @@ function renderDomaines(donnees){
         <span>${fmt(indicateur.valeur_finale, 1)} ${indicateur.unite}
         <span class="delta ${favorable ? 'hausse' : 'baisse'}">(${variation >= 0 ? '+' : ''}${fmt(variation,1)} %)</span></span></li>`;
     }).join('');
-    return `<div class="domaine" style="border-top:3px solid ${domaine.couleur}">
+    const texteAide = `<b>${domaine.libelle}</b>${domaine.description}<br>`
+      + `score ${fmt(domaine.score, 1)}/100 — écart à la référence ${ecart >= 0 ? '+' : ''}${fmt(ecart, 1)} pt `
+      + `(50 = aucune politique ; « sans politique » = tendance spontanée du modèle).<br>`
+      + `${domaine.indicateurs.length} indicateur(s) chiffré(s), chacun avec sa source.`;
+    return `<div class="domaine" data-aide="${texteAide}" style="border-top:3px solid ${domaine.couleur}">
       <div class="tete">
         <div><b>${domaine.libelle}</b><div class="ref">${domaine.description}</div></div>
         <div style="text-align:right">
@@ -1412,6 +1560,7 @@ function telecharger(contenu, nom, type){
 /* ── Démarrage ──────────────────────────────────────────────────────────── */
 (async function demarrer(){
   await chargerCatalogue();
+  initialiserInfobulles();
   renderScenarios();
   await chargerContexte(false);
   chargerPreset('mandature', null);

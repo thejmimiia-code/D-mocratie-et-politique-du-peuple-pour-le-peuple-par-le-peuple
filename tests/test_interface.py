@@ -291,6 +291,38 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("BULLE_OUVERTE = cle;", self.script)
         self.assertIn("BULLE_OUVERTE = null;", self.script)
 
+    def test_infobulles_au_survol_des_reglages(self):
+        """Curseurs, interrupteurs et boutons s'expliquent au survol.
+
+        L'aide est affichée par une couche fixe et passive : elle ne capte
+        aucun clic et disparaît quand la souris repart, donc les réglages
+        restent tous actionnables.
+        """
+        self.assertIn('id="infobulle"', self.page)
+        self.assertIn(".infobulle{position:fixed", self.page)
+        self.assertIn("pointer-events:none", self.page)
+        self.assertIn("[data-aide],[data-aide-levier]{cursor:help}", self.page)
+        for fonction in ("elementInfobulle", "levierParCle", "texteAideLevier",
+                         "texteAideElement", "positionnerInfobulle", "afficherInfobulle",
+                         "masquerInfobulle", "survoler", "initialiserInfobulles"):
+            with self.subTest(fonction=fonction):
+                self.assertIn(f"function {fonction}", self.script)
+        self.assertIn("initialiserInfobulles();", self.script)
+        # Survol, sortie de souris, focus clavier, clic (pour ne pas masquer l'aide).
+        for evenement in ("mouseover", "mouseout", "focusin", "focusout", "mousedown", "scroll"):
+            self.assertIn(evenement, self.script)
+
+    def test_chaque_reglage_est_annote_pour_le_survol(self):
+        """Les zones interactives des 93 leviers portent leur aide."""
+        self.assertGreaterEqual(self.script.count('data-aide-levier="${levier.cle}"'), 6)
+        self.assertIn('<input type="range" data-aide-levier=', self.script)
+        self.assertIn('<input type="checkbox" data-aide-levier=', self.script)
+        self.assertIn('data-aide="${texteAide}"', self.script)          # cartes de domaine
+        self.assertIn("card.setAttribute('data-aide'", self.script)      # scénarios/préréglages
+        self.assertIn("data-aide=\"${texteAide}\"", self.script)       # puces d'impact
+        # Les boutons de la page (en-tête, ruban, barre des leviers) sont annotés.
+        self.assertGreaterEqual(self.page.count('data-aide="'), 10)
+
     def test_bulle_guide_opportunites_et_desagrements(self):
         """Le contenu doit guider : chaîne, répercussions, garde-fous, pistes."""
         for marqueur in ("Chaîne d'interaction", "Répercussions mesurées",

@@ -4,6 +4,30 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.4.1] — 2026-10-05
+
+### Ajout — Aides au survol (infobulles) sur tous les réglages et boutons
+
+- **`simulateur/interface.py`** : couche d'infobulle instantanée
+  (`initialiserInfobulles()`, `survoler()`, `texteAideLevier()`) affichée au
+  survol **et** au focus clavier, `pointer-events:none`, masquée au clic, au
+  défilement et à l'ouverture d'une bulle.
+- **93 réglages annotés** : curseurs, interrupteurs, étiquettes de nom et de
+  valeur, cartes de levier (vue confort et vue compacte) — l'aide donne la
+  famille, l'unité, la valeur courante et le défaut, la plage et le pas, la
+  description, les effets déclarés, les mesures en direct sous le curseur et les
+  mouvements aux bornes.
+- **Boutons et contrôles annotés** : rafraîchir, réinitialiser, simuler,
+  exports JSON/CSV, densité, détails des seuils, « régler les 93 leviers »,
+  recherche, case de vue compacte, puces d'impact, puces de strate, cartes de
+  domaine, préréglages et scénarios.
+- **Tests** : 2 tests statiques de plus (couche passive, annotation des zones
+  interactives) et **8 étapes de plus dans le harnais Node** (85 au total) —
+  zones d'aide par réglage, contenu de l'aide, affichage, masquage, boutons
+  annotés.
+- **`docs/SIMULATEUR_PARAMETRABLE.md`** : sous-section « Aides au survol » du
+  § 6 (tableau élément survolé → contenu).
+
 ## [1.4.0] — 2026-10-05
 
 ### Ajout — Bulles explicatives par réglage (93 leviers)

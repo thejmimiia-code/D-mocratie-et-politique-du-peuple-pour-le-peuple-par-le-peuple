@@ -107,6 +107,8 @@ globalThis.document = {
   querySelector: (selecteur) => new Element(selecteur),
   querySelectorAll: () => [],
   createElement: (balise) => new Element("cree-" + balise, balise),
+  addEventListener: () => {},
+  removeEventListener: () => {},
   body: new Element("body"),
 };
 globalThis.window = globalThis;
@@ -214,6 +216,8 @@ const programme = `
                        'terminerReglage','basculerDensite','basculerDetailsConsole','allerAuxLeviers',
                        'filtreCourant','pucesHtml','majEffetsParLevier',
                        'ouvrirBulle','chargerBulle','htmlBulle','bulleBoutonHtml','libelleDomaine',
+                       'initialiserInfobulles','survoler','masquerInfobulle','afficherInfobulle',
+                       'texteAideLevier','texteAideElement','puceHtml',
                        'extraireEurostat','extraireSdmx','extraireGenerique']) {
       api[nom] = eval(nom);
     }
@@ -343,6 +347,32 @@ noter("la bulle laisse les 93 réglages accessibles",
 await apiPage.ouvrirBulle(cleLevier);
 for (let i = 0; i < 2; i += 1) await tourner();
 noter("la bulle se referme", !contenu("leviers-grille").includes("bulle-levier"));
+
+/* 2 quinquies. Aides au survol : chaque réglage s'explique sans clic. */
+const zonesAide = (contenu("leviers-grille").match(/data-aide-levier=/g) || []).length;
+noter("chaque réglage porte une zone d'aide au survol", zonesAide >= leviersComplets * 4,
+      `${zonesAide} zones pour ${leviersComplets} réglages`);
+const aideReglage = apiPage.texteAideLevier(cleLevier);
+noter("l'aide décrit plage, défaut et valeur courante",
+      aideReglage.includes("plage") && aideReglage.includes("défaut")
+      && aideReglage.includes("valeur actuelle"),
+      aideReglage.slice(0, 110));
+noter("l'aide annonce les effets déclarés au catalogue",
+      aideReglage.includes("Effets déclarés"), aideReglage.slice(0, 110));
+const cibleAide = { getAttribute: (nom) => (nom === "data-aide-levier" ? cleLevier : null) };
+apiPage.survoler(cibleAide);
+noter("l'infobulle s'affiche au survol d'un réglage",
+      elements.get("infobulle")?.classList.contains("visible") === true);
+noter("l'infobulle reprend le libellé du réglage",
+      contenu("infobulle").includes("TVA"), contenu("infobulle").slice(0, 90));
+noter("la couche d'infobulle ne capte aucun clic",
+      /pointer-events:none/.test(charge.page));
+apiPage.masquerInfobulle();
+noter("l'infobulle disparaît au départ de la souris",
+      elements.get("infobulle")?.classList.contains("visible") === false);
+const boutonsAnnotes = (charge.page.match(/data-aide="/g) || []).length;
+noter("les boutons d'action portent aussi une aide", boutonsAnnotes >= 10,
+      `${boutonsAnnotes} éléments annotés dans la page`);
 
 /* 3. Sorties attendues peuplées après simulation paramétrique. */
 for (const id of ["strates-cascade", "results-table", "svg-chart", "domaines-grille",

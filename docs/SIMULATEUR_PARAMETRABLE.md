@@ -265,6 +265,28 @@ Une bulle répond à trois questions, dans cet ordre :
 Réglages possibles : `GET /api/bulles?detail=resume` (sans le détail indicateur
 par indicateur ni le journal) et `?mesure=0` (chaîne d'interaction seule).
 
+### Aides au survol : chaque réglage s'explique sans clic
+
+Passer la souris (ou poser le focus clavier) sur un curseur, un interrupteur, une
+étiquette de valeur, un bouton, une case à cocher, une carte de domaine, un
+préréglage ou un scénario affiche une **infobulle instantanée** — sans attendre
+le délai du `title` natif du navigateur et sans recouvrir durablement l'écran :
+
+| Élément survolé | Contenu de l'infobulle |
+|---|---|
+| Curseur ou interrupteur d'un levier | libellé, famille, unité, **valeur actuelle** et défaut, plage et pas, description, **effets déclarés** au catalogue, **mesures en direct** sous le curseur, mouvements aux bornes et rappel de la bulle |
+| Bouton « interactions » | ce que la bulle contient et le fait qu'elle s'ouvre dans la carte |
+| Boutons d'action | ce que fait le bouton (rafraîchir, réinitialiser, simuler, exporter, densité, détails des seuils) |
+| Puces d'impact et puces de strate | domaine et sens de l'effet mesuré, niveau du garde-fou et nombre de seuils en alerte |
+| Cartes de domaine | description, score, écart à la référence, tendance sans politique, nombre d'indicateurs |
+| Préréglages et scénarios | contenu et effet du clic (charger les leviers / rejouer le moteur d'origine) |
+
+La couche d'infobulle est **passive** (`pointer-events:none`) : elle ne capte
+aucun clic, disparaît au départ de la souris, au clic, au défilement et à
+l'ouverture d'une bulle — les 93 paramètres restent donc tous actionnables.
+Lecture du code : `initialiserInfobulles()`, `survoler()`, `texteAideLevier()`
+dans `simulateur/interface.py`.
+
 Lecture du module : `simulateur/bulles.py` — thèmes déclarés → domaines
 (`THEMES_DOMAINES`), échelons traversés par thème (`THEMES_STRATES`), index des
 consommateurs de chaque médiateur, mesures par borne, lecture guidée.
