@@ -4,6 +4,28 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.4.3] — 2026-10-05
+
+### Correction — Repli documentaire exprimé dans l'unité du modèle
+
+- **`simulateur/donnees_live.py`** : la réconciliation du repli avec le snapshot
+  daté applique désormais la **conversion de l'indicateur**. Le repli hors ligne
+  valait l'unité de la source (Eurostat publie le PIB en **millions** d'euros) au
+  lieu de celle du modèle : `pib_nominal_mde` valait 2 991 055,9 au lieu de
+  2 991,06 Md€. Le défaut restait masqué tant que la collecte tournait, car le
+  collecteur convertit, lui, chaque lecture ; il n'apparaissait donc que dans les
+  exécutions sans réseau.
+- **`simulateur/donnees_live.py`** : nouveau paramètre `hors_ligne` de
+  `construire_contexte()` et variable d'environnement `SIMULATEUR_HORS_LIGNE=1`.
+  Aucun appel réseau n'est alors effectué : le contexte vient du cache et du
+  snapshot daté. Les tests s'en servent pour être **déterministes sur une machine
+  connectée** comme hors ligne.
+- **Tests** : les contextes de test sont explicitement hors ligne ; les suites qui
+  démarrent un serveur posent `SIMULATEUR_HORS_LIGNE=1` (plus de collecte réseau
+  pendant les tests : c'était la cause des échecs et de la lenteur de la CI).
+  Nouveaux tests : conversion du repli alignée sur l'indicateur, concordance des
+  deux chemins hors ligne, bornes du PIB de repli.
+
 ## [1.4.2] — 2026-10-05
 
 ### Correction — Prise en charge des sondes `HEAD` (affichage des aperçus)

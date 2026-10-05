@@ -17,6 +17,7 @@ import socket
 import subprocess
 import tempfile
 import threading
+import os
 import unittest
 import urllib.request
 from pathlib import Path
@@ -27,6 +28,12 @@ from simulateur.parametres import LEVIERS
 RACINE = Path(__file__).resolve().parent.parent
 HARNAIS = RACINE / "tests" / "navigateur_interface.mjs"
 NODE = __import__("shutil").which("node")
+
+
+#: Le serveur testé ne doit jamais interroger les API publiques : sur une
+#: machine connectée (CI), la collecte rendrait les tests lents et
+#: dépendants du réseau. Le contexte vient donc du snapshot daté.
+os.environ.setdefault("SIMULATEUR_HORS_LIGNE", "1")
 
 
 class TestInterfaceDansNode(unittest.TestCase):

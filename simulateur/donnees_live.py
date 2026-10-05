@@ -956,10 +956,33 @@ _CORRESPONDANCE = {
 # pour chaque indicateur publié. On l'impose au repli : hors ligne, le simulateur
 # affiche donc le dernier chiffre vérifié, et non une constante historique plus
 # ancienne. Toute divergence entre les deux tables est ainsi impossible.
+#
+# ⚠️ La conversion d'unité est indispensable ici : `reference` est publié dans
+# l'unité de la source (Eurostat donne le PIB en **millions** d'euros) alors que
+# le modèle raisonne en **milliards** (`indicateur.conversion = 0,001`). Sans
+# elle, le repli hors ligne valait 1 000 fois la réalité — et le bug restait
+# masqué tant que la collecte tournait, car le collecteur, lui, convertissait.
 for _champ, _cle_indicateur in _CORRESPONDANCE.items():
-    _reference = getattr(INDICATEURS.get(_cle_indicateur), "reference", None)
+    _indicateur = INDICATEURS.get(_cle_indicateur)
+    _reference = getattr(_indicateur, "reference", None)
     if _reference and _reference[0] is not None:
-        _REPLI[_champ] = float(_reference[0])
+        _conversion = getattr(_indicateur, "conversion", 1.0) or 1.0
+        _REPLI[_champ] = round(float(_reference[0]) * _conversion, 6)
+
+
+#: Variable d'environnement qui force le mode hors ligne (aucune API publiques).
+VARIABLE_HORS_LIGNE = "SIMULATEUR_HORS_LIGNE"
+
+
+def hors_ligne_force() -> bool:
+    """Vrai si l'environnement interdit la collecte réseau.
+
+    Utile aux tests et aux exécutions sans réseau : le contexte est alors
+    assemblé du cache et du snapshot daté, jamais des API publiques.
+    """
+    return os.environ.get(VARIABLE_HORS_LIGNE, "").strip().lower() in {
+        "1", "true", "oui", "vrai", "yes", "on",
+    }
 
 
 def construire_contexte(
@@ -968,14 +991,21 @@ def construire_contexte(
     rafraichir: bool = False,
     utiliser_cache: bool = True,
     timeout: float = 12.0,
+    hors_ligne: bool | None = None,
 ) -> ContexteInstant:
     """Assemble le contexte « instant T » à partir du live, du cache ou du snapshot.
 
     `lectures` permet d'injecter un relevé déjà effectué (tests, mode navigateur).
+    `hors_ligne=True` (ou la variable d'environnement `SIMULATEUR_HORS_LIGNE=1`)
+    interdit toute requête réseau : le contexte vient du cache et du snapshot
+    daté. Les tests s'en servent pour être déterministes qu'ils tournent sur une
+    machine connectée ou non.
     """
+    if hors_ligne is None:
+        hors_ligne = hors_ligne_force()
     if lectures is None:
         lectures = charger_cache() if utiliser_cache else {}
-        if rafraichir or not lectures:
+        if not hors_ligne and (rafraichir or not lectures):
             collecte = collecter(list(_CORRESPONDANCE.values()), timeout=timeout)
             lectures = {**lectures, **collecte}
             if rafraichir and any(lec.statut != "indisponible" for lec in collecte.values()):

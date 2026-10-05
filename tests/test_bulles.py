@@ -34,7 +34,7 @@ class TestChaineDInteraction(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         cls.catalogue = bulles_catalogue(cls.contexte, detail="resume")
         cls.bulles = cls.catalogue["bulles"]
 
@@ -112,7 +112,7 @@ class TestRepercussionsMesurees(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         cls.catalogue = bulles_catalogue(cls.contexte, detail="resume")
         cls.bulles = cls.catalogue["bulles"]
 
@@ -208,7 +208,7 @@ class TestLectureGuidee(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         cls.bulles = bulles_catalogue(cls.contexte, detail="resume")["bulles"]
 
     def test_chaque_bulle_produit_une_lecture(self):
@@ -269,7 +269,7 @@ class TestPerformance(unittest.TestCase):
     """Une bulle doit rester calculable à la demande, sans figer la page."""
 
     def test_une_bulle_se_calcule_en_moins_d_une_seconde(self):
-        contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         depart = time.perf_counter()
         bulle = bulle_levier("aide_logement", contexte)
         duree = time.perf_counter() - depart

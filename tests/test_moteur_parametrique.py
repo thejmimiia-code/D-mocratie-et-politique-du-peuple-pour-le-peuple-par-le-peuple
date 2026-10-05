@@ -23,7 +23,7 @@ from simulateur.parametres import LEVIERS, PRESETS, normaliser
 
 
 def _contexte():
-    return construire_contexte(utiliser_cache=False, rafraichir=False)
+    return construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
 
 
 def _domaine(sortie, cle):

@@ -32,7 +32,7 @@ from simulateur.seuils import (
 
 
 def _contexte():
-    return construire_contexte(utiliser_cache=False, rafraichir=False)
+    return construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
 
 
 class TestStructureDesGardeFous(unittest.TestCase):

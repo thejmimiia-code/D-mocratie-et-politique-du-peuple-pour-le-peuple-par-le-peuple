@@ -11,11 +11,14 @@ licences, cohérence interne) et non la disponibilité d'Internet.
 
 import json
 import tempfile
+import os
 import unittest
 from dataclasses import fields
 from pathlib import Path
 
 from simulateur.donnees_live import (
+    VARIABLE_HORS_LIGNE,
+    hors_ligne_force,
     _CORRESPONDANCE,
     _REPLI,
     ADAPTATEURS_SERVEUR,
@@ -85,14 +88,18 @@ class TestRepliEtCorrespondance(unittest.TestCase):
     """Le repli documentaire ne doit jamais contredire le snapshot daté."""
 
     def test_repli_aligne_sur_le_snapshot(self):
+        """Le repli reprend le snapshot daté **dans l'unité du modèle**.
+
+        La comparaison inclut la conversion de l'indicateur : Eurostat publie le
+        PIB en millions d'euros, le modèle le manipule en milliards.
+        """
         for champ, cle in _CORRESPONDANCE.items():
             indicateur = INDICATEURS[cle]
             if not indicateur.reference or indicateur.reference[0] is None:
                 continue
+            attendu = float(indicateur.reference[0]) * (indicateur.conversion or 1.0)
             with self.subTest(champ=champ):
-                self.assertAlmostEqual(
-                    float(_REPLI[champ]), float(indicateur.reference[0]), places=6
-                )
+                self.assertAlmostEqual(float(_REPLI[champ]), attendu, places=6)
 
     def test_correspondance_pointe_sur_des_indicateurs_existants(self):
         for champ, cle in _CORRESPONDANCE.items():
@@ -105,12 +112,101 @@ class TestRepliEtCorrespondance(unittest.TestCase):
             self.assertIn(champ, champs)
 
 
+class TestModeHorsLigne(unittest.TestCase):
+    """Le drapeau hors ligne rend les tests déterministes, connectés ou non.
+
+    Sans lui, `construire_contexte(rafraichir=True)` interroge les API
+    publiques : sur une machine connectée (CI), le contexte passait en mode
+    « live » et les assertions de référence échouaient.
+    """
+
+    def test_drapeau_explicite_ignore_le_reseau_meme_avec_rafraichissement(self):
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=True, hors_ligne=True)
+        self.assertEqual(contexte.mode, "reference")
+        self.assertTrue(contexte.horodatage)
+        for info in contexte.provenance.values():
+            self.assertEqual(info["statut"], "reference")
+
+    def test_variable_d_environnement_active_le_mode_hors_ligne(self):
+        precedent = os.environ.get(VARIABLE_HORS_LIGNE)
+        os.environ[VARIABLE_HORS_LIGNE] = "1"
+        try:
+            self.assertTrue(hors_ligne_force())
+            self.assertEqual(construire_contexte(utiliser_cache=False).mode, "reference")
+        finally:
+            if precedent is None:
+                os.environ.pop(VARIABLE_HORS_LIGNE, None)
+            else:
+                os.environ[VARIABLE_HORS_LIGNE] = precedent
+
+    def test_variable_d_environnement_fausse_laisse_la_collecte_possible(self):
+        precedent = os.environ.get(VARIABLE_HORS_LIGNE)
+        os.environ[VARIABLE_HORS_LIGNE] = "0"
+        try:
+            self.assertFalse(hors_ligne_force())
+        finally:
+            if precedent is None:
+                os.environ.pop(VARIABLE_HORS_LIGNE, None)
+            else:
+                os.environ[VARIABLE_HORS_LIGNE] = precedent
+
+    def test_hors_ligne_n_est_pas_le_defaut(self):
+        """Par défaut, le simulateur doit pouvoir collecter : c'est sa promesse."""
+        precedent = os.environ.pop(VARIABLE_HORS_LIGNE, None)
+        try:
+            self.assertFalse(hors_ligne_force())
+        finally:
+            if precedent is not None:
+                os.environ[VARIABLE_HORS_LIGNE] = precedent
+
+
+class TestReconciliationDuRepli(unittest.TestCase):
+    """Le repli hors ligne doit être dans l'unité du modèle, pas dans celle de l'API.
+
+    Régression réelle : `_REPLI["pib_nominal_mde"]` valait 2 991 055,9 (millions
+    d'euros, unité d'Eurostat) au lieu de 2 991,06 Md€. Le bug restait invisible
+    tant que la collecte tournait, car le collecteur applique, lui, la conversion
+    de l'indicateur. Dès qu'une exécution se passait de réseau (tests hors ligne,
+    CI), les valeurs du contexte étaient multipliées par 1 000.
+    """
+
+    def test_le_repli_est_dans_l_unite_du_modele(self):
+        for champ, cle_indicateur in _CORRESPONDANCE.items():
+            indicateur = INDICATEURS[cle_indicateur]
+            if not indicateur.reference or indicateur.reference[0] is None:
+                continue
+            conversion = indicateur.conversion or 1.0
+            attendu = float(indicateur.reference[0]) * conversion
+            with self.subTest(champ=champ):
+                self.assertAlmostEqual(
+                    _REPLI[champ], attendu, places=4,
+                    msg=f"{champ} : repli {_REPLI[champ]} ≠ référence convertie {attendu}",
+                )
+
+    def test_les_deux_chemins_donnent_les_memes_valeurs_sans_reseau(self):
+        """Hors ligne, « pas de collecte » et « collecte indisponible » concordent."""
+        sans_collecte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
+        avec_collecte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        if avec_collecte.mode != "reference":
+            self.skipTest("machine connectée : la collecte a réellement fourni des données")
+        for champ in _CORRESPONDANCE:
+            with self.subTest(champ=champ):
+                self.assertAlmostEqual(
+                    getattr(sans_collecte, champ), getattr(avec_collecte, champ), places=6,
+                )
+
+    def test_le_pib_de_repli_reste_dans_les_bornes_du_modele(self):
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
+        self.assertGreater(contexte.pib_nominal_mde, 2000.0)
+        self.assertLess(contexte.pib_nominal_mde, 4000.0)
+
+
 class TestContexteInstant(unittest.TestCase):
     """Le contexte hors ligne reste complet, daté et traçable."""
 
     @classmethod
     def setUpClass(cls):
-        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        cls.contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
 
     def test_mode_reference_hors_ligne(self):
         self.assertEqual(self.contexte.mode, "reference")

@@ -89,7 +89,7 @@ class TestResolutionDesTermes(unittest.TestCase):
         )
 
         cls.disponibles = {champ.name for champ in fields(MediateursAnnee)}
-        contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
 
         # Trajectoire de référence : tous leviers neutres.
         moteur_ref, flux_ref = _executer_serie({}, contexte, 5)
@@ -140,7 +140,7 @@ class TestResolutionDesTermes(unittest.TestCase):
     def test_bases_resolues(self):
         """Chaque base textuelle doit correspondre à un champ du contexte réel."""
         from simulateur.donnees_live import construire_contexte
-        contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         for spec in SPECS:
             if not isinstance(spec.base, str):
                 continue
@@ -242,7 +242,7 @@ class TestEvaluationDunIndicateur(unittest.TestCase):
 
     def test_indicateur_absolu(self):
         from simulateur.donnees_live import construire_contexte
-        contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         spec = next(s for s in SPECS if not s.unite.startswith(("%", "indice")) and s.termes)
         mediateurs = MediateursAnnee()
         mediateur, coefficient = spec.termes[0]
@@ -254,7 +254,7 @@ class TestEvaluationDunIndicateur(unittest.TestCase):
 
     def test_mediateurs_vides_ne_changent_rien(self):
         from simulateur.donnees_live import construire_contexte
-        contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         mediateurs = MediateursAnnee()
         for spec in SPECS:
             if isinstance(spec.base, str):
@@ -267,7 +267,7 @@ class TestEvaluationDunIndicateur(unittest.TestCase):
 
     def test_planchers_et_plafonds_respectes(self):
         from simulateur.donnees_live import construire_contexte
-        contexte = construire_contexte(utiliser_cache=False, rafraichir=False)
+        contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
         mediateurs = MediateursAnnee()
         for mediateur in {terme for spec in SPECS for terme, _ in spec.termes}:
             mediateurs.flux[mediateur] = 1e6

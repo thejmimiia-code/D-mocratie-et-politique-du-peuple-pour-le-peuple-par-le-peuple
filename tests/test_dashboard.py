@@ -10,6 +10,7 @@ import json
 import re
 import socket
 import threading
+import os
 import unittest
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -20,6 +21,12 @@ from simulateur.dashboard import (
     create_server,
     run_simulation_api,
 )
+
+
+#: Le serveur testé ne doit jamais interroger les API publiques : sur une
+#: machine connectée (CI), la collecte rendrait les tests lents et
+#: dépendants du réseau. Le contexte vient donc du snapshot daté.
+os.environ.setdefault("SIMULATEUR_HORS_LIGNE", "1")
 
 
 class TestDashboardAPI(unittest.TestCase):
