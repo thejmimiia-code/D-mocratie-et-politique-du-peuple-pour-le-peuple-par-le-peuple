@@ -76,7 +76,39 @@ quatre chiffres clés (93 leviers · 20 domaines · 38 indicateurs publics ·
 
 ---
 
-## 6. Ce qui a été mis à jour dans le dépôt lui-même
+## 6. Trois façons d'appliquer ces réglages
+
+### a. Page locale `outils/reglages_depot.html` (aucun secret partagé)
+
+Ouvrez le fichier dans votre navigateur, collez-y un **jeton jetable** restreint
+à ce dépôt (*fine-grained token*, permission **Administration : Read and write**,
+expiration 7 jours, à révoquer ensuite), vérifiez les valeurs pré-remplies puis
+cliquez sur *Appliquer au dépôt*. La page n'appelle que `api.github.com` :
+le jeton ne quitte pas votre navigateur, il n'est ni enregistré ni transmis.
+
+### b. Interface web, en une minute
+
+1. Sur la page du dépôt, cliquez sur la roue dentée **⚙** à côté de « About »
+   (ou *Settings → General → Edit repository details*).
+2. **Description** : coller le texte du § 1 (270 caractères).
+3. **Website** : vider le champ, ou coller l'adresse de la documentation (§ 2).
+4. **Topics** : coller les vingt sujets du § 3.
+5. *Save changes*, puis **Social preview → Edit → Upload an image** et choisir
+   `docs/apercu_social.png` (§ 4) — l'aperçu social n'a pas d'API, c'est le seul
+   champ qui reste nécessairement manuel.
+
+### c. API GitHub, si un jeton administrateur est disponible
+
+```bash
+GH_TOKEN=<jeton administration> python3 outils/details_depot.py --appliquer
+python3 outils/details_depot.py            # vérifie ensuite l'état du dépôt
+```
+
+L'aperçu social reste manuel même par cette voie.
+
+---
+
+## 7. Ce qui a été mis à jour dans le dépôt lui-même
 
 Ces éléments sont, eux, versionnés et déjà à jour :
 

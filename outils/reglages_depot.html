@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Appliquer les réglages du dépôt — GitHub</title>
+<style>
+  :root{--bg:#0b1220;--panel:#131c2f;--panel-2:#1a2540;--border:#26324d;--texte:#e6edf7;
+        --dim:#93a3bd;--accent:#38bdf8;--vert:#22c55e;--ambre:#f59e0b;--rouge:#ef4444}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Segoe UI',Roboto,system-ui,sans-serif;background:
+    radial-gradient(1200px 600px at 50% -10%,#16233d 0%,var(--bg) 60%);
+    color:var(--texte);padding:24px;line-height:1.5}
+  .conteneur{max-width:900px;margin:0 auto}
+  h1{font-size:1.35rem;margin-bottom:6px}
+  h2{font-size:1rem;margin:20px 0 8px}
+  p.aide{color:var(--dim);font-size:.86rem;margin-bottom:10px}
+  .bloc{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px}
+  .bloc.attention{border-color:var(--ambre);background:rgba(245,158,11,.07)}
+  label{font-size:.8rem;color:var(--dim);display:block;margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px}
+  input,textarea{width:100%;background:var(--panel-2);border:1px solid var(--border);border-radius:9px;
+    color:var(--texte);padding:9px 11px;font-family:inherit;font-size:.86rem}
+  textarea{min-height:74px;resize:vertical}
+  .ligne{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+  button{font-family:inherit;font-size:.86rem;cursor:pointer;border-radius:9px;border:1px solid var(--border);
+    background:var(--panel-2);color:var(--texte);padding:9px 15px;transition:.15s}
+  button:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.primaire{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#1d4ed8}
+  .topics{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .topic{border:1px solid var(--border);border-radius:999px;padding:3px 11px;font-size:.76rem;
+    background:var(--panel-2);color:var(--dim)}
+  .journal{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.8rem;white-space:pre-wrap;
+    background:#0d1526;border:1px solid var(--border);border-radius:10px;padding:12px;min-height:80px}
+  .ok{color:var(--vert)} .ko{color:var(--rouge)}
+  ul{margin-left:20px;font-size:.84rem;color:var(--dim)}
+  code{background:#0d1526;border:1px solid var(--border);border-radius:6px;padding:1px 6px;font-size:.82rem}
+</style>
+</head>
+<body>
+<div class="conteneur">
+  <h1>Appliquer les réglages du dépôt</h1>
+  <p class="aide">Description, site web et sujets du dépôt <code>thejmimiia-code/D-mocratie-et-politique-du-peuple</code>.
+  Tout se passe <b>dans votre navigateur</b> : votre jeton n'est envoyé qu'à <code>api.github.com</code>, jamais ailleurs,
+  et il n'est ni enregistré ni transmis à un tiers.</p>
+
+  <div class="bloc attention">
+    <h2 style="margin-top:0">Le jeton : créez-en un jetable, pour ce dépôt seulement</h2>
+    <ul>
+      <li>GitHub → <b>Settings</b> → <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <i>Generate new token</i></li>
+      <li><b>Repository access</b> : <i>Only select repositories</i> → ce dépôt uniquement</li>
+      <li><b>Permissions</b> → <i>Repository permissions</i> → <b>Administration : Read and write</b> (seule permission nécessaire)</li>
+      <li><b>Expiration</b> : 7 jours — puis <i>Revoke</i> après usage</li>
+      <li>⚠️ Ne collez <b>jamais</b> ce jeton dans une conversation : ici, il reste chez vous.</li>
+    </ul>
+  </div>
+
+  <div class="bloc">
+    <h2 style="margin-top:0">1. Votre jeton</h2>
+    <label for="jeton">Jeton d'accès (fine-grained, Administration: write)</label>
+    <input id="jeton" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false">
+  </div>
+
+  <div class="bloc">
+    <h2 style="margin-top:0">2. Description</h2>
+    <label for="description">Description (350 caractères maximum)</label>
+    <textarea id="description">Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 93 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.</textarea>
+    <p class="aide" id="compte-description"></p>
+
+    <h2>3. Site web</h2>
+    <label for="site">Adresse du site (laisser vide : l'ancienne adresse Vercel renvoie 404)</label>
+    <input id="site" type="text" placeholder="(vide)">
+    <p class="aide">Ou, à défaut d'application hébergée :
+      <code>https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md</code></p>
+
+    <h2>4. Sujets</h2>
+    <div class="topics" id="topics"></div>
+    <p class="aide"><span id="compte-topics"></span> — cliquez pour retirer ou remettre un sujet.</p>
+  </div>
+
+  <div class="bloc">
+    <div class="ligne">
+      <button class="primaire" id="btn-appliquer" onclick="appliquer()">Appliquer au dépôt</button>
+      <button id="btn-verifier" onclick="verifier()">Vérifier l'état actuel</button>
+      <span class="aide" id="etat"></span>
+    </div>
+    <h2>Journal</h2>
+    <div class="journal" id="journal">En attente.</div>
+  </div>
+
+  <div class="bloc">
+    <h2 style="margin-top:0">Ce que cette page ne peut pas faire</h2>
+    <p class="aide">L'<b>aperçu social</b> (la vignette affichée au partage d'un lien) n'a pas d'API :
+    GitHub ne l'accepte que par l'interface web. Le fichier est prêt dans le dépôt :
+    <code>docs/apercu_social.png</code> (1280 × 640, 52 Kio) — à téléverser dans
+    <b>Settings → General → Social preview → Edit → Upload an image</b>.
+    Raccourci pour tout le reste : sur la page du dépôt, la roue dentée
+    <b>⚙</b> à côté de « About » ouvre directement cette fenêtre.</p>
+  </div>
+</div>
+
+<script>
+const DEPOT = 'thejmimiia-code/D-mocratie-et-politique-du-peuple';
+const SUJETS = ['france','simulation','politiques-publiques','finances-publiques','budget',
+  'dette-publique','democratie','geopolitique','open-data','api-publiques','eurostat',
+  'banque-mondiale','dashboard','python','modele-systemique','souverainete',
+  'politiques-budgetaires','transparence','constitution','economie'];
+let sujetsActifs = new Set(SUJETS);
+
+function journal(texte, classe){
+  const zone = document.getElementById('journal');
+  zone.innerHTML = (classe ? `<span class="${classe}">${texte}</span>` : texte);
+}
+function majCompteurs(){
+  const description = document.getElementById('description').value;
+  document.getElementById('compte-description').textContent =
+    `${description.length} / 350 caractères`
+    + (description.length > 350 ? ' — trop long, GitHub refusera' : '');
+  document.getElementById('compte-topics').textContent =
+    `${sujetsActifs.size} sujets sur 20`;
+}
+function renderTopics(){
+  document.getElementById('topics').innerHTML = SUJETS.map(sujet =>
+    `<span class="topic" data-sujet="${sujet}" onclick="basculerSujet('${sujet}')"
+       style="${sujetsActifs.has(sujet) ? 'border-color:var(--accent);color:var(--accent)' : 'opacity:.45'}">${sujet}</span>`
+  ).join('');
+  majCompteurs();
+}
+function basculerSujet(sujet){
+  if (sujetsActifs.has(sujet)) { sujetsActifs.delete(sujet); } else { sujetsActifs.add(sujet); }
+  renderTopics();
+}
+async function appel(url, options){
+  const jeton = document.getElementById('jeton').value.trim();
+  if (!jeton){ throw new Error('Renseignez d’abord votre jeton.'); }
+  const reponse = await fetch(url, Object.assign({}, options, {
+    headers: Object.assign({
+      'Accept': 'application/vnd.github+json',
+      'Authorization': 'Bearer ' + jeton,
+      'X-GitHub-Api-Version': '2022-11-28'
+    }, (options && options.headers) || {})
+  }));
+  const texte = await reponse.text();
+  let charge = null;
+  try { charge = texte ? JSON.parse(texte) : null; } catch (erreur) { charge = texte; }
+  if (!reponse.ok){
+    const message = (charge && charge.message) || texte || ('HTTP ' + reponse.status);
+    throw new Error(`HTTP ${reponse.status} — ${message}`);
+  }
+  return charge;
+}
+async function verifier(){
+  journal('Lecture de l’état actuel…');
+  try {
+    const depot = await appel(`https://api.github.com/repos/${DEPOT}`, {method:'GET'});
+    document.getElementById('etat').textContent = 'état lu';
+    journal(
+      `Dépôt      : ${depot.full_name}\n`
+      + `Description: ${depot.description || '(vide)'}\n`
+      + `Site web   : ${depot.homepage || '(vide)'}\n`
+      + `Sujets     : ${(depot.topics || []).join(', ') || '(aucun)'}\n`
+      + `Visibilité : ${depot.visibility}`);
+  } catch (erreur){
+    journal('Échec de la lecture : ' + erreur.message, 'ko');
+  }
+}
+async function appliquer(){
+  const bouton = document.getElementById('btn-appliquer');
+  bouton.disabled = true;
+  const description = document.getElementById('description').value.trim();
+  const site = document.getElementById('site').value.trim();
+  if (description.length > 350){
+    journal('Description trop longue (350 caractères maximum).', 'ko');
+    bouton.disabled = false;
+    return;
+  }
+  journal('Envoi de la mise à jour…');
+  try {
+    const depot = await appel(`https://api.github.com/repos/${DEPOT}`, {
+      method: 'PATCH',
+      body: JSON.stringify({description: description, homepage: site, topics: [...sujetsActifs]})
+    });
+    journal(
+      `Mise à jour appliquée.\n`
+      + `Description: ${depot.description}\n`
+      + `Site web   : ${depot.homepage || '(vide)'}\n`
+      + `Sujets     : ${(depot.topics || []).length} définis\n\n`
+      + `Il reste une seule étape, impossible par API : téléverser l’aperçu social\n`
+      + `docs/apercu_social.png dans Settings → General → Social preview.`, 'ok');
+    document.getElementById('etat').textContent = 'réglages appliqués';
+  } catch (erreur){
+    journal(
+      'Échec : ' + erreur.message
+      + '\n\nVérifiez que le jeton porte bien la permission « Administration : Read and write »'
+      + '\nsur ce dépôt précis, et qu’il n’a pas expiré.', 'ko');
+  } finally {
+    bouton.disabled = false;
+  }
+}
+document.getElementById('description').addEventListener('input', majCompteurs);
+renderTopics();
+majCompteurs();
+</script>
+</body>
+</html>

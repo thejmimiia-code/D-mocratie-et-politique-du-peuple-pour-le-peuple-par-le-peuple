@@ -130,6 +130,7 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
 - **exports JSON et CSV** de la simulation complète.
 
 Documentation détaillée : [`docs/SIMULATEUR_PARAMETRABLE.md`](docs/SIMULATEUR_PARAMETRABLE.md).
+Réglages du dépôt (description, sujets, aperçu social) : [`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md).
 
 ```bash
 # ligne de commande paramétrique :
