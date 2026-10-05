@@ -261,7 +261,14 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 
 ---
 
-## 9. Limites assumées
+## 9. Réglages du dépôt
+
+L'aperçu social, la description, les sujets et le site web déclarés sont tenus à
+jour dans [`REPOSITORY_DETAILS.md`](REPOSITORY_DETAILS.md), avec les scripts
+`outils/details_depot.py` (bloc à coller) et `outils/apercu_social.py` (image
+1280 × 640).
+
+## 10. Limites assumées
 
 1. **Modèle, pas prophétie.** Les coefficients sont documentés et sourcés
    (multiplicateurs OFCE/FMI, élasticités INSEE, loi d'Okun 1 pt ≈ 150 000

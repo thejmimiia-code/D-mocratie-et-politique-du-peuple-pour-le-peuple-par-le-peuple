@@ -1,0 +1,88 @@
+# Réglages du dépôt (*Edit repository details*) — état au 5 octobre 2026
+
+Ce document est la référence des champs non versionnés du dépôt : description,
+site web, sujets (*topics*) et aperçu social. L'API GitHub refuse de les modifier
+avec le jeton d'intégration utilisé par l'environnement d'automatisation
+(`403 Resource not accessible by integration`) : les valeurs ci-dessous sont donc
+à coller dans **Settings → General → Edit repository details**.
+
+Deux scripts les tiennent à jour :
+
+```bash
+python3 outils/apercu_social.py     # régénère docs/apercu_social.png (1280 × 640)
+python3 outils/details_depot.py     # affiche l'état actuel et le bloc à copier
+python3 outils/details_depot.py --appliquer   # tente la mise à jour par l'API GitHub
+```
+
+---
+
+## 1. Description (270 / 350 caractères)
+
+```
+Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 93 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
+```
+
+**Pourquoi ce changement.** La description annonçait « Modèle gigogne à
+**4** échelons », alors que le moteur en compte **5** depuis l'ajout de la strate
+géopolitique (`docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`). Elle ne
+mentionnait ni les leviers croisables, ni les domaines d'impact, ni les données
+publiques en direct, ni la console de seuils — c'est-à-dire tout ce que le dépôt
+sait faire aujourd'hui.
+
+## 2. Site web
+
+Le site déclaré (`https://d-mocratie-et-politique-du-peuple-p.vercel.app`)
+**renvoie une erreur 404** : l'application n'est plus servie. Deux options :
+
+| Option | Valeur à saisir |
+|---|---|
+| Vider le champ (recommandé tant qu'aucune instance n'est en ligne) | *(vide)* |
+| Renvoyer vers la documentation du simulateur | `https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md` |
+
+Le simulateur se lance localement : `python -m simulateur.dashboard --port 8080`
+(voir § 5 du `README.md`).
+
+## 3. Sujets (20 / 20)
+
+```
+france, simulation, politiques-publiques, finances-publiques, budget, dette-publique,
+democratie, geopolitique, open-data, api-publiques, eurostat, banque-mondiale,
+dashboard, python, modele-systemique, souverainete, politiques-budgetaires,
+transparence, constitution, economie
+```
+
+Aucun sujet n'était défini : le dépôt n'apparaissait dans aucune recherche
+thématique. Les vingt retenus couvrent ses quatre axes réels : le **modèle**
+(simulation, modele-systemique, python, dashboard), le **champ** (politiques
+publiques, finances publiques, budget, dette, économie), la **doctrine**
+(démocratie, constitution, souveraineté, transparence, géopolitique) et les
+**données** (open data, API publiques, Eurostat, Banque mondiale).
+
+## 4. Aperçu social
+
+Téléverser **`docs/apercu_social.png`** (1280 × 640, 52 Kio), régénérable par
+`python3 outils/apercu_social.py`. L'image reprend la palette du simulateur, ses
+quatre chiffres clés (93 leviers · 20 domaines · 38 indicateurs publics ·
+5 échelons) et le ruban de veille avec ses pastilles de strate.
+
+## 5. Autres cases de la même page
+
+| Réglage | Recommandation |
+|---|---|
+| *Include in the home page* — Releases | **activé** : l'application se lance par `python -m simulateur.dashboard` |
+| *Include in the home page* — Packages | désactivé : aucun paquet publié |
+| *Include in the home page* — Deployments / Environments | désactivé : pas de déploiement continu |
+| Wikis / Discussions | désactivés : la documentation vit dans `docs/` |
+
+---
+
+## 6. Ce qui a été mis à jour dans le dépôt lui-même
+
+Ces éléments sont, eux, versionnés et déjà à jour :
+
+- `README.md` — titre et présentation en « 5 échelons », section 5 consacrée au
+  simulateur paramétrable (93 leviers, 20 domaines, données publiques, console) ;
+- `docs/README.md` — index enrichi de `SIMULATEUR_PARAMETRABLE.md` ;
+- `docs/SIMULATEUR_PARAMETRABLE.md` — fonctionnement, seuils, limites assumées ;
+- `pyproject.toml` — description, mots-clés et scripts d'entrée
+  (`simulateur-mpol-dashboard`, `simulateur-mpol-simuler`).

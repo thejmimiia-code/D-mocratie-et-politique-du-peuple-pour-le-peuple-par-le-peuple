@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "simulateur-macro-politique"
 version = "1.0.0"
-description = "Simulateur macro-politique systémique — Démocratie et politique, du peuple, pour le peuple, par le peuple."
+description = "Simulateur macro-politique systémique à 5 échelons : 93 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct et console de veille des seuils tolérables et hors-sol."
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "Loi 1901 — Open-Source et Privé" }
@@ -14,8 +14,9 @@ authors = [
 ]
 keywords = [
     "simulation", "politique", "économie", "démocratie",
-    "élections", "budget", "dette", "UE", "macroéconomie",
-    "systémique", "gigogne", "mandature", "démocratie",
+    "budget", "dette", "UE", "macroéconomie", "systémique",
+    "gigogne", "mandature", "leviers", "données-publiques",
+    "eurostat", "open-data", "seuils", "garde-fous",
 ]
 classifiers = [
     "Development Status :: 4 - Beta",
