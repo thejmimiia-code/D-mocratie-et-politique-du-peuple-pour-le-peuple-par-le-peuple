@@ -222,6 +222,12 @@ class DecisionPolitique:
     # Transferts financiers aux collectivités (DGF)
     delta_dotation_dgf_mde: float = 0.0
 
+    # Agrégats « leviers libres » du simulateur interactif (simulateur/domaines.py).
+    # Les recettes nouvelles hors champs dédiés et les dépenses prioritaires nettes
+    # sont injectées telles quelles dans la mécanique budgétaire du moteur.
+    recettes_nouvelles_mde: float = 0.0
+    depenses_prioritaires_mde: float = 0.0
+
     # Chocs et variables macro-financières exogènes mondiales
     choc_petrole_brent_usd: float = 0.0               # Exogène : variation du baril (ex: +25 $/bbl)
     choc_taux_fed_bps: float = 0.0                    # Exogène : resserrement Fed en bps (ex: +50 bps)

@@ -111,11 +111,31 @@ for decision in get_scenario_mandature_5_ans():
 
 ---
 
-### 5. Lancer le dashboard web interactif (en direct)
+### 5. Lancer le simulateur interactif (en direct)
 ```bash
 python -m simulateur.dashboard --port 8080
 # ou, après installation via pip :
 simulateur-mpol-dashboard
+```
+
+La page servie est un **simulateur paramétrable complet**, et non un jeu de cartes figées :
+
+- **93 leviers** pilotables (fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux), avec recherche et 13 préréglages doctrinaux ;
+- **20 domaines d'action publique** — 74 indicateurs concrets, chacun avec sa formule et sa source — notés de 0 à 100 par rapport à la trajectoire de référence (50 = aucune politique) ;
+- **cascade des 5 échelons** (locale → nationale → européenne → mondiale → géopolitique) et journal causal, année par année ;
+- **console de veille permanente**, résumée en un ruban collant (verdict, 5 strates, risque population) : messages de seuil (tolérable → vigilance → risqué → hors-sol), marges de manœuvre restantes, effet différé de **chaque** modification et **puces d'impact sous chaque levier réglé** ;
+- **les 93 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
+- **matrice d'impacts croisés** levier × domaine, calculée par le modèle par différences finies (aucun coefficient saisi à la main) ;
+- **données publiques « à l'instant T »** : le serveur interroge les API (Eurostat, BCE, Frankfurter, Banque mondiale) et, s'il n'a pas de réseau, le bouton « Rafraîchir les données » les interroge **depuis votre navigateur** puis transmet les valeurs au simulateur — provenance, période et licence affichées pour chaque chiffre ;
+- **exports JSON et CSV** de la simulation complète.
+
+Documentation détaillée : [`docs/SIMULATEUR_PARAMETRABLE.md`](docs/SIMULATEUR_PARAMETRABLE.md).
+Réglages du dépôt (description, sujets, aperçu social) : [`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md).
+
+```bash
+# ligne de commande paramétrique :
+python -m simulateur.moteur_parametrique --preset mandature --json
+python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --levier reforme_ric=1
 ```
 
 ---

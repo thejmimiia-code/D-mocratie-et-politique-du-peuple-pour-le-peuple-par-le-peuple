@@ -4,6 +4,156 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.4.3] — 2026-10-05
+
+### Correction — Repli documentaire exprimé dans l'unité du modèle
+
+- **`simulateur/donnees_live.py`** : la réconciliation du repli avec le snapshot
+  daté applique désormais la **conversion de l'indicateur**. Le repli hors ligne
+  valait l'unité de la source (Eurostat publie le PIB en **millions** d'euros) au
+  lieu de celle du modèle : `pib_nominal_mde` valait 2 991 055,9 au lieu de
+  2 991,06 Md€. Le défaut restait masqué tant que la collecte tournait, car le
+  collecteur convertit, lui, chaque lecture ; il n'apparaissait donc que dans les
+  exécutions sans réseau.
+- **`simulateur/donnees_live.py`** : nouveau paramètre `hors_ligne` de
+  `construire_contexte()` et variable d'environnement `SIMULATEUR_HORS_LIGNE=1`.
+  Aucun appel réseau n'est alors effectué : le contexte vient du cache et du
+  snapshot daté. Les tests s'en servent pour être **déterministes sur une machine
+  connectée** comme hors ligne.
+- **Tests** : les contextes de test sont explicitement hors ligne ; les suites qui
+  démarrent un serveur posent `SIMULATEUR_HORS_LIGNE=1` (plus de collecte réseau
+  pendant les tests : c'était la cause des échecs et de la lenteur de la CI).
+  Nouveaux tests : conversion du repli alignée sur l'indicateur, concordance des
+  deux chemins hors ligne, bornes du PIB de repli.
+
+## [1.4.2] — 2026-10-05
+
+### Correction — Prise en charge des sondes `HEAD` (affichage des aperçus)
+
+- **`simulateur/dashboard.py`** : `do_HEAD` répond désormais comme `GET` mais
+  sans corps (statut, `Content-Type` et `Content-Length` corrects). Les aperçus
+  hébergés et les moniteurs vérifient la disponibilité par un `HEAD` : le 501
+  renvoyé jusqu'ici pouvait laisser l'aperçu vide alors que le serveur
+  fonctionnait. Concerne `/`, les routes `/api/*` et les exports.
+- **`tests/test_dashboard.py`** : `HEAD /` et `HEAD /api/catalogue` vérifiés
+  (200, en-têtes complets, corps vide).
+
+## [1.4.1] — 2026-10-05
+
+### Ajout — Aides au survol (infobulles) sur tous les réglages et boutons
+
+- **`simulateur/interface.py`** : couche d'infobulle instantanée
+  (`initialiserInfobulles()`, `survoler()`, `texteAideLevier()`) affichée au
+  survol **et** au focus clavier, `pointer-events:none`, masquée au clic, au
+  défilement et à l'ouverture d'une bulle.
+- **93 réglages annotés** : curseurs, interrupteurs, étiquettes de nom et de
+  valeur, cartes de levier (vue confort et vue compacte) — l'aide donne la
+  famille, l'unité, la valeur courante et le défaut, la plage et le pas, la
+  description, les effets déclarés, les mesures en direct sous le curseur et les
+  mouvements aux bornes.
+- **Boutons et contrôles annotés** : rafraîchir, réinitialiser, simuler,
+  exports JSON/CSV, densité, détails des seuils, « régler les 93 leviers »,
+  recherche, case de vue compacte, puces d'impact, puces de strate, cartes de
+  domaine, préréglages et scénarios.
+- **Tests** : 2 tests statiques de plus (couche passive, annotation des zones
+  interactives) et **8 étapes de plus dans le harnais Node** (85 au total) —
+  zones d'aide par réglage, contenu de l'aide, affichage, masquage, boutons
+  annotés.
+- **`docs/SIMULATEUR_PARAMETRABLE.md`** : sous-section « Aides au survol » du
+  § 6 (tableau élément survolé → contenu).
+
+## [1.4.0] — 2026-10-05
+
+### Ajout — Bulles explicatives par réglage (93 leviers)
+
+- **`simulateur/bulles.py`** (nouveau) : chaque levier reçoit une fiche
+  **calculée**, jamais rédigée à la main, en trois étages :
+  1. *chaîne d'interaction* — ligne budgétaire ou champ moteur → médiateurs émis
+     (Md€, points, milliers) → indicateurs qui les lisent, avec coefficient et
+     domaine, en signalant les relais indirects (autre échelle, agrégat
+     budgétaire) et l'absence de relais ;
+  2. *répercussions mesurées* — simulation réelle à chaque borne du réglage (et
+     un pas au-delà du défaut), réglage isolé : score des 20 domaines, écart des
+     indicateurs, niveau des 33 garde-fous, risque population, strates 1 à 5 et
+     journal institutionnel ;
+  3. *lecture guidée* — opportunités et désagréments classés, points à
+     surveiller (garde-fous aggravés, strate concernée) et pistes de
+     compensation tirées des effets déclarés des autres leviers.
+  Mesure sur le catalogue actuel : **92 leviers sur 93** déplacent au moins un
+  domaine à leurs bornes ; **0 médiateur orphelin** ; l'exception
+  `clause_sauvegarde_defense` est documentée (effet PDE journalisé en strate 3).
+- **`simulateur/interface.py`** : bouton « interactions » sur chacun des
+  93 réglages, bulle dépliée **dans la carte du levier** (vue confort et vue
+  compacte), donc jamais par-dessus les paramètres ; contenu chargé à la demande
+  depuis `/api/bulle` et mis en cache par levier.
+- **`simulateur/dashboard.py`** : `GET /api/bulles` (catalogue complet ou
+  sélection, `detail=resume`, `mesure=0`) et `GET /api/bulle?levier=…`
+  (fiche complète) ; levier inconnu ou détail inconnu → 400 explicite.
+- **`tests/test_bulles.py`** (21 tests) : couverture des 93 bulles, mapping
+  exhaustif des 44 thèmes déclarés, cohérence bilan/mesures, cache, allègement
+  du détail, garde-fou sur les médiateurs orphelins, coût de calcul.
+- **Harnais navigateur** : 8 étapes de plus (77 au total) — bouton sur chaque
+  réglage, ouverture, contenu (chaîne, mesures, lecture, effets déclarés),
+  accessibilité maintenue des 93 réglages, fermeture.
+- **`docs/SIMULATEUR_PARAMETRABLE.md`** : nouvelle section 6 « Les bulles
+  explicatives par réglage » (méthode, chiffres mesurés, limites).
+
+## [1.3.0] — 2026-10-05
+
+### Ajout — Simulateur paramétrable (remplace le tableau de bord à cartes figées)
+- **`simulateur/parametres.py`** : 93 leviers de politique publique en 14 familles
+  (fiscalité, dépenses, réformes institutionnelles, énergie, industrie, logement,
+  défense…), 13 préréglages doctrinaux et un validateur `normaliser()` qui borne
+  et type toutes les valeurs reçues du client.
+- **`simulateur/domaines.py`** : 20 domaines d'action publique, 74 indicateurs
+  concrets (formule lisible + source), chaîne de médiateurs annuels et notation
+  0-100 par écart à la trajectoire de référence (50 = aucune politique).
+- **`simulateur/moteur_parametrique.py`** : orchestrateur — trajectoire de
+  référence, boucle de convergence des médiateurs, cinq exercices budgétaires sur
+  les cinq échelons, synthèse, matrice d'impacts croisés levier × domaine calculée
+  par différences finies, comparateur de préréglages, calibrage du contexte.
+- **`simulateur/donnees_live.py`** : 38 indicateurs publics sourcés et licenciés
+  (Eurostat, BCE SDMX, Frankfurter, Banque mondiale, Opendatasoft, Yahoo, Stooq),
+  snapshot daté, collecte serveur (7 adaptateurs) et collecte navigateur, avec
+  repli hors ligne réconcilié sur le snapshot.
+- **`simulateur/seuils.py`** : 33 garde-fous répartis sur les cinq strates et
+  quatre paliers (tolérable → vigilance → risqué → hors-sol), seuils absolus et
+  seuils d'écart, messages chiffrant la distance de retour, indice de risque pour
+  la population, marges de manœuvre et audaces possibles.
+- **`simulateur/interface.py`** : page unique sans dépendance externe — ruban de
+  veille collant, 93 leviers en vue confort ou compacte (une ligne par levier),
+  puces d'impact sous chaque levier réglé, 20 domaines, cascade des 5 échelons,
+  exports JSON/CSV, rafraîchissement des API publiques depuis le navigateur.
+- **`simulateur/dashboard.py`** : routes paramétriques `/api/catalogue`,
+  `/api/contexte`, `/api/simuler` (GET et POST), `/api/comparer`, `/api/presets`,
+  `/api/proxy` (liste blanche du registre, pas de proxy ouvert), `/api/donnees`,
+  plus les routes historiques conservées.
+- **`outils/`** : `apercu_social.py` (vignette 1280 × 640), `details_depot.py`
+  (réglages du dépôt), `reglages_depot.html` (application depuis le navigateur).
+
+### Correction
+- **Chocs exogènes** : ils sont désormais appliqués en niveau et mémorisés
+  (`MoteurSimulationSystemique._chocs_appliques`) — un choc maintenu cinq ans ne
+  s'empile plus d'année en année (Brent année 1 = année 5).
+- **`tests/verificateur_js.py`** : un objet littéral dans une substitution
+  (`` `${f({})}` ``) était pris pour l'accolade fermante du gabarit (faux positif),
+  corrigé par suivi de la profondeur de pile à l'entrée de chaque substitution.
+- **Interface** : le compteur de leviers actifs compare par clé (et non par
+  position) ; la grille n'est plus reconstruite pendant la manipulation d'un
+  curseur (re-rendu au relâchement).
+
+### Documentation
+- `docs/SIMULATEUR_PARAMETRABLE.md` (fonctionnement, seuils, limites assumées),
+  `docs/REPOSITORY_DETAILS.md` (réglages du dépôt), `NOTE_POUR_CLAUDE.md` (note de
+  reprise), `README.md`, `docs/README.md`, `CONTRIBUTING.md` (5 échelons).
+
+### Tests
+- **310 tests**, dont `test_parametres` (23), `test_domaines` (23),
+  `test_donnees_live` (17), `test_moteur_parametrique` (30), `test_seuils` (26),
+  `test_interface` (26), `test_dashboard` (28) ; `tests/test_interface_navigateur.py`
+  exécute réellement le JavaScript de la page dans Node (69 étapes du parcours
+  utilisateur, réponses du vrai serveur).
+
 ## [1.2.1] — 2026-10-03
 
 ### Correction — Dashboard web : grille de scénarios vide

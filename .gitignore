@@ -20,3 +20,6 @@ dist/
 
 # Scratch local d audit, jamais livre
 .arena/
+
+# Cache local des relevés API publiques (données live, non versionné)
+.simulateur_cache/

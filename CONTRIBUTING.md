@@ -4,9 +4,9 @@ Merci de votre intérêt pour le **Simulateur Macro-Politique Systémique** !
 
 ## Philosophie du projet
 
-Ce simulateur modélise l'intégration dynamique de 4 échelons de contrainte :
-Local → National → Europe → Mondial. Chaque décision politique a des
-répercussions systémiques mesurables et chiffrables.
+Ce simulateur modélise l'intégration dynamique de **5 échelons** de contrainte :
+Local → National → Europe → Mondial → **Géopolitique**. Chaque décision politique
+a des répercussions systémiques mesurables et chiffrables, domaine par domaine.
 
 **Principe directeur** : toute modification doit être **vérifiable par preuve réelle**
 (finish_reason=stop, tests passants, résultats reproductibles).
@@ -28,9 +28,15 @@ pip install -e ".[dev]"
 python -m unittest discover -s tests -p "test_*.py" -v
 
 # 5. Lancer le simulateur
-python3 main.py mandature
+python3 main.py mandature          # scénario en ligne de commande
 python3 -m simulateur.cli          # menu interactif
+python3 -m simulateur.dashboard --port 8080   # simulateur interactif : 93 leviers,
+                                              # 20 domaines, console de veille
 ```
+
+Les seuls scripts qui demandent une dépendance externe (Pillow) sont ceux du
+dossier `outils/` : ils ne servent qu'à l'aperçu social et aux réglages du
+dépôt. Le simulateur lui-même reste en bibliothèque standard.
 
 ## Standards de code
 
