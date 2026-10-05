@@ -49,6 +49,7 @@ from simulateur.parametres import (
 from simulateur.parametres import (
     catalogue_public as catalogue_parametres,
 )
+from simulateur.seuils import evaluer_sortie, resume_court
 
 #: Nombre de passes de la boucle de médiateurs (les écarts d'un domaine
 #: alimentent les domaines suivants : chômage → pauvreté → cohésion…).
@@ -386,6 +387,7 @@ class SortieSimulation:
     journal: list[str]
     avertissements: list[str] = field(default_factory=list)
     impacts: list[dict[str, Any]] = field(default_factory=list)
+    diagnostic: dict[str, Any] = field(default_factory=dict)
 
     def en_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -496,6 +498,9 @@ def simuler(parametres: dict[str, float] | None = None,
     for resultat in moteur.historique_etapes:
         journal.extend(resultat.commentaires)
 
+    # 6) Garde-fous : seuils tolérables, risqués et hors-sol, strate par strate.
+    #    Le diagnostic voyage avec chaque simulation : l'interface affiche donc
+    #    en permanence les conséquences d'un réglage, sans aller-retour réseau.
     return SortieSimulation(
         horodatage=contexte.horodatage,
         contexte=contexte.en_dict(),
@@ -514,6 +519,11 @@ def simuler(parametres: dict[str, float] | None = None,
         journal=journal,
         avertissements=avertissements,
         impacts=impacts,
+        diagnostic=evaluer_sortie({
+            "etapes": [asdict(r) for r in moteur.historique_etapes],
+            "domaines": [d.en_dict() for d in domaines],
+            "synthese": synthese,
+        }),
     )
 
 
@@ -640,6 +650,9 @@ def comparer(scenarios: dict[str, dict[str, float]] | None = None,
             "libelle": PRESETS.get(cle, {}).get("libelle", cle),
             "synthese": sortie.synthese,
             "scores": {d["cle"]: d["score"] for d in sortie.domaines},
+            # Verdict des garde-fous, en version courte : un préréglage peut être
+            # efficace et dangereux, les deux informations doivent coexister.
+            "diagnostic": resume_court(sortie.diagnostic),
         })
     return {"horodatage": contexte.horodatage, "contexte": contexte.en_dict(),
             "comparaison": resultats}

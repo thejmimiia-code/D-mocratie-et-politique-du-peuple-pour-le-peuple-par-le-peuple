@@ -34,6 +34,7 @@ mouvement de curseur.
 |---|---|
 | `simulateur/parametres.py` | 93 leviers (14 familles), 13 préréglages doctrinaux, `normaliser()`, `catalogue_public()` |
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs spécifiés (formule + source), `construire_flux()`, `decision_moteur()` |
+| `simulateur/seuils.py` | garde-fous par strate : bornes, messages, marges, risque population |
 | `simulateur/moteur_parametrique.py` | orchestrateur : trajectoire de référence, boucle de convergence, scores, matrice d'impacts |
 | `simulateur/donnees_live.py` | registre de 38 indicateurs publics (38 sources licenciées), snapshot daté, collecte |
 | `simulateur/moteur.py`, `model.py` | moteur systémique à 5 échelons (inchangé) |
@@ -130,7 +131,68 @@ un médiateur inexistant (les 102 termes sont couverts par des politiques réell
 
 ---
 
-## 5. Impacts croisés (matrice levier × domaine)
+## 5. La console de veille permanente
+
+En haut de la page, une console **épinglée** suit le défilement : elle reste
+visible pendant que l'on règle les 93 leviers. Elle répond à trois questions,
+en permanence et sans clic supplémentaire (le diagnostic voyage avec chaque
+simulation, aucune requête en plus) :
+
+1. **Où en est-on ?** Un verdict global (favorable → tolérable → vigilance →
+   risqué → hors-sol) et une puce par strate : locale, nationale, européenne,
+   mondiale, géopolitique.
+2. **Qu'est-ce qui est dangereux ?** Les messages de seuil, du plus grave au
+   plus doux, avec la valeur mesurée, le seuil franchi et sa source
+   institutionnelle. Un bandeau rouge apparaît dès qu'une grandeur est hors-sol.
+3. **Que peut-on encore faire ?** Les **marges de manœuvre** (ce qu'il reste
+   avant le prochain seuil) et les **audaces possibles** (ce qu'on peut encore
+   oser avant d'atteindre l'objectif), pour régler au plus fin sans danger.
+
+S'y ajoute le bloc « effet de votre dernière modification » : chaque mouvement
+de curseur est comparé à la simulation précédente et affiché en différentiel
+(déficit, dette, OAT, spread, charge, tension, confiance, censure, solde des
+mesures, score moyen), avec la mention du domaine le plus touché et un verdict
+— « jugée favorable », « mixte », « jugée défavorable ».
+
+### Indice de risque pour la population
+
+Huit domaines qui touchent directement les ménages (pouvoir d'achat, pauvreté,
+santé, éducation, emploi, logement, solidarité, sécurité) donnent un indice de
+0 à 100 (50 = aucune politique) :
+
+| Indice | Lecture |
+|---|---|
+| ≤ 50 | tolérable — les ménages ne sont pas exposés |
+| 50 à 58 | vigilance — effets perceptibles, à accompagner |
+| 58 à 68 | risqué — les pertes l'emportent, corriger avant d'avancer |
+| > 68 | hors-sol — la population paie les mesures |
+
+### Barème des seuils (extraits)
+
+| Strate | Grandeur | tolérable | vigilance | risqué | hors-sol |
+|---|---|---|---|---|---|
+| 2 | Déficit (% PIB) | ≤ 3,0 | ≤ 4,5 | ≤ 5,5 | > 5,5 |
+| 2 | Dette (% PIB) | ≤ 90 | ≤ 125 | ≤ 145 | > 145 |
+| 2 | Charge de la dette (% PIB) | ≤ 2,0 | ≤ 3,0 | ≤ 4,0 | > 4,0 |
+| 4 | OAT 10 ans (%) | ≤ 3,5 | ≤ 4,5 | ≤ 5,5 | > 5,5 |
+| 3 | Spread vs Bund (bps) | ≤ 80 | ≤ 150 | ≤ 250 | > 250 |
+| 1 | Pouvoir d'achat (base 100) | ≥ 99,0 | ≥ 97,5 | ≥ 95,5 | < 95,5 |
+| 1 | Tension sociale (/100) | ≤ 45 | ≤ 60 | ≤ 75 | > 75 |
+| 1 | Confiance démocratique (/100) | ≥ 30 | ≥ 22 | ≥ 15 | < 15 |
+| 5 | Stocks pétroliers (jours, AIE) | ≥ 90 | ≥ 75 | ≥ 60 | < 60 |
+| 5 | Effort de défense (% PIB) | ≥ 2,5 | ≥ 2,0 | ≥ 1,5 | < 1,5 |
+| 5 | Risque nucléaire tactique (%) | ≤ 8 | ≤ 20 | ≤ 35 | > 35 |
+
+Les garde-fous « écart » comparent, eux, la trajectoire choisie à la trajectoire
+neutre : déficit (±0,25 / 1 / 2 pt), dette (0,5 / 3 / 6 pt), croissance
+(0 / −0,5 / −1,5 pt), **équilibre des mesures** (0 / −10 / −25 Md€ par an) et
+score moyen des domaines (48 / 44 / 38).
+
+Lecture du module : `simulateur/seuils.py` (bornes, sources, messages) ; le
+diagnostic est attaché à chaque `SortieSimulation` et exposé par
+`/api/simuler` et `/api/comparer`.
+
+## 6. Impacts croisés (matrice levier × domaine)
 
 La matrice n'est pas saisie à la main : pour chaque levier actif, le modèle
 **rejoue la simulation avec ce seul levier ramené à sa valeur neutre** et mesure
@@ -140,7 +202,7 @@ marginale du levier à la politique en cours, domaine par domaine.
 
 ---
 
-## 6. Cascade des 5 échelons
+## 7. Cascade des 5 échelons
 
 L'interface affiche, année par année, l'état des cinq strates : locale (tension,
 services de proximité, taxe foncière), nationale (PIB, déficit, dette, charge de
@@ -151,7 +213,7 @@ par le moteur à chaque étape.
 
 ---
 
-## 7. Exécution et API
+## 8. Exécution et API
 
 ```bash
 python -m simulateur.dashboard --host 0.0.0.0 --port 8080 [--rafraichir]
@@ -164,8 +226,8 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | `/` | GET | page unique du simulateur |
 | `/api/catalogue` | GET | familles, 93 leviers, 13 préréglages, 20 domaines |
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
-| `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts) |
-| `/api/comparer` | GET | comparaison des 13 préréglages |
+| `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) |
+| `/api/comparer` | GET | comparaison des 13 préréglages **avec leur verdict de garde-fous** |
 | `/api/presets` | GET | préréglages seuls |
 | `/api/proxy` | GET | relais d'une source du registre (liste blanche) |
 | `/api/donnees` | POST | valeurs relevées par le navigateur → recalibrage |
@@ -173,7 +235,7 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 
 ---
 
-## 8. Limites assumées
+## 9. Limites assumées
 
 1. **Modèle, pas prophétie.** Les coefficients sont documentés et sourcés
    (multiplicateurs OFCE/FMI, élasticités INSEE, loi d'Okun 1 pt ≈ 150 000

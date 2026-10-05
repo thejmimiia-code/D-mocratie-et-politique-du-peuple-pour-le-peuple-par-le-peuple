@@ -5,6 +5,9 @@ Le module expose `HTML_PAGE` : une page unique (aucune dépendance externe,
 aucun CDN) qui contient :
 
   * la barre de contexte « instant T » (données réelles, provenance, licences) ;
+  * la **console de veille permanente** (`console-pilotage`) : verdict par strate,
+    messages de seuil (tolérable → vigilance → risqué → hors-sol), risque pour la
+    population, marges de manœuvre restantes et effet de la dernière modification ;
   * la cascade des 5 échelons systémiques, recalculée à chaque simulation ;
   * la grille des scénarios types (9 situations historiques du dépôt) ;
   * les préréglages doctrinaux additionnels ;
@@ -126,7 +129,47 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .provenance div{padding:3px 0;border-bottom:1px dashed rgba(147,163,189,.15)}
 .onglets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .onglets button.actif{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#1d4ed8}
-@media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}}
+/* ── Console de veille permanente ─────────────────────────────────────── */
+.console{position:sticky;top:8px;z-index:40;border-width:2px;
+  box-shadow:0 12px 34px rgba(0,0,0,.45);backdrop-filter:blur(3px)}
+.console.niveau-favorable,.console.niveau-tolerable{border-color:rgba(34,197,94,.55)}
+.console.niveau-vigilance{border-color:rgba(245,158,11,.65)}
+.console.niveau-risque{border-color:rgba(239,68,68,.7)}
+.console.niveau-hors_sol{border-color:var(--rouge);
+  box-shadow:0 0 0 3px rgba(239,68,68,.28),0 12px 34px rgba(0,0,0,.5)}
+.console-entete{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.console-verdict{font-weight:700;font-size:.85rem;padding:7px 14px;border-radius:999px;
+  border:1px solid var(--border);max-width:720px}
+.console-strates{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:8px;margin:12px 0}
+.strate-puce{border:1px solid var(--border);border-left-width:5px;border-radius:9px;padding:7px 10px;
+  background:var(--panel-2);font-size:.74rem}
+.strate-puce b{display:block;font-size:.78rem;margin-bottom:2px}
+.console-corps{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
+.console-titre{font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--texte-dim);
+  margin:8px 0 6px}
+.niveau-favorable{color:#bbf7d0}.niveau-tolerable{color:#bbf7d0}.niveau-vigilance{color:#fde68a}
+.niveau-risque{color:#fecaca}.niveau-hors_sol{color:#fff;background:rgba(239,68,68,.22)}
+.strate-puce.niveau-hors_sol{border-color:var(--rouge)}
+.message-seuil{border-left:3px solid var(--border);padding:6px 10px;margin-bottom:7px;
+  font-size:.76rem;background:var(--panel-2);border-radius:0 8px 8px 0}
+.message-seuil .tete{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.message-seuil .etiquette{font-size:.68rem;text-transform:uppercase;letter-spacing:.4px;font-weight:700}
+.message-seuil p{color:var(--texte-dim);margin-top:3px}
+.message-seuil .source{font-size:.66rem;color:#7b8aa5;font-style:italic;margin-top:3px;display:block}
+.jauge{height:11px;border-radius:7px;background:#22304f;overflow:hidden;border:1px solid var(--border)}
+.jauge > span{display:block;height:100%;transition:width .25s}
+.graduations{display:flex;justify-content:space-between;font-size:.64rem;color:var(--texte-dim);margin-top:3px}
+.ligne-marge{display:flex;justify-content:space-between;gap:10px;font-size:.75rem;padding:4px 0;
+  border-bottom:1px dashed rgba(147,163,189,.18)}
+.ligne-marge .droite{color:var(--texte-dim);white-space:nowrap}
+.bandeau-hors-sol{background:linear-gradient(90deg,rgba(239,68,68,.35),rgba(239,68,68,.06));
+  border:1px solid var(--rouge);border-radius:10px;padding:9px 12px;font-size:.79rem;margin-top:10px}
+.bandeau-hors-sol b{font-size:.82rem;letter-spacing:.3px}
+.delta-mesure{font-size:.75rem;padding:4px 0;border-bottom:1px dashed rgba(147,163,189,.18);
+  display:flex;justify-content:space-between;gap:10px}
+.delta-mesure .valeur{font-variant-numeric:tabular-nums;white-space:nowrap}
+@media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
+  .console{position:static}.console-corps{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -152,6 +195,29 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   <section class="bloc">
     <h2>Contexte « instant T » <span class="aide">données publiques réellement collectées, avec provenance et licence</span></h2>
     <div class="grille metrics" id="grid-metrics"></div>
+  </section>
+
+  <section class="bloc console" id="console-pilotage">
+    <div class="console-entete">
+      <h2>Console de veille permanente <span class="aide">seuils tolérables → hors-sol, strate par strate, mis à jour à chaque réglage</span></h2>
+      <div class="console-verdict" id="console-verdict">en attente de la première simulation…</div>
+    </div>
+    <div id="console-danger"></div>
+    <div class="console-strates" id="console-strates"></div>
+    <div class="console-corps">
+      <div>
+        <h3 class="console-titre">Risque pour la population</h3>
+        <div id="console-population"></div>
+        <h3 class="console-titre">Effet de votre dernière modification</h3>
+        <div id="console-derniere-modification"></div>
+      </div>
+      <div>
+        <h3 class="console-titre">Messages de seuil</h3>
+        <div id="console-alertes"></div>
+        <h3 class="console-titre">Marges de manœuvre et audaces possibles</h3>
+        <div id="console-marges"></div>
+      </div>
+    </div>
   </section>
 
   <section class="bloc">
@@ -219,10 +285,28 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 
 <script>
 const SCENARIOS = ===SCENARIOS_JSON===;
+const LIBELLES_NIVEAUX = {favorable:'favorable', tolerable:'tolérable', vigilance:'vigilance',
+                          risque:'risqué', hors_sol:'hors-sol', inconnu:'non mesuré'};
+//: Ce que la console surveille pour juger une modification (−1 : plus bas = mieux).
+const EFFETS_SURVEILLES = [
+  ['deficit_final_pct','Déficit (% du PIB)', -1, 2],
+  ['dette_finale_pct','Dette (% du PIB)', -1, 1],
+  ['taux_oat_final','OAT 10 ans (%)', -1, 2],
+  ['spread_final_bps','Spread face au Bund (bps)', -1, 0],
+  ['charge_dette_finale_mde','Charge de la dette (Md€/an)', -1, 1],
+  ['tension_finale','Tension sociale', -1, 1],
+  ['confiance_finale','Confiance démocratique', 1, 1],
+  ['risque_censure_final_pct','Risque de censure (%)', -1, 0],
+  ['solde_mesures_mde','Solde des mesures (Md€)', 1, 1],
+  ['score_moyen_domaines','Score moyen des domaines', 1, 1]
+];
 let CATALOGUE = null;
 let CONTEXTE = null;
 let SORTIE = null;
 let PARAMS = {};
+//: Simulation précédente (paramètres envoyés + sortie) : c'est elle qui permet
+//: d'afficher la conséquence de la DERNIÈRE modification, en direct.
+let SIMULATION_PRECEDENTE = null;
 
 function fmt(valeur, precision){
   if (valeur === null || valeur === undefined || Number.isNaN(valeur)) return '—';
@@ -553,10 +637,11 @@ function afficherScenarioHistorique(donnees){
 async function simuler(avecImpacts){
   const bouton = document.getElementById('btn-simuler');
   bouton.disabled = true;
+  const parametresEnvoyes = Object.assign({}, PARAMS);
   try {
     const reponse = await fetch('/api/simuler', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({parametres: PARAMS, avec_impacts: !!avecImpacts, max_impacts: 16})
+      body: JSON.stringify({parametres: parametresEnvoyes, avec_impacts: !!avecImpacts, max_impacts: 16})
     });
     const donnees = await reponse.json();
     if (donnees.error){ alert('Erreur de simulation : ' + donnees.error); return; }
@@ -569,6 +654,10 @@ async function simuler(avecImpacts){
     renderMatrice(donnees);
     renderJournal(donnees);
     renderAlertes(donnees);
+    renderConsole(donnees);
+    renderDerniereModification(SIMULATION_PRECEDENTE,
+                               {parametres: parametresEnvoyes, sortie: donnees});
+    SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees};
     document.getElementById('badge-leviers').textContent =
       `${nombreLeviersActifs()} leviers actifs · score moyen ${fmt(donnees.synthese.score_moyen_domaines,1)} (référence ${fmt(donnees.synthese.score_moyen_reference,1)})`;
     activerExports();
@@ -582,6 +671,146 @@ function renderAlertes(donnees){
   const alertes = (donnees.avertissements || []).map(texte => `<div class="alerte">${texte}</div>`).join('');
   document.getElementById('zone-alertes').innerHTML = alertes;
 }
+
+
+/* ── Console de veille permanente ───────────────────────────────────────── */
+function classeNiveau(niveau){ return 'niveau-' + (niveau || 'inconnu'); }
+function etiquetteNiveau(niveau){ return LIBELLES_NIVEAUX[niveau] || niveau || 'non mesuré'; }
+
+function renderConsole(donnees){
+  const diagnostic = donnees.diagnostic;
+  const verdictBoite = document.getElementById('console-verdict');
+  const bloc = document.getElementById('console-pilotage');
+  if (!diagnostic){
+    bloc.className = 'bloc console';
+    verdictBoite.className = 'console-verdict';
+    verdictBoite.textContent = 'Diagnostic indisponible (serveur antérieur ?).';
+    return;
+  }
+  const verdict = diagnostic.verdict || {};
+  bloc.className = 'bloc console ' + classeNiveau(diagnostic.niveau_global);
+  verdictBoite.className = 'console-verdict ' + classeNiveau(diagnostic.niveau_global);
+  verdictBoite.textContent = `${etiquetteNiveau(diagnostic.niveau_global).toUpperCase()} — ${verdict.message || ''}`;
+
+  // Bandeau d'alerte rouge : ce qui est déjà hors-sol.
+  const horsSol = (diagnostic.indicateurs || []).filter(ind => ind.niveau === 'hors_sol');
+  document.getElementById('console-danger').innerHTML = horsSol.length
+    ? `<div class="bandeau-hors-sol"><b>⚠ HORS-SOL (${horsSol.length}) — la population ou l'État est exposé :</b><br>`
+      + horsSol.map(ind => `${ind.libelle} : ${ind.valeur_texte} ${ind.unite} — strate ${ind.strate}`).join('<br>')
+      + '</div>'
+    : '';
+
+  // Les cinq strates, du local au géopolitique.
+  document.getElementById('console-strates').innerHTML = (diagnostic.strates || []).map(strate =>
+    `<div class="strate-puce ${classeNiveau(strate.niveau)}">
+       <b>${strate.libelle}</b>
+       <span class="${classeNiveau(strate.niveau)}">${etiquetteNiveau(strate.niveau)}</span>
+       <div class="aide">${strate.alertes.length} seuil(s) en alerte sur ${strate.indicateurs.length}</div>
+     </div>`).join('');
+
+  // Risque pour la population : jauge + piliers + consigne.
+  const population = diagnostic.population || {};
+  const risque = Number(population.valeur || 0);
+  const couleur = risque <= 50 ? 'var(--vert)' : (risque <= 58 ? 'var(--ambre)'
+    : (risque <= 68 ? '#fb923c' : 'var(--rouge)'));
+  const piliers = (population.piliers || []).map(pilier => {
+    const ecart = pilier.score - 50;
+    return `<span class="delta ${couleurDelta(ecart)}">${pilier.cle.replace(/_/g,' ')} ${fmt(pilier.score,0)}</span>`;
+  }).join(' · ');
+  document.getElementById('console-population').innerHTML =
+    `<div class="ligne-marge"><span>Indice de risque (0 = aucun, 100 = maximal)</span>
+       <span class="droite ${classeNiveau(population.niveau)}">${fmt(risque,1)}/100 — ${etiquetteNiveau(population.niveau)}</span></div>
+     <div class="jauge"><span style="width:${Math.max(2, Math.min(100, risque))}%;background:${couleur}"></span></div>
+     <div class="graduations"><span>0</span><span>50 vigilance</span><span>58 risque</span><span>68 hors-sol</span><span>100</span></div>
+     <div class="message-seuil ${classeNiveau(population.niveau)}"><p>${population.message || ''}</p></div>
+     <div class="aide">Domaines suivis : ${piliers}</div>`;
+
+  // Messages de seuil, du plus grave au plus doux.
+  const alertes = (diagnostic.alertes || []);
+  document.getElementById('console-alertes').innerHTML = alertes.length
+    ? alertes.slice(0, 8).map(alerte =>
+        `<div class="message-seuil ${classeNiveau(alerte.niveau)}">
+           <div class="tete"><span>${alerte.libelle} · strate ${alerte.strate}</span>
+             <span class="etiquette ${classeNiveau(alerte.niveau)}">${etiquetteNiveau(alerte.niveau)}</span></div>
+           <p>${alerte.message}</p>
+           ${alerte.source ? `<span class="source">Seuil : ${alerte.source}</span>` : ''}
+         </div>`).join('')
+    : '<div class="message-seuil"><p>Aucun seuil franchi : tous les garde-fous sont respectés.</p></div>';
+
+  // Marges de manœuvre (ce qu'il reste avant le prochain seuil) et audaces.
+  const marges = (diagnostic.marges || []).slice(0, 6).map(marge =>
+    `<div class="ligne-marge"><span>${marge.libelle}</span>
+       <span class="droite">${marge.valeur_texte} ${marge.unite} ·
+         <b class="${classeNiveau(marge.prochain_niveau)}">${fmt(marge.marge, 2)} ${marge.unite}</b>
+         avant « ${etiquetteNiveau(marge.prochain_niveau)} »</span></div>`).join('');
+  const progres = (diagnostic.progres || []).slice(0, 4).map(progres =>
+    `<div class="ligne-marge"><span>${progres.libelle}</span>
+       <span class="droite">encore <b>${fmt(progres.ecart, 2)}</b> ${progres.unite} possibles avant ${progres.valeur_cible}</span></div>
+     <div class="aide" style="margin:-2px 0 6px">${progres.message_cible || ''}</div>`).join('');
+  document.getElementById('console-marges').innerHTML =
+    (marges || '<div class="ligne-marge"><span>Aucune marge mesurable.</span></div>')
+    + (progres ? `<h3 class="console-titre">Ce que vous pouvez encore oser</h3>${progres}` : '');
+}
+
+function renderDerniereModification(avant, apres){
+  const zone = document.getElementById('console-derniere-modification');
+  if (!avant || !apres){ zone.innerHTML = '<div class="aide">Chargez un préréglage ou bougez un curseur pour voir l\'effet d\'une mesure.</div>'; return; }
+  const defauts = (CATALOGUE && CATALOGUE.parametres.defauts) || {};
+  const leviers = Object.keys(apres.parametres).filter(cle =>
+    Math.abs((apres.parametres[cle] || 0) - (avant.parametres[cle] || 0)) > 1e-9);
+  const libelles = leviers.slice(0, 4).map(cle => {
+    const levier = CATALOGUE.parametres.familles.flatMap(f => f.leviers).find(l => l.cle === cle);
+    const valeur = apres.parametres[cle];
+    const texte = (levier && levier.type === 'interrupteur')
+      ? (valeur >= 0.5 ? 'activé' : 'désactivé')
+      : `${fmt(valeur, levier ? levier.precision : 2)} ${levier && levier.unite !== 'bool' ? levier.unite : ''}`;
+    const retour = defauts[cle] !== undefined && Math.abs(valeur - defauts[cle]) < 1e-9 ? ' (retour au neutre)' : '';
+    return `${levier ? levier.libelle : cle} → ${texte}${retour}`;
+  });
+  const effets = [];
+  EFFETS_SURVEILLES.forEach(([cle, libelle, sens, precision]) => {
+    const a = avant.sortie.synthese[cle], b = apres.sortie.synthese[cle];
+    if (a === undefined || b === undefined) return;
+    const delta = b - a;
+    if (Math.abs(delta) < Math.pow(10, -precision) / 2) return;
+    const favorable = sens * delta > 0;
+    effets.push({libelle: libelle, avant: a, apres: b, delta: delta,
+                 sens: sens, precision: precision, favorable: favorable});
+  });
+  // Un domaine qui décroche est plus parlant qu'un agrégat : on signale le pire.
+  let pireDomaine = null;
+  const domainesAvant = {};
+  (avant.sortie.domaines || []).forEach(d => { domainesAvant[d.cle] = d.score; });
+  (apres.sortie.domaines || []).forEach(d => {
+    const avantScore = domainesAvant[d.cle];
+    if (avantScore === undefined) return;
+    const delta = d.score - avantScore;
+    if (Math.abs(delta) < 0.15) return;
+    if (!pireDomaine || delta < pireDomaine.delta) pireDomaine = {libelle: d.libelle, delta: delta};
+  });
+  const favorables = effets.filter(e => e.favorable).length;
+  const defavorables = effets.length - favorables;
+  const verdict = effets.length === 0
+    ? 'aucun effet mesurable sur les grandeurs surveillées'
+    : (defavorables === 0 ? 'jugée favorable'
+      : (favorables === 0 ? 'jugée défavorable' : `${favorables} effet(s) favorable(s), ${defavorables} défavorable(s)`));
+  const niveauVerdict = effets.length === 0 ? 'inconnu'
+    : (defavorables === 0 ? 'favorable' : (favorables === 0 ? 'risque' : 'vigilance'));
+
+  zone.innerHTML =
+    `<div class="message-seuil ${classeNiveau(niveauVerdict)}">
+       <div class="tete"><span>${leviers.length ? leviers.length + ' levier(s) modifié(s)' : 'Aucun levier modifié'}</span>
+         <span class="etiquette ${classeNiveau(niveauVerdict)}">${verdict}</span></div>
+       ${libelles.length ? `<p>${libelles.join(' · ')}${leviers.length > libelles.length ? ` (+${leviers.length - libelles.length} autre(s))` : ''}</p>` : ''}
+     </div>`
+    + effets.map(effet =>
+        `<div class="delta-mesure"><span>${effet.libelle} : ${fmt(effet.avant, effet.precision)} → ${fmt(effet.apres, effet.precision)}</span>
+           <span class="valeur ${effet.favorable ? 'delta hausse' : 'delta baisse'}">
+             ${effet.delta > 0 ? '+' : ''}${fmt(effet.delta, effet.precision)} ${effet.favorable ? '✓' : '✗'}</span></div>`).join('')
+    + (pireDomaine ? `<div class="aide">Domaine le plus touché : <b>${pireDomaine.libelle}</b>
+         (${pireDomaine.delta > 0 ? '+' : ''}${fmt(pireDomaine.delta, 1)} pt de score).</div>` : '');
+}
+
 function renderImpact(donnees){
   const s = donnees.synthese;
   const cartes = [

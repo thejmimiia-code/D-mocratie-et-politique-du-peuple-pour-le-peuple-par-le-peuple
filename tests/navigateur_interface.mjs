@@ -145,15 +145,21 @@ globalThis.fetch = async (url, options = {}) => {
     const chemin = brut.split("?")[0];
     let cle = `${methode} ${chemin}`;
     if (cle === "POST /api/simuler") {
-      // Le corps envoyé par la page est le vrai : on rend la réponse calculée
-      // par le serveur pour ces paramètres précis.
+      // Les réponses sont servies dans l'ordre où le parcours les demande, et
+      // chacune a été calculée par le vrai serveur pour ces paramètres précis.
       const envoye = JSON.parse(options.body || "{}");
-      const discriminant = charge.discriminant || {};
-      const actif = envoye.parametres
-        && Math.abs((envoye.parametres[discriminant.cle] ?? 0) - (discriminant.valeur ?? -1)) < 1e-9;
-      if (actif && api["POST /api/simuler#variante"] !== undefined) cle = "POST /api/simuler#variante";
       rapport.postes_simuler = rapport.postes_simuler || [];
-      rapport.postes_simuler.push({ cle, leviers_actifs: Object.keys(envoye.parametres || {}).length });
+      const rang = rapport.postes_simuler.length;
+      const sequence = charge.sequence_simuler || [];
+      if (rang < sequence.length) cle = sequence[rang].route;
+      rapport.postes_simuler.push({
+        cle: cle,
+        leviers_actifs: Object.keys(envoye.parametres || {}).length,
+        premier_levier_actif: Object.entries(envoye.parametres || {})
+          .filter(([nom]) => (charge.defauts || {})[nom] !== undefined
+                             && Math.abs(envoye.parametres[nom] - charge.defauts[nom]) > 1e-9)
+          .map(([nom]) => nom).slice(0, 6),
+      });
     }
     const corps = api[cle];
     if (corps === undefined) {
@@ -267,6 +273,36 @@ for (const id of ["strates-cascade", "results-table", "svg-chart", "domaines-gri
 noter("matrice d'impacts chiffrée", /\d+([.,]\d+)?\s*(pt|%|\+|-)/.test(contenu("matrice-impacts")),
       contenu("matrice-impacts").slice(0, 120));
 
+/* 3 bis. Console de veille permanente : messages de seuil et garde-fous. */
+noter("la console affiche un verdict", /tolérable|vigilance|risqué|hors-sol|favorable/i.test(
+  elements.get("console-verdict")?.textContent || ""), elements.get("console-verdict")?.textContent);
+noter("la console décrit les cinq strates", (contenu("console-strates").match(/strate-puce/g) || []).length >= 4,
+      `${(contenu("console-strates").match(/strate-puce/g) || []).length} strates`);
+noter("la console mesure le risque pour la population",
+      contenu("console-population").includes("Indice de risque"));
+noter("la console affiche des messages de seuil", contenu("console-alertes").length > 60,
+      `${contenu("console-alertes").length} caractères`);
+noter("la console donne des marges ou des audaces", contenu("console-marges").length > 60);
+noter("l'effet de la dernière modification est affiché",
+      contenu("console-derniere-modification").includes("TVA")
+      || contenu("console-derniere-modification").includes("modifié"),
+      contenu("console-derniere-modification").slice(0, 140));
+
+/* 3 ter. Un préréglage dangereux doit déclencher l'alerte hors-sol. */
+apiPage.chargerPreset("austerite", null);
+for (let i = 0; i < 6; i += 1) await tourner();
+noter("charger un préréglage dangereux demande une simulation",
+      (rapport.postes_simuler || []).length >= 3, `${(rapport.postes_simuler || []).length} simulations`);
+noter("le bandeau hors-sol apparaît", contenu("console-danger").includes("HORS-SOL"),
+      contenu("console-danger").slice(0, 120));
+noter("le verdict global passe au rouge",
+      /hors-sol|risqué/i.test(elements.get("console-verdict")?.textContent || ""),
+      elements.get("console-verdict")?.textContent);
+noter("la strate locale signale la tension sociale",
+      /tension/i.test(contenu("console-alertes")), contenu("console-alertes").slice(0, 120));
+noter("au moins une strate est marquée hors-sol",
+      (contenu("console-strates").match(/niveau-hors_sol/g) || []).length >= 1);
+
 /* 4. Les scénarios du dépôt rejouent le moteur d'origine (chemin historique). */
 await apiPage.runScenario("choc_mondial", null);
 for (let i = 0; i < 4; i += 1) await tourner();
@@ -276,7 +312,7 @@ noter("affiche le scénario historique", contenu("grid-impact").includes("Scéna
 noter("le tableau montre les résultats du moteur d'origine",
       contenu("results-table").includes("<tbody>") && contenu("results-table").length > 500);
 
-/* 5. Filtre et réinitialisation. */
+/* 5. Filtre, puis retour au neutre : la console doit revenir au vert. */
 apiPage.filtrerLeviers("retraite");
 const restreints = (contenu("leviers-grille").match(/class="levier"/g) || []).length;
 noter("le filtre réduit la liste", restreints > 0 && restreints < leviersComplets,
@@ -288,6 +324,10 @@ const tousNuls = Object.entries(apiPage.etat().PARAMS)
 noter("la réinitialisation remet tous les leviers au neutre", tousNuls);
 noter("la grille complète est rétablie",
       (contenu("leviers-grille").match(/class="levier"/g) || []).length === leviersComplets);
+noter("le retour au neutre efface le bandeau hors-sol", !contenu("console-danger").includes("HORS-SOL"));
+noter("le verdict reste calculé après réinitialisation",
+      /tolérable|vigilance|risqué|hors-sol|favorable/i.test(
+        elements.get("console-verdict")?.textContent || ""));
 
 /* 6. Exports. */
 apiPage.exporter("json");

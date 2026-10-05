@@ -371,6 +371,28 @@ class TestAPIparametrique(unittest.TestCase):
             self.assertTrue(impact["effets"])
             self.assertTrue(any(abs(e["effet_score"]) > 0 for e in impact["effets"]))
 
+    def test_le_diagnostic_de_seuils_accompagne_la_simulation(self):
+        """POST /api/simuler renvoie les garde-fous par strate."""
+        corps = json.dumps({"parametres": {"tva_taux_normal": 1.0}, "avec_impacts": False}).encode()
+        requete = urllib.request.Request(
+            f"http://127.0.0.1:{self.__class__.port}/api/simuler",
+            data=corps, headers={"Content-Type": "application/json"}, method="POST")
+        with urllib.request.urlopen(requete, timeout=60) as reponse:
+            donnees = json.loads(reponse.read().decode("utf-8"))
+        diagnostic = donnees["diagnostic"]
+        self.assertIn(diagnostic["niveau_global"], diagnostic["barème"])
+        self.assertEqual(diagnostic["verdict"]["niveau"], diagnostic["niveau_global"])
+        self.assertEqual(len(diagnostic["strates"]), 5)
+        self.assertIn(diagnostic["population"]["niveau"], diagnostic["barème"])
+        self.assertTrue(diagnostic["alertes"]
+                        or diagnostic["niveau_global"] in ("tolerable", "favorable"))
+        for alerte in diagnostic["alertes"]:
+            self.assertNotIn("{", alerte["message"])
+            self.assertIn(alerte["niveau"], diagnostic["barème"])
+            self.assertIn(alerte["strate"], (1, 2, 3, 4, 5))
+        for marge in diagnostic["marges"]:
+            self.assertGreater(marge["marge"], 0)
+
     def test_simuler_levier_inconnu_refuse(self):
         try:
             statut, donnees = self._appel("/api/simuler", {"parametres": {"levier_bidon": 1.0}})

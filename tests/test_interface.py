@@ -55,6 +55,34 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertFalse(_identifiants_referencés(self.script) - declares,
                          "getElementById sur un identifiant absent du document")
 
+    def test_console_de_veille_permanente(self):
+        """La console doit rester visible pendant que l'on règle les leviers."""
+        self.assertIn('id="console-pilotage"', self.page)
+        # Épinglée en haut de la fenêtre : elle suit le défilement des 93 leviers.
+        console = self.page.split(".console{", 1)[1].split("}", 1)[0]
+        self.assertIn("position:sticky", console.replace(" ", ""))
+        for identifiant in ("console-verdict", "console-strates", "console-danger",
+                            "console-population", "console-derniere-modification",
+                            "console-alertes", "console-marges"):
+            self.assertIn(f'id="{identifiant}"', self.page, identifiant)
+        self.assertIn("function renderConsole(", self.script)
+        self.assertIn("function renderDerniereModification(", self.script)
+        # Les cinq niveaux de seuil sont connus du rendu.
+        for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
+            self.assertIn(niveau, self.script)
+        # Le bandeau hors-sol est bien produit par le rendu.
+        self.assertIn("bandeau-hors-sol", self.script)
+
+    def test_console_branchee_sur_chaque_simulation(self):
+        """Chaque simulation recalcule la console et l'effet de la mesure."""
+        simuler = self.script.split("async function simuler(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("renderConsole(donnees);", simuler)
+        self.assertIn("renderDerniereModification(", simuler)
+        self.assertIn("SIMULATION_PRECEDENTE", simuler)
+        # C'est bien le jeu de paramètres envoyé qui est mémorisé, pas l'objet
+        # mutable `PARAMS` (sinon la comparaison porterait sur le même objet).
+        self.assertIn("parametresEnvoyes = Object.assign({}, PARAMS)", simuler)
+
     def test_placeholder_des_scenarios(self):
         self.assertIn("===SCENARIOS_JSON===", self.page)
 

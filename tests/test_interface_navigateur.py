@@ -94,8 +94,13 @@ class TestInterfaceDansNode(unittest.TestCase):
         variante = dict(prereglage)
         variante[cle] = defauts[cle] + 1.0
 
+        # Parcours complet : préréglage de démarrage, levier modifié, préréglage
+        # dangereux (austérité), puis retour au neutre. Chaque réponse est
+        # calculée par le serveur, dans l'ordre où la page la demandera.
         sortie_prereglage = cls._simuler(prereglage)
         sortie_variante = cls._simuler(variante)
+        sortie_austerite = cls._simuler(catalogue["parametres"]["presets"]["austerite"]["parametres"])
+        sortie_neutre = cls._simuler(defauts)
 
         # Sources publiques : le navigateur les interroge directement, sauf
         # celles qui ne renvoient pas d'en-tête CORS (relais /api/proxy).
@@ -107,7 +112,15 @@ class TestInterfaceDansNode(unittest.TestCase):
                     externes[url] = source.get("adaptateur")
         proxy = json.loads(cls._get("/api/proxy?indicateur=brent_usd"))
 
+        routes = ["POST /api/simuler", "POST /api/simuler#variante",
+                  "POST /api/simuler#austerite", "POST /api/simuler#neutre"]
+        sequence = list(zip(routes,
+                            [sortie_prereglage, sortie_variante, sortie_austerite, sortie_neutre],
+                            strict=True))
         return {
+            "defauts": defauts,
+            "sequence_simuler": [{"route": route} for route, _ in sequence]
+                                 + [{"route": "POST /api/simuler#neutre"}],
             "page": page,
             "api": {
                 "GET /api/catalogue": catalogue,
@@ -119,6 +132,8 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "GET /api/proxy": proxy,
                 "POST /api/simuler": sortie_prereglage,
                 "POST /api/simuler#variante": sortie_variante,
+                "POST /api/simuler#austerite": sortie_austerite,
+                "POST /api/simuler#neutre": sortie_neutre,
                 "POST /api/donnees": {"ok": True},
             },
             "externe": externes,
@@ -151,7 +166,7 @@ class TestInterfaceDansNode(unittest.TestCase):
     def test_toutes_les_etapes_du_parcours_reussissent(self):
         """Chaque étape contrôlée par le harnais est verte."""
         etapes = self.rapport.get("etapes", [])
-        self.assertGreaterEqual(len(etapes), 25, f"parcours trop court : {len(etapes)} étapes")
+        self.assertGreaterEqual(len(etapes), 38, f"parcours trop court : {len(etapes)} étapes")
         echecs = [etape for etape in etapes if not etape["ok"]]
         self.assertEqual(echecs, [], f"étapes en échec : {echecs}")
 
@@ -176,6 +191,13 @@ class TestInterfaceDansNode(unittest.TestCase):
         """Les deux boutons d'export déclenchent un téléchargement."""
         telechargements = self.rapport.get("telechargements", [])
         self.assertEqual(len(telechargements), 2, f"téléchargements : {telechargements}")
+
+    def test_la_console_de_veille_reagit_a_un_prenrereglage_dangereux(self):
+        """Le parcours a chargé l'austérité : le hors-sol doit être signalé."""
+        etapes = {etape["nom"]: etape["ok"] for etape in self.rapport.get("etapes", [])}
+        self.assertTrue(etapes.get("le bandeau hors-sol apparaît"), "aucun bandeau hors-sol affiché")
+        self.assertTrue(etapes.get("au moins une strate est marquée hors-sol"))
+        self.assertTrue(etapes.get("le retour au neutre efface le bandeau hors-sol"))
 
 
 if __name__ == "__main__":
