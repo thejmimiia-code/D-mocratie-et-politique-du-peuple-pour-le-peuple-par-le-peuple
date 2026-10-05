@@ -60,6 +60,20 @@ publiques, finances publiques, budget, dette, économie), la **doctrine**
 
 ## 4. Aperçu social
 
+Téléverser **`docs/apercu_social.png`** (1280 × 640, 52 Kio, très en
+deçà de la limite d'1 Mo), régénérable par `python3 outils/apercu_social.py`.
+L'image reprend la palette du simulateur, ses quatre chiffres clés (93 leviers ·
+20 domaines · 38 indicateurs publics · 5 échelons) et le ruban de veille avec ses
+pastilles de strate.
+
+Empreintes du fichier livré, pour vérifier que c'est bien celui-ci qui a été
+téléversé :
+
+| Format | Valeur |
+|---|---|
+| SHA-256 (hexadécimal) | `fcfb89acd4db575d0389384afef397451667c44c1bf2f6a7d94808897d64fc37` |
+| SHA-256 (base64) | `SHA256:/PuJrNTbV10DiThK/vOXRRZnxEwb8van2UgIiX1k/Dc=` |
+
 Téléverser **`docs/apercu_social.png`** (1280 × 640, 52 Kio), régénérable par
 `python3 outils/apercu_social.py`. L'image reprend la palette du simulateur, ses
 quatre chiffres clés (93 leviers · 20 domaines · 38 indicateurs publics ·
