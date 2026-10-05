@@ -247,6 +247,23 @@ class TestDashboardInterface(unittest.TestCase):
         self.assertEqual(ouverts, fermes)
         self.assertGreater(ouverts, 0)
 
+    def test_sonde_head_repond_sans_corps(self):
+        """HEAD / et HEAD /api/catalogue : 200, en-têtes complets, corps vide.
+
+        C'est la sonde utilisée par les aperçus hébergés : sans elle, la page
+        peut ne jamais s'afficher.
+        """
+        for chemin, type_attendu in (("/", "text/html"),
+                                     ("/api/catalogue", "application/json")):
+            with self.subTest(chemin=chemin):
+                requete = urllib.request.Request(
+                    f"http://127.0.0.1:{self.__class__.port}{chemin}", method="HEAD")
+                with urllib.request.urlopen(requete, timeout=30) as reponse:
+                    self.assertEqual(reponse.status, 200)
+                    self.assertIn(type_attendu, reponse.headers.get("Content-Type", ""))
+                    self.assertGreater(int(reponse.headers.get("Content-Length", "0")), 0)
+                    self.assertEqual(reponse.read(), b"")
+
     def test_serveur_multi_thread_et_http1_1(self):
         """Le serveur est multi-thread (daemon) et parle HTTP/1.1 keep-alive."""
         self.assertIsInstance(self.server, ThreadingHTTPServer)

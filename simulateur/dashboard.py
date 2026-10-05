@@ -208,6 +208,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
     protocol_version = "HTTP/1.1"
     server_version = "SimulateurMacroPolitique/2.0"
+    #: Vrai pendant une requête HEAD : on envoie les en-têtes (statut, type,
+    #: longueur) mais jamais le corps. Les sondes de disponibilité des aperçus
+    #: et des moniteurs utilisent HEAD ; sans cette prise en charge elles
+    #: recevaient un 501 et l'aperçu pouvait rester vide.
+    _tete_seulement = False
 
     # ── utilitaires de réponse ─────────────────────────────────────────────
     def log_message(self, format: str, *args) -> None:  # noqa: A002 - API stdlib
@@ -226,7 +231,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(charge)))
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
-        self.wfile.write(charge)
+        if not self._tete_seulement:
+            self.wfile.write(charge)
 
     def _send_json(self, donnees: dict[str, Any], status: int = 200) -> None:
         charge = json.dumps(donnees, ensure_ascii=False, default=str).encode("utf-8")
@@ -234,7 +240,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(charge)))
         self.end_headers()
-        self.wfile.write(charge)
+        if not self._tete_seulement:
+            self.wfile.write(charge)
 
     def _send_fichier(self, chemin: str, type_mime: str = "application/octet-stream") -> None:
         donnees = Path(chemin).read_bytes()
@@ -243,7 +250,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Disposition", f'attachment; filename="{Path(chemin).name}"')
         self.send_header("Content-Length", str(len(donnees)))
         self.end_headers()
-        self.wfile.write(donnees)
+        if not self._tete_seulement:
+            self.wfile.write(donnees)
 
     def _lire_corps(self) -> Any:
         try:
@@ -268,6 +276,20 @@ class DashboardHandler(BaseHTTPRequestHandler):
             except (json.JSONDecodeError, IndexError, TypeError):
                 return {}
         return {}
+
+    # ── HEAD ───────────────────────────────────────────────────────────────
+    def do_HEAD(self) -> None:  # noqa: N802 - API stdlib
+        """Sonde de disponibilité : mêmes en-têtes que GET, corps vide.
+
+        Les aperçus hébergés et les moniteurs vérifient souvent qu'un service
+        répond par un HEAD avant d'afficher la page ; un 501 laissait alors
+        l'aperçu vide alors que le serveur fonctionnait.
+        """
+        self._tete_seulement = True
+        try:
+            self.do_GET()
+        finally:
+            self._tete_seulement = False
 
     # ── GET ────────────────────────────────────────────────────────────────
     def do_GET(self) -> None:  # noqa: N802 - API stdlib

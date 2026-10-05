@@ -4,6 +4,18 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.4.2] — 2026-10-05
+
+### Correction — Prise en charge des sondes `HEAD` (affichage des aperçus)
+
+- **`simulateur/dashboard.py`** : `do_HEAD` répond désormais comme `GET` mais
+  sans corps (statut, `Content-Type` et `Content-Length` corrects). Les aperçus
+  hébergés et les moniteurs vérifient la disponibilité par un `HEAD` : le 501
+  renvoyé jusqu'ici pouvait laisser l'aperçu vide alors que le serveur
+  fonctionnait. Concerne `/`, les routes `/api/*` et les exports.
+- **`tests/test_dashboard.py`** : `HEAD /` et `HEAD /api/catalogue` vérifiés
+  (200, en-têtes complets, corps vide).
+
 ## [1.4.1] — 2026-10-05
 
 ### Ajout — Aides au survol (infobulles) sur tous les réglages et boutons
