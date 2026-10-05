@@ -4,6 +4,62 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] — 2026-10-05
+
+### Ajout — Simulateur paramétrable (remplace le tableau de bord à cartes figées)
+- **`simulateur/parametres.py`** : 93 leviers de politique publique en 14 familles
+  (fiscalité, dépenses, réformes institutionnelles, énergie, industrie, logement,
+  défense…), 13 préréglages doctrinaux et un validateur `normaliser()` qui borne
+  et type toutes les valeurs reçues du client.
+- **`simulateur/domaines.py`** : 20 domaines d'action publique, 74 indicateurs
+  concrets (formule lisible + source), chaîne de médiateurs annuels et notation
+  0-100 par écart à la trajectoire de référence (50 = aucune politique).
+- **`simulateur/moteur_parametrique.py`** : orchestrateur — trajectoire de
+  référence, boucle de convergence des médiateurs, cinq exercices budgétaires sur
+  les cinq échelons, synthèse, matrice d'impacts croisés levier × domaine calculée
+  par différences finies, comparateur de préréglages, calibrage du contexte.
+- **`simulateur/donnees_live.py`** : 38 indicateurs publics sourcés et licenciés
+  (Eurostat, BCE SDMX, Frankfurter, Banque mondiale, Opendatasoft, Yahoo, Stooq),
+  snapshot daté, collecte serveur (7 adaptateurs) et collecte navigateur, avec
+  repli hors ligne réconcilié sur le snapshot.
+- **`simulateur/seuils.py`** : 33 garde-fous répartis sur les cinq strates et
+  quatre paliers (tolérable → vigilance → risqué → hors-sol), seuils absolus et
+  seuils d'écart, messages chiffrant la distance de retour, indice de risque pour
+  la population, marges de manœuvre et audaces possibles.
+- **`simulateur/interface.py`** : page unique sans dépendance externe — ruban de
+  veille collant, 93 leviers en vue confort ou compacte (une ligne par levier),
+  puces d'impact sous chaque levier réglé, 20 domaines, cascade des 5 échelons,
+  exports JSON/CSV, rafraîchissement des API publiques depuis le navigateur.
+- **`simulateur/dashboard.py`** : routes paramétriques `/api/catalogue`,
+  `/api/contexte`, `/api/simuler` (GET et POST), `/api/comparer`, `/api/presets`,
+  `/api/proxy` (liste blanche du registre, pas de proxy ouvert), `/api/donnees`,
+  plus les routes historiques conservées.
+- **`outils/`** : `apercu_social.py` (vignette 1280 × 640), `details_depot.py`
+  (réglages du dépôt), `reglages_depot.html` (application depuis le navigateur).
+
+### Correction
+- **Chocs exogènes** : ils sont désormais appliqués en niveau et mémorisés
+  (`MoteurSimulationSystemique._chocs_appliques`) — un choc maintenu cinq ans ne
+  s'empile plus d'année en année (Brent année 1 = année 5).
+- **`tests/verificateur_js.py`** : un objet littéral dans une substitution
+  (`` `${f({})}` ``) était pris pour l'accolade fermante du gabarit (faux positif),
+  corrigé par suivi de la profondeur de pile à l'entrée de chaque substitution.
+- **Interface** : le compteur de leviers actifs compare par clé (et non par
+  position) ; la grille n'est plus reconstruite pendant la manipulation d'un
+  curseur (re-rendu au relâchement).
+
+### Documentation
+- `docs/SIMULATEUR_PARAMETRABLE.md` (fonctionnement, seuils, limites assumées),
+  `docs/REPOSITORY_DETAILS.md` (réglages du dépôt), `NOTE_POUR_CLAUDE.md` (note de
+  reprise), `README.md`, `docs/README.md`, `CONTRIBUTING.md` (5 échelons).
+
+### Tests
+- **310 tests**, dont `test_parametres` (23), `test_domaines` (23),
+  `test_donnees_live` (17), `test_moteur_parametrique` (30), `test_seuils` (26),
+  `test_interface` (26), `test_dashboard` (28) ; `tests/test_interface_navigateur.py`
+  exécute réellement le JavaScript de la page dans Node (69 étapes du parcours
+  utilisateur, réponses du vrai serveur).
+
 ## [1.2.1] — 2026-10-03
 
 ### Correction — Dashboard web : grille de scénarios vide

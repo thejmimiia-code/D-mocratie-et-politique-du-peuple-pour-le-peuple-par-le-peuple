@@ -6,6 +6,11 @@ avec le jeton d'intégration utilisé par l'environnement d'automatisation
 (`403 Resource not accessible by integration`) : les valeurs ci-dessous sont donc
 à coller dans **Settings → General → Edit repository details**.
 
+> **Note de reprise** : la tâche complète (commandes, valeurs à coller,
+> empreintes de l'image, procédure en cas de refus de l'API) est décrite dans
+> [`NOTE_POUR_CLAUDE.md`](../NOTE_POUR_CLAUDE.md), à l'attention de l'agent qui
+> reprendra le dépôt avec des droits d'administration.
+
 Deux scripts les tiennent à jour :
 
 ```bash
