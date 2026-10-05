@@ -25,6 +25,25 @@ def _identifiants_referencés(script: str) -> set[str]:
     return trouve
 
 
+class TestVerificateurJS(unittest.TestCase):
+    """Le vérificateur doit accepter le JS valide et refuser l'invalide."""
+
+    def test_objets_litteraux_dans_les_substitutions(self):
+        # Un objet vide ou imbriqué dans un `${…}` ne doit pas être confondu
+        # avec l'accolade fermante de la substitution.
+        for script in ("const a = `${f({})}`;",
+                       "const a = `<b class=\"${g((x || {}).y)}\">${h(1)}</b>`;",
+                       "const a = `${liste.map(v => `${v}`).join('')}`;"):
+            avec, message = verifier_js(script)
+            self.assertTrue(avec, f"{script} → {message}")
+
+    def test_erreurs_reelles_detectees(self):
+        for script in ("function f(){ if (a) { return 1; }", "function f(){} }",
+                       "const a = `${f(1)};", "const a = `${f(1)}`;)"):
+            avec, _ = verifier_js(script)
+            self.assertFalse(avec, script)
+
+
 class TestStructureDeLaPage(unittest.TestCase):
     """Le document servi doit être autonome et bien formé."""
 
@@ -56,11 +75,20 @@ class TestStructureDeLaPage(unittest.TestCase):
                          "getElementById sur un identifiant absent du document")
 
     def test_console_de_veille_permanente(self):
-        """La console doit rester visible pendant que l'on règle les leviers."""
+        """La veille tient en un ruban : elle ne recouvre jamais les leviers."""
         self.assertIn('id="console-pilotage"', self.page)
-        # Épinglée en haut de la fenêtre : elle suit le défilement des 93 leviers.
+        self.assertIn('id="ruban-veille"', self.page)
+        # Seul le ruban est épinglé, et il tient sur une ligne.
+        ruban = self.page.split(".ruban-veille{", 1)[1].split("}", 1)[0]
+        self.assertIn("position:sticky", ruban.replace(" ", ""))
         console = self.page.split(".console{", 1)[1].split("}", 1)[0]
-        self.assertIn("position:sticky", console.replace(" ", ""))
+        self.assertNotIn("position:sticky", console.replace(" ", ""))
+        self.assertIn("flex-wrap:wrap", ruban.replace(" ", ""))
+        # Le corps de la console est repliable : on peut libérer l'écran.
+        self.assertIn("console-corps", self.page)
+        self.assertIn(".console-corps.replie{display:none}", self.page)
+        self.assertIn("function basculerDetailsConsole()", self.script)
+        self.assertIn("classList.toggle('replie')", self.script)
         for identifiant in ("console-verdict", "console-strates", "console-danger",
                             "console-population", "console-derniere-modification",
                             "console-alertes", "console-marges"):
@@ -73,6 +101,45 @@ class TestStructureDeLaPage(unittest.TestCase):
         # Le bandeau hors-sol est bien produit par le rendu.
         self.assertIn("bandeau-hors-sol", self.script)
 
+    def test_tous_les_leviers_sont_visibles_et_actionnables(self):
+        """Les 93 paramètres doivent être affichés, groupés et manipulables."""
+        self.assertIn('id="section-leviers"', self.page)
+        self.assertIn('id="compteur-leviers"', self.page)
+        self.assertIn('id="case-densite"', self.page)
+        self.assertIn("function basculerDensite(", self.script)
+        # La vue dense change la classe de la grille et des familles.
+        self.assertIn("'leviers-grille' + (VUE_COMPACTE ? ' compacte' : '')", self.script)
+        self.assertIn("' compacte' : ''", self.script)
+        self.assertIn("function filtreCourant()", self.script)
+        self.assertIn("function allerAuxLeviers()", self.script)
+        # Chaque levier continu/entier est un curseur qui déclenche la
+        # simulation en direct, sans rechargement ni bouton à presser.
+        self.assertIn("oninput=\"majLevier(", self.script)
+        self.assertIn("parseFloat(this.value)", self.script)
+        self.assertIn("onchange=\"terminerReglage()\"", self.script)
+        # L'interrupteur bascule aussi, et clôt le réglage.
+        self.assertIn("majLevier('${levier.cle}', this.checked ? 1 : 0); terminerReglage()", self.script)
+        # Le compte des leviers affichés est permanent.
+        self.assertIn("levier(s) affiché(s)", self.script)
+
+    def test_chaque_levier_recoit_l_impact_de_son_reglage(self):
+        """Sous chaque curseur, l'effet mesuré du levier est affiché."""
+        self.assertIn("function pucesHtml(", self.script)
+        self.assertIn("function majEffetsParLevier(", self.script)
+        self.assertIn("let DERNIERES_PUCES = {}", self.script)
+        self.assertIn("let LEVIERS_MODIFIES = new Set()", self.script)
+        self.assertIn("puce-effect", self.page)
+        self.assertIn("class=\"levier${modifie ? ' modifie' : ''}\"", self.script)
+        # Les effets viennent de la matrice du modèle quand elle est demandée…
+        self.assertIn("(donnees.impacts || []).forEach(impact =>", self.script)
+        # …et de la comparaison des deux dernières simulations sinon.
+        self.assertIn("Math.abs((parametresEnvoyes[cle] || 0) - (precedente.parametres[cle] || 0)) > 1e-9",
+                      self.script)
+        # La grille n'est pas reconstruite pendant qu'un curseur est manipulé,
+        # sinon le curseur serait remplacé sous les doigts de l'utilisateur.
+        self.assertIn("if (!REGLAGE_EN_COURS) renderLeviers(filtreCourant());", self.script)
+        self.assertIn("REGLAGE_EN_COURS = true", self.script)
+
     def test_console_branchee_sur_chaque_simulation(self):
         """Chaque simulation recalcule la console et l'effet de la mesure."""
         simuler = self.script.split("async function simuler(", 1)[1].split("\nfunction ", 1)[0]
@@ -82,6 +149,12 @@ class TestStructureDeLaPage(unittest.TestCase):
         # C'est bien le jeu de paramètres envoyé qui est mémorisé, pas l'objet
         # mutable `PARAMS` (sinon la comparaison porterait sur le même objet).
         self.assertIn("parametresEnvoyes = Object.assign({}, PARAMS)", simuler)
+        # Le ruban est alimenté par le même diagnostic, sans requête de plus :
+        # `simuler` appelle `renderConsole`, qui remplit le ruban.
+        rendu = self.script.split("function renderConsole(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("'ruban-veille'", rendu)
+        self.assertIn("document.getElementById('ruban-strates')", rendu)
+        self.assertIn("document.getElementById('ruban-population')", rendu)
 
     def test_placeholder_des_scenarios(self):
         self.assertIn("===SCENARIOS_JSON===", self.page)

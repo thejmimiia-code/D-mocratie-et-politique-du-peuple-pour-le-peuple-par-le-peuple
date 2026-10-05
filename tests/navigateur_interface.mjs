@@ -57,7 +57,12 @@ class Element {
     this.disabled = false;
     this.href = "";
     this.download = "";
-    this.className = "";
+    Object.defineProperty(this, "className", {
+      get: () => [...this._classes].join(" "),
+      set: (valeur) => {
+        this._classes = new Set(String(valeur || "").split(/\s+/).filter(Boolean));
+      },
+    });
     this.dataset = {};
     this.style = {};
     this.children = [];
@@ -68,6 +73,11 @@ class Element {
       add: (classe) => this._classes.add(classe),
       remove: (classe) => this._classes.delete(classe),
       contains: (classe) => this._classes.has(classe),
+      toggle: (classe) => {
+        if (this._classes.has(classe)) { this._classes.delete(classe); return false; }
+        this._classes.add(classe);
+        return true;
+      },
     };
   }
   querySelector(selecteur) {
@@ -201,6 +211,8 @@ const programme = `
                        'simuler','renderAlertes','renderImpact','renderStrates','renderTableau',
                        'renderGraphique','renderDomaines','renderMatrice','renderJournal',
                        'reinitialiser','activerExports','exporter','rafraichirDonnees',
+                       'terminerReglage','basculerDensite','basculerDetailsConsole','allerAuxLeviers',
+                       'filtreCourant','pucesHtml','majEffetsParLevier',
                        'extraireEurostat','extraireSdmx','extraireGenerique']) {
       api[nom] = eval(nom);
     }
@@ -228,7 +240,7 @@ if (!apiPage) {
 for (let i = 0; i < 6; i += 1) await tourner();
 
 /* 1. Démarrage : catalogue, presets, contexte, préréglage actif. */
-const leviersComplets = (contenu("leviers-grille").match(/class="levier"/g) || []).length;
+const leviersComplets = (contenu("leviers-grille").match(/class="levier[ "]/g) || []).length;
 noter("charge le catalogue des leviers", leviersComplets > 50, `${leviersComplets} cartes`);
 noter("affiche les 13 préréglages", (elements.get("preset-grid")?.children.length || 0) === 13,
       `${elements.get("preset-grid")?.children.length} cartes`);
@@ -249,6 +261,8 @@ const cleLevier = charge.discriminant.cle;
 const defauts = apiPage.etat().CATALOGUE.parametres.defauts;
 apiPage.majLevier(cleLevier, defauts[cleLevier] + 1.0);
 for (let i = 0; i < 6; i += 1) await tourner();
+// Le curseur est relâché : `change` déclenche le re-rendu avec les puces.
+apiPage.terminerReglage();
 noter("mémorise la valeur du levier", apiPage.etat().PARAMS[cleLevier] === defauts[cleLevier] + 1.0,
       `valeur : ${apiPage.etat().PARAMS[cleLevier]}`);
 noter("compte le levier comme actif", apiPage.nombreLeviersActifs() >= 1,
@@ -264,6 +278,51 @@ noter("recalcule les domaines", contenu("domaines-grille").length > 500,
       `${contenu("domaines-grille").length} caractères`);
 noter("recalcule la cascade des 5 échelons", contenu("strates-cascade").includes("Échelon 5 — Géopolitique"));
 noter("signale l'absence de tension par un journal", contenu("journal").length > 0);
+noter("le ruban de veille est renseigné",
+      /tolérable|vigilance|risqué|hors-sol|favorable/i.test(
+        elements.get("ruban-verdict")?.textContent || ""),
+      elements.get("ruban-verdict")?.textContent);
+noter("le ruban porte les cinq strates",
+      (contenu("ruban-strates").match(/ruban-strate/g) || []).length === 5,
+      `${(contenu("ruban-strates").match(/ruban-strate/g) || []).length} strates`);
+noter("le ruban affiche le risque population",
+      /risque population/.test(contenu("ruban-population")), contenu("ruban-population"));
+noter("le levier réglé est mis en évidence",
+      contenu("leviers-grille").includes("levier modifie")
+      || contenu("leviers-grille").includes('class="levier modifie"'),
+      (contenu("leviers-grille").match(/levier modifie/g) || []).length + " levier(s) marqué(s)");
+noter("le levier réglé reçoit ses puces d'impact",
+      contenu("leviers-grille").includes("puce-effect"),
+      (contenu("leviers-grille").match(/puce-effect/g) || []).length + " puce(s)");
+noter("le compteur annonce les leviers affichés et modifiés",
+      /93 levier\(s\) affiché\(s\)/.test(elements.get("compteur-leviers")?.textContent || ""),
+      elements.get("compteur-leviers")?.textContent);
+
+/* 2 bis. Vue compacte : les 93 paramètres sur une ligne chacun. */
+apiPage.basculerDensite(true);
+for (let i = 0; i < 2; i += 1) await tourner();
+const compacts = (contenu("leviers-grille").match(/class="levier compact/g) || []).length;
+noter("la vue compacte affiche les 93 leviers", compacts === 93, `${compacts} leviers compacts`);
+const curseurs = (contenu("leviers-grille").match(/oninput="majLevier/g) || []).length;
+const bascules = (contenu("leviers-grille").match(/onchange="majLevier/g) || []).length;
+noter("chaque levier compact garde sa commande", curseurs + bascules === 93,
+      `${curseurs} curseurs + ${bascules} interrupteurs = ${curseurs + bascules} commandes`);
+noter("le libellé du bouton de densité bascule",
+      (elements.get("btn-densite")?.textContent || "").includes("confort"),
+      elements.get("btn-densite")?.textContent);
+apiPage.basculerDensite(false);
+for (let i = 0; i < 2; i += 1) await tourner();
+noter("le retour en vue confort restaure les descriptions",
+      contenu("leviers-grille").includes("class=\"desc\""));
+
+/* 2 ter. Le détail des seuils se replie pour libérer l'écran. */
+apiPage.basculerDetailsConsole();
+for (let i = 0; i < 2; i += 1) await tourner();
+noter("le corps de la console se replie",
+      elements.get("console-corps")?.classList.contains("replie") === true);
+apiPage.basculerDetailsConsole();
+noter("le corps de la console se déplie",
+      elements.get("console-corps")?.classList.contains("replie") === false);
 
 /* 3. Sorties attendues peuplées après simulation paramétrique. */
 for (const id of ["strates-cascade", "results-table", "svg-chart", "domaines-grille",
@@ -314,7 +373,7 @@ noter("le tableau montre les résultats du moteur d'origine",
 
 /* 5. Filtre, puis retour au neutre : la console doit revenir au vert. */
 apiPage.filtrerLeviers("retraite");
-const restreints = (contenu("leviers-grille").match(/class="levier"/g) || []).length;
+const restreints = (contenu("leviers-grille").match(/class="levier[ "]/g) || []).length;
 noter("le filtre réduit la liste", restreints > 0 && restreints < leviersComplets,
       `${restreints} sur ${leviersComplets}`);
 apiPage.reinitialiser();
@@ -323,7 +382,7 @@ const tousNuls = Object.entries(apiPage.etat().PARAMS)
   .every(([cle, valeur]) => Math.abs(valeur - defauts[cle]) < 1e-9);
 noter("la réinitialisation remet tous les leviers au neutre", tousNuls);
 noter("la grille complète est rétablie",
-      (contenu("leviers-grille").match(/class="levier"/g) || []).length === leviersComplets);
+      (contenu("leviers-grille").match(/class="levier[ "]/g) || []).length === leviersComplets);
 noter("le retour au neutre efface le bandeau hors-sol", !contenu("console-danger").includes("HORS-SOL"));
 noter("le verdict reste calculé après réinitialisation",
       /tolérable|vigilance|risqué|hors-sol|favorable/i.test(

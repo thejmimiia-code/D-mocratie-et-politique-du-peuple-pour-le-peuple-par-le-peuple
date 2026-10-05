@@ -131,6 +131,32 @@ un médiateur inexistant (les 102 termes sont couverts par des politiques réell
 
 ---
 
+### Le ruban : la veille en une ligne
+
+La console complète vit dans le flux de la page (elle défile) ; c'est un
+**ruban compact et collant** qui reste seul en haut de l'écran : verdict,
+compteur d'alertes et de hors-sol, cinq pastilles de strate (S1…S5), risque
+pour la population, et trois boutons — *Masquer le détail des seuils*,
+*Vue compacte*, *Régler les 93 leviers*. Le ruban mesure 44 pixels de haut :
+il ne recouvre jamais les paramètres.
+
+### Tous les paramètres, visibles et actionnables
+
+- **Vue confort** : une carte par famille, chaque levier avec sa description,
+  sa source et son curseur.
+- **Vue compacte** (bascule dans la barre des leviers) : une ligne par levier —
+  nom, curseur, valeur — pour que **les 93 paramètres** tiennent à l'écran.
+- Chaque geste part immédiatement : anti-rebond de 180 ms, puis simulation.
+- Pendant la manipulation d'un curseur, la grille **n'est pas reconstruite**
+  (sinon le curseur serait remplacé sous les doigts) ; elle l'est au relâchement.
+- Sous chaque levier touché, ses **puces d'impact** : l'effet mesuré par le
+  modèle sur les deux ou trois domaines les plus concernés, en points de score.
+  Elles proviennent des impacts croisés quand on les demande, et sinon de la
+  comparaison entre les deux dernières simulations (attribution directe quand un
+  seul levier a bougé).
+- Un compteur permanent indique combien de leviers sont affichés et combien
+  sont modifiés ; les leviers modifiés sont mis en évidence.
+
 ## 5. La console de veille permanente
 
 En haut de la page, une console **épinglée** suit le défilement : elle reste

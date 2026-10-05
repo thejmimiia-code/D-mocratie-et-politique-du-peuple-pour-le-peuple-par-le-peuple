@@ -24,6 +24,10 @@ def verifier_js(texte: str) -> tuple[bool, str]:
     pile: list[tuple[str, int]] = []   # délimiteurs ouvrants (code) : (symbole, position)
     contextes: list[tuple[str, str]] = [("code", "")]  # ("code", "") ou ("chaine", guillemet)
     precedents: list[str] = ["\n"]     # dernier caractère signifiant, par contexte
+    #: Profondeur de pile à l'entrée de chaque substitution `${…}` : c'est elle
+    #: qui distingue l'accolade fermante de la substitution de celle d'un objet
+    #: littéral imbriqué (`` `${f({})}` ``).
+    profondeurs: list[int] = []
     i, n = 0, len(texte)
     while i < n:
         genre, cle = contextes[-1]
@@ -60,6 +64,7 @@ def verifier_js(texte: str) -> tuple[bool, str]:
                 pile.append(("{", i))
                 contextes.append(("code", "substitution"))
                 precedents.append("{")
+                profondeurs.append(len(pile))
                 i += 2
                 continue
             i += 1
@@ -110,15 +115,21 @@ def verifier_js(texte: str) -> tuple[bool, str]:
             continue
         if c in OUVRANTS:
             pile.append((c, i))
+        elif c == "}" and cle == "substitution" and len(pile) == profondeurs[-1]:
+            # L'accolade ramène la pile à sa profondeur d'entrée : c'est celle
+            # de la substitution. Celles des objets littéraux ont déjà été
+            # consommées par la branche générique ci-dessous.
+            pile.pop()
+            contextes.pop()
+            precedents.pop()
+            profondeurs.pop()
+            precedents[-1] = "}"
+            i += 1
+            continue
         elif c == "}" and cle == "substitution":
             if not pile or pile[-1][0] != "{":
                 return False, f"gabarit « ${{ » non fermé ligne {_ligne(texte, i)}"
             pile.pop()
-            contextes.pop()
-            precedents.pop()
-            precedents[-1] = "}"
-            i += 1
-            continue
         elif c in FERMANTS:
             if not pile or pile[-1][0] != FERMANTS[c]:
                 return False, f"délimiteur « {c} » inattendu ligne {_ligne(texte, i)}"

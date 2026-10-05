@@ -130,8 +130,53 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .onglets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .onglets button.actif{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#1d4ed8}
 /* ── Console de veille permanente ─────────────────────────────────────── */
-.console{position:sticky;top:8px;z-index:40;border-width:2px;
-  box-shadow:0 12px 34px rgba(0,0,0,.45);backdrop-filter:blur(3px)}
+.console{border-width:2px}
+/* Ruban de veille : une seule ligne collante, jamais devant les leviers. */
+.ruban-veille{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:10px;
+  flex-wrap:wrap;background:linear-gradient(135deg,#0e1a30,#141b33);border:1px solid var(--border);
+  border-radius:12px;padding:7px 12px;margin-bottom:12px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+.ruban-veille .ruban-titre{font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;
+  color:var(--texte-dim);white-space:nowrap}
+.ruban-veille .console-verdict{font-size:.78rem;padding:4px 12px;max-width:520px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ruban-veille.niveau-vigilance{border-color:rgba(245,158,11,.65)}
+.ruban-veille.niveau-risque{border-color:rgba(239,68,68,.7)}
+.ruban-veille.niveau-hors_sol{border-color:var(--rouge);
+  box-shadow:0 0 0 3px rgba(239,68,68,.25),0 8px 22px rgba(0,0,0,.5)}
+.ruban-strates{display:flex;gap:5px;align-items:center}
+.ruban-strate{width:26px;height:22px;border-radius:6px;border:1px solid var(--border);
+  font-size:.62rem;display:flex;align-items:center;justify-content:center;cursor:help;
+  background:var(--panel-2);color:var(--texte-dim);font-weight:700}
+.ruban-strate.niveau-favorable,.ruban-strate.niveau-tolerable{background:rgba(34,197,94,.22);color:#bbf7d0;border-color:rgba(34,197,94,.5)}
+.ruban-strate.niveau-vigilance{background:rgba(245,158,11,.22);color:#fde68a;border-color:rgba(245,158,11,.55)}
+.ruban-strate.niveau-risque{background:rgba(239,68,68,.24);color:#fecaca;border-color:rgba(239,68,68,.6)}
+.ruban-strate.niveau-hors_sol{background:var(--rouge);color:#fff;border-color:#fff}
+.ruban-pop{font-size:.72rem;color:var(--texte-dim);white-space:nowrap}
+.ruban-pop b{font-variant-numeric:tabular-nums}
+.ruban-veille .ruban-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
+.ruban-veille button{padding:5px 10px;font-size:.74rem}
+/* Barre d'outils des leviers et vues */
+.barre-leviers{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.barre-leviers .recherche{flex:1;min-width:240px;margin-bottom:0}
+.barre-leviers label{display:flex;align-items:center;gap:6px;font-size:.76rem;color:var(--texte-dim)}
+.leviers-grille.compacte{grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px}
+.famille.compacte{padding:9px 10px}
+.famille.compacte h3{font-size:.76rem;margin-bottom:6px;padding-bottom:4px}
+.levier.compact{margin-bottom:6px;display:grid;grid-template-columns:1fr 96px 74px;
+  gap:6px;align-items:center;padding-bottom:5px;border-bottom:1px dashed rgba(147,163,189,.14)}
+.levier.compact .nom{font-size:.73rem}
+.levier.compact input[type=range]{margin-top:0}
+.levier.compact .valeur{font-size:.72rem;text-align:right}
+.levier.compact .desc,.levier.compact .source{display:none}
+.levier.modifie{border-left:3px solid var(--accent);padding-left:8px;background:rgba(56,189,248,.06);
+  border-radius:0 8px 8px 0}
+.levier.modifie .nom{font-weight:700}
+.puces{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.puce-effect{font-size:.66rem;border-radius:6px;padding:1px 6px;border:1px solid var(--border);
+  white-space:nowrap}
+.puce-effect.pos{background:rgba(34,197,94,.16);color:#bbf7d0;border-color:rgba(34,197,94,.45)}
+.puce-effect.neg{background:rgba(239,68,68,.16);color:#fecaca;border-color:rgba(239,68,68,.45)}
+.console-corps.replie{display:none}
 .console.niveau-favorable,.console.niveau-tolerable{border-color:rgba(34,197,94,.55)}
 .console.niveau-vigilance{border-color:rgba(245,158,11,.65)}
 .console.niveau-risque{border-color:rgba(239,68,68,.7)}
@@ -169,7 +214,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   display:flex;justify-content:space-between;gap:10px}
 .delta-mesure .valeur{font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
-  .console{position:static}.console-corps{grid-template-columns:1fr}}
+  .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
+  .levier.compact{grid-template-columns:1fr 70px}}
 </style>
 </head>
 <body>
@@ -190,6 +236,18 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     </div>
   </header>
 
+  <div class="ruban-veille" id="ruban-veille">
+    <span class="ruban-titre">Veille permanente</span>
+    <span class="console-verdict" id="ruban-verdict">en attente de la première simulation…</span>
+    <span class="ruban-strates" id="ruban-strates"></span>
+    <span class="ruban-pop" id="ruban-population">risque population —</span>
+    <span class="ruban-actions">
+      <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()">Masquer le détail des seuils</button>
+      <button class="discret" id="btn-densite" onclick="basculerDensite()">Vue compacte</button>
+      <button class="primaire" onclick="allerAuxLeviers()">Régler les 93 leviers</button>
+    </span>
+  </div>
+
   <div id="zone-alertes"></div>
 
   <section class="bloc">
@@ -204,7 +262,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     </div>
     <div id="console-danger"></div>
     <div class="console-strates" id="console-strates"></div>
-    <div class="console-corps">
+    <div class="console-corps" id="console-corps">
       <div>
         <h3 class="console-titre">Risque pour la population</h3>
         <div id="console-population"></div>
@@ -240,9 +298,15 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="grille scenarios" id="preset-grid"></div>
   </section>
 
-  <section class="bloc">
-    <h2>Vos leviers <span class="aide">93 paramètres : fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux</span></h2>
-    <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)">
+  <section class="bloc" id="section-leviers">
+    <h2>Vos leviers <span class="aide">les 93 paramètres, tous visibles et actionnables — chaque geste se répercute en direct</span></h2>
+    <div class="barre-leviers">
+      <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)">
+      <span class="pastille" id="compteur-leviers">—</span>
+      <label title="Une ligne par levier : les 93 paramètres tiennent à l'écran">
+        <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> Vue compacte (une ligne par levier)
+      </label>
+    </div>
     <div class="leviers-grille" id="leviers-grille"></div>
   </section>
 
@@ -307,6 +371,15 @@ let PARAMS = {};
 //: Simulation précédente (paramètres envoyés + sortie) : c'est elle qui permet
 //: d'afficher la conséquence de la DERNIÈRE modification, en direct.
 let SIMULATION_PRECEDENTE = null;
+//: Effets mesurés, par levier : affichés sous chaque curseur concerné.
+let DERNIERES_PUCES = {};
+//: Leviers touchés par la dernière modification (mis en évidence).
+let LEVIERS_MODIFIES = new Set();
+//: Vue compacte : une ligne par levier, pour que les 93 tiennent à l'écran.
+let VUE_COMPACTE = false;
+//: Vrai pendant qu'un curseur est manipulé : on ne reconstruit alors pas la
+//: grille, sinon le curseur serait remplacé sous les doigts de l'utilisateur.
+let REGLAGE_EN_COURS = false;
 
 function fmt(valeur, precision){
   if (valeur === null || valeur === undefined || Number.isNaN(valeur)) return '—';
@@ -498,7 +571,39 @@ async function rafraichirDonnees(){
   if (SORTIE) simuler(false);
 }
 
-/* ── Leviers ────────────────────────────────────────────────────────────── */
+/* ── Leviers : les 93 paramètres, tous visibles et actionnables ────────── */
+function filtreCourant(){
+  const champ = document.getElementById('recherche-levier');
+  return (champ && champ.value) || '';
+}
+function basculerDensite(force){
+  VUE_COMPACTE = (force === undefined) ? !VUE_COMPACTE : !!force;
+  const case_ = document.getElementById('case-densite');
+  if (case_) case_.checked = VUE_COMPACTE;
+  const bouton = document.getElementById('btn-densite');
+  if (bouton) bouton.textContent = VUE_COMPACTE ? 'Vue confort' : 'Vue compacte';
+  renderLeviers(filtreCourant());
+}
+function basculerDetailsConsole(){
+  const corps = document.getElementById('console-corps');
+  if (!corps) return;
+  corps.classList.toggle('replie');
+  const bouton = document.getElementById('btn-console-details');
+  if (bouton) bouton.textContent = corps.classList.contains('replie')
+    ? 'Afficher le détail des seuils' : 'Masquer le détail des seuils';
+}
+function allerAuxLeviers(){
+  const section = document.getElementById('section-leviers');
+  if (section && section.scrollIntoView) section.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function pucesHtml(cle){
+  const effets = DERNIERES_PUCES[cle] || [];
+  if (!effets.length) return '';
+  return '<div class="puces">' + effets.map(effet =>
+    `<span class="puce-effect ${effet.effet_score > 0 ? 'pos' : 'neg'}"
+       title="${effet.libelle}">${effet.libelle} ${effet.effet_score > 0 ? '+' : ''}${fmt(effet.effet_score, 1)}</span>`
+  ).join('') + '</div>';
+}
 function renderLeviers(filtre){
   const recherche = (filtre || '').toLowerCase();
   const zones = CATALOGUE.parametres.familles.map(famille => {
@@ -509,30 +614,65 @@ function renderLeviers(filtre){
     if (!leviers.length) return '';
     const contenu = leviers.map(levier => {
       const valeur = PARAMS[levier.cle];
+      const modifie = LEVIERS_MODIFIES.has(levier.cle);
       const valeurTexte = levier.type === 'interrupteur'
         ? (valeur >= 0.5 ? 'activé' : 'désactivé')
         : `${fmt(valeur, levier.precision)} ${levier.unite === 'bool' ? '' : levier.unite}`;
-      const commande = levier.type === 'interrupteur'
-        ? `<label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
+      const bascule = `<label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
              onchange="majLevier('${levier.cle}', this.checked ? 1 : 0)"> ${levier.libelle}
-             <span class="valeur">${valeurTexte}</span></label>`
-        : `<div class="ligne"><span class="nom">${levier.libelle}</span>
+             <span class="valeur">${valeurTexte}</span></label>`;
+      const curseur = `<div class="ligne"><span class="nom">${levier.libelle}</span>
              <span class="valeur">${valeurTexte}</span></div>
            <input type="range" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
-                  value="${valeur}" oninput="majLevier('${levier.cle}', parseFloat(this.value))">`;
-      return `<div class="levier" data-cle="${levier.cle}">
+                  value="${valeur}" oninput="majLevier('${levier.cle}', parseFloat(this.value))"
+                  onchange="terminerReglage()">`;
+      const curseurCompact = `<span class="nom" title="${levier.description}">${levier.libelle}</span>
+           <input type="range" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
+                  value="${valeur}" oninput="majLevier('${levier.cle}', parseFloat(this.value))"
+                  onchange="terminerReglage()">
+           <span class="valeur">${valeurTexte}</span>`;
+      if (VUE_COMPACTE){
+        const contenuLevier = levier.type === 'interrupteur'
+          ? `<span class="nom">${levier.libelle}</span>
+             <label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
+               onchange="majLevier('${levier.cle}', this.checked ? 1 : 0); terminerReglage()"></label>
+             <span class="valeur">${valeurTexte}</span>`
+          : curseurCompact;
+        return `<div class="levier compact${modifie ? ' modifie' : ''}" data-cle="${levier.cle}">
+          ${contenuLevier}${pucesHtml(levier.cle)}</div>`;
+      }
+      const commande = levier.type === 'interrupteur' ? bascule : curseur;
+      return `<div class="levier${modifie ? ' modifie' : ''}" data-cle="${levier.cle}">
         ${commande}
         <div class="desc">${levier.description}</div>
         ${levier.source ? `<div class="source">Source : ${levier.source}</div>` : ''}
+        ${pucesHtml(levier.cle)}
       </div>`;
     }).join('');
-    return `<div class="famille"><h3 style="color:${famille.couleur}">${famille.libelle}</h3>${contenu}</div>`;
+    return `<div class="famille${VUE_COMPACTE ? ' compacte' : ''}">
+      <h3 style="color:${famille.couleur}">${famille.libelle}</h3>${contenu}</div>`;
   }).join('');
   document.getElementById('leviers-grille').innerHTML = zones
     || '<div class="carte">Aucun levier ne correspond à cette recherche.</div>';
+  const grille = document.getElementById('leviers-grille');
+  grille.className = 'leviers-grille' + (VUE_COMPACTE ? ' compacte' : '');
+  const affiches = (grille.innerHTML.match(/class="levier/g) || []).length;
+  const compteur = document.getElementById('compteur-leviers');
+  if (compteur){
+    compteur.textContent = `${affiches} levier(s) affiché(s)`
+      + (LEVIERS_MODIFIES.size ? ` · ${LEVIERS_MODIFIES.size} modifié(s)` : '')
+      + (VUE_COMPACTE ? ' · vue compacte' : '');
+  }
 }
 function filtrerLeviers(valeur){ renderLeviers(valeur); }
+function terminerReglage(){
+  // Le curseur vient d'être relâché : on peut reconstruire la grille sans
+  // interrompre la manipulation, pour afficher les puces d'impact à jour.
+  REGLAGE_EN_COURS = false;
+  renderLeviers(filtreCourant());
+}
 function majLevier(cle, valeur){
+  REGLAGE_EN_COURS = true;
   PARAMS[cle] = valeur;
   const carte = document.querySelector(`.levier[data-cle="${cle}"]`);
   if (carte){
@@ -551,7 +691,7 @@ function planifierSimulation(){
   document.getElementById('badge-leviers').textContent =
     `${nombreLeviersActifs()} leviers actifs — calcul en cours…`;
   if (minuteur) clearTimeout(minuteur);
-  minuteur = setTimeout(() => simuler(false), 320);
+  minuteur = setTimeout(() => simuler(false), 180);
 }
 function nombreLeviersActifs(){
   if (!CATALOGUE) return 0;
@@ -590,7 +730,11 @@ function chargerPreset(cle, ev){
   const preset = CATALOGUE.parametres.presets[cle];
   if (!preset) return;
   PARAMS = Object.assign({}, CATALOGUE.parametres.defauts, preset.parametres);
-  renderLeviers(document.getElementById('recherche-levier').value);
+  // Les leviers du préréglage sont marqués comme modifiés : on voit d'un coup
+  // d'œil ce que le programme change, et où il faut ajuster.
+  LEVIERS_MODIFIES = new Set(Object.keys(preset.parametres).filter(nom =>
+    Math.abs((preset.parametres[nom] || 0) - (CATALOGUE.parametres.defauts[nom] || 0)) > 1e-9));
+  renderLeviers(filtreCourant());
   marquerCarteActive(ev, cle);
   simuler(true);
 }
@@ -657,7 +801,11 @@ async function simuler(avecImpacts){
     renderConsole(donnees);
     renderDerniereModification(SIMULATION_PRECEDENTE,
                                {parametres: parametresEnvoyes, sortie: donnees});
+    majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
     SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees};
+    // La grille est reconstruite avec ses puces d'impact — sauf pendant qu'un
+    // curseur est manipulé, pour ne pas le remplacer sous les doigts.
+    if (!REGLAGE_EN_COURS) renderLeviers(filtreCourant());
     document.getElementById('badge-leviers').textContent =
       `${nombreLeviersActifs()} leviers actifs · score moyen ${fmt(donnees.synthese.score_moyen_domaines,1)} (référence ${fmt(donnees.synthese.score_moyen_reference,1)})`;
     activerExports();
@@ -691,6 +839,23 @@ function renderConsole(donnees){
   bloc.className = 'bloc console ' + classeNiveau(diagnostic.niveau_global);
   verdictBoite.className = 'console-verdict ' + classeNiveau(diagnostic.niveau_global);
   verdictBoite.textContent = `${etiquetteNiveau(diagnostic.niveau_global).toUpperCase()} — ${verdict.message || ''}`;
+
+  // Ruban collant : la même information en une ligne, pour que les leviers
+  // restent visibles et cliquables pendant tout le réglage.
+  const ruban = document.getElementById('ruban-veille');
+  if (ruban){
+    ruban.className = 'ruban-veille ' + classeNiveau(diagnostic.niveau_global);
+    document.getElementById('ruban-verdict').textContent =
+      `${etiquetteNiveau(diagnostic.niveau_global).toUpperCase()} · ${verdict.nombre_alertes || 0} alerte(s)`
+      + (verdict.nombre_hors_sol ? ` · ${verdict.nombre_hors_sol} HORS-SOL` : '');
+    document.getElementById('ruban-strates').innerHTML = (diagnostic.strates || []).map(strate =>
+      `<span class="ruban-strate ${classeNiveau(strate.niveau)}"
+             title="${strate.libelle} — ${etiquetteNiveau(strate.niveau)} (${strate.alertes.length} seuil(s) en alerte)">S${strate.strate}</span>`
+    ).join('');
+    const risque = (diagnostic.population || {}).valeur;
+    document.getElementById('ruban-population').innerHTML =
+      `risque population <b class="${classeNiveau((diagnostic.population || {}).niveau)}">${fmt(risque, 0)}/100</b>`;
+  }
 
   // Bandeau d'alerte rouge : ce qui est déjà hors-sol.
   const horsSol = (diagnostic.indicateurs || []).filter(ind => ind.niveau === 'hors_sol');
@@ -750,6 +915,48 @@ function renderConsole(donnees){
   document.getElementById('console-marges').innerHTML =
     (marges || '<div class="ligne-marge"><span>Aucune marge mesurable.</span></div>')
     + (progres ? `<h3 class="console-titre">Ce que vous pouvez encore oser</h3>${progres}` : '');
+}
+
+function majEffetsParLevier(donnees, precedente, parametresEnvoyes){
+  const puces = {};
+  const modifies = new Set();
+  if (precedente){
+    Object.keys(parametresEnvoyes).forEach(cle => {
+      if (Math.abs((parametresEnvoyes[cle] || 0) - (precedente.parametres[cle] || 0)) > 1e-9){
+        modifies.add(cle);
+      }
+    });
+    // Un seul levier touché : la variation de chaque domaine lui est
+    // directement imputable, on peut donc la chiffrer sous son curseur.
+    if (modifies.size === 1){
+      const cle = [...modifies][0];
+      const avantScores = {};
+      (precedente.sortie.domaines || []).forEach(domaine => { avantScores[domaine.cle] = domaine.score; });
+      const effets = (donnees.domaines || [])
+        .map(domaine => ({libelle: domaine.libelle,
+                          effet_score: domaine.score - (avantScores[domaine.cle] === undefined
+                            ? 50 : avantScores[domaine.cle])}))
+        .filter(effet => Math.abs(effet.effet_score) >= 0.1)
+        .sort((a, b) => Math.abs(b.effet_score) - Math.abs(a.effet_score))
+        .slice(0, 3);
+      if (effets.length) puces[cle] = effets;
+    }
+  }
+  // « Simuler avec impacts croisés » : le modèle fournit l'effet marginal de
+  // chaque levier actif, domaine par domaine — on l'affiche sous le curseur.
+  (donnees.impacts || []).forEach(impact => {
+    const effets = (impact.effets || [])
+      .filter(effet => Math.abs(effet.effet_score) >= 0.1)
+      .sort((a, b) => Math.abs(b.effet_score) - Math.abs(a.effet_score))
+      .slice(0, 3)
+      .map(effet => ({libelle: effet.libelle, effet_score: effet.effet_score}));
+    if (effets.length){
+      puces[impact.levier] = effets;
+      modifies.add(impact.levier);
+    }
+  });
+  DERNIERES_PUCES = puces;
+  LEVIERS_MODIFIES = modifies;
 }
 
 function renderDerniereModification(avant, apres){
@@ -965,7 +1172,9 @@ function renderJournal(donnees){
 /* ── Actions ────────────────────────────────────────────────────────────── */
 function reinitialiser(){
   PARAMS = Object.assign({}, CATALOGUE.parametres.defauts);
-  renderLeviers(document.getElementById('recherche-levier').value);
+  DERNIERES_PUCES = {};
+  LEVIERS_MODIFIES = new Set();
+  renderLeviers(filtreCourant());
   simuler(false);
 }
 function activerExports(){
