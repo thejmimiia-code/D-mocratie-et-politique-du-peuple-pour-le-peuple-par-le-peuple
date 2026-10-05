@@ -218,7 +218,60 @@ Lecture du module : `simulateur/seuils.py` (bornes, sources, messages) ; le
 diagnostic est attaché à chaque `SortieSimulation` et exposé par
 `/api/simuler` et `/api/comparer`.
 
-## 6. Impacts croisés (matrice levier × domaine)
+## 6. Les bulles explicatives par réglage
+
+Chaque réglage porte un bouton **« interactions »** : la fiche s'ouvre **dans la
+carte du levier** (jamais par-dessus), donc les 93 paramètres restent visibles et
+actionnables pendant la lecture. Le contenu n'est pas rédigé à la main : il est
+calculé par `simulateur/bulles.py` à partir du catalogue, des 74 formules
+d'indicateurs et du moteur, puis servi par `GET /api/bulle?levier=…`.
+
+Une bulle répond à trois questions, dans cet ordre :
+
+1. **Que déclenche ce réglage ?** La chaîne technique réelle, lue dans le code :
+   ligne budgétaire ou champ du moteur → médiateurs émis (Md€, points,
+   milliers…) → indicateurs qui les lisent (avec leur coefficient) → domaines
+   notés. Quand un médiateur n'est lu par aucune formule, la bulle le dit :
+   soit il passe par une autre échelle du même médiateur (`_mde` vs `_pts`),
+   soit par l'agrégat budgétaire, soit — cas rare et signalé — il n'atteint
+   pas les scores. Un levier piloté par un champ du moteur (DGF, plan
+   semi-conducteurs, clause de sauvegarde défense…) affiche en plus l'état
+   interne atteint.
+2. **Quelles répercussions, à quelles amplitudes ?** Pour chaque borne du
+   réglage (et pour un pas au-delà du défaut), une simulation réelle compare le
+   réglage isolé — tous les autres leviers restent neutres — à la trajectoire de
+   référence : score des 20 domaines, écart chiffré des indicateurs (les
+   12 plus forts), niveau des 33 garde-fous, risque population, verdict par
+   strate et **journal institutionnel** (« Report forcé sur la taxe foncière »,
+   « Alerte censure : probabilité de chute du cabinet à 87,5 % », « Sortie de la
+   PDE », « Plan semi-conducteurs : résilience de 25 % face à un blocus »…).
+3. **Opportunités ou désagréments ?** Une lecture guidée : gains classés,
+   pertes classées, points à surveiller (garde-fous franchis ou aggravés, strate
+   concernée), puis des **pistes de compensation** tirées des effets déclarés au
+   catalogue des autres leviers — de quoi corriger un désagrément sans
+   improviser.
+
+État mesuré sur le catalogue actuel (réglage isolé, bornes des 93 leviers) :
+
+| Constat | Valeur |
+|---|---|
+| Leviers déplaçant au moins un domaine à leurs bornes | **92 / 93** |
+| Leviers dont un médiateur n'atteint pas les scores | **0** (tous passent par une formule, une autre échelle ou un agrégat) |
+| Seuil de mouvement retenu | 0,2 point de score |
+| Exception documentée | `clause_sauvegarde_defense` : aucun domaine ne bouge, mais la sortie des dépenses de défense du calcul PDE est journalisée en strate 3 |
+| Coût de calcul d'une bulle | ≈ 25 ms (mise en cache par contexte) |
+| Coût du catalogue complet | ≈ 2,5 s (`GET /api/bulles`) |
+
+Réglages possibles : `GET /api/bulles?detail=resume` (sans le détail indicateur
+par indicateur ni le journal) et `?mesure=0` (chaîne d'interaction seule).
+
+Lecture du module : `simulateur/bulles.py` — thèmes déclarés → domaines
+(`THEMES_DOMAINES`), échelons traversés par thème (`THEMES_STRATES`), index des
+consommateurs de chaque médiateur, mesures par borne, lecture guidée.
+
+---
+
+## 7. Impacts croisés (matrice levier × domaine)
 
 La matrice n'est pas saisie à la main : pour chaque levier actif, le modèle
 **rejoue la simulation avec ce seul levier ramené à sa valeur neutre** et mesure
@@ -228,7 +281,7 @@ marginale du levier à la politique en cours, domaine par domaine.
 
 ---
 
-## 7. Cascade des 5 échelons
+## 8. Cascade des 5 échelons
 
 L'interface affiche, année par année, l'état des cinq strates : locale (tension,
 services de proximité, taxe foncière), nationale (PIB, déficit, dette, charge de
@@ -239,7 +292,7 @@ par le moteur à chaque étape.
 
 ---
 
-## 8. Exécution et API
+## 9. Exécution et API
 
 ```bash
 python -m simulateur.dashboard --host 0.0.0.0 --port 8080 [--rafraichir]
@@ -254,6 +307,8 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
 | `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) |
 | `/api/comparer` | GET | comparaison des 13 préréglages **avec leur verdict de garde-fous** |
+| `/api/bulles` | GET | bulles explicatives du catalogue (`?levier=`, `?detail=resume`, `?mesure=0`) |
+| `/api/bulle` | GET | bulle d'un levier : chaîne d'interaction, mesures par borne, lecture guidée |
 | `/api/presets` | GET | préréglages seuls |
 | `/api/proxy` | GET | relais d'une source du registre (liste blanche) |
 | `/api/donnees` | POST | valeurs relevées par le navigateur → recalibrage |
@@ -261,14 +316,14 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 
 ---
 
-## 9. Réglages du dépôt
+## 10. Réglages du dépôt
 
 L'aperçu social, la description, les sujets et le site web déclarés sont tenus à
 jour dans [`REPOSITORY_DETAILS.md`](REPOSITORY_DETAILS.md), avec les scripts
 `outils/details_depot.py` (bloc à coller) et `outils/apercu_social.py` (image
 1280 × 640).
 
-## 10. Limites assumées
+## 11. Limites assumées
 
 1. **Modèle, pas prophétie.** Les coefficients sont documentés et sourcés
    (multiplicateurs OFCE/FMI, élasticités INSEE, loi d'Okun 1 pt ≈ 150 000

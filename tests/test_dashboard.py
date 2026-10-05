@@ -393,6 +393,54 @@ class TestAPIparametrique(unittest.TestCase):
         for marge in diagnostic["marges"]:
             self.assertGreater(marge["marge"], 0)
 
+    def test_bulle_explicative_d_un_levier(self):
+        """GET /api/bulle sert la chaîne, les mesures et la lecture guidée."""
+        statut, donnees = self._appel("/api/bulle?levier=tva_taux_normal&detail=complet")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["cle"], "tva_taux_normal")
+        self.assertEqual(donnees["famille"], "fiscalite_menages")
+        self.assertTrue(donnees["emissions"])
+        for emission in donnees["emissions"]:
+            self.assertIn(emission["sens"], ("hausse", "baisse", "neutre"))
+            self.assertIsInstance(emission["relaye"], bool)
+        self.assertGreaterEqual(len(donnees["mesures"]), 2)
+        self.assertEqual(len(donnees["mesures"][0]["domaines"]), 20)
+        self.assertEqual(len(donnees["mesures"][0]["seuils"]["strates"]), 5)
+        self.assertTrue(donnees["bilan_domaines"])
+        lecture = donnees["lecture"]
+        self.assertTrue(lecture["phrase"])
+        self.assertIn("opportunites", lecture)
+        self.assertIn("desagrements", lecture)
+        self.assertIn("a_surveiller", lecture)
+        self.assertIn("compensations", lecture)
+
+    def test_bulles_du_catalogue_allegees(self):
+        """GET /api/bulles sert tout le catalogue, en version allégée."""
+        statut, donnees = self._appel("/api/bulles?detail=resume&levier=tva_taux_normal,aide_logement")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["nombre"], 2)
+        self.assertEqual(sorted(donnees["bulles"]), ["aide_logement", "tva_taux_normal"])
+        self.assertEqual(donnees["resume"]["theme_inconnu"], [])
+        for bulle in donnees["bulles"].values():
+            self.assertNotIn("indicateurs", bulle["mesures"][0])
+            self.assertIn("phrase", bulle["lecture"])
+
+    def test_bulle_levier_inconnu_refuse(self):
+        try:
+            statut, donnees = self._appel("/api/bulle?levier=levier_bidon")
+        except urllib.error.HTTPError as erreur:  # 400 attendu
+            statut, donnees = erreur.code, json.loads(erreur.read().decode("utf-8"))
+        self.assertEqual(statut, 400)
+        self.assertIn("levier inconnu", donnees["error"])
+
+    def test_bulle_sans_levier_refusee(self):
+        try:
+            statut, donnees = self._appel("/api/bulle")
+        except urllib.error.HTTPError as erreur:  # 400 attendu
+            statut, donnees = erreur.code, json.loads(erreur.read().decode("utf-8"))
+        self.assertEqual(statut, 400)
+        self.assertIn("levier", donnees["error"])
+
     def test_simuler_levier_inconnu_refuse(self):
         try:
             statut, donnees = self._appel("/api/simuler", {"parametres": {"levier_bidon": 1.0}})

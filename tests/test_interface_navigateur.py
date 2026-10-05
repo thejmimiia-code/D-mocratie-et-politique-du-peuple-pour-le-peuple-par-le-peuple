@@ -111,6 +111,7 @@ class TestInterfaceDansNode(unittest.TestCase):
                 if url:
                     externes[url] = source.get("adaptateur")
         proxy = json.loads(cls._get("/api/proxy?indicateur=brent_usd"))
+        bulle = json.loads(cls._get(f"/api/bulle?levier={cle}&detail=complet"))
 
         routes = ["POST /api/simuler", "POST /api/simuler#variante",
                   "POST /api/simuler#austerite", "POST /api/simuler#neutre"]
@@ -130,6 +131,8 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "GET /api/scenarios": json.loads(cls._get("/api/scenarios")),
                 "GET /api/run": json.loads(cls._get("/api/run?scenario=choc_mondial")),
                 "GET /api/proxy": proxy,
+                "GET /api/bulle": bulle,
+                "GET /api/bulles": json.loads(cls._get("/api/bulles?detail=resume")),
                 "POST /api/simuler": sortie_prereglage,
                 "POST /api/simuler#variante": sortie_variante,
                 "POST /api/simuler#austerite": sortie_austerite,

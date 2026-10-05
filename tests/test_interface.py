@@ -266,6 +266,42 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("licence", self.script)
         self.assertIn("series_complementaires", self.script)
 
+    def test_bulles_explicatives_par_reglage(self):
+        """Chaque réglage porte un bouton qui ouvre une bulle calculée.
+
+        La bulle doit rester **dans** la carte du levier (jamais par-dessus) :
+        l'utilisateur garde ses 93 paramètres visibles et actionnables.
+        """
+        self.assertIn("bulle-bouton", self.page)
+        self.assertIn("bulle-levier", self.page)
+        self.assertIn(".bulle-levier{grid-column:1/-1", self.page)
+        self.assertIn("data-bulle", self.script)
+        self.assertIn("function ouvrirBulle", self.script)
+        self.assertIn("function bulleHtml", self.script)
+        self.assertIn("async function chargerBulle", self.script)
+        self.assertIn("/api/bulle?levier=", self.script)
+        # Le bouton est présent dans les deux vues et la bulle suit le levier.
+        self.assertEqual(self.script.count("&#39;"), 0)
+        self.assertIn("${bouton}", self.script)
+        self.assertIn("${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}", self.script)
+
+    def test_bulle_ne_souvre_que_pour_le_levier_choisi(self):
+        """Une seule bulle ouverte à la fois, uniquement pour son levier."""
+        self.assertIn("if (BULLE_OUVERTE !== cle) return '';", self.script)
+        self.assertIn("BULLE_OUVERTE = cle;", self.script)
+        self.assertIn("BULLE_OUVERTE = null;", self.script)
+
+    def test_bulle_guide_opportunites_et_desagrements(self):
+        """Le contenu doit guider : chaîne, répercussions, garde-fous, pistes."""
+        for marqueur in ("Chaîne d'interaction", "Répercussions mesurées",
+                         "Effets déclarés au catalogue", "Opportunités", "Désagréments",
+                         "À surveiller", "Pistes de compensation"):
+            with self.subTest(marqueur=marqueur):
+                self.assertIn(marqueur, self.script)
+        self.assertIn("bulle-domaine", self.page)
+        self.assertIn(".bulle-levier .bulle-domaine.pos", self.page)
+        self.assertIn(".bulle-levier .bulle-domaine.neg", self.page)
+
     def test_semantique_des_scores_expliquee(self):
         """Un score ne veut rien dire s'il n'est pas expliqué à l'utilisateur."""
         self.assertIn("Comment lire les scores", self.page)

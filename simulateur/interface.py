@@ -97,6 +97,31 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .levier .desc{font-size:.7rem;color:var(--texte-dim);margin-top:2px}
 .levier input[type=range]{width:100%;margin-top:5px;accent-color:var(--accent)}
 .levier .source{font-size:.66rem;color:#7b8aa5;font-style:italic;margin-top:3px}
+.levier .ligne .bascule{margin-bottom:0}
+.levier .bulle-bouton{margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:999px;
+  color:var(--texte-dim);font-size:.64rem;padding:1px 8px;line-height:1.5;white-space:nowrap}
+.levier .bulle-bouton:hover{border-color:var(--accent);color:var(--accent);transform:none}
+.levier .bulle-bouton.actif{border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,.12)}
+.bulle-levier{grid-column:1/-1;margin-top:9px;border-top:1px dashed var(--border);padding-top:9px;
+  font-size:.72rem;line-height:1.5;color:var(--texte-dim)}
+.bulle-levier b{color:var(--texte)}
+.bulle-levier .bulle-titre{font-size:.67rem;text-transform:uppercase;letter-spacing:.5px;color:var(--texte-dim)}
+.bulle-levier .bulle-section{margin-top:8px}
+.bulle-levier ul{margin:4px 0 0 14px;padding:0}
+.bulle-levier li{margin-bottom:2px}
+.bulle-levier .bulle-med{color:var(--texte);font-variant-numeric:tabular-nums}
+.bulle-levier .bulle-mesure{border-left:3px solid var(--border);padding-left:8px;margin:7px 0}
+.bulle-levier .bulle-mesure.bulle-aggrave{border-left-color:var(--rouge)}
+.bulle-levier .bulle-mesure.bulle-favorable{border-left-color:var(--vert)}
+.bulle-levier .bulle-domaine{display:inline-block;margin:1px 4px 1px 0;padding:1px 7px;border-radius:999px;
+  border:1px solid var(--border);font-variant-numeric:tabular-nums}
+.bulle-levier .bulle-domaine.pos{border-color:rgba(34,197,94,.6);color:#86efac}
+.bulle-levier .bulle-domaine.neg{border-color:rgba(239,68,68,.6);color:#fca5a5}
+.bulle-levier .bulle-alerte{color:#fca5a5}
+.bulle-levier .bulle-alerte.vigilance{color:#fcd34d}
+.bulle-levier .bulle-journal li{font-style:italic}
+.bulle-levier .bulle-note{margin-top:8px;font-style:italic;color:#7b8aa5}
+.bulle-levier .bulle-chargement{font-style:italic}
 .bascule{display:flex;align-items:center;gap:8px;font-size:.79rem;margin-bottom:9px}
 .bascule input{width:18px;height:18px;accent-color:var(--vert)}
 .recherche{width:100%;padding:9px 12px;border-radius:9px;border:1px solid var(--border);
@@ -162,7 +187,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .leviers-grille.compacte{grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px}
 .famille.compacte{padding:9px 10px}
 .famille.compacte h3{font-size:.76rem;margin-bottom:6px;padding-bottom:4px}
-.levier.compact{margin-bottom:6px;display:grid;grid-template-columns:1fr 96px 74px;
+.levier.compact{margin-bottom:6px;display:grid;grid-template-columns:1fr 96px 74px auto;
   gap:6px;align-items:center;padding-bottom:5px;border-bottom:1px dashed rgba(147,163,189,.14)}
 .levier.compact .nom{font-size:.73rem}
 .levier.compact input[type=range]{margin-top:0}
@@ -215,7 +240,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .delta-mesure .valeur{font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
-  .levier.compact{grid-template-columns:1fr 70px}}
+  .levier.compact{grid-template-columns:1fr 70px auto}}
 </style>
 </head>
 <body>
@@ -380,6 +405,15 @@ let VUE_COMPACTE = false;
 //: Vrai pendant qu'un curseur est manipulé : on ne reconstruit alors pas la
 //: grille, sinon le curseur serait remplacé sous les doigts de l'utilisateur.
 let REGLAGE_EN_COURS = false;
+//: Bulles explicatives chargées depuis /api/bulle (une par levier, à la demande).
+let BULLES = {};
+//: Levier dont la bulle est dépliée : elle s'ouvre **dans** la carte du levier,
+//: jamais par-dessus, pour que les 93 réglages restent visibles et actionnables.
+let BULLE_OUVERTE = null;
+//: Leviers déjà demandés au serveur (évite les appels répétés).
+let BULLES_DEMANDEES = new Set();
+//: Libellés des 20 domaines, repris du catalogue pour les bulles.
+let LIBELLES_DOMAINES = {};
 
 function fmt(valeur, precision){
   if (valeur === null || valeur === undefined || Number.isNaN(valeur)) return '—';
@@ -596,6 +630,175 @@ function allerAuxLeviers(){
   const section = document.getElementById('section-leviers');
   if (section && section.scrollIntoView) section.scrollIntoView({behavior:'smooth', block:'start'});
 }
+/* ── Bulles explicatives par levier ────────────────────────────────────────
+   Chaque réglage porte un bouton « interactions » : la bulle s'ouvre dans la
+   carte du levier (jamais par-dessus), avec la chaîne technique, les
+   répercussions mesurées borne par borne et la lecture opportunités /
+   désagréments. Le contenu vient du serveur (/api/bulle), calculé par
+   simulateur/bulles.py sur les formules réelles du modèle.                    */
+function libelleDomaine(cle){
+  if (CATALOGUE && CATALOGUE.domaines && !Object.keys(LIBELLES_DOMAINES).length){
+    for (const domaine of CATALOGUE.domaines){ LIBELLES_DOMAINES[domaine.cle] = domaine.libelle; }
+  }
+  return LIBELLES_DOMAINES[cle] || cle;
+}
+function montantTexte(emission){
+  if (emission.montant === null || emission.montant === undefined) return 'champ du moteur';
+  const signe = emission.montant > 0 ? '+' : '';
+  return `${signe}${fmt(emission.montant, 2)} ${emission.unite || ''}`.trim();
+}
+function pucesDomaines(domaines, maximum){
+  return (domaines || []).slice(0, maximum || 20).map(domaine => {
+    const delta = domaine.delta;
+    return `<span class="bulle-domaine ${delta >= 0 ? 'pos' : 'neg'}">${libelleDomaine(domaine.cle)} `
+      + `${delta > 0 ? '+' : ''}${fmt(delta, 1)} pt</span>`;
+  }).join('');
+}
+function chaineHtml(bulle){
+  const lignes = (bulle.emissions || []).map(emission => {
+    let relais;
+    if (emission.relaye){
+      const lecteurs = (emission.consommateurs || []).slice(0, 3).map(consommateur =>
+        `${consommateur.libelle} (${libelleDomaine(consommateur.domaine)}, ×${fmt(consommateur.coefficient, 2)})`
+      ).join(' ; ');
+      relais = `lu par : ${lecteurs}`;
+    } else if (emission.relais){
+      relais = `relais : ${emission.relais}`;
+    } else {
+      relais = 'aucun relais identifié dans les formules actuelles';
+    }
+    return `<li><span class="bulle-med">${emission.mediateur}</span> ${montantTexte(emission)} → ${relais}</li>`;
+  }).join('');
+  const moteur = bulle.champ_moteur
+    ? `<li><span class="bulle-med">${bulle.champ_moteur.champ}</span> état du moteur → `
+      + "l'effet vit dans les strates 1 à 5 (journal ci-dessous)</li>" : '';
+  const maillons = (bulle.maillons_non_relayes || []).map(maillon =>
+    `<li class="bulle-alerte">⚠ ${maillon.mediateur} : ${maillon.note}</li>`).join('');
+  const vide = (!lignes && !moteur) ? '<li>Aucun médiateur propre : le levier agit par le champ du moteur.</li>' : '';
+  return `<div class="bulle-section"><span class="bulle-titre">Chaîne d'interaction (plein régime)</span>`
+    + `<ul>${lignes}${moteur}${vide}${maillons}</ul></div>`;
+}
+function effetsDeclaresHtml(bulle){
+  const jetons = [...(bulle.effets_directs || []), ...(bulle.effets_hors_domaine || [])].map(effet => {
+    const domaines = (effet.domaines || []).map(cle => libelleDomaine(cle)).join(', ');
+    const precision = domaines ? ` → ${domaines}` : ' (thème transverse)';
+    return `<span class="bulle-domaine ${effet.coefficient >= 0 ? 'pos' : 'neg'}">`
+      + `${effet.theme} ${effet.coefficient > 0 ? '+' : ''}${fmt(effet.coefficient, 2)}${precision}</span>`;
+  }).join('');
+  return `<div class="bulle-section"><span class="bulle-titre">Effets déclarés au catalogue</span>`
+    + `<div>${jetons || 'aucun'}</div></div>`;
+}
+function mesuresHtml(bulle){
+  const blocs = (bulle.mesures || []).map(mesure => {
+    const seuils = mesure.seuils || {};
+    const population = seuils.population || {};
+    const mouvementes = mesure.domaines_mouvementes || [];
+    const negatifs = mouvementes.filter(domaine => domaine.delta < 0).length;
+    const classes = [];
+    if (negatifs) classes.push('bulle-aggrave');
+    if (mouvementes.length - negatifs) classes.push('bulle-favorable');
+    const domaines = mouvementes.length
+      ? pucesDomaines(mouvementes, 20)
+      : '<i>aucun des 20 domaines ne bouge au-delà de 0,2 pt</i>';
+    const indicateurs = (mesure.indicateurs || []).slice(0, 4).map(indicateur =>
+      `<li>${indicateur.libelle} : ${fmt(indicateur.valeur_reference, 2)} → ${fmt(indicateur.valeur, 2)} `
+      + `${indicateur.unite || ''} (${indicateur.ecart > 0 ? '+' : ''}${fmt(indicateur.ecart, 2)})</li>`
+    ).join('');
+    const alertes = (seuils.alertes || []).slice(0, 4).map(alerte =>
+      `<li class="bulle-alerte ${alerte.niveau}">${alerte.libelle} : ${alerte.valeur_texte} `
+      + `${alerte.unite || ''} — ${alerte.message || ''} (${alerte.strate_libelle || ''})</li>`
+    ).join('');
+    const journal = (mesure.journal || []).slice(0, 4).map(ligne =>
+      `<li>${ligne.strate ? `[${ligne.strate}] ` : ''}${ligne.texte}</li>`).join('');
+    const risque = (population.risque === null || population.risque === undefined) ? ''
+      : ` · risque population ${fmt(population.risque, 1)} (${population.niveau_libelle || '—'})`;
+    return `<div class="bulle-mesure ${classes.join(' ')}">`
+      + `<div><b>${mesure.nom}</b> · score moyen ${fmt(mesure.score_moyen, 1)} · `
+      + `niveau ${seuils.niveau_global_libelle || '—'}${risque}</div>`
+      + `<div>${domaines}</div>`
+      + (indicateurs ? `<ul>${indicateurs}</ul>` : '')
+      + (alertes ? `<ul>${alertes}</ul>` : '')
+      + (journal ? `<ul class="bulle-journal">${journal}</ul>` : '')
+      + `</div>`;
+  }).join('');
+  return `<div class="bulle-section"><span class="bulle-titre">Répercussions mesurées `
+    + `(réglage isolé, autres leviers neutres)</span>${blocs}</div>`;
+}
+function lectureHtml(bulle){
+  const lecture = bulle.lecture || {};
+  const liste = (entrees, gabarit) => (entrees || []).map(gabarit).join('');
+  const opportunites = liste(lecture.opportunites, entree =>
+    `<li><b>${entree.libelle}</b> +${fmt(entree.gain, 1)} pt à « ${entree.mesure} »`
+    + (entree.relais && entree.relais.length ? ` — via ${entree.relais.join(' ; ')}` : '') + '</li>');
+  const desagrements = liste(lecture.desagrements, entree =>
+    `<li><b>${entree.libelle}</b> ${fmt(entree.perte, 1)} pt à « ${entree.mesure} »`
+    + (entree.relais && entree.relais.length ? ` — via ${entree.relais.join(' ; ')}` : '') + '</li>');
+  const surveillance = liste(lecture.a_surveiller, entree =>
+    `<li class="bulle-alerte ${entree.niveau || ''}">${entree.libelle}`
+    + (entree.niveau_libelle ? ` — ${entree.niveau_libelle}` : '')
+    + (entree.strate_libelle ? ` (${entree.strate_libelle})` : '')
+    + ((entree.valeur_texte === undefined || entree.valeur_texte === null)
+       ? '' : ` : ${entree.valeur_texte} ${entree.unite || ''}`)
+    + ((entree.avant === undefined || entree.avant === null)
+       ? '' : ` — ${fmt(entree.avant, 1)} → ${fmt(entree.apres, 1)}`) + '</li>');
+  const compensations = liste(lecture.compensations, entree =>
+    `<li>${entree.libelle} : ${(entree.leviers || []).map(levier => levier.libelle).join(', ')}</li>`);
+  const bloc = (titre, contenu) => contenu
+    ? `<div class="bulle-section"><span class="bulle-titre">${titre}</span><ul>${contenu}</ul></div>` : '';
+  const bouge = (lecture.opportunites || []).length + (lecture.desagrements || []).length;
+  return bloc('Opportunités', opportunites) + bloc('Désagréments', desagrements)
+    + bloc('À surveiller (garde-fous et strates)', surveillance)
+    + bloc('Pistes de compensation déclarées au catalogue', compensations)
+    + (bouge ? '' : '<div class="bulle-section">Aucun domaine noté ne bouge aux bornes de ce '
+        + 'réglage : voir la chaîne d\'interaction et le journal des strates.</div>');
+}
+function htmlBulle(bulle){
+  return `<div class="bulle-levier">`
+    + `<div class="bulle-titre">Bulle explicative — ${bulle.libelle} `
+    + `(${bulle.famille_libelle}, ${bulle.type})</div>`
+    + chaineHtml(bulle) + effetsDeclaresHtml(bulle) + mesuresHtml(bulle) + lectureHtml(bulle)
+    + (bulle.sans_effet_mesure
+       ? '<div class="bulle-section bulle-alerte">Aucun des 20 domaines notés ne bouge : les '
+         + 'répercussions listées ci-dessus sont institutionnelles (strates 1 à 5).</div>' : '')
+    + `<div class="bulle-note">${bulle.avertissement || ''}</div></div>`;
+}
+function bulleHtml(cle){
+  if (BULLE_OUVERTE !== cle) return '';
+  if (Object.prototype.hasOwnProperty.call(BULLES, cle)){
+    return BULLES[cle]
+      ? htmlBulle(BULLES[cle])
+      : '<div class="bulle-levier bulle-chargement">Bulle indisponible : le serveur n\'a pas répondu.</div>';
+  }
+  return '<div class="bulle-levier bulle-chargement">Calcul des interactions en cours…</div>';
+}
+function bulleBoutonHtml(cle){
+  const actif = BULLE_OUVERTE === cle;
+  return `<button class="bulle-bouton${actif ? ' actif' : ''}" data-bulle="${cle}" `
+    + `onclick="ouvrirBulle('${cle}')" title="Expliquer les interactions de ce réglage">`
+    + `${actif ? '▾ interactions' : '▸ interactions'}</button>`;
+}
+async function chargerBulle(cle){
+  if (Object.prototype.hasOwnProperty.call(BULLES, cle) || BULLES_DEMANDEES.has(cle)) return;
+  BULLES_DEMANDEES.add(cle);
+  try {
+    const reponse = await fetch(`/api/bulle?levier=${encodeURIComponent(cle)}&detail=complet`);
+    const donnees = await reponse.json();
+    BULLES[cle] = (donnees && donnees.cle === cle) ? donnees : null;
+  } catch (erreur){
+    BULLES[cle] = null;
+  }
+  if (BULLE_OUVERTE === cle) renderLeviers(filtreCourant());
+}
+async function ouvrirBulle(cle){
+  if (BULLE_OUVERTE === cle){
+    BULLE_OUVERTE = null;
+    renderLeviers(filtreCourant());
+    return;
+  }
+  BULLE_OUVERTE = cle;
+  renderLeviers(filtreCourant());
+  await chargerBulle(cle);
+}
 function pucesHtml(cle){
   const effets = DERNIERES_PUCES[cle] || [];
   if (!effets.length) return '';
@@ -618,11 +821,12 @@ function renderLeviers(filtre){
       const valeurTexte = levier.type === 'interrupteur'
         ? (valeur >= 0.5 ? 'activé' : 'désactivé')
         : `${fmt(valeur, levier.precision)} ${levier.unite === 'bool' ? '' : levier.unite}`;
-      const bascule = `<label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
+      const bouton = bulleBoutonHtml(levier.cle);
+      const bascule = `<div class="ligne"><label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
              onchange="majLevier('${levier.cle}', this.checked ? 1 : 0)"> ${levier.libelle}
-             <span class="valeur">${valeurTexte}</span></label>`;
+             <span class="valeur">${valeurTexte}</span></label>${bouton}</div>`;
       const curseur = `<div class="ligne"><span class="nom">${levier.libelle}</span>
-             <span class="valeur">${valeurTexte}</span></div>
+             <span class="valeur">${valeurTexte}</span>${bouton}</div>
            <input type="range" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
                   value="${valeur}" oninput="majLevier('${levier.cle}', parseFloat(this.value))"
                   onchange="terminerReglage()">`;
@@ -630,23 +834,23 @@ function renderLeviers(filtre){
            <input type="range" min="${levier.minimum}" max="${levier.maximum}" step="${levier.pas}"
                   value="${valeur}" oninput="majLevier('${levier.cle}', parseFloat(this.value))"
                   onchange="terminerReglage()">
-           <span class="valeur">${valeurTexte}</span>`;
+           <span class="valeur">${valeurTexte}</span>${bouton}`;
       if (VUE_COMPACTE){
         const contenuLevier = levier.type === 'interrupteur'
           ? `<span class="nom">${levier.libelle}</span>
              <label class="bascule"><input type="checkbox" ${valeur >= 0.5 ? 'checked' : ''}
                onchange="majLevier('${levier.cle}', this.checked ? 1 : 0); terminerReglage()"></label>
-             <span class="valeur">${valeurTexte}</span>`
+             <span class="valeur">${valeurTexte}</span>${bouton}`
           : curseurCompact;
         return `<div class="levier compact${modifie ? ' modifie' : ''}" data-cle="${levier.cle}">
-          ${contenuLevier}${pucesHtml(levier.cle)}</div>`;
+          ${contenuLevier}${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}</div>`;
       }
       const commande = levier.type === 'interrupteur' ? bascule : curseur;
       return `<div class="levier${modifie ? ' modifie' : ''}" data-cle="${levier.cle}">
         ${commande}
         <div class="desc">${levier.description}</div>
         ${levier.source ? `<div class="source">Source : ${levier.source}</div>` : ''}
-        ${pucesHtml(levier.cle)}
+        ${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}
       </div>`;
     }).join('');
     return `<div class="famille${VUE_COMPACTE ? ' compacte' : ''}">

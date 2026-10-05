@@ -11,7 +11,11 @@ Deux niveaux de service cohabitent :
       - `GET  /api/contexte`   : contexte réel + provenance + sources navigateur ;
       - `POST /api/donnees`    : valeurs collectées par le navigateur (API publiques) ;
       - `POST /api/simuler`    : simulation paramétrique complète ;
-      - `GET  /api/comparer`   : comparaison des préréglages à l'année finale.
+      - `GET  /api/comparer`   : comparaison des préréglages à l'année finale ;
+      - `GET  /api/bulles`     : bulles explicatives de tous les leviers (chaîne
+                                 d'interaction, répercussions mesurées, lecture
+                                 opportunités / désagréments) ;
+      - `GET  /api/bulle`      : bulle d'un seul levier (`?levier=…`).
 
   * **Scénarios historiques** du dépôt, conservés à l'identique pour la
     compatibilité (scripts, CI, utilisateurs) :
@@ -36,6 +40,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from simulateur.bulles import DETAILS, bulle_levier, bulles_catalogue
 from simulateur.cli import CATALOGUE_SCENARIOS, SCENARIOS_DISPONIBLES, executer_scenario
 from simulateur.donnees_live import (
     INDICATEURS,
@@ -309,6 +314,39 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif chemin == "/api/comparer":
             try:
                 self._send_json(comparer(contexte=contexte_courant()))
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/bulles":
+            detail = query.get("detail", ["resume"])[0]
+            if detail not in DETAILS:
+                self._send_json({"error": f"détail inconnu : {detail}"}, status=400)
+                return
+            avec_mesure = query.get("mesure", ["1"])[0] not in ("0", "false", "non")
+            brutes = [cle for valeur in query.get("levier", []) for cle in valeur.split(",") if cle]
+            try:
+                self._send_json(bulles_catalogue(
+                    contexte_courant(), cles=brutes or None,
+                    avec_mesure=avec_mesure, detail=detail,
+                ))
+            except ValueError as exc:
+                self._send_json({"error": str(exc)}, status=400)
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/bulle":
+            cle = query.get("levier", [""])[0]
+            detail = query.get("detail", ["complet"])[0]
+            avec_mesure = query.get("mesure", ["1"])[0] not in ("0", "false", "non")
+            if not cle:
+                self._send_json({"error": "Paramètre `levier` requis."}, status=400)
+                return
+            try:
+                self._send_json(bulle_levier(
+                    cle, contexte_courant(), avec_mesure=avec_mesure, detail=detail,
+                ))
+            except ValueError as exc:
+                self._send_json({"error": str(exc)}, status=400)
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 

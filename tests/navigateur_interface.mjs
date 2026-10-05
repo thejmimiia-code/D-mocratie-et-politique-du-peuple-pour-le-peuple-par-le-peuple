@@ -213,6 +213,7 @@ const programme = `
                        'reinitialiser','activerExports','exporter','rafraichirDonnees',
                        'terminerReglage','basculerDensite','basculerDetailsConsole','allerAuxLeviers',
                        'filtreCourant','pucesHtml','majEffetsParLevier',
+                       'ouvrirBulle','chargerBulle','htmlBulle','bulleBoutonHtml','libelleDomaine',
                        'extraireEurostat','extraireSdmx','extraireGenerique']) {
       api[nom] = eval(nom);
     }
@@ -323,6 +324,25 @@ noter("le corps de la console se replie",
 apiPage.basculerDetailsConsole();
 noter("le corps de la console se déplie",
       elements.get("console-corps")?.classList.contains("replie") === false);
+
+/* 2 quater. Bulles explicatives : un bouton par réglage, contenu calculé. */
+const boutonsBulle = (contenu("leviers-grille").match(/class="bulle-bouton/g) || []).length;
+noter("chaque réglage porte un bouton de bulle explicative", boutonsBulle >= leviersComplets,
+      `${boutonsBulle} boutons`);
+await apiPage.ouvrirBulle(cleLevier);
+for (let i = 0; i < 6; i += 1) await tourner();
+const grilleBulle = contenu("leviers-grille");
+noter("la bulle s'ouvre dans la carte du levier", grilleBulle.includes("bulle-levier"));
+noter("la bulle décrit la chaîne d'interaction", grilleBulle.includes("Chaîne d'interaction"));
+noter("la bulle affiche les répercussions mesurées", grilleBulle.includes("Répercussions mesurées"));
+noter("la bulle guide opportunités et désagréments", /Opportunités|Désagréments/.test(grilleBulle));
+noter("la bulle cite les effets déclarés au catalogue", grilleBulle.includes("Effets déclarés au catalogue"));
+noter("la bulle laisse les 93 réglages accessibles",
+      (grilleBulle.match(/class="levier[ "]/g) || []).length === leviersComplets,
+      `${(grilleBulle.match(/class="levier[ "]/g) || []).length} cartes`);
+await apiPage.ouvrirBulle(cleLevier);
+for (let i = 0; i < 2; i += 1) await tourner();
+noter("la bulle se referme", !contenu("leviers-grille").includes("bulle-levier"));
 
 /* 3. Sorties attendues peuplées après simulation paramétrique. */
 for (const id of ["strates-cascade", "results-table", "svg-chart", "domaines-grille",

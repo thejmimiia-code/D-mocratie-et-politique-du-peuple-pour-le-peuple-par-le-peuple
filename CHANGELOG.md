@@ -4,6 +4,42 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] — 2026-10-05
+
+### Ajout — Bulles explicatives par réglage (93 leviers)
+
+- **`simulateur/bulles.py`** (nouveau) : chaque levier reçoit une fiche
+  **calculée**, jamais rédigée à la main, en trois étages :
+  1. *chaîne d'interaction* — ligne budgétaire ou champ moteur → médiateurs émis
+     (Md€, points, milliers) → indicateurs qui les lisent, avec coefficient et
+     domaine, en signalant les relais indirects (autre échelle, agrégat
+     budgétaire) et l'absence de relais ;
+  2. *répercussions mesurées* — simulation réelle à chaque borne du réglage (et
+     un pas au-delà du défaut), réglage isolé : score des 20 domaines, écart des
+     indicateurs, niveau des 33 garde-fous, risque population, strates 1 à 5 et
+     journal institutionnel ;
+  3. *lecture guidée* — opportunités et désagréments classés, points à
+     surveiller (garde-fous aggravés, strate concernée) et pistes de
+     compensation tirées des effets déclarés des autres leviers.
+  Mesure sur le catalogue actuel : **92 leviers sur 93** déplacent au moins un
+  domaine à leurs bornes ; **0 médiateur orphelin** ; l'exception
+  `clause_sauvegarde_defense` est documentée (effet PDE journalisé en strate 3).
+- **`simulateur/interface.py`** : bouton « interactions » sur chacun des
+  93 réglages, bulle dépliée **dans la carte du levier** (vue confort et vue
+  compacte), donc jamais par-dessus les paramètres ; contenu chargé à la demande
+  depuis `/api/bulle` et mis en cache par levier.
+- **`simulateur/dashboard.py`** : `GET /api/bulles` (catalogue complet ou
+  sélection, `detail=resume`, `mesure=0`) et `GET /api/bulle?levier=…`
+  (fiche complète) ; levier inconnu ou détail inconnu → 400 explicite.
+- **`tests/test_bulles.py`** (21 tests) : couverture des 93 bulles, mapping
+  exhaustif des 44 thèmes déclarés, cohérence bilan/mesures, cache, allègement
+  du détail, garde-fou sur les médiateurs orphelins, coût de calcul.
+- **Harnais navigateur** : 8 étapes de plus (77 au total) — bouton sur chaque
+  réglage, ouverture, contenu (chaîne, mesures, lecture, effets déclarés),
+  accessibilité maintenue des 93 réglages, fermeture.
+- **`docs/SIMULATEUR_PARAMETRABLE.md`** : nouvelle section 6 « Les bulles
+  explicatives par réglage » (méthode, chiffres mesurés, limites).
+
 ## [1.3.0] — 2026-10-05
 
 ### Ajout — Simulateur paramétrable (remplace le tableau de bord à cartes figées)
