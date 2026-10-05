@@ -10,26 +10,26 @@ licences, cohérence interne) et non la disponibilité d'Internet.
 """
 
 import json
-import tempfile
 import os
+import tempfile
 import unittest
 from dataclasses import fields
 from pathlib import Path
 
 from simulateur.donnees_live import (
-    VARIABLE_HORS_LIGNE,
-    hors_ligne_force,
     _CORRESPONDANCE,
     _REPLI,
     ADAPTATEURS_SERVEUR,
     DATE_VERIFICATION,
     INDICATEURS,
+    VARIABLE_HORS_LIGNE,
     ContexteInstant,
     Lecture,
     browser_payload,
     charger_cache,
     collecter,
     construire_contexte,
+    hors_ligne_force,
     sauver_cache,
 )
 

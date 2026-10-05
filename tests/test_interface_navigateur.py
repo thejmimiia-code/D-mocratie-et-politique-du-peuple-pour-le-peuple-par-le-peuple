@@ -13,11 +13,11 @@ couvre alors le rendu statique).
 """
 
 import json
+import os
 import socket
 import subprocess
 import tempfile
 import threading
-import os
 import unittest
 import urllib.request
 from pathlib import Path
