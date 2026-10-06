@@ -86,6 +86,8 @@ python3 main.py hormuz               # Strate 5 — Fermeture du détroit d'Horm
 python3 main.py escalade_nucleaire   # Strate 5 — Seuil nucléaire tactique OTAN-Russie
 python3 main.py convergence_ww3      # Strate 5 — Convergence Chine-Russie-Iran (WW3)
 python3 main.py resilience           # Mandature + réarmement OTAN 3,50 % du PIB
+python3 main.py double_mandature     # Deux mandatures consécutives 2027-2037 (verrou, dividende de la dette)
+python3 main.py alternance_2032      # Stress-test : dix ans sans verrou constitutionnel
 ```
 
 ### 2. Menu interactif
@@ -120,11 +122,11 @@ simulateur-mpol-dashboard
 
 La page servie est un **simulateur paramétrable complet**, et non un jeu de cartes figées :
 
-- **93 leviers** pilotables (fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux), avec recherche et 13 préréglages doctrinaux ;
+- **97 leviers** pilotables (fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux), avec recherche et 14 préréglages doctrinaux ;
 - **20 domaines d'action publique** — 74 indicateurs concrets, chacun avec sa formule et sa source — notés de 0 à 100 par rapport à la trajectoire de référence (50 = aucune politique) ;
 - **cascade des 5 échelons** (locale → nationale → européenne → mondiale → géopolitique) et journal causal, année par année ;
 - **console de veille permanente**, résumée en un ruban collant (verdict, 5 strates, risque population) : messages de seuil (tolérable → vigilance → risqué → hors-sol), marges de manœuvre restantes, effet différé de **chaque** modification et **puces d'impact sous chaque levier réglé** ;
-- **les 93 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
+- **les 97 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
 - **matrice d'impacts croisés** levier × domaine, calculée par le modèle par différences finies (aucun coefficient saisi à la main) ;
 - **données publiques « à l'instant T »** : le serveur interroge les API (Eurostat, BCE, Frankfurter, Banque mondiale) et, s'il n'a pas de réseau, le bouton « Rafraîchir les données » les interroge **depuis votre navigateur** puis transmet les valeurs au simulateur — provenance, période et licence affichées pour chaque chiffre ;
 - **exports JSON et CSV** de la simulation complète.
@@ -170,6 +172,13 @@ python -m simulateur.laboratoire --nombre 500 --graine 20261003
 ```
 
 Ces expériences interrogent le modèle ; elles ne constituent pas des prévisions.
+
+## Deux mandatures consécutives (2027-2037)
+
+[Inventaire des points stratégiques systématiques de la période de dix ans]
+(docs/RD_DOUBLE_MANDATURE.md) : calendrier électoral, verrou constitutionnel,
+usure du capital politique, second dividende de la dette, investissements à
+cycle long — avec deux scénarios décennaux exécutables et 16 tests dédiés.
 
 ## Conflits et risques systémiques
 

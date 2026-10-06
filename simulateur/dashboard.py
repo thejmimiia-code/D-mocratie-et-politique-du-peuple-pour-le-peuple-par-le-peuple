@@ -4,7 +4,7 @@ simulateur/dashboard.py — Serveur web du simulateur macro-politique.
 
 Deux niveaux de service cohabitent :
 
-  * **Simulateur interactif** (page `/`) : 93 leviers réglables, contexte de
+  * **Simulateur interactif** (page `/`) : 97 leviers réglables, contexte de
     données publiques « instant T », 20 domaines d'impact, matrice croisée
     levier × domaine, exports.
       - `GET  /api/catalogue`  : leviers, familles, préréglages, domaines ;
@@ -117,6 +117,20 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "description": "Mandature + réarmement OTAN à 3,5 % du PIB.",
         "couleur": "#38bdf8",
         "fn": CATALOGUE_SCENARIOS["resilience"][0],
+    },
+    "double_mandature": {
+        "nom": "Deux mandatures consécutives (2027-2037)",
+        "description": "Dix ans : verrou constitutionnel des réformes, second dividende "
+                       "de la dette réinvesti, investissements à cycle long.",
+        "couleur": "#2dd4bf",
+        "fn": CATALOGUE_SCENARIOS["double_mandature"][0],
+    },
+    "alternance_2032": {
+        "nom": "Stress-test : alternance 2032",
+        "description": "Deux mandatures sans verrou constitutionnel : réformes révocables, "
+                       "usure maximale du capital politique.",
+        "couleur": "#f43f5e",
+        "fn": CATALOGUE_SCENARIOS["alternance_2032"][0],
     },
 }
 

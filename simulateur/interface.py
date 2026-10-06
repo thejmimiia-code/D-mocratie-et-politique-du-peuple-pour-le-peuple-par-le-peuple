@@ -11,7 +11,7 @@ aucun CDN) qui contient :
   * la cascade des 5 échelons systémiques, recalculée à chaque simulation ;
   * la grille des scénarios types (9 situations historiques du dépôt) ;
   * les préréglages doctrinaux additionnels ;
-  * 93 leviers de politique publique réglables (curseurs, interrupteurs), chacun
+  * 97 leviers de politique publique réglables (curseurs, interrupteurs), chacun
     annoté d'une **aide au survol** (plage, défaut, valeur courante, effets
     déclarés, mesures en direct) et d'une **bulle explicative** dépliable ;
   * des infobulles instantanées sur les boutons, cases à cocher, cartes de
@@ -267,7 +267,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <span class="pastille" id="badge-date">—</span>
       <span class="pastille" id="badge-leviers">—</span>
       <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données (API publiques)</button>
-      <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène les 93 réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
+      <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène les 97 réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
       <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule les 5 années, les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Compter moins d'une seconde.">Simuler avec impacts croisés</button>
       <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
       <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
@@ -281,8 +281,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <span class="ruban-pop" id="ruban-population">risque population —</span>
     <span class="ruban-actions">
       <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()" data-aide="<b>Détail des seuils</b>Replie ou déplie le corps de la console de veille pour libérer l'écran : le verdict et les cinq strates restent affichés.">Masquer le détail des seuils</button>
-      <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : les 93 paramètres tiennent à l'écran, tous réglables en direct.">Vue compacte</button>
-      <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les 93 leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct.">Régler les 93 leviers</button>
+      <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : les 97 paramètres tiennent à l'écran, tous réglables en direct.">Vue compacte</button>
+      <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les 97 leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct.">Régler les 97 leviers</button>
     </span>
   </div>
 
@@ -339,11 +339,11 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   </section>
 
   <section class="bloc" id="section-leviers">
-    <h2>Vos leviers <span class="aide">les 93 paramètres, tous visibles et actionnables — chaque geste se répercute en direct</span></h2>
+    <h2>Vos leviers <span class="aide">les 97 paramètres, tous visibles et actionnables — chaque geste se répercute en direct</span></h2>
     <div class="barre-leviers">
-      <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre les 93 leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
+      <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre les 97 leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
-      <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : les 93 paramètres tiennent à l'écran tout en restant actionnables en direct.">
+      <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : les 97 paramètres tiennent à l'écran tout en restant actionnables en direct.">
         <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> Vue compacte (une ligne par levier)
       </label>
     </div>
@@ -415,7 +415,7 @@ let SIMULATION_PRECEDENTE = null;
 let DERNIERES_PUCES = {};
 //: Leviers touchés par la dernière modification (mis en évidence).
 let LEVIERS_MODIFIES = new Set();
-//: Vue compacte : une ligne par levier, pour que les 93 tiennent à l'écran.
+//: Vue compacte : une ligne par levier, pour que les 97 tiennent à l'écran.
 let VUE_COMPACTE = false;
 //: Vrai pendant qu'un curseur est manipulé : on ne reconstruit alors pas la
 //: grille, sinon le curseur serait remplacé sous les doigts de l'utilisateur.
@@ -423,7 +423,7 @@ let REGLAGE_EN_COURS = false;
 //: Bulles explicatives chargées depuis /api/bulle (une par levier, à la demande).
 let BULLES = {};
 //: Levier dont la bulle est dépliée : elle s'ouvre **dans** la carte du levier,
-//: jamais par-dessus, pour que les 93 réglages restent visibles et actionnables.
+//: jamais par-dessus, pour que les 97 réglages restent visibles et actionnables.
 let BULLE_OUVERTE = null;
 //: Leviers déjà demandés au serveur (évite les appels répétés).
 let BULLES_DEMANDEES = new Set();
@@ -620,7 +620,7 @@ async function rafraichirDonnees(){
   if (SORTIE) simuler(false);
 }
 
-/* ── Leviers : les 93 paramètres, tous visibles et actionnables ────────── */
+/* ── Leviers : les 97 paramètres, tous visibles et actionnables ────────── */
 function filtreCourant(){
   const champ = document.getElementById('recherche-levier');
   return (champ && champ.value) || '';

@@ -1,4 +1,4 @@
-# Simulateur paramétrable — piloter 93 leviers et voir l'impact sur 20 domaines
+# Simulateur paramétrable — piloter 97 leviers et voir l'impact sur 20 domaines
 
 > Tableau de bord unique, sans dépendance externe : `python -m simulateur.dashboard --port 8080`
 > (ou `simulateur-mpol-dashboard` après installation).
@@ -15,7 +15,7 @@ mouvement de curseur.
 
 ```
 ┌──────────────────────────── navigateur (page unique) ────────────────────────────┐
-│ 93 leviers (curseurs, interrupteurs, cibles)   ← leviers →   20 domaines notés    │
+│ 97 leviers (curseurs, interrupteurs, cibles)   ← leviers →   20 domaines notés    │
 │ recherche, préréglages, exports JSON/CSV        service       0-100 + indicateurs │
 │ « Rafraîchir les données » → API publiques en direct (fetch CORS)                 │
 └───────────────┬───────────────────────────────────────────┬─────────────────────┘
@@ -24,7 +24,7 @@ mouvement de curseur.
 ┌───────────────▼───────────────────────────────────────────▼─────────────────────┐
 │ serveur HTTP (bibliothèque standard, multi-thread, HTTP/1.1)                    │
 │  · moteur_parametrique.simuler()  → 5 étapes × 5 échelons + domaines + impacts  │
-│  · parametres.normaliser()        → validation et bornage des 93 leviers        │
+│  · parametres.normaliser()        → validation et bornage des 97 leviers        │
 │  · domaines.evaluer_domaines()    → 74 indicateurs concrets, scores 0-100       │
 │  · donnees_live.construire_contexte() → chiffres publics datés et sourcés       │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -32,7 +32,7 @@ mouvement de curseur.
 
 | Module | Rôle |
 |---|---|
-| `simulateur/parametres.py` | 93 leviers (14 familles), 13 préréglages doctrinaux, `normaliser()`, `catalogue_public()` |
+| `simulateur/parametres.py` | 97 leviers (14 familles), 14 préréglages doctrinaux, `normaliser()`, `catalogue_public()` |
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs spécifiés (formule + source), `construire_flux()`, `decision_moteur()` |
 | `simulateur/seuils.py` | garde-fous par strate : bornes, messages, marges, risque population |
 | `simulateur/moteur_parametrique.py` | orchestrateur : trajectoire de référence, boucle de convergence, scores, matrice d'impacts |
@@ -43,7 +43,7 @@ mouvement de curseur.
 
 ---
 
-## 2. Les 93 leviers
+## 2. Les 97 leviers
 
 Chaque levier est un objet `Levier` documenté : clé, libellé, famille, description,
 unité, type, valeur par défaut, bornes, pas, profil temporel sur 5 ans, et
@@ -137,7 +137,7 @@ La console complète vit dans le flux de la page (elle défile) ; c'est un
 **ruban compact et collant** qui reste seul en haut de l'écran : verdict,
 compteur d'alertes et de hors-sol, cinq pastilles de strate (S1…S5), risque
 pour la population, et trois boutons — *Masquer le détail des seuils*,
-*Vue compacte*, *Régler les 93 leviers*. Le ruban mesure 44 pixels de haut :
+*Vue compacte*, *Régler les 97 leviers*. Le ruban mesure 44 pixels de haut :
 il ne recouvre jamais les paramètres.
 
 ### Tous les paramètres, visibles et actionnables
@@ -145,7 +145,7 @@ il ne recouvre jamais les paramètres.
 - **Vue confort** : une carte par famille, chaque levier avec sa description,
   sa source et son curseur.
 - **Vue compacte** (bascule dans la barre des leviers) : une ligne par levier —
-  nom, curseur, valeur — pour que **les 93 paramètres** tiennent à l'écran.
+  nom, curseur, valeur — pour que **les 97 paramètres** tiennent à l'écran.
 - Chaque geste part immédiatement : anti-rebond de 180 ms, puis simulation.
 - Pendant la manipulation d'un curseur, la grille **n'est pas reconstruite**
   (sinon le curseur serait remplacé sous les doigts) ; elle l'est au relâchement.
@@ -160,7 +160,7 @@ il ne recouvre jamais les paramètres.
 ## 5. La console de veille permanente
 
 En haut de la page, une console **épinglée** suit le défilement : elle reste
-visible pendant que l'on règle les 93 leviers. Elle répond à trois questions,
+visible pendant que l'on règle les 97 leviers. Elle répond à trois questions,
 en permanence et sans clic supplémentaire (le diagnostic voyage avec chaque
 simulation, aucune requête en plus) :
 
@@ -221,7 +221,7 @@ diagnostic est attaché à chaque `SortieSimulation` et exposé par
 ## 6. Les bulles explicatives par réglage
 
 Chaque réglage porte un bouton **« interactions »** : la fiche s'ouvre **dans la
-carte du levier** (jamais par-dessus), donc les 93 paramètres restent visibles et
+carte du levier** (jamais par-dessus), donc les 97 paramètres restent visibles et
 actionnables pendant la lecture. Le contenu n'est pas rédigé à la main : il est
 calculé par `simulateur/bulles.py` à partir du catalogue, des 74 formules
 d'indicateurs et du moteur, puis servi par `GET /api/bulle?levier=…`.
@@ -251,11 +251,11 @@ Une bulle répond à trois questions, dans cet ordre :
    catalogue des autres leviers — de quoi corriger un désagrément sans
    improviser.
 
-État mesuré sur le catalogue actuel (réglage isolé, bornes des 93 leviers) :
+État mesuré sur le catalogue actuel (réglage isolé, bornes des 97 leviers) :
 
 | Constat | Valeur |
 |---|---|
-| Leviers déplaçant au moins un domaine à leurs bornes | **92 / 93** |
+| Leviers déplaçant au moins un domaine à leurs bornes | **96 / 97** |
 | Leviers dont un médiateur n'atteint pas les scores | **0** (tous passent par une formule, une autre échelle ou un agrégat) |
 | Seuil de mouvement retenu | 0,2 point de score |
 | Exception documentée | `clause_sauvegarde_defense` : aucun domaine ne bouge, mais la sortie des dépenses de défense du calcul PDE est journalisée en strate 3 |
@@ -283,7 +283,7 @@ le délai du `title` natif du navigateur et sans recouvrir durablement l'écran 
 
 La couche d'infobulle est **passive** (`pointer-events:none`) : elle ne capte
 aucun clic, disparaît au départ de la souris, au clic, au défilement et à
-l'ouverture d'une bulle — les 93 paramètres restent donc tous actionnables.
+l'ouverture d'une bulle — les 97 paramètres restent donc tous actionnables.
 Lecture du code : `initialiserInfobulles()`, `survoler()`, `texteAideLevier()`
 dans `simulateur/interface.py`.
 
@@ -325,10 +325,10 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | Route | Méthode | Contenu |
 |---|---|---|
 | `/` | GET | page unique du simulateur |
-| `/api/catalogue` | GET | familles, 93 leviers, 13 préréglages, 20 domaines |
+| `/api/catalogue` | GET | familles, 97 leviers, 14 préréglages, 20 domaines |
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
-| `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) |
-| `/api/comparer` | GET | comparaison des 13 préréglages **avec leur verdict de garde-fous** |
+| `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) ; `horizon` jusqu'à 10 ans pour la période de deux mandatures (`docs/RD_DOUBLE_MANDATURE.md`) |
+| `/api/comparer` | GET | comparaison des 14 préréglages **avec leur verdict de garde-fous** |
 | `/api/bulles` | GET | bulles explicatives du catalogue (`?levier=`, `?detail=resume`, `?mesure=0`) |
 | `/api/bulle` | GET | bulle d'un levier : chaîne d'interaction, mesures par borne, lecture guidée |
 | `/api/presets` | GET | préréglages seuls |

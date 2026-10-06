@@ -18,6 +18,18 @@ from simulateur.model import (
     ResultatEtapeSimulation,
 )
 
+#: Délai de maturité des investissements à cycle long (années).
+#: Hypothèse R&D « deux mandatures consécutives » (docs/RD_DOUBLE_MANDATURE.md,
+#: point P6) : EPR2, lois de programmation militaire, prévention santé, recherche…
+#: le coût est payé tout de suite, le rendement n'arrive qu'à maturité (courbe en J).
+DELAI_MATURITE_INVESTISSEMENTS = 5
+
+#: Rendement annuel d'un investissement à cycle long mature (part de PIB ajoutée
+#: par Md€ investi) et plafond par programme, pour éviter toute divergence sur
+#: les horizons longs. Calibrage exploratoire, pas une prévision.
+RENDEMENT_INVESTISSEMENTS_MATURES = 0.08
+PLAFOND_RENDEMENT_PAR_PROGRAMME_MDE = 2.5
+
 
 class MoteurSimulationSystemique:
     """
@@ -66,6 +78,29 @@ class MoteurSimulationSystemique:
         self.reforme_regimes_speciaux_active = False
         self.reforme_anti_pantouflage_active = False
         self.reforme_non_cumul_active = False
+
+        # ── Profondeur temporelle : deux mandatures consécutives ─────────────
+        # Registre des investissements à cycle long : (année de maturité, Md€).
+        # Le rendement n'est compté qu'à maturité, jamais avant (courbe en J).
+        self.investissements_differes: list[tuple[int, float]] = []
+
+    def _investissements_matures(self, annee: int) -> tuple[float, float]:
+        """Stock mature (Md€) et rendement annuel (Md€ de PIB) à l'année donnée.
+
+        Chaque programme investi rapporte, une fois mature,
+        `RENDEMENT_INVESTISSEMENTS_MATURES` Md€ de PIB par Md€ investi et par an,
+        plafonné à `PLAFOND_RENDEMENT_PAR_PROGRAMME_MDE` par programme.
+        """
+        stock_mature = 0.0
+        rendement = 0.0
+        for annee_maturite, montant in self.investissements_differes:
+            if annee >= annee_maturite:
+                stock_mature += montant
+                rendement += min(
+                    PLAFOND_RENDEMENT_PAR_PROGRAMME_MDE,
+                    montant * RENDEMENT_INVESTISSEMENTS_MATURES,
+                )
+        return round(stock_mature, 2), round(rendement, 2)
 
     def appliquer_etape(
         self, decision: DecisionPolitique, *, facteur_activite: float = 1.0
@@ -183,6 +218,9 @@ class MoteurSimulationSystemique:
         # - Coupes dans les dotations aux collectivités : multiplicateur récessif fort (-0.85)
         # - Choc d'inflation importée sur l'activité : impact récessif (-0.25 par point d'inflation au-dessus de 2%)
         impact_choc_inflation = -max(0.0, (self.mondial.inflation_globale_pct - 2.0) * 3.5)
+        stock_investissements_matures, rendement_investissements_matures = (
+            self._investissements_matures(decision.annee)
+        )
         impact_multiplicateur = (
             (decision.baisse_tva_energie_5_5_mde * 0.75)
             - ((decision.recettes_fraude_ia_mde + decision.taxe_superprofits_rachats_mde + decision.extension_ttf_mde + decision.recettes_pilier2_ocde_mde + decision.recettes_macf_carbone_mde) * 0.12)
@@ -194,6 +232,13 @@ class MoteurSimulationSystemique:
             # légèrement récessif (−0,12), comme les prélèvements existants.
             + (decision.depenses_prioritaires_mde * 0.55)
             - (decision.recettes_nouvelles_mde * 0.12)
+            # Deux mandatures consécutives : le « second dividende » de la dette
+            # (baisse de charge refinancée, réinvestie) agit comme une dépense
+            # publique financée sans déficit, et les investissements à cycle
+            # long de la mandature 1 arrivent à maturité en mandature 2
+            # (rendement différé, courbe en J).
+            + (decision.reinvestissement_dividende_dette_mde * 0.55)
+            + rendement_investissements_matures
         )
         pib_annee = round(max(500.0, pib_t + impact_multiplicateur), 2)
 
@@ -310,6 +355,54 @@ class MoteurSimulationSystemique:
                 100.0, max(0.0, self.national.confiance_democratique + effets_geo.confiance_delta)
             )
 
+        # ── PROFONDEUR TEMPORELLE : DEUX MANDATURES CONSÉCUTIVES ─────────────
+        # Dynamiques propres à la période de dix ans (docs/RD_DOUBLE_MANDATURE.md) :
+        # usure du capital politique, année électorale, verrou constitutionnel,
+        # clauses de revoyure et « second dividende » de la dette. Tous ces effets
+        # sont neutres tant que les champs dédiés de la décision restent à leurs
+        # valeurs par défaut (scénarios quinquennaux inchangés).
+        usure_politique = max(0.0, min(100.0, decision.usure_politique_pts))
+        if usure_politique > 0.0:
+            # La réforme de fatigue : l'usure érode la confiance et tend le climat
+            # social, même sans nouvelle mesure impopulaire.
+            self.national.confiance_democratique = max(
+                0.0, self.national.confiance_democratique - usure_politique * 0.08
+            )
+            self.local.tension_sociale_territoriale = min(
+                100.0, self.local.tension_sociale_territoriale + usure_politique * 0.06
+            )
+            commentaires.append(
+                f"[Deux mandatures] Usure du capital politique à {usure_politique:.0f}/100 : "
+                f"chaque réforme coûte désormais plus cher politiquement."
+            )
+        if decision.verrouillage_irreversibilite:
+            # L'ancrage constitutionnel crédibilise la trajectoire : les marchés et
+            # les citoyens savent qu'une alternance ne défera pas les réformes.
+            self.national.confiance_democratique = min(
+                100.0, self.national.confiance_democratique + 2.0
+            )
+            commentaires.append(
+                "[Deux mandatures] Ancrage constitutionnel des réformes adopté : "
+                "prime de crédibilité (+2 pts de confiance démocratique)."
+            )
+        if decision.clause_revoyure_evaluation:
+            self.national.confiance_democratique = min(
+                100.0, self.national.confiance_democratique + 1.0
+            )
+        if decision.reinvestissement_dividende_dette_mde > 0.0:
+            # La baisse de la charge de la dette finance la restitution aux ménages :
+            # c'est une dépense gagée, donc sans déficit supplémentaire, et elle
+            # apaise le corps social.
+            self.local.tension_sociale_territoriale = max(
+                0.0,
+                self.local.tension_sociale_territoriale
+                - decision.reinvestissement_dividende_dette_mde * 0.3,
+            )
+            commentaires.append(
+                f"[Deux mandatures] Second dividende : {decision.reinvestissement_dividende_dette_mde:.1f} Md€ "
+                f"d'économies d'intérêts réinvestis en pouvoir d'achat et services publics."
+            )
+
         # =========================================================================
         # 3. STRATE NATIONALE (État, Sécurité Sociale, Déficit au sens de Maastricht)
         # =========================================================================
@@ -366,6 +459,14 @@ class MoteurSimulationSystemique:
             # Climat pacifié et confiance civique en hausse
             self.national.parlement.probabilite_motion_censure_pct = max(10.0, 52.0 - (self.national.confiance_democratique * 0.4))
 
+        # Deux mandatures consécutives : l'usure du capital politique fragilise
+        # la majorité (députés sortants hésitants, fronde interne).
+        if usure_politique > 0.0:
+            self.national.parlement.probabilite_motion_censure_pct = min(
+                95.0,
+                self.national.parlement.probabilite_motion_censure_pct + usure_politique * 0.15,
+            )
+
         # =========================================================================
         # 4. STRATE MONDIALE (Agence France Trésor, Spreads, OAT 10 ans, Rating)
         # =========================================================================
@@ -412,6 +513,30 @@ class MoteurSimulationSystemique:
             self.mondial.spread_oat_bund_bps = min(
                 600.0, self.mondial.spread_oat_bund_bps + effets_geo.prime_spread_bps
             )
+
+        # Deux mandatures consécutives : prime de risque électorale. Une année de
+        # scrutin national général renchérit le crédit de l'État tant que les
+        # réformes ne sont pas ancrées dans la Constitution (risque d'abrogation
+        # par une alternance). Le verrou constitutionnel divise la prime par trois.
+        if decision.annee_electorale_majeure:
+            prime_electorale_bps = 4.0 if decision.verrouillage_irreversibilite else 12.0
+            self.mondial.spread_oat_bund_bps = min(
+                600.0, self.mondial.spread_oat_bund_bps + prime_electorale_bps
+            )
+            incertitude_sociale = 0.8 if decision.clause_revoyure_evaluation else 2.0
+            self.local.tension_sociale_territoriale = min(
+                100.0, self.local.tension_sociale_territoriale + incertitude_sociale
+            )
+            if not decision.verrouillage_irreversibilite:
+                self.national.confiance_democratique = max(
+                    0.0, self.national.confiance_democratique - 1.0
+                )
+            commentaires.append(
+                f"[Deux mandatures] Année électorale majeure : prime d'incertitude de "
+                f"{prime_electorale_bps:.0f} bps sur le spread souverain"
+                + (" (réformes verrouillées)." if decision.verrouillage_irreversibilite
+                   else " (réformes révocables : risque d'alternance).")
+            )
         if effets_geo.degradation_notation:
             self.mondial.note_souveraine = "BBB+"
             commentaires.append(
@@ -446,12 +571,29 @@ class MoteurSimulationSystemique:
             f"maturité moyenne {self.mondial.maturite_moyenne_dette_ans:.1f} a)."
         )
 
+        # Deux mandatures consécutives : les investissements à cycle long
+        # (EPR2, lois de programmation militaire, prévention santé, recherche)
+        # sont payés MAINTENANT — ils dégradent le solde à court terme (courbe
+        # en J) — mais leur rendement n'arrive qu'à maturité, au-delà de cinq
+        # ans, c'est-à-dire pendant la mandature suivante.
+        if decision.investissements_cycle_long_mde > 0.0:
+            annee_maturite = decision.annee + DELAI_MATURITE_INVESTISSEMENTS
+            self.investissements_differes.append(
+                (annee_maturite, decision.investissements_cycle_long_mde)
+            )
+            commentaires.append(
+                f"[Deux mandatures] Investissement à cycle long de "
+                f"{decision.investissements_cycle_long_mde:.1f} Md€ : coût immédiat, "
+                f"rendement différé à partir de l'année {annee_maturite} (courbe en J)."
+            )
+
         # Dépenses consolidées effectives des APU
         depenses_primaires_apu = (
             (self.reference["depenses_primaires_mde"] - self.national.etat.charge_nette_dette_mde)
             - economies_volet3
             + effets_geo.surcout_defense_mde
             + decision.depenses_prioritaires_mde
+            + decision.investissements_cycle_long_mde
         )
         depenses_totales_apu = depenses_primaires_apu + charge_dette_effective
 
@@ -542,6 +684,9 @@ class MoteurSimulationSystemique:
             prime_risque_geopolitique_bps=round(self.geo.prime_risque_geopolitique_bps, 1),
             chokepoints_sous_tension=self.geo.nombre_chokepoints_sous_tension,
             stocks_strategiques_petrole_jours=round(self.geo.stocks_strategiques_petrole_jours, 1),
+            usure_politique_pts=round(usure_politique, 1),
+            irreversibilite_reformes_active=bool(decision.verrouillage_irreversibilite),
+            investissements_matures_mde=stock_investissements_matures,
             commentaires=commentaires,
         )
 

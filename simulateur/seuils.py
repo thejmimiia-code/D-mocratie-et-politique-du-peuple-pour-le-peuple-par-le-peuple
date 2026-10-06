@@ -449,6 +449,37 @@ GARDE_FOUS: tuple[GardeFou, ...] = (
             "Défense à {valeur} % du PIB : hors-sol — désarmement de fait, la sécurité du pays "
             "dépend entièrement de choix étrangers."),
        ]),
+    # ── Profondeur temporelle : deux mandatures consécutives (2027-2037) ────
+    _g(cle="usure_politique_pts", libelle="Usure du capital politique", strate=2, sens="max",
+       unite="pts", precision=0, famille="general",
+       source="R&D deux mandatures consécutives (docs/RD_DOUBLE_MANDATURE.md, point P4) ; "
+              "baromètre de la confiance politique CEVIPOF.",
+       cible=(20.0, "Objectif sur dix ans : préserver le capital politique sous 20 pts."),
+       bornes=[
+           (20.0, "favorable",
+            "Usure à {valeur}/100 : le capital politique est intact, les réformes passent au calendrier prévu."),
+           (35.0, "tolerable",
+            "Usure à {valeur}/100 : fatigue normale de mi-parcours, séquencer les réformes et soigner l'évaluation."),
+           (55.0, "vigilance",
+            "Usure à {valeur}/100 : réforme de fatigue — chaque réforme coûte désormais plus cher politiquement qu'elle ne rapporte."),
+           (75.0, "risque",
+            "Usure à {valeur}/100 : fin de cycle, risque élevé de censure et de blocage parlementaire."),
+           (float("inf"), "hors_sol",
+            "Usure à {valeur}/100 : hors-sol — capital politique épuisé, plus aucune réforme n'est adoptable avant l'élection suivante."),
+       ]),
+    _g(cle="irreversibilite_reformes_active", libelle="Verrou constitutionnel des réformes",
+       strate=2, sens="booleen", famille="general",
+       source="Constitution de 1958, art. 89 (Congrès, majorité des 3/5) et art. 11 ; "
+              "R&D deux mandatures (docs/RD_DOUBLE_MANDATURE.md, points P3 et P7).",
+       cible=(1.0, "Objectif de la deuxième mandature : ancrer les réformes structurelles dans la Constitution."),
+       bornes=[
+           (1.0, "tolerable",
+            "Réformes ancrées dans la Constitution : une alternance ne peut plus les abroger d'un trait de plume, "
+            "les marchés et les citoyens anticipent dans la durée."),
+           (0.0, "vigilance",
+            "Réformes non verrouillées : sur deux mandatures, le risque d'abrogation par une alternance est systémique — "
+            "chaque année électorale renchérit le crédit de l'État."),
+       ]),
 )
 
 

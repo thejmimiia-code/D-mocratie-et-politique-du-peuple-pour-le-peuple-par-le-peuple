@@ -91,10 +91,12 @@ class ExtensionSimulateurPolitique:
         """Moteur de calcul des 5 échelons (Local, National, Europe, Monde, Géopolitique)."""
         from simulateur.moteur import MoteurSimulationSystemique
         from simulateur.scenarios import (
+            get_scenario_alternance_2032,
             get_scenario_austerite_brutale,
             get_scenario_choc_mondial_stagflation,
             get_scenario_convergence_ww3,
             get_scenario_crise_taiwan,
+            get_scenario_double_mandature,
             get_scenario_escalade_nucleaire_tactique,
             get_scenario_fermeture_hormuz,
             get_scenario_mandature_5_ans,
@@ -112,6 +114,8 @@ class ExtensionSimulateurPolitique:
             "escalade_nucleaire": get_scenario_escalade_nucleaire_tactique,
             "convergence_ww3": get_scenario_convergence_ww3,
             "resilience": get_scenario_resilience_republicaine,
+            "double_mandature": get_scenario_double_mandature,
+            "alternance_2032": get_scenario_alternance_2032,
         }
 
         moteur = MoteurSimulationSystemique()

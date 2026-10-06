@@ -164,9 +164,10 @@ class TestPresets(unittest.TestCase):
 
     def test_presets_presents(self):
         attendus = {
-            "statut_quo", "mandature", "resilience", "austerite", "transition_ecologique",
-            "justice_sociale", "choc_mondial", "crise_geopolitique", "crise_taiwan",
-            "hormuz", "escalade_nucleaire", "convergence_ww3", "refondation_democratique",
+            "statut_quo", "mandature", "double_mandature", "resilience", "austerite",
+            "transition_ecologique", "justice_sociale", "choc_mondial", "crise_geopolitique",
+            "crise_taiwan", "hormuz", "escalade_nucleaire", "convergence_ww3",
+            "refondation_democratique",
         }
         self.assertEqual(set(PRESETS), attendus)
 

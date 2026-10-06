@@ -28,7 +28,7 @@ DEPOT_COURT = "thejmimiia-code/D-mocratie-et-politique-du-peuple"
 #: Description du dépôt (limite GitHub : 350 caractères).
 DESCRIPTION = (
     "Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → "
-    "géopolitique) : 93 leviers croisables, 20 domaines d'impact notés 0-100, données "
+    "géopolitique) : 97 leviers croisables, 20 domaines d'impact notés 0-100, données "
     "publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils "
     "tolérables et hors-sol."
 )

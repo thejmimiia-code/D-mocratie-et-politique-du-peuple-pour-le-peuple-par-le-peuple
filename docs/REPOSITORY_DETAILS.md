@@ -24,7 +24,7 @@ python3 outils/details_depot.py --appliquer   # tente la mise à jour par l'API 
 ## 1. Description (270 / 350 caractères)
 
 ```
-Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 93 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
+Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 97 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
 ```
 
 **Pourquoi ce changement.** La description annonçait « Modèle gigogne à
@@ -67,7 +67,7 @@ publiques, finances publiques, budget, dette, économie), la **doctrine**
 
 Téléverser **`docs/apercu_social.png`** (1280 × 640, 52 Kio, très en
 deçà de la limite d'1 Mo), régénérable par `python3 outils/apercu_social.py`.
-L'image reprend la palette du simulateur, ses quatre chiffres clés (93 leviers ·
+L'image reprend la palette du simulateur, ses quatre chiffres clés (97 leviers ·
 20 domaines · 38 indicateurs publics · 5 échelons) et le ruban de veille avec ses
 pastilles de strate.
 
@@ -81,7 +81,7 @@ téléversé :
 
 Téléverser **`docs/apercu_social.png`** (1280 × 640, 52 Kio), régénérable par
 `python3 outils/apercu_social.py`. L'image reprend la palette du simulateur, ses
-quatre chiffres clés (93 leviers · 20 domaines · 38 indicateurs publics ·
+quatre chiffres clés (97 leviers · 20 domaines · 38 indicateurs publics ·
 5 échelons) et le ruban de veille avec ses pastilles de strate.
 
 ## 5. Autres cases de la même page
@@ -132,7 +132,7 @@ L'aperçu social reste manuel même par cette voie.
 Ces éléments sont, eux, versionnés et déjà à jour :
 
 - `README.md` — titre et présentation en « 5 échelons », section 5 consacrée au
-  simulateur paramétrable (93 leviers, 20 domaines, données publiques, console) ;
+  simulateur paramétrable (97 leviers, 20 domaines, données publiques, console) ;
 - `docs/README.md` — index enrichi de `SIMULATEUR_PARAMETRABLE.md` ;
 - `docs/SIMULATEUR_PARAMETRABLE.md` — fonctionnement, seuils, limites assumées ;
 - `pyproject.toml` — description, mots-clés et scripts d'entrée

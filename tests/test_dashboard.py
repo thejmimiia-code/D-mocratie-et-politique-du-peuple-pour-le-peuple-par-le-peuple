@@ -225,13 +225,13 @@ class TestDashboardInterface(unittest.TestCase):
         self.assertIn("function activerExports()", js)
         self.assertIn("activerExports();", js)
 
-    def test_neuf_scenarios_exposes(self):
-        """Les 9 scénarios sont exposés côté serveur et injectés dans la page."""
+    def test_onze_scenarios_exposes(self):
+        """Les 11 scénarios sont exposés côté serveur et injectés dans la page."""
         status, body = self._get("/api/scenarios")
         self.assertEqual(status, 200)
         data = json.loads(body)
-        self.assertEqual(len(data["scenarios"]), 9)
-        self.assertEqual(len(SCENARIOS), 9)
+        self.assertEqual(len(data["scenarios"]), 11)
+        self.assertEqual(len(SCENARIOS), 11)
         for key in [
             "mandature",
             "statut_quo",
@@ -242,6 +242,8 @@ class TestDashboardInterface(unittest.TestCase):
             "escalade_nucleaire",
             "convergence_ww3",
             "resilience",
+            "double_mandature",
+            "alternance_2032",
         ]:
             self.assertIn(key, SCENARIOS)
             self.assertIn(key, self.page)
@@ -285,7 +287,7 @@ class TestDashboardInterface(unittest.TestCase):
                 resp = conn.getresponse()
                 self.assertEqual(resp.status, 200)
                 payload = json.loads(resp.read().decode("utf-8"))
-                self.assertEqual(len(payload["scenarios"]), 9)
+                self.assertEqual(len(payload["scenarios"]), 11)
                 self.assertFalse(resp.will_close)
             # Une 404 sans corps doit annoncer Content-Length: 0, sinon le
             # client attend indéfiniment la fin d'une réponse keep-alive.
@@ -347,7 +349,7 @@ class TestAPIparametrique(unittest.TestCase):
         familles = donnees["parametres"]["familles"]
         leviers = [levier for famille in familles for levier in famille["leviers"]]
         self.assertGreaterEqual(len(leviers), 90)
-        self.assertEqual(len(donnees["parametres"]["presets"]), 13)
+        self.assertEqual(len(donnees["parametres"]["presets"]), 14)
 
     def test_contexte_avec_sources_navigateur(self):
         statut, donnees = self._appel("/api/contexte")
@@ -475,7 +477,7 @@ class TestAPIparametrique(unittest.TestCase):
     def test_comparer_les_presets(self):
         statut, donnees = self._appel("/api/comparer")
         self.assertEqual(statut, 200)
-        self.assertEqual(len(donnees["comparaison"]), 13)
+        self.assertEqual(len(donnees["comparaison"]), 14)
         for entree in donnees["comparaison"]:
             self.assertEqual(len(entree["scores"]), 20)
 

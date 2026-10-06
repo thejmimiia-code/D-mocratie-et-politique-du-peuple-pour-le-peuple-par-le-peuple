@@ -4,6 +4,59 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] — 2026-10-06
+
+### Ajout — R&D « deux mandatures consécutives » (2027-2037)
+
+Inventaire et modélisation des points stratégiques qui n'existent que sur la
+période de dix ans : calendrier électoral, verrou constitutionnel, usure du
+capital politique, second dividende de la dette, investissements à cycle long.
+Document de référence : [`docs/RD_DOUBLE_MANDATURE.md`](docs/RD_DOUBLE_MANDATURE.md).
+
+- **`simulateur/model.py`** : six nouveaux champs de `DecisionPolitique`, tous
+  neutres par défaut (`annee_electorale_majeure`, `usure_politique_pts`,
+  `verrouillage_irreversibilite`, `clause_revoyure_evaluation`,
+  `reinvestissement_dividende_dette_mde`, `investissements_cycle_long_mde`) ;
+  trois champs de résultat (`usure_politique_pts`,
+  `irreversibilite_reformes_active`, `investissements_matures_mde`).
+- **`simulateur/moteur.py`** : prime de risque électorale sur le spread
+  (+12 bps sans verrou, +4 bps verrouillé), usure du capital politique
+  (confiance, tension, risque de censure), verrou constitutionnel
+  (+2 pts de confiance), clauses de revoyure, dividende de la dette réinvesti
+  (multiplicateur 0,55, dépense gagée sans déficit) et investissements à cycle
+  long (coût immédiat, rendement 8 %/an plafonné 2,5 Md€ par programme après
+  cinq ans : courbe en J).
+- **`simulateur/scenarios.py`** : deux scénarios décennaux —
+  `get_scenario_double_mandature()` (2027-2037 : mandature 1, élection 2032,
+  verrou en année 6, dividende 3→8 Md€, usure croissante, élection 2037) et
+  `get_scenario_alternance_2032()` (stress-test sans verrou).
+- **`simulateur/cli.py`, `simulateur/dashboard.py`, `extension_eva/main.py`** :
+  scénarios `double_mandature` et `alternance_2032` exposés au menu (options
+  14-15), à la ligne de commande, à l'API du tableau de bord et à l'adaptateur
+  ÉVA (11 scénarios au total).
+- **`simulateur/parametres.py`** : quatre leviers dédiés
+  (`verrouillage_irreversibilite`, `clause_revoyure_evaluation`,
+  `dividende_dette_reinvesti`, `investissements_cycle_long`) et le préréglage
+  « Deux mandatures consécutives (2027-2037) » — catalogue porté de **93 à
+  97 leviers** et de **13 à 14 préréglages** ; bulles explicatives générées
+  automatiquement pour les nouveaux leviers.
+- **`simulateur/seuils.py`** : deux garde-fous nouveaux — « Usure du capital
+  politique » (strate 2, cible ≤ 20 pts sur dix ans) et « Verrou
+  constitutionnel des réformes » (strate 2 : l'absence de verrou est signalée
+  en vigilance sur toute simulation, car c'est le risque systémique de la
+  période). Garde-fous portés de 33 à 35.
+- **`tests/test_double_mandature.py`** : 16 tests nouveaux — neutralité
+  stricte des scénarios quinquennaux (valeurs publiées vérifiées au centième),
+  complétude des scénarios décennaux, dynamiques isolées, leviers pilotant
+  réellement le moteur, garde-fous présents dans le diagnostic. Compteurs mis
+  à jour dans `test_integration_branches.py`, `test_dashboard.py`,
+  `test_parametres.py` et `tests/navigateur_interface.mjs`.
+- **Documentation** : `README.md` (scénarios et section R&D),
+  `docs/README.md` (index), références « 93 leviers / 13 préréglages »
+  actualisées dans la documentation vivante et les outils du dépôt
+  (`outils/details_depot.py`, `outils/apercu_social.py`,
+  `docs/SIMULATEUR_PARAMETRABLE.md`, `docs/REPOSITORY_DETAILS.md`).
+
 ## [1.4.3] — 2026-10-05
 
 ### Correction — Repli documentaire exprimé dans l'unité du modèle

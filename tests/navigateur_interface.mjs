@@ -247,16 +247,16 @@ for (let i = 0; i < 6; i += 1) await tourner();
 /* 1. Démarrage : catalogue, presets, contexte, préréglage actif. */
 const leviersComplets = (contenu("leviers-grille").match(/class="levier[ "]/g) || []).length;
 noter("charge le catalogue des leviers", leviersComplets > 50, `${leviersComplets} cartes`);
-noter("affiche les 13 préréglages", (elements.get("preset-grid")?.children.length || 0) === 13,
+noter("affiche les 14 préréglages", (elements.get("preset-grid")?.children.length || 0) === 14,
       `${elements.get("preset-grid")?.children.length} cartes`);
-noter("affiche les 9 scénarios historiques", (elements.get("scenario-grid")?.children.length || 0) === 9,
+noter("affiche les 11 scénarios", (elements.get("scenario-grid")?.children.length || 0) === 11,
       `${elements.get("scenario-grid")?.children.length} cartes`);
 noter("affiche les métriques du contexte instant T", contenu("grid-metrics").includes("PIB nominal"));
 noter("affiche la provenance des chiffres", contenu("provenance").length > 200);
 noter("affiche l'impact du préréglage de démarrage", contenu("grid-impact").includes("carte metric"));
 noter("remplit le tableau année par année", contenu("results-table").includes("<tbody>"));
 noter("trace les courbes du graphique", contenu("svg-chart").includes("<polyline"));
-noter("le POST de simulation porte bien les 93 leviers",
+noter("le POST de simulation porte bien les 97 leviers",
       (rapport.postes_simuler?.[0]?.leviers_actifs || 0) >= 90,
       `${rapport.postes_simuler?.[0]?.leviers_actifs} leviers transmis`);
 const impactPrereglage = contenu("grid-impact");
@@ -300,17 +300,17 @@ noter("le levier réglé reçoit ses puces d'impact",
       contenu("leviers-grille").includes("puce-effect"),
       (contenu("leviers-grille").match(/puce-effect/g) || []).length + " puce(s)");
 noter("le compteur annonce les leviers affichés et modifiés",
-      /93 levier\(s\) affiché\(s\)/.test(elements.get("compteur-leviers")?.textContent || ""),
+      /97 levier\(s\) affiché\(s\)/.test(elements.get("compteur-leviers")?.textContent || ""),
       elements.get("compteur-leviers")?.textContent);
 
-/* 2 bis. Vue compacte : les 93 paramètres sur une ligne chacun. */
+/* 2 bis. Vue compacte : les 97 paramètres sur une ligne chacun. */
 apiPage.basculerDensite(true);
 for (let i = 0; i < 2; i += 1) await tourner();
 const compacts = (contenu("leviers-grille").match(/class="levier compact/g) || []).length;
-noter("la vue compacte affiche les 93 leviers", compacts === 93, `${compacts} leviers compacts`);
+noter("la vue compacte affiche les 97 leviers", compacts === 97, `${compacts} leviers compacts`);
 const curseurs = (contenu("leviers-grille").match(/oninput="majLevier/g) || []).length;
 const bascules = (contenu("leviers-grille").match(/onchange="majLevier/g) || []).length;
-noter("chaque levier compact garde sa commande", curseurs + bascules === 93,
+noter("chaque levier compact garde sa commande", curseurs + bascules === 97,
       `${curseurs} curseurs + ${bascules} interrupteurs = ${curseurs + bascules} commandes`);
 noter("le libellé du bouton de densité bascule",
       (elements.get("btn-densite")?.textContent || "").includes("confort"),
@@ -341,7 +341,7 @@ noter("la bulle décrit la chaîne d'interaction", grilleBulle.includes("Chaîne
 noter("la bulle affiche les répercussions mesurées", grilleBulle.includes("Répercussions mesurées"));
 noter("la bulle guide opportunités et désagréments", /Opportunités|Désagréments/.test(grilleBulle));
 noter("la bulle cite les effets déclarés au catalogue", grilleBulle.includes("Effets déclarés au catalogue"));
-noter("la bulle laisse les 93 réglages accessibles",
+noter("la bulle laisse les 97 réglages accessibles",
       (grilleBulle.match(/class="levier[ "]/g) || []).length === leviersComplets,
       `${(grilleBulle.match(/class="levier[ "]/g) || []).length} cartes`);
 await apiPage.ouvrirBulle(cleLevier);

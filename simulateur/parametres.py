@@ -1051,6 +1051,69 @@ _lev(Levier(
     effets_directs={"democratie": 0.7, "confiance": 0.5, "territoires": 0.3},
     source="Loi organique 2014-125 ; rapports sur le renouvellement démocratique.",
 ))
+# ── Profondeur temporelle : deux mandatures consécutives (2027-2037) ────────
+# Quatre leviers issus de la R&D « points stratégiques systématiques de la
+# période de dix ans » : cf. docs/RD_DOUBLE_MANDATURE.md.
+_lev(Levier(
+    cle="verrouillage_irreversibilite",
+    libelle="Verrou constitutionnel des réformes",
+    famille="institutions_democratie",
+    description="Ancrage constitutionnel des réformes adoptées en première mandature "
+                "(révision par Congrès aux 3/5 ou référendum) : une alternance ne peut "
+                "plus les abroger d'un trait de plume. Divise par trois la prime de "
+                "risque électorale sur le spread souverain.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    champ="verrouillage_irreversibilite", profil=(1.0, 1.0, 1.0, 1.0, 1.0),
+    effets_directs={"democratie": 0.5, "confiance": 0.6, "stabilite_gouvernementale": 0.5,
+                    "marches": 0.3},
+    source="Constitution de 1958, art. 89 et 11 ; R&D deux mandatures "
+           "(docs/RD_DOUBLE_MANDATURE.md, points P3 et P7).",
+))
+_lev(Levier(
+    cle="clause_revoyure_evaluation",
+    libelle="Clauses de revoyure & évaluation systématique",
+    famille="etat_fonction_publique",
+    description="Chaque réforme majeure est évaluée à date fixe (LOLF, Cour des comptes) "
+                "avec clause de revoyure : prolongation, ajustement ou abrogation "
+                "documentée. Condition de pilotage de la seconde mandature et "
+                "d'apaisement des années électorales.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    champ="clause_revoyure_evaluation", profil=(1.0, 1.0, 1.0, 1.0, 1.0),
+    effets_directs={"confiance": 0.5, "democratie": 0.4},
+    source="LOLF du 1er août 2001 ; Constitution, art. 47-2 ; R&D deux mandatures "
+           "(docs/RD_DOUBLE_MANDATURE.md, point P13).",
+))
+_lev(Levier(
+    cle="dividende_dette_reinvesti",
+    libelle="Second dividende : charge de la dette réinvestie",
+    famille="etat_fonction_publique",
+    description="La maturité moyenne de la dette négociable est de 8,5 ans : sur deux "
+                "mandatures, le stock est intégralement refinancé aux taux détendus par "
+                "la trajectoire de désendettement. Les économies d'intérêts sont "
+                "réinvesties en pouvoir d'achat et services publics — une dépense gagée, "
+                "sans déficit supplémentaire. Ce dividende n'apparaît qu'en mandature 2.",
+    unite="Md€", defaut=0.0, minimum=0.0, maximum=15.0, pas=0.5,
+    champ="reinvestissement_dividende_dette_mde",
+    profil=(0.0, 0.2, 0.5, 0.8, 1.0),
+    effets_directs={"pouvoir_achat": 0.5, "confiance": 0.3, "dette": 0.4},
+    source="Agence France Trésor, maturité moyenne 8,5 ans ; R&D deux mandatures "
+           "(docs/RD_DOUBLE_MANDATURE.md, point P5).",
+))
+_lev(Levier(
+    cle="investissements_cycle_long",
+    libelle="Investissements à cycle long (rendement différé)",
+    famille="energie_climat",
+    description="EPR2, lois de programmation militaire, France 2030, prévention santé, "
+                "recherche : le coût est payé immédiatement (courbe en J), le rendement "
+                "n'arrive qu'au-delà de cinq ans — les fruits de la première mandature "
+                "sont récoltés pendant la seconde.",
+    unite="Md€", defaut=0.0, minimum=0.0, maximum=20.0, pas=0.5,
+    champ="investissements_cycle_long_mde", profil=(1.0, 1.0, 1.0, 1.0, 1.0),
+    effets_directs={"investissement": 0.5, "energie": 0.4, "defense": 0.3,
+                    "innovation": 0.3, "croissance": 0.3},
+    source="PPE ; LPM 2024-2030 ; sommet OTAN de La Haye (2025) ; dossier de "
+           "mandature, chiffrage prévention santé ; R&D deux mandatures (point P6).",
+))
 _lev(Levier(
     cle="reforme_proportionnelle",
     libelle="Scrutin proportionnel à l'Assemblée",
@@ -1346,6 +1409,37 @@ PRESETS: dict[str, dict[str, Any]] = {
             "dgf_delta": 0.0,
         },
         "couleur": "#22c55e",
+    },
+    "double_mandature": {
+        "libelle": "Deux mandatures consécutives (2027-2037)",
+        "description": "Doctrine de la période de dix ans : les réformes de la mandature 1, "
+                       "puis leur verrouillage constitutionnel, le second dividende de la "
+                       "dette réinvesti, l'évaluation systématique et les investissements "
+                       "à cycle long récoltés en mandature 2.",
+        "parametres": {
+            "lutte_fraude_fiscale_ia": 10.0,
+            "fraude_sociale": 2.5,
+            "conditionnement_aides_entreprises": 12.0,
+            "taxe_superprofits": 6.0,
+            "extension_ttf": 5.0,
+            "impot_minimum_pilier2": 6.0,
+            "macf_carbone_frontiere": 4.0,
+            "niches_fiscales": 40.0,
+            "commande_publique": 5.0,
+            "fusion_doublons": 6.5,
+            "tva_energie_5_5": 1.0,
+            "reforme_casier_b2": 1.0,
+            "reforme_vote_blanc": 1.0,
+            "reforme_ric": 1.0,
+            "reforme_regimes_speciaux": 1.0,
+            "reforme_anti_pantouflage": 1.0,
+            "verrouillage_irreversibilite": 1.0,
+            "clause_revoyure_evaluation": 1.0,
+            "dividende_dette_reinvesti": 6.0,
+            "investissements_cycle_long": 6.0,
+            "dgf_delta": 0.0,
+        },
+        "couleur": "#2dd4bf",
     },
     "resilience": {
         "libelle": "Résilience républicaine & réarmement",

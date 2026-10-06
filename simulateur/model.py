@@ -253,6 +253,17 @@ class DecisionPolitique:
     plan_souverainete_semiconducteurs_mde: float = 0.0  # Chips Act / relocalisation (Md€/an)
     activation_clause_sauvegarde_nationale_ue: bool = False  # Dérogation défense du Pacte de stabilité
 
+    # --- PROFONDEUR TEMPORELLE : DEUX MANDATURES CONSÉCUTIVES (2027-2037) -----
+    # Dynamiques qui n'existent que sur la période de dix ans (R&D :
+    # docs/RD_DOUBLE_MANDATURE.md). Tous ces champs sont neutres par défaut :
+    # les scénarios quinquennaux existants restent strictement inchangés.
+    annee_electorale_majeure: bool = False            # Scrutin national général (présidentielle + législatives)
+    usure_politique_pts: float = 0.0                  # Usure cumulée du capital politique (0 à 100)
+    verrouillage_irreversibilite: bool = False        # Ancrage constitutionnel des réformes adoptées
+    clause_revoyure_evaluation: bool = False          # Évaluation systématique et clauses de revoyure
+    reinvestissement_dividende_dette_mde: float = 0.0 # Baisse de charge de la dette réinvestie (« second dividende »)
+    investissements_cycle_long_mde: float = 0.0       # Investissements à rendement différé au-delà de 5 ans
+
 
 @dataclass
 class ResultatEtapeSimulation:
@@ -302,5 +313,10 @@ class ResultatEtapeSimulation:
     prime_risque_geopolitique_bps: float = 12.0
     chokepoints_sous_tension: int = 0
     stocks_strategiques_petrole_jours: float = 98.0
+
+    # Profondeur temporelle : deux mandatures consécutives (2027-2037)
+    usure_politique_pts: float = 0.0
+    irreversibilite_reformes_active: bool = False
+    investissements_matures_mde: float = 0.0
 
     commentaires: list[str] = field(default_factory=list)
