@@ -274,6 +274,9 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .ruban-cout.gain{background:rgba(34,197,94,.20);border-color:rgba(34,197,94,.55);color:#86efac}
 .ruban-cout.cout{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.55);color:#fca5a5}
 .ruban-cout.neutre{background:rgba(147,163,189,.12);border-color:var(--border);color:var(--texte-dim)}
+/* Coût / gain global : toujours dans la partie visible de la console, même
+   quand le détail des seuils est replié. */
+.cout-global-veille{margin:10px 0 4px}
 /* Bulle explicative : le bloc « mesure live » doit se lire d'un coup d'œil. */
 .bulle-levier .bulle-live{margin:8px 0 2px}
 /* Audit et traçabilité : tableaux denses et lisibles en bas de page. */
@@ -340,12 +343,14 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <h2>Console de veille permanente <span class="aide">seuils tolérables → hors-sol, strate par strate, mis à jour à chaque réglage</span></h2>
       <div class="console-verdict" id="console-verdict">en attente de la première simulation…</div>
     </div>
+    <div class="cout-global-veille">
+      <h3 class="console-titre" data-aide="<b>Coût / gain réel des réglages globaux croisés</b>Recettes nouvelles, dépenses nouvelles et solde net de l'ensemble des leviers actifs, croisés par le moteur à chaque simulation : le chiffre se met à jour en temps réel, avec les sources officielles qui l'ancrent. Ce bloc reste affiché même quand le détail des seuils est replié.">💶 Coût / gain réel des réglages globaux croisés</h3>
+      <div id="console-cout-global"><div class="aide">en attente de la première simulation…</div></div>
+    </div>
     <div id="console-danger"></div>
     <div class="console-strates" id="console-strates"></div>
     <div class="console-corps" id="console-corps">
       <div>
-        <h3 class="console-titre" data-aide="<b>Coût / gain réel des réglages globaux croisés</b>Recettes nouvelles, dépenses nouvelles et solde net de l'ensemble des leviers actifs, croisés par le moteur à chaque simulation : le chiffre se met à jour en temps réel, avec les sources officielles qui l'ancrent.">💶 Coût / gain réel des réglages globaux croisés</h3>
-        <div id="console-cout-global"><div class="aide">en attente de la première simulation…</div></div>
         <h3 class="console-titre">Risque pour la population</h3>
         <div id="console-population"></div>
         <h3 class="console-titre">Effet de votre dernière modification</h3>
@@ -468,6 +473,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
+    <span class="aide" id="version-interface">Interface v1.7.3 (2026-10-06) — si les indicateurs coût / gain en € n'apparaissent pas, rechargez la page (F5) pour obtenir cette version.</span>
   </p>
 </div>
 

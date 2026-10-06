@@ -108,6 +108,15 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("Coût / gain réel des réglages globaux croisés", self.page)
         self.assertIn(".cout-gain.gain{", self.page)
         self.assertIn(".cout-gain.cout{", self.page)
+        # Le bloc coût / gain est hors de la zone repliable : il reste visible
+        # même quand le détail des seuils est masqué.
+        self.assertIn("cout-global-veille", self.page)
+        self.assertLess(self.page.index('id="console-cout-global"'),
+                        self.page.index('id="console-corps"'),
+                        "le bloc coût/gain doit précéder le corps repliable")
+        # Version d'interface visible pour diagnostiquer les pages périmées.
+        self.assertIn('id="version-interface"', self.page)
+        self.assertIn("Interface v1.7.3", self.page)
         # Les cinq niveaux de seuil sont connus du rendu.
         for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
             self.assertIn(niveau, self.script)
