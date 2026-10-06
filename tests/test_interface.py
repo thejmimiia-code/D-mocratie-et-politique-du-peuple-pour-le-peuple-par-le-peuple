@@ -91,10 +91,16 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("classList.toggle('replie')", self.script)
         for identifiant in ("console-verdict", "console-strates", "console-danger",
                             "console-population", "console-derniere-modification",
-                            "console-alertes", "console-marges"):
+                            "console-alertes", "console-marges", "console-conseil"):
             self.assertIn(f'id="{identifiant}"', self.page, identifiant)
         self.assertIn("function renderConsole(", self.script)
         self.assertIn("function renderDerniereModification(", self.script)
+        # Le conseiller temps réel (« effet papillon ») est branché sur la page.
+        self.assertIn("function majConseilTempsReel(", self.script)
+        self.assertIn("function renderConseil(", self.script)
+        self.assertIn("let MOUVEMENT = null;", self.script)
+        self.assertIn("/api/conseil", self.script)
+        self.assertIn("effet papillon", self.page.lower())
         # Les cinq niveaux de seuil sont connus du rendu.
         for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
             self.assertIn(niveau, self.script)
@@ -139,12 +145,20 @@ class TestStructureDeLaPage(unittest.TestCase):
         # sinon le curseur serait remplacé sous les doigts de l'utilisateur.
         self.assertIn("if (!REGLAGE_EN_COURS) renderLeviers(filtreCourant());", self.script)
         self.assertIn("REGLAGE_EN_COURS = true", self.script)
+        # Le mouvement (position avant vs position à l'instant T) est capturé
+        # pour TOUS les leviers, avant toute écriture de la nouvelle valeur.
+        maj = self.script.split("function majLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("MOUVEMENT = {cle: cle, avant: PARAMS[cle]}", maj)
+        self.assertLess(maj.index("MOUVEMENT = {cle: cle, avant: PARAMS[cle]}"),
+                        maj.index("PARAMS[cle] = valeur"),
+                        "la position d'avant doit être lue avant l'écriture")
 
     def test_console_branchee_sur_chaque_simulation(self):
         """Chaque simulation recalcule la console et l'effet de la mesure."""
         simuler = self.script.split("async function simuler(", 1)[1].split("\nfunction ", 1)[0]
         self.assertIn("renderConsole(donnees);", simuler)
         self.assertIn("renderDerniereModification(", simuler)
+        self.assertIn("majConseilTempsReel(parametresEnvoyes);", simuler)
         self.assertIn("SIMULATION_PRECEDENTE", simuler)
         # C'est bien le jeu de paramètres envoyé qui est mémorisé, pas l'objet
         # mutable `PARAMS` (sinon la comparaison porterait sur le même objet).
@@ -311,6 +325,10 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         # Survol, sortie de souris, focus clavier, clic (pour ne pas masquer l'aide).
         for evenement in ("mouseover", "mouseout", "focusin", "focusout", "mousedown", "scroll"):
             self.assertIn(evenement, self.script)
+        # L'aide du levier reflète le dernier mouvement en temps réel.
+        aide = self.script.split("function texteAideLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("MOUVEMENT && MOUVEMENT.cle === cle", aide)
+        self.assertIn("dernier mouvement", aide)
 
     def test_chaque_reglage_est_annote_pour_le_survol(self):
         """Les zones interactives des 93 leviers portent leur aide."""

@@ -308,6 +308,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
         <div id="console-population"></div>
         <h3 class="console-titre">Effet de votre dernière modification</h3>
         <div id="console-derniere-modification"></div>
+        <h3 class="console-titre" data-aide="<b>Conseiller temps réel</b>À chaque mouvement de réglage, le moteur rejoue la trajectoire avec le levier à sa position d'avant puis d'après votre geste : effets directs, ricochets (effet papillon), garde-fous qui basculent et pistes de compensation, comme un conseiller spécialisé.">🦋 Conseiller temps réel (effet papillon)</h3>
+        <div id="console-conseil"><div class="aide">Bougez un curseur ou un interrupteur : le conseiller lit chaque décision et ses ricochets en temps réel.</div></div>
       </div>
       <div>
         <h3 class="console-titre">Messages de seuil</h3>
@@ -413,6 +415,9 @@ let PARAMS = {};
 let SIMULATION_PRECEDENTE = null;
 //: Effets mesurés, par levier : affichés sous chaque curseur concerné.
 let DERNIERES_PUCES = {};
+//: Dernier mouvement de réglage : {cle, avant} — la « décision » à l'instant T
+//: (position actuelle) par rapport à la position avant le dernier mouvement.
+let MOUVEMENT = null;
 //: Leviers touchés par la dernière modification (mis en évidence).
 let LEVIERS_MODIFIES = new Set();
 //: Vue compacte : une ligne par levier, pour que les 97 tiennent à l'écran.
@@ -670,6 +675,11 @@ function texteAideLevier(cle){
   lignes.push(`${famille ? famille.libelle : levier.famille} · ${levier.type}`
     + (levier.unite && levier.unite !== 'bool' ? ` · unité : ${levier.unite}` : ''));
   lignes.push(`valeur actuelle <b>${actif}</b> (défaut ${defaut})`);
+  if (MOUVEMENT && MOUVEMENT.cle === cle){
+    lignes.push(`dernier mouvement : ${fmt(MOUVEMENT.avant, levier.precision)} → `
+      + `${fmt(valeur, levier.precision)} — le conseiller temps réel de la console `
+      + 'de veille lit cette décision et ses ricochets.');
+  }
   if (levier.type === 'interrupteur'){
     lignes.push('interrupteur : activé ou désactivé');
   } else {
@@ -1016,6 +1026,9 @@ function terminerReglage(){
   renderLeviers(filtreCourant());
 }
 function majLevier(cle, valeur){
+  // La « décision » : on mémorise la position du réglage AVANT ce geste, pour
+  // que le conseiller temps réel mesure exactement le dernier mouvement.
+  if (!MOUVEMENT || MOUVEMENT.cle !== cle) MOUVEMENT = {cle: cle, avant: PARAMS[cle]};
   REGLAGE_EN_COURS = true;
   PARAMS[cle] = valeur;
   const carte = document.querySelector(`.levier[data-cle="${cle}"]`);
@@ -1150,6 +1163,7 @@ async function simuler(avecImpacts){
     renderDerniereModification(SIMULATION_PRECEDENTE,
                                {parametres: parametresEnvoyes, sortie: donnees});
     majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
+    majConseilTempsReel(parametresEnvoyes);
     SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees};
     // La grille est reconstruite avec ses puces d'impact — sauf pendant qu'un
     // curseur est manipulé, pour ne pas le remplacer sous les doigts.
@@ -1364,6 +1378,72 @@ function renderDerniereModification(avant, apres){
              ${effet.delta > 0 ? '+' : ''}${fmt(effet.delta, effet.precision)} ${effet.favorable ? '✓' : '✗'}</span></div>`).join('')
     + (pireDomaine ? `<div class="aide">Domaine le plus touché : <b>${pireDomaine.libelle}</b>
          (${pireDomaine.delta > 0 ? '+' : ''}${fmt(pireDomaine.delta, 1)} pt de score).</div>` : '');
+}
+
+/* ── Conseiller temps réel (« effet papillon ») ────────────────────────────
+   À chaque simulation déclenchée par un mouvement de réglage, on demande au
+   serveur de rejouer le moteur avec le levier à sa position d'avant le geste
+   puis à sa position à l'instant T : la différence est exactement celle de la
+   décision. Le panneau rend effets directs, ricochets, garde-fous basculés,
+   journal nouveau et pistes de compensation — pour TOUS les leviers.        */
+async function majConseilTempsReel(parametresEnvoyes){
+  const zone = document.getElementById('console-conseil');
+  if (!zone) return;
+  if (!MOUVEMENT) return;
+  const cle = MOUVEMENT.cle;
+  const apres = parametresEnvoyes[cle];
+  if (apres === undefined || Math.abs(apres - MOUVEMENT.avant) < 1e-9) return;
+  try {
+    const reponse = await fetch('/api/conseil', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({parametres: parametresEnvoyes, cle: cle,
+                            avant: MOUVEMENT.avant, apres: apres})
+    });
+    const conseil = await reponse.json();
+    // Le conseil affiché correspond au dernier mouvement réellement demandé.
+    if (conseil && !conseil.error && MOUVEMENT && MOUVEMENT.cle === cle){
+      renderConseil(conseil);
+    }
+  } catch (erreur){
+    /* Le conseil est un confort : un serveur muet ne casse pas la page. */
+  }
+}
+function renderConseil(conseil){
+  const zone = document.getElementById('console-conseil');
+  if (!zone) return;
+  const niveau = conseil.verdict_niveau || 'inconnu';
+  const domaines = (conseil.domaines || []);
+  const directs = domaines.filter(d => d.direct);
+  const ricochets = domaines.filter(d => !d.direct);
+  const ligneDomaine = d =>
+    `<div class="delta-mesure"><span>${d.direct ? '→ ' : '🦋 '}${d.libelle}</span>
+       <span class="valeur ${d.favorable ? 'delta hausse' : 'delta baisse'}">
+         ${d.delta > 0 ? '+' : ''}${fmt(d.delta, 1)} pt ${d.favorable ? '✓' : '✗'}</span></div>`;
+  const grandeurs = (conseil.grandeurs || []).map(g =>
+    `<div class="delta-mesure"><span>${g.libelle} : ${fmt(g.avant, g.precision)} → ${fmt(g.apres, g.precision)}</span>
+       <span class="valeur ${g.favorable ? 'delta hausse' : 'delta baisse'}">
+         ${g.delta > 0 ? '+' : ''}${fmt(g.delta, g.precision)} ${g.favorable ? '✓' : '✗'}</span></div>`).join('');
+  const gardes = (conseil.garde_fous || []).map(g =>
+    `<div class="delta-mesure"><span>${g.libelle}</span>
+       <span class="etiquette ${classeNiveau(g.niveau_avant)}">${etiquetteNiveau(g.niveau_avant)}</span>
+       <span class="valeur">→</span>
+       <span class="etiquette ${classeNiveau(g.niveau_apres)}">${etiquetteNiveau(g.niveau_apres)}</span></div>
+     <div class="aide">${g.message}</div>`).join('');
+  const journal = (conseil.journal || []).map(m => `<div class="aide">• ${m}</div>`).join('');
+  const comp = (conseil.compensations || []).map(c =>
+    `<span class="puce-effect pos" data-aide="<b>Piste de compensation</b>${c.libelle} : effet déclaré favorable au domaine dégradé (catalogue).">${c.libelle}</span>`).join(' ');
+  zone.innerHTML =
+    `<div class="message-seuil ${classeNiveau(niveau)}">
+       <div class="tete"><span>${conseil.mouvement ? conseil.mouvement.phrase.replace(/\*\*/g, '') : conseil.libelle}</span>
+         <span class="etiquette ${classeNiveau(niveau)}">${etiquetteNiveau(niveau)}</span></div>
+       <p class="aide">${conseil.lecture || ''}</p>
+     </div>`
+    + (directs.length ? `<div class="aide"><b>Effets directs :</b></div>` + directs.map(ligneDomaine).join('') : '')
+    + (ricochets.length ? `<div class="aide"><b>Par ricochet (effet papillon) :</b></div>` + ricochets.map(ligneDomaine).join('') : '')
+    + (grandeurs ? `<div class="aide"><b>Grandeurs qui basculent :</b></div>` + grandeurs : '')
+    + (gardes ? `<div class="aide"><b>Garde-fous :</b></div>` + gardes : '')
+    + (journal ? `<div class="aide"><b>Signaux nouveaux :</b></div>` + journal : '')
+    + (comp ? `<div class="aide"><b>Pistes de compensation :</b> ${comp}</div>` : '');
 }
 
 function renderImpact(donnees){

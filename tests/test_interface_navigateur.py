@@ -109,6 +109,15 @@ class TestInterfaceDansNode(unittest.TestCase):
         sortie_austerite = cls._simuler(catalogue["parametres"]["presets"]["austerite"]["parametres"])
         sortie_neutre = cls._simuler(defauts)
 
+        # Le conseiller temps réel rejoue le moteur sur le même mouvement que
+        # l'utilisateur (position avant → position à l'instant T).
+        conseil = json.loads(cls._post("/api/conseil", {
+            "parametres": variante,
+            "cle": cle,
+            "avant": defauts[cle],
+            "apres": defauts[cle] + 1.0,
+        }))
+
         # Sources publiques : le navigateur les interroge directement, sauf
         # celles qui ne renvoient pas d'en-tête CORS (relais /api/proxy).
         externes = {}
@@ -144,6 +153,7 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "POST /api/simuler#variante": sortie_variante,
                 "POST /api/simuler#austerite": sortie_austerite,
                 "POST /api/simuler#neutre": sortie_neutre,
+                "POST /api/conseil": conseil,
                 "POST /api/donnees": {"ok": True},
             },
             "externe": externes,

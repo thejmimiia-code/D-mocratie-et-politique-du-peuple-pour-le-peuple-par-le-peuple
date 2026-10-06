@@ -299,6 +299,15 @@ noter("le levier réglé est mis en évidence",
 noter("le levier réglé reçoit ses puces d'impact",
       contenu("leviers-grille").includes("puce-effect"),
       (contenu("leviers-grille").match(/puce-effect/g) || []).length + " puce(s)");
+/* Le conseiller temps réel (« effet papillon ») : le geste est une décision —
+   position avant vs position à l'instant T — rejouée par le moteur. */
+for (let i = 0; i < 6; i += 1) await tourner();
+noter("le mouvement du levier interroge le conseiller temps réel",
+      rapport.appels.some((appel) => appel.startsWith("POST /api/conseil")),
+      rapport.appels.filter((appel) => appel.startsWith("POST /api/conseil")).length + " appel(s)");
+noter("le conseiller rend la décision et ses ricochets dans la console",
+      /Effet papillon|ricochet|directs|Conseiller/i.test(contenu("console-conseil")),
+      contenu("console-conseil").slice(0, 140));
 noter("le compteur annonce les leviers affichés et modifiés",
       /97 levier\(s\) affiché\(s\)/.test(elements.get("compteur-leviers")?.textContent || ""),
       elements.get("compteur-leviers")?.textContent);

@@ -180,6 +180,34 @@ de curseur est comparé à la simulation précédente et affiché en différenti
 mesures, score moyen), avec la mention du domaine le plus touché et un verdict
 — « jugée favorable », « mixte », « jugée défavorable ».
 
+### 🦋 Le conseiller temps réel (effet papillon)
+
+Chaque mouvement de réglage est traité comme une **décision** : sa position à
+l'instant T par rapport à sa position **avant** le dernier mouvement. Pour
+**tous** les leviers, curseurs comme interrupteurs, le serveur rejoue le
+moteur deux fois — le levier à sa position d'avant, puis à sa position
+d'après, toutes choses égales par ailleurs (`simulateur/conseil.py`, route
+`/api/conseil`) — et la différence mesurée alimente un panneau qui s'actualise
+à chaque geste, comme un conseiller spécialisé :
+
+- **la formulation du mouvement** (« vous avez monté TVA taux normal de 0 à 1 »,
+  « vous avez activé… ») et un verdict global ;
+- **les effets directs** (domaines déclarés au catalogue pour ce levier) et
+  **les ricochets** — les domaines qui bougent sans être déclarés, c'est
+  l'effet papillon mesuré par le moteur plutôt que supposé ;
+- **les grandeurs qui basculent** (déficit, dette, OAT, spread, tension,
+  confiance, censure, croissance, score moyen) avec leur sens favorable ;
+- **les garde-fous dont le niveau change** (avant → après, avec le message du
+  barème) ;
+- **le journal institutionnel nouveau** déclenché par la décision ;
+- **des pistes de compensation** : les leviers non actionnés dont l'effet
+  déclaré soutient le domaine le plus dégradé.
+
+L'aide au survol du levier (`texteAideLevier`) rappelle elle aussi le dernier
+mouvement, si bien que chaque message explicatif reste cohérent avec le geste
+en cours. Rien n'est rédigé levier par levier : tout est dérivé du catalogue,
+du moteur et du barème, donc le conseil reste exact quand le modèle évolue.
+
 ### Indice de risque pour la population
 
 Huit domaines qui touchent directement les ménages (pouvoir d'achat, pauvreté,
@@ -329,6 +357,7 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
 | `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) ; `horizon` jusqu'à 10 ans pour la période de deux mandatures (`docs/RD_DOUBLE_MANDATURE.md`) |
 | `/api/comparer` | GET | comparaison des 14 préréglages **avec leur verdict de garde-fous** |
+| `/api/conseil` | POST | conseiller temps réel : lecture du **dernier mouvement** d'un levier (`cle`, `avant`, `apres`, `parametres`) — effets directs, ricochets, grandeurs, garde-fous, journal, compensations |
 | `/api/bulles` | GET | bulles explicatives du catalogue (`?levier=`, `?detail=resume`, `?mesure=0`) |
 | `/api/bulle` | GET | bulle d'un levier : chaîne d'interaction, mesures par borne, lecture guidée |
 | `/api/presets` | GET | préréglages seuls |

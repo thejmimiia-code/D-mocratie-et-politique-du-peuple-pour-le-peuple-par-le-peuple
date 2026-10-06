@@ -42,6 +42,7 @@ from urllib.parse import parse_qs, urlparse
 
 from simulateur.bulles import DETAILS, bulle_levier, bulles_catalogue
 from simulateur.cli import CATALOGUE_SCENARIOS, SCENARIOS_DISPONIBLES, executer_scenario
+from simulateur.conseil import conseil_mouvement
 from simulateur.donnees_live import (
     INDICATEURS,
     Lecture,
@@ -493,6 +494,28 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return
             try:
                 self._send_json(enregistrer_donnees_navigateur(corps.get("lectures") or {}))
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/conseil":
+            # Conseiller temps réel (« effet papillon ») : compare deux exécutions
+            # réelles du moteur, le levier à sa position avant le dernier
+            # mouvement puis à sa position à l'instant T, toutes choses égales.
+            if not isinstance(corps, dict) or not corps.get("cle"):
+                self._send_json({"error": "Corps JSON avec « cle » attendu."}, status=400)
+                return
+            try:
+                conseil = conseil_mouvement(
+                    corps.get("parametres") or {},
+                    str(corps["cle"]),
+                    float(corps.get("avant", 0.0)),
+                    float(corps.get("apres", corps.get("avant", 0.0))),
+                    contexte_courant(),
+                    horizon=int(corps.get("horizon", 5)),
+                )
+                self._send_json(conseil)
+            except (TypeError, ValueError) as exc:
+                self._send_json({"error": str(exc)}, status=400)
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 

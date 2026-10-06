@@ -4,6 +4,37 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] — 2026-10-06
+
+### Ajout — Conseiller temps réel (« effet papillon ») sur chaque mouvement de réglage
+
+Chaque geste sur un réglage — **tous** les leviers, curseurs comme
+interrupteurs, sans exception — est désormais traité comme une décision : la
+position à l'instant T comparée à la position avant le dernier mouvement. Le
+conseiller met à jour **en temps réel** toutes les interactions et tous les
+textes d'aide de la console de veille.
+
+- **`simulateur/conseil.py`** (nouveau) : le moteur est rejoué deux fois, le
+  levier à sa position d'avant puis d'après le geste, toutes choses égales ;
+  la différence exacte de la décision alimente une lecture de conseiller
+  spécialisé : formulation du mouvement, effets **directs** (thèmes déclarés)
+  et effets **par ricochet** (les domaines qui bougent sans être déclarés —
+  l'effet papillon mesuré, pas supposé), grandeurs qui basculent, garde-fous
+  dont le niveau change, journal institutionnel nouveau, pistes de
+  compensation et verdict global.
+- **`simulateur/dashboard.py`** : route `POST /api/conseil` (corps :
+  `parametres`, `cle`, `avant`, `apres`, `horizon` optionnel) ; 400 si la
+  `cle` manque.
+- **`simulateur/interface.py`** : panneau « 🦋 Conseiller temps réel » dans la
+  console de veille ; `MOUVEMENT` capture la position d'avant chaque geste
+  avant toute écriture, la simulation déclenchée appelle `/api/conseil` et
+  rend la lecture, les ricochets, les garde-fous et les compensations ;
+  l'aide au survol du levier rappelle le dernier mouvement.
+- **Tests** : `tests/test_conseil.py` (16 tests : formulation, structure,
+  isolation du mouvement, direct vs ricochet, seuils de bruit, garde-fous,
+  endpoint) ; deux étapes navigateur vérifient l'appel `/api/conseil` et le
+  rendu du panneau. Suite : 380 tests.
+
 ## [1.5.0] — 2026-10-06
 
 ### Ajout — R&D « deux mandatures consécutives » (2027-2037)
