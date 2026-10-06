@@ -132,14 +132,24 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
 Documentation détaillée : [`docs/SIMULATEUR_PARAMETRABLE.md`](docs/SIMULATEUR_PARAMETRABLE.md).
 Réglages du dépôt (description, sujets, aperçu social) : [`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md).
 
-### Page d'accueil statique
+### Déploiement Vercel du simulateur
 
-Le dépôt inclut `index.html` à sa racine ainsi qu'une page d'index dans chaque
-dossier. Vercel peut donc servir le site comme des fichiers statiques, sans
-lancer le serveur Python. Le simulateur interactif reste disponible en local :
-`python -m simulateur.dashboard --port 8080`.
+`index.html` à la racine est généré depuis la vraie page interactive `HTML_PAGE`.
+Les fonctions `api/*.py` exposent les routes du moteur sur le même domaine, ce
+qui permet à la page d'appeler ses URL absolues `/api/...` et d'être intégrée
+dans un `iframe`.
 
-Pour redéployer sur Vercel, choisissez la racine du dépôt comme **Root Directory**.
+```bash
+python3 outils/generer-index-simulateur.py
+python3 outils/generer-fonctions-api.py
+python3 outils/generer-index-simulateur.py --verifier
+python3 outils/generer-fonctions-api.py --verifier
+```
+
+Dans Vercel : **Framework Preset: Other**, **Build Command: vide**,
+**Output Directory: `.`**, **Install Command: vide**. Ne pas ajouter de règle de
+réécriture globale. Le code ne définit ni `X-Frame-Options` ni CSP `frame-ancestors`.
+Pour un accès public, désactiver **Security → Deployment Protection → Vercel Authentication**.
 
 
 ```bash

@@ -37,15 +37,17 @@ sait faire aujourd'hui.
 ## 2. Site web
 
 Le site déclaré (`https://d-mocratie-et-politique-du-peuple-p.vercel.app`)
-**renvoyait une erreur 404** lors de l'audit du 5 octobre 2026 : il manquait un
-`index.html` à la racine. Une page d'accueil statique est maintenant présente,
-ainsi qu'une page d'index dans chaque dossier. Le changement prendra effet après
-un nouveau déploiement Vercel depuis la racine du dépôt.
+renvoyait `404 DEPLOYMENT_NOT_FOUND` quand la branche `main` ne contenait ni
+page d'accueil ni fonctions API. La branche de travail ajoute maintenant à la
+racine la vraie interface interactive du simulateur et une fonction Python
+par route du moteur. Après fusion dans `main` et redéploiement Vercel, vérifier
+`/`, `/api/scenarios` et `POST /api/simuler` sur cette même adresse.
 
 Les URL de prévisualisation `git-…vercel.app` peuvent rester protégées par les
-réglages d'accès de Vercel. Pour un site public, utilisez l'alias de production
-stable après avoir vérifié qu'il est accessible publiquement. Tant que ce n'est
-pas fait, les options sûres restent :
+réglages d'accès de Vercel. Pour rendre l'outil public, désactiver
+**Deployment Protection → Vercel Authentication** et utiliser l'alias stable
+de production. Tant que le déploiement de production n'est pas vérifié, les
+options sûres restent :
 
 | Option | Valeur à saisir |
 |---|---|
