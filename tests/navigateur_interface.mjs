@@ -401,6 +401,20 @@ noter("la couche d'infobulle ne capte aucun clic",
 apiPage.masquerInfobulle();
 noter("l'infobulle disparaît au départ de la souris",
       elements.get("infobulle")?.classList.contains("visible") === false);
+/* Aucune aide flottante ne doit recouvrir une bulle « interactions » ouverte :
+   le résultat affiché derrière doit rester lisible. */
+await apiPage.ouvrirBulle(cleLevier);
+for (let i = 0; i < 4; i += 1) await tourner();
+apiPage.survoler(cibleAide);
+noter("aucune infobulle ne recouvre la bulle « interactions » ouverte",
+      elements.get("infobulle")?.classList.contains("visible") === false,
+      "infobulle masquée tant qu'une bulle est ouverte");
+await apiPage.ouvrirBulle(cleLevier);
+for (let i = 0; i < 2; i += 1) await tourner();
+apiPage.survoler(cibleAide);
+noter("l'infobulle revient une fois la bulle refermée",
+      elements.get("infobulle")?.classList.contains("visible") === true);
+apiPage.masquerInfobulle();
 const boutonsAnnotes = (charge.page.match(/data-aide="/g) || []).length;
 noter("les boutons d'action portent aussi une aide", boutonsAnnotes >= 10,
       `${boutonsAnnotes} éléments annotés dans la page`);

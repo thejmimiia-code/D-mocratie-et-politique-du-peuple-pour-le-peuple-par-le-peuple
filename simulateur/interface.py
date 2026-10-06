@@ -473,7 +473,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.7.3 (2026-10-06) — si les indicateurs coût / gain en € n'apparaissent pas, rechargez la page (F5) pour obtenir cette version.</span>
+    <span class="aide" id="version-interface">Interface v1.7.4 (2026-10-06) — si les indicateurs coût / gain en € n'apparaissent pas, rechargez la page (F5) pour obtenir cette version.</span>
   </p>
 </div>
 
@@ -836,6 +836,13 @@ function masquerInfobulle(){
   bulle.setAttribute('aria-hidden', 'true');
 }
 function survoler(cible){
+  // Jamais d'infobulle volante par-dessus un résultat en cours de lecture :
+  // pendant qu'un réglage est manipulé, ou quand une bulle « interactions »
+  // est ouverte, l'aide flottante s'efface — l'information utile est déjà à
+  // l'écran (badge coût/gain live, bulle explicative, console de veille).
+  // Valable pour l'ensemble des réglages et des fonctionnalités : survoler
+  // est le seul chemin d'affichage des infobulles.
+  if (REGLAGE_EN_COURS || BULLE_OUVERTE){ masquerInfobulle(); return; }
   const texte = texteAideElement(cible);
   if (!texte){ masquerInfobulle(); return; }
   afficherInfobulle(texte, cible);
@@ -1118,6 +1125,7 @@ async function chargerBulle(cle){
   if (BULLE_OUVERTE === cle) renderLeviers(filtreCourant());
 }
 async function ouvrirBulle(cle){
+  masquerInfobulle(); // la bulle ouverte devient l'aide : plus d'aide flottante
   if (BULLE_OUVERTE === cle){
     BULLE_OUVERTE = null;
     renderLeviers(filtreCourant());
@@ -1213,6 +1221,7 @@ function majLevier(cle, valeur){
   // que le conseiller temps réel mesure exactement le dernier mouvement.
   if (!MOUVEMENT || MOUVEMENT.cle !== cle) MOUVEMENT = {cle: cle, avant: PARAMS[cle]};
   REGLAGE_EN_COURS = true;
+  masquerInfobulle(); // le résultat live prime : rien ne doit le recouvrir
   PARAMS[cle] = valeur;
   const carte = document.querySelector(`.levier[data-cle="${cle}"]`);
   if (carte){

@@ -116,7 +116,7 @@ class TestStructureDeLaPage(unittest.TestCase):
                         "le bloc coût/gain doit précéder le corps repliable")
         # Version d'interface visible pour diagnostiquer les pages périmées.
         self.assertIn('id="version-interface"', self.page)
-        self.assertIn("Interface v1.7.3", self.page)
+        self.assertIn("Interface v1.7.4", self.page)
         # Les cinq niveaux de seuil sont connus du rendu.
         for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
             self.assertIn(niveau, self.script)
@@ -386,6 +386,15 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         # Survol, sortie de souris, focus clavier, clic (pour ne pas masquer l'aide).
         for evenement in ("mouseover", "mouseout", "focusin", "focusout", "mousedown", "scroll"):
             self.assertIn(evenement, self.script)
+        # Jamais d'aide flottante par-dessus un résultat en cours de lecture :
+        # ni pendant un réglage, ni quand une bulle « interactions » est ouverte.
+        survoler = self.script.split("function survoler(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("if (REGLAGE_EN_COURS || BULLE_OUVERTE){ masquerInfobulle(); return; }",
+                      survoler)
+        maj = self.script.split("function majLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("masquerInfobulle();", maj)
+        ouvrir = self.script.split("async function ouvrirBulle(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("masquerInfobulle();", ouvrir)
         # L'aide du levier reflète le dernier mouvement en temps réel.
         aide = self.script.split("function texteAideLevier(", 1)[1].split("\nfunction ", 1)[0]
         self.assertIn("MOUVEMENT && MOUVEMENT.cle === cle", aide)

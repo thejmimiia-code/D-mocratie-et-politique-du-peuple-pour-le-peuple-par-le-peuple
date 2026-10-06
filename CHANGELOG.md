@@ -4,6 +4,22 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.7.1] — 2026-10-06
+
+### Corrigé — Plus aucune bulle d'aide ne recouvre les résultats
+
+- Les infobulles volantes ne s'affichent plus **pendant un réglage en cours**
+  ni **quand une bulle « interactions » est ouverte** : le badge coût/gain
+  live, la fiche d'interactions et la console de veille restent lisibles,
+  rien ne vient les couvrir. Le verrou est dans `survoler()`, unique chemin
+  d'affichage — valable pour l'ensemble des réglages et des fonctionnalités.
+- L'infobulle est aussi masquée dès le début d'un geste sur un levier et à
+  l'ouverture/fermeture d'une bulle.
+- Le coût / gain global des réglages croisés sort de la zone repliable : il
+  est désormais juste sous le verdict de la console, toujours visible.
+- Version d'interface affichée en pied de page (v1.7.4) pour repérer les
+  pages périmées. Tests : 389.
+
 ## [1.7.0] — 2026-10-06
 
 ### Ajout — Coût / gain réel en direct (bulle + veille) et audit de traçabilité complet
