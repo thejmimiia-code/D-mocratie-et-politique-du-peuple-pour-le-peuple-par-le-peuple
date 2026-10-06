@@ -157,7 +157,7 @@ un fichier (comme au § 2), jamais à se connecter.
 - [ ] `gh api … --jq '.topics | length'` renvoie `20`
 - [ ] l'aperçu social est téléversé (`docs/apercu_social.png`, empreinte vérifiée)
 - [ ] `python3 outils/details_depot.py` affiche « Déjà à jour, rien à faire »
-- [ ] `python3 -m unittest discover -s tests -p "test_*.py"` reste vert (**380 tests**)
+- [ ] `python3 -m unittest discover -s tests -p "test_*.py"` reste vert (**388 tests**)
 - [ ] `ruff check .` reste vert
 - [ ] la section « Réglages du dépôt » de `docs/REPOSITORY_DETAILS.md` est à jour,
       et cette note peut être supprimée ou marquée comme faite
@@ -175,11 +175,11 @@ remplacé par un **simulateur paramétrable**.
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs (formule + source), médiateurs annuels |
 | `simulateur/moteur_parametrique.py` | références, convergence, scores 0-100, matrice d'impacts croisés |
 | `simulateur/donnees_live.py` | 38 indicateurs publics (Eurostat, BCE, Frankfurter, Banque mondiale, Opendatasoft, Yahoo, Stooq) |
-| `simulateur/seuils.py` | 33 garde-fous par strate : tolérable → vigilance → risqué → hors-sol |
+| `simulateur/seuils.py` | 31 garde-fous (26 absolus + 5 en écart) par strate : tolérable → vigilance → risqué → hors-sol ; `bareme_public()` pour l'audit |
 | `simulateur/conseil.py` | conseiller temps réel (« effet papillon ») : chaque mouvement rejoué avant/après, directs + ricochets, garde-fous, compensations |
 | `simulateur/interface.py` | page unique : ruban de veille, 97 leviers, 20 domaines, exports |
-| `simulateur/dashboard.py` | API JSON : `/api/catalogue`, `/contexte`, `/simuler`, `/comparer`, `/conseil`, `/presets`, `/proxy`, `/donnees` |
-| `tests/` | **380 tests verts**, dont un harnais Node qui exécute réellement la page |
+| `simulateur/dashboard.py` | API JSON : `/api/catalogue`, `/contexte`, `/simuler`, `/comparer`, `/conseil`, `/garde_fous`, `/presets`, `/proxy`, `/donnees` |
+| `tests/` | **388 tests verts**, dont un harnais Node qui exécute réellement la page |
 
 État Git : branche `arena/01a10c67-d-mocratie-et-politique-du-peuple-pour-le-peuple`,
 **PR #14 ouverte** vers `main` (contient toute la refonte). Le dépôt distant suit.

@@ -61,6 +61,7 @@ from simulateur.moteur_parametrique import (
     simuler as simuler_parametrique,
 )
 from simulateur.parametres import PRESETS
+from simulateur.seuils import bareme_public
 
 #: Catalogue des scénarios historiques : clé → (fabrique de décisions, nom,
 #: description, couleur). `fn` est exposé pour la compatibilité des tests.
@@ -351,6 +352,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif chemin == "/api/comparer":
             try:
                 self._send_json(comparer(contexte=contexte_courant()))
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/garde_fous":
+            # Barème complet (audit et traçabilité) : chaque seuil est livré
+            # avec sa strate, ses bornes et sa source institutionnelle.
+            try:
+                self._send_json(bareme_public())
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 

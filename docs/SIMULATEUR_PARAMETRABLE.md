@@ -208,6 +208,48 @@ mouvement, si bien que chaque message explicatif reste cohérent avec le geste
 en cours. Rien n'est rédigé levier par levier : tout est dérivé du catalogue,
 du moteur et du barème, donc le conseil reste exact quand le modèle évolue.
 
+### 💶 Le coût / gain réel, en direct, partout où l'on règle
+
+Deux indicateurs visuels mesurent l'argent réel à chaque instant :
+
+1. **Dans la bulle du réglage déplacé** : dès le début du geste, le bloc
+   « mesure live » annonce le calcul, puis affiche le **coût ou gain réel de
+   ce réglage précis** — bannière rouge (coût) ou verte (gain) en
+   transparence, avec le détail recettes / dépenses / déficit / charge de la
+   dette et les sources officielles qui ancrent le chiffre. La mise à jour se
+   fait par écriture DOM directe, sans re-rendu de la grille : le chiffre est
+   lisible dès la fin du mouvement.
+2. **Dans la console de veille** : le **coût / gain réel des réglages globaux
+   croisés** — recettes nouvelles, dépenses nouvelles, solde net de l'ensemble
+   des leviers actifs, déficit et dette finals — recalculé à chaque
+   simulation, donc à chaque mouvement.
+
+Les deux affichages descendent du même calcul : deux exécutions réelles du
+moteur (levier à sa position d'avant, puis d'après), dont on soustrait les
+flux budgétaires de la dernière année. Chaque chiffre est traçable : le
+conseil cite les valeurs officielles d'ancrage (PIB, OAT, BCE, inflation…)
+avec leur source et leur période.
+
+### 🔍 Audit & traçabilité : le simulateur à livre ouvert
+
+La section « Audit & traçabilité » en bas de page rend tout recoupement
+possible, ce n'est pas une boîte noire :
+
+1. **sources officielles des données d'entrée** — valeur retenue, période,
+   statut (live / référence), source, URL, licence ;
+2. **les 20 domaines et leurs 74 indicateurs** — la formule du score et la
+   source de chaque chiffre ;
+3. **les 97 leviers** — champ / ligne budgétaire, effets déclarés (thème et
+   coefficient), source ;
+4. **les 31 garde-fous** (`GET /api/garde_fous`) — strate, bornes
+   (seuil → niveau) et source institutionnelle de chaque seuil ;
+5. **la méthode des dynamiques croisées** — différences finies, scores
+   0-100 contre la trajectoire de référence, double exécution du conseiller.
+
+Le pied de page porte la bannière **MRSC** : outil open-source produit par son
+créateur pour l'intérêt général, d'utilisation gratuite, dont nul ne peut
+s'attribuer la paternité.
+
 ### Indice de risque pour la population
 
 Huit domaines qui touchent directement les ménages (pouvoir d'achat, pauvreté,
@@ -357,7 +399,8 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
 | `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) ; `horizon` jusqu'à 10 ans pour la période de deux mandatures (`docs/RD_DOUBLE_MANDATURE.md`) |
 | `/api/comparer` | GET | comparaison des 14 préréglages **avec leur verdict de garde-fous** |
-| `/api/conseil` | POST | conseiller temps réel : lecture du **dernier mouvement** d'un levier (`cle`, `avant`, `apres`, `parametres`) — effets directs, ricochets, grandeurs, garde-fous, journal, compensations |
+| `/api/conseil` | POST | conseiller temps réel : lecture du **dernier mouvement** d'un levier (`cle`, `avant`, `apres`, `parametres`) — effets directs, ricochets, grandeurs, garde-fous, journal, compensations, **budget réel (Md€) et sources officielles** |
+| `/api/garde_fous` | GET | barème complet des 31 garde-fous : strates, bornes, sources institutionnelles (audit) |
 | `/api/bulles` | GET | bulles explicatives du catalogue (`?levier=`, `?detail=resume`, `?mesure=0`) |
 | `/api/bulle` | GET | bulle d'un levier : chaîne d'interaction, mesures par borne, lecture guidée |
 | `/api/presets` | GET | préréglages seuls |

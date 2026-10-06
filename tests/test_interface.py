@@ -91,7 +91,8 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("classList.toggle('replie')", self.script)
         for identifiant in ("console-verdict", "console-strates", "console-danger",
                             "console-population", "console-derniere-modification",
-                            "console-alertes", "console-marges", "console-conseil"):
+                            "console-alertes", "console-marges", "console-conseil",
+                            "console-cout-global"):
             self.assertIn(f'id="{identifiant}"', self.page, identifiant)
         self.assertIn("function renderConsole(", self.script)
         self.assertIn("function renderDerniereModification(", self.script)
@@ -99,8 +100,14 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("function majConseilTempsReel(", self.script)
         self.assertIn("function renderConseil(", self.script)
         self.assertIn("let MOUVEMENT = null;", self.script)
+        self.assertIn("let DERNIER_CONSEIL = null;", self.script)
         self.assertIn("/api/conseil", self.script)
         self.assertIn("effet papillon", self.page.lower())
+        # Le coût / gain réel des réglages globaux croisés est dans la veille.
+        self.assertIn("function renderCoutGlobal(", self.script)
+        self.assertIn("Coût / gain réel des réglages globaux croisés", self.page)
+        self.assertIn(".cout-gain.gain{", self.page)
+        self.assertIn(".cout-gain.cout{", self.page)
         # Les cinq niveaux de seuil sont connus du rendu.
         for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
             self.assertIn(niveau, self.script)
@@ -157,6 +164,7 @@ class TestStructureDeLaPage(unittest.TestCase):
         """Chaque simulation recalcule la console et l'effet de la mesure."""
         simuler = self.script.split("async function simuler(", 1)[1].split("\nfunction ", 1)[0]
         self.assertIn("renderConsole(donnees);", simuler)
+        self.assertIn("renderCoutGlobal(donnees);", simuler)
         self.assertIn("renderDerniereModification(", simuler)
         self.assertIn("majConseilTempsReel(parametresEnvoyes);", simuler)
         self.assertIn("SIMULATION_PRECEDENTE", simuler)
@@ -305,6 +313,27 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("BULLE_OUVERTE = cle;", self.script)
         self.assertIn("BULLE_OUVERTE = null;", self.script)
 
+    def test_bulle_rafraichie_en_direct_avec_cout_gain_reel(self):
+        """La bulle du réglage se rafraîchit dès le mouvement, avec le coût /
+        gain réel de ce réglage précis, en rouge / vert transparent."""
+        # Le bloc live est rendu dans chaque bulle, au sommet de la fiche.
+        self.assertIn('id="bulle-live"', self.script)
+        self.assertIn("function bulleLiveHtml(", self.script)
+        self.assertIn("function coutGainHtml(", self.script)
+        self.assertIn("function majBulleLive(", self.script)
+        # Mise à jour DOM directe (sans re-rendu) dès la réponse du conseiller.
+        self.assertIn("majBulleLive();", self.script)
+        # Retour immédiat dès le début du geste, avant même la réponse serveur.
+        maj = self.script.split("function majLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("if (BULLE_OUVERTE === cle)", maj)
+        self.assertIn("Mesure du coût / gain réel", maj)
+        # Rouge / vert en transparence, comme le bandeau hors-sol.
+        self.assertIn(".cout-gain.gain{background:linear-gradient(90deg,rgba(34,197,94,.34)", self.page)
+        self.assertIn(".cout-gain.cout{background:linear-gradient(90deg,rgba(239,68,68,.34)", self.page)
+        # Le conseil stocké alimente la bulle et cite les sources officielles.
+        self.assertIn("DERNIER_CONSEIL = conseil;", self.script)
+        self.assertIn("sources officielles", self.script)
+
     def test_infobulles_au_survol_des_reglages(self):
         """Curseurs, interrupteurs et boutons s'expliquent au survol.
 
@@ -357,6 +386,38 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("Comment lire les scores", self.page)
         self.assertIn("trajectoire de référence", self.page)
         self.assertIn("écarts de politique publique", self.page)
+
+    def test_section_audit_tracabilite_en_bas_de_page(self):
+        """Pas de boîte noire : sources, formules, seuils et méthode sont
+        livrés en bas de page, vérifiables et recoupables."""
+        self.assertIn('id="section-audit"', self.page)
+        for identifiant in ("audit-sources", "audit-domaines", "audit-leviers",
+                            "audit-gardefous", "audit-methodes"):
+            self.assertIn(f'id="{identifiant}"', self.page, identifiant)
+        # Les cinq blocs de recoupement et leur rendu.
+        self.assertIn("Audit &amp; traçabilité", self.page)
+        self.assertIn("function chargerAudit(", self.script)
+        self.assertIn("function auditSourcesHtml(", self.script)
+        self.assertIn("function auditDomainesHtml(", self.script)
+        self.assertIn("function auditLeviersHtml(", self.script)
+        self.assertIn("function auditGardeFousHtml(", self.script)
+        self.assertIn("function auditMethodesHtml(", self.script)
+        self.assertIn("chargerAudit();", self.script)
+        # Le barème des garde-fous est servi par une route dédiée.
+        self.assertIn("/api/garde_fous", self.script)
+        # L'échappement protège l'audit de toute injection.
+        self.assertIn("function echapperTexte(", self.script)
+        # Un bouton de l'en-tête mène à l'audit.
+        self.assertIn("allerAudit()", self.script)
+        self.assertIn("function allerAudit(", self.script)
+
+    def test_attribution_et_banniere_mrsc(self):
+        """L'outil est open-source sous bannière MRSC : la paternité est
+        protégée et l'usage gratuit, énoncés en bas de page."""
+        self.assertIn("Bannière MRSC", self.page)
+        self.assertIn("MRSC", self.page)
+        self.assertIn("nul ne peut s'en attribuer", self.page.lower())
+        self.assertIn("par le peuple, pour le peuple", self.page.lower())
 
 
 if __name__ == "__main__":

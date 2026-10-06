@@ -10,6 +10,15 @@ Ce dépôt rassemble les travaux complets de doctrine institutionnelle, le plan 
 > « Son principe est : gouvernement du peuple, par le peuple et pour le peuple. »  
 > — *Constitution de la République française du 4 octobre 1958, Article 2, alinéa 5.*
 
+**Bannière MRSC — propriété intellectuelle et usage.** Cet outil open-source est produit par son
+créateur pour l'intérêt général et mis gratuitement à disposition de toutes et tous :
+utilisation, étude, modification et partage libres ; **nul ne peut s'en attribuer la paternité**.
+Il porte l'ambition d'une vie meilleure et d'une gestion de la nation réellement faite
+« par le peuple, pour le peuple » — une prise de conscience politique par la base,
+citoyenne par citoyenne, citoyen par citoyen. Le simulateur est un modèle, pas une prophétie :
+toutes ses sources officielles, formules et seuils sont livrés dans la section
+« Audit & traçabilité » de la page, à livre ouvert.
+
 ---
 
 ## II. LE MODÈLE SYSTÉMIQUE GIGOGNE (POUPÉES RUSSES)

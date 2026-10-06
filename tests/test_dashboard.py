@@ -474,6 +474,36 @@ class TestAPIparametrique(unittest.TestCase):
         self.assertEqual(statut, 400)
         self.assertIn("error", donnees)
 
+    def test_garde_fous_bareme_public(self):
+        """GET /api/garde_fous livre le barème complet, auditable (audit)."""
+        statut, donnees = self._appel("/api/garde_fous")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["niveaux"],
+                         ["favorable", "tolerable", "vigilance", "risque", "hors_sol"])
+        self.assertGreaterEqual(len(donnees["garde_fous"]), 31)
+        deficit = next(garde for garde in donnees["garde_fous"]
+                       if garde["cle"] == "deficit_final_pct")
+        self.assertIn("Maastricht", deficit["source"])
+        self.assertTrue(deficit["bornes"], "chaque garde-fou expose ses bornes")
+
+    def test_conseil_budget_reel_et_sources(self):
+        """POST /api/conseil livre le coût/gain réel du mouvement et ses sources."""
+        statut, conseil = self._appel("/api/conseil", {
+            "parametres": {"tva_energie_5_5": 1.0},
+            "cle": "tva_energie_5_5", "avant": 0.0, "apres": 1.0,
+        })
+        self.assertEqual(statut, 200)
+        budget = conseil["budget"]
+        for champ in ("recettes_delta_mde", "depenses_delta_mde", "solde_delta_mde",
+                      "charge_dette_delta_mde", "deficit_delta_pt_pib"):
+            self.assertIn(champ, budget)
+        self.assertAlmostEqual(budget["solde_delta_mde"],
+                               budget["recettes_delta_mde"] - budget["depenses_delta_mde"],
+                               places=1)
+        self.assertGreaterEqual(len(conseil["sources"]), 8,
+                                "les chiffres clefs des sources officielles sont cités")
+        self.assertIn("libelle", conseil["sources"][0])
+
     def test_comparer_les_presets(self):
         statut, donnees = self._appel("/api/comparer")
         self.assertEqual(statut, 200)

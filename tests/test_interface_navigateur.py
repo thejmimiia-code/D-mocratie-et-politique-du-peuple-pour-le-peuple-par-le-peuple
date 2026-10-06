@@ -149,6 +149,7 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "GET /api/proxy": proxy,
                 "GET /api/bulle": bulle,
                 "GET /api/bulles": json.loads(cls._get("/api/bulles?detail=resume")),
+                "GET /api/garde_fous": json.loads(cls._get("/api/garde_fous")),
                 "POST /api/simuler": sortie_prereglage,
                 "POST /api/simuler#variante": sortie_variante,
                 "POST /api/simuler#austerite": sortie_austerite,

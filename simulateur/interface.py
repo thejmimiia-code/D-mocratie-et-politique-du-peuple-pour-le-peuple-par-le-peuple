@@ -251,6 +251,32 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .delta-mesure{font-size:.75rem;padding:4px 0;border-bottom:1px dashed rgba(147,163,189,.18);
   display:flex;justify-content:space-between;gap:10px}
 .delta-mesure .valeur{font-variant-numeric:tabular-nums;white-space:nowrap}
+/* Coût / gain réel : affichage live, rouge ou vert en transparence, comme le
+   bandeau hors-sol mais dédié à la mesure budgétaire d'un réglage. */
+.cout-gain{border-radius:10px;padding:9px 12px;font-size:.8rem;margin-top:8px;border:1px solid}
+.cout-gain b.chiffre{font-size:1.05rem;font-variant-numeric:tabular-nums}
+.cout-gain.gain{background:linear-gradient(90deg,rgba(34,197,94,.34),rgba(34,197,94,.06));
+  border-color:var(--vert)}
+.cout-gain.cout{background:linear-gradient(90deg,rgba(239,68,68,.34),rgba(239,68,68,.06));
+  border-color:var(--rouge)}
+.cout-gain.neutre{background:rgba(147,163,189,.12);border-color:var(--border)}
+.cout-gain .detail{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;color:var(--texte-dim);font-size:.72rem}
+.cout-gain .trace{margin-top:6px;font-size:.66rem;color:#7b8aa5;font-style:italic}
+/* Bulle explicative : le bloc « mesure live » doit se lire d'un coup d'œil. */
+.bulle-levier .bulle-live{margin:8px 0 2px}
+/* Audit et traçabilité : tableaux denses et lisibles en bas de page. */
+.audit details{background:var(--panel-2);border:1px solid var(--border);border-radius:11px;
+  padding:10px 13px;margin-bottom:10px}
+.audit summary{cursor:pointer;font-weight:600;font-size:.86rem;color:var(--texte)}
+.audit summary:hover{color:var(--accent)}
+.audit .corps{margin-top:9px;font-size:.74rem;color:var(--texte-dim)}
+.audit table{width:100%;border-collapse:collapse;font-size:.72rem}
+.audit th,.audit td{text-align:left;border-bottom:1px dashed rgba(147,163,189,.18);
+  padding:5px 7px;vertical-align:top}
+.audit th{color:var(--texte);font-size:.7rem;text-transform:uppercase;letter-spacing:.4px}
+.audit td.chiffre{font-variant-numeric:tabular-nums;white-space:nowrap}
+.audit .formule{font-family:ui-monospace,Consolas,monospace;font-size:.68rem;color:var(--texte)}
+.audit .source-note{color:#7b8aa5}
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
   .levier.compact{grid-template-columns:1fr 70px auto}}
@@ -283,6 +309,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()" data-aide="<b>Détail des seuils</b>Replie ou déplie le corps de la console de veille pour libérer l'écran : le verdict et les cinq strates restent affichés.">Masquer le détail des seuils</button>
       <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : les 97 paramètres tiennent à l'écran, tous réglables en direct.">Vue compacte</button>
       <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les 97 leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct.">Régler les 97 leviers</button>
+      <button class="discret" onclick="allerAudit()" data-aide="<b>Audit &amp; traçabilité</b>Toutes les sources officielles, chaque formule, chaque seuil et la méthode des dynamiques croisées : le simulateur à livre ouvert, pas une boîte noire.">🔍 Audit &amp; sources</button>
     </span>
   </div>
 
@@ -304,6 +331,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="console-strates" id="console-strates"></div>
     <div class="console-corps" id="console-corps">
       <div>
+        <h3 class="console-titre" data-aide="<b>Coût / gain réel des réglages globaux croisés</b>Recettes nouvelles, dépenses nouvelles et solde net de l'ensemble des leviers actifs, croisés par le moteur à chaque simulation : le chiffre se met à jour en temps réel, avec les sources officielles qui l'ancrent.">💶 Coût / gain réel des réglages globaux croisés</h3>
+        <div id="console-cout-global"><div class="aide">en attente de la première simulation…</div></div>
         <h3 class="console-titre">Risque pour la population</h3>
         <div id="console-population"></div>
         <h3 class="console-titre">Effet de votre dernière modification</h3>
@@ -382,10 +411,50 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="provenance" id="provenance"></div>
   </section>
 
+  <section class="bloc audit" id="section-audit">
+    <h2>🔍 Audit &amp; traçabilité — à livre ouvert <span class="aide">pas de boîte noire : chaque chiffre, chaque formule, chaque seuil et chaque dynamique croisée est vérifiable à la source</span></h2>
+    <p class="aide" style="margin-bottom:10px">
+      Ce simulateur est un <b>modèle, pas une prophétie</b> : il rend explicites toutes ses
+      hypothèses. Vous trouverez ici, de façon permanente et auditable : les sources officielles
+      de chaque donnée d'entrée, la formule et la source de chaque indicateur des 20 domaines,
+      le champ et la source de chacun des 97 leviers, le barème institutionnel complet des
+      garde-fous, et la méthode des dynamiques croisées. Tout recoupement est possible.
+    </p>
+    <details id="audit-sources-details" open>
+      <summary>1. Sources officielles des données d'entrée (recoupement possible)</summary>
+      <div class="corps" id="audit-sources">chargement…</div>
+    </details>
+    <details id="audit-domaines-details">
+      <summary>2. Les 20 domaines et leurs indicateurs : formule + source de chaque chiffre</summary>
+      <div class="corps" id="audit-domaines">chargement…</div>
+    </details>
+    <details id="audit-leviers-details">
+      <summary>3. Les 97 leviers : champ budgétaire, effets déclarés et source</summary>
+      <div class="corps" id="audit-leviers">chargement…</div>
+    </details>
+    <details id="audit-gardefous-details">
+      <summary>4. Les 31 garde-fous : seuils, strates et sources institutionnelles</summary>
+      <div class="corps" id="audit-gardefous">chargement…</div>
+    </details>
+    <details id="audit-methodes-details">
+      <summary>5. Dynamiques croisées : comment les effets sont calculés (méthode complète)</summary>
+      <div class="corps" id="audit-methodes">chargement…</div>
+    </details>
+    <div class="aide" style="margin-top:10px">
+      <b>Bannière MRSC.</b> Outil open-source produit par son créateur pour l'intérêt général :
+      utilisation, étude, modification et partage libres et gratuits ; nul ne peut s'en attribuer
+      la paternité. Il porte l'ambition d'une vie meilleure et d'une gestion de la nation
+      réellement faite « par le peuple, pour le peuple » — une prise de conscience politique par
+      la base, citoyenne par citoyenne, citoyen par citoyen.
+    </div>
+  </section>
+
   <p class="pied">
-    Projet citoyen open-source — « gouvernement du peuple, par le peuple et pour le peuple »
+    Projet citoyen open-source sous bannière MRSC — « gouvernement du peuple, par le peuple et pour le peuple »
     (Constitution du 4 octobre 1958, article 2). Les chiffres publics sont cités avec leur source ;
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
+    Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
+    avec attribution, nul ne peut s'en attribuer le mérite.
   </p>
 </div>
 
@@ -418,6 +487,8 @@ let DERNIERES_PUCES = {};
 //: Dernier mouvement de réglage : {cle, avant} — la « décision » à l'instant T
 //: (position actuelle) par rapport à la position avant le dernier mouvement.
 let MOUVEMENT = null;
+//: Dernière réponse du conseiller temps réel (budget réel, sources, lecture).
+let DERNIER_CONSEIL = null;
 //: Leviers touchés par la dernière modification (mis en évidence).
 let LEVIERS_MODIFIES = new Set();
 //: Vue compacte : une ligne par levier, pour que les 97 tiennent à l'écran.
@@ -648,6 +719,10 @@ function basculerDetailsConsole(){
 }
 function allerAuxLeviers(){
   const section = document.getElementById('section-leviers');
+  if (section && section.scrollIntoView) section.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function allerAudit(){
+  const section = document.getElementById('section-audit');
   if (section && section.scrollIntoView) section.scrollIntoView({behavior:'smooth', block:'start'});
 }
 /* ── Aides au survol (infobulles) ─────────────────────────────────────────
@@ -893,10 +968,55 @@ function lectureHtml(bulle){
     + (bouge ? '' : '<div class="bulle-section">Aucun domaine noté ne bouge aux bornes de ce '
         + 'réglage : voir la chaîne d\'interaction et le journal des strates.</div>');
 }
+/* ── Mesure live dans la bulle : coût / gain réel du réglage, rafraîchie dès
+     le déplacement (mise à jour DOM directe, sans re-rendu de la grille). ── */
+function coutGainHtml(budget, libelleMouvement){
+  if (!budget) return '';
+  const solde = budget.solde_delta_mde || 0;
+  const classe = solde > 0.005 ? 'gain' : (solde < -0.005 ? 'cout' : 'neutre');
+  const titre = solde > 0.005
+    ? `Gain réel : <b class="chiffre">+${fmt(solde, 2)} Md€ / an</b>`
+    : (solde < -0.005
+       ? `Coût réel : <b class="chiffre">${fmt(solde, 2)} Md€ / an</b>`
+       : 'Effet budgétaire net nul à ce réglage');
+  const sources = (DERNIER_CONSEIL && DERNIER_CONSEIL.sources || [])
+    .filter(s => s.valeur !== null && s.valeur !== undefined).slice(0, 6)
+    .map(s => `${s.libelle} ${fmt(s.valeur, 2)} ${s.unite || ''} (${s.source || 'source officielle'})`)
+    .join(' ; ');
+  return `<div class="cout-gain ${classe}">
+    <div>${titre}${libelleMouvement ? ` <span class="aide">— ${libelleMouvement}</span>` : ''}</div>
+    <div class="detail">
+      <span>Recettes : ${fmt(budget.recettes_delta_mde || 0, 2)} Md€</span>
+      <span>Dépenses : ${fmt(budget.depenses_delta_mde || 0, 2)} Md€</span>
+      <span>Déficit : ${budget.deficit_delta_pt_pib >= 0 ? '+' : ''}${fmt(budget.deficit_delta_pt_pib || 0, 2)} pt PIB</span>
+      <span>Charge de la dette : ${fmt(budget.charge_dette_delta_mde || 0, 2)} Md€</span>
+    </div>
+    ${sources ? `<div class="trace">Ancré sur les sources officielles : ${sources}.</div>` : ''}
+  </div>`;
+}
+function bulleLiveHtml(cle){
+  if (DERNIER_CONSEIL && DERNIER_CONSEIL.cle === cle && DERNIER_CONSEIL.budget){
+    return coutGainHtml(DERNIER_CONSEIL.budget,
+                        (DERNIER_CONSEIL.mouvement || {}).phrase
+                          ? (DERNIER_CONSEIL.mouvement.phrase.replace(/\*\*/g, '')) : '')
+      + `<div class="bulle-note">Mesure recalculée en direct par le moteur à chaque déplacement `
+      + 'du réglage (position avant → position actuelle) : ce bloc se rafraîchit dès le mouvement.</div>';
+  }
+  return '<div class="cout-gain neutre"><div>Déplacez ce curseur ou basculez cet interrupteur : '
+    + 'le coût / gain réel de ce réglage précis s\'affichera ici immédiatement, en rouge ou vert.</div></div>';
+}
+function majBulleLive(){
+  // Mise à jour immédiate du bloc live de la bulle ouverte, sans re-rendu :
+  // indispensable pendant qu'un curseur est en cours de manipulation.
+  if (!BULLE_OUVERTE) return;
+  const zone = document.getElementById('bulle-live');
+  if (zone) zone.innerHTML = bulleLiveHtml(BULLE_OUVERTE);
+}
 function htmlBulle(bulle){
   return `<div class="bulle-levier">`
     + `<div class="bulle-titre">Bulle explicative — ${bulle.libelle} `
     + `(${bulle.famille_libelle}, ${bulle.type})</div>`
+    + `<div class="bulle-live" id="bulle-live">${bulleLiveHtml(bulle.cle)}</div>`
     + chaineHtml(bulle) + effetsDeclaresHtml(bulle) + mesuresHtml(bulle) + lectureHtml(bulle)
     + (bulle.sans_effet_mesure
        ? '<div class="bulle-section bulle-alerte">Aucun des 20 domaines notés ne bouge : les '
@@ -1042,6 +1162,13 @@ function majLevier(cle, valeur){
     }
   }
   planifierSimulation();
+  // Retour immédiat dans la bulle ouverte : le bloc live passe en « calcul en
+  // cours » dès le début du geste, puis la mesure réelle arrive du moteur.
+  if (BULLE_OUVERTE === cle){
+    const zone = document.getElementById('bulle-live');
+    if (zone) zone.innerHTML = '<div class="cout-gain neutre"><div>Mesure du coût / gain réel '
+      + 'en cours… le moteur rejoue la trajectoire avec votre mouvement.</div></div>';
+  }
 }
 let minuteur = null;
 function planifierSimulation(){
@@ -1160,6 +1287,7 @@ async function simuler(avecImpacts){
     renderJournal(donnees);
     renderAlertes(donnees);
     renderConsole(donnees);
+    renderCoutGlobal(donnees);
     renderDerniereModification(SIMULATION_PRECEDENTE,
                                {parametres: parametresEnvoyes, sortie: donnees});
     majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
@@ -1180,6 +1308,43 @@ async function simuler(avecImpacts){
 function renderAlertes(donnees){
   const alertes = (donnees.avertissements || []).map(texte => `<div class="alerte">${texte}</div>`).join('');
   document.getElementById('zone-alertes').innerHTML = alertes;
+}
+/* Coût / gain réel des réglages globaux croisés : les flux budgétaires de
+   l'ensemble des leviers actifs, croisés par le moteur, remis à jour à chaque
+   simulation. Ancré sur les chiffres clefs des sources officielles. */
+function renderCoutGlobal(donnees){
+  const zone = document.getElementById('console-cout-global');
+  if (!zone) return;
+  const synthese = donnees.synthese || {};
+  const recettes = synthese.recettes_nouvelles_mde || 0;
+  const depenses = synthese.depenses_nouvelles_mde || 0;
+  const solde = synthese.solde_mesures_mde || 0;
+  const actifs = nombreLeviersActifs();
+  if (!actifs){
+    zone.innerHTML = '<div class="cout-gain neutre"><div>Aucun levier actif : activez des réglages '
+      + 'pour mesurer leur coût / gain réel croisé en temps réel.</div></div>';
+    return;
+  }
+  const classe = solde > 0.005 ? 'gain' : (solde < -0.005 ? 'cout' : 'neutre');
+  const titre = solde > 0.005
+    ? `Gain réel du programme actif : <b class="chiffre">+${fmt(solde, 1)} Md€ / an</b>`
+    : (solde < -0.005
+       ? `Coût réel du programme actif : <b class="chiffre">${fmt(solde, 1)} Md€ / an</b>`
+       : 'Programme actif : effet budgétaire net nul');
+  const c = (CONTEXTE && CONTEXTE.contexte) || {};
+  zone.innerHTML = `<div class="cout-gain ${classe}">
+    <div>${titre} <span class="aide">(${actifs} levier(s) actif(s), effets croisés)</span></div>
+    <div class="detail">
+      <span>Recettes nouvelles : ${fmt(recettes, 1)} Md€</span>
+      <span>Dépenses nouvelles : ${fmt(depenses, 1)} Md€</span>
+      <span>Déficit final : ${fmt(synthese.deficit_final_pct, 2)} % PIB</span>
+      <span>Dette finale : ${fmt(synthese.dette_finale_pct, 1)} % PIB</span>
+    </div>
+    <div class="trace">Recalculé à chaque mouvement, croisé avec les autres réglages — ancré sur :
+      PIB ${fmt(c.pib_nominal_mde, 0)} Md€, OAT ${fmt(c.taux_oat_10ans, 2)} %,
+      déficit constaté ${fmt(c.deficit_public_pct_pib, 1)} % PIB
+      (sources officielles en bas de page).</div>
+  </div>`;
 }
 
 
@@ -1402,7 +1567,11 @@ async function majConseilTempsReel(parametresEnvoyes){
     const conseil = await reponse.json();
     // Le conseil affiché correspond au dernier mouvement réellement demandé.
     if (conseil && !conseil.error && MOUVEMENT && MOUVEMENT.cle === cle){
+      DERNIER_CONSEIL = conseil;
       renderConseil(conseil);
+      // Rafraîchissement immédiat de la bulle du réglage déplacé : le coût /
+      // gain réel doit être lisible dès la fin du mouvement, sans clic.
+      majBulleLive();
     }
   } catch (erreur){
     /* Le conseil est un confort : un serveur muet ne casse pas la page. */
@@ -1438,6 +1607,7 @@ function renderConseil(conseil){
          <span class="etiquette ${classeNiveau(niveau)}">${etiquetteNiveau(niveau)}</span></div>
        <p class="aide">${conseil.lecture || ''}</p>
      </div>`
+    + (conseil.budget ? coutGainHtml(conseil.budget, 'coût / gain réel de ce mouvement') : '')
     + (directs.length ? `<div class="aide"><b>Effets directs :</b></div>` + directs.map(ligneDomaine).join('') : '')
     + (ricochets.length ? `<div class="aide"><b>Par ricochet (effet papillon) :</b></div>` + ricochets.map(ligneDomaine).join('') : '')
     + (grandeurs ? `<div class="aide"><b>Grandeurs qui basculent :</b></div>` + grandeurs : '')
@@ -1638,11 +1808,142 @@ function telecharger(contenu, nom, type){
 }
 
 /* ── Démarrage ──────────────────────────────────────────────────────────── */
+/* ── Audit & traçabilité : tout le recoupement, à livre ouvert ─────────────
+   Chaque bloc rend des données déjà chargées (catalogue, contexte) ou le
+   barème des garde-fous : aucun chiffre n'avance sans sa source. */
+function echapperTexte(texte){
+  return String(texte === null || texte === undefined ? '' : texte)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function auditSourcesHtml(){
+  const contexte = (CONTEXTE && CONTEXTE.contexte) || {};
+  const provenance = contexte.provenance || {};
+  const lignes = Object.keys(provenance).map(cle => {
+    const fiche = provenance[cle];
+    const valeur = contexte[cle];
+    const url = fiche.url
+      ? ` <a href="${echapperTexte(fiche.url)}" rel="noopener">consulter</a>` : '';
+    return `<tr><td>${echapperTexte(fiche.libelle)}</td>
+      <td class="chiffre">${valeur === null || valeur === undefined ? '—' : fmt(valeur, 2)} ${echapperTexte(fiche.unite || '')}</td>
+      <td>${echapperTexte(fiche.periode || '—')}</td>
+      <td>${echapperTexte(fiche.statut || '')}</td>
+      <td class="source-note">${echapperTexte(fiche.source || '')}${url}</td>
+      <td class="source-note">${echapperTexte(fiche.licence || '')}</td></tr>`;
+  }).join('');
+  return `<table><thead><tr><th>Grandeur d'entrée</th><th>Valeur retenue</th><th>Période</th>
+    <th>Statut</th><th>Source</th><th>Licence</th></tr></thead><tbody>${lignes}</tbody></table>
+    <div class="source-note" style="margin-top:6px">« live » = valeur relevée sur l'API publique
+    officielle à l'instant T ; « référence » = valeur documentaire du dépôt (le serveur n'a pas
+    pu interroger l'API). Le bouton « Rafraîchir les données » relève les valeurs depuis votre
+    navigateur et les transmet au simulateur : le recoupement est toujours possible.</div>`;
+}
+function auditDomainesHtml(){
+  const domaines = (CATALOGUE && CATALOGUE.domaines) || [];
+  return domaines.map(domaine => {
+    const indicateurs = (domaine.indicateurs || []).map(indicateur =>
+      `<tr><td>${echapperTexte(indicateur.libelle)}</td>
+       <td class="formule">${echapperTexte(indicateur.formule)}</td>
+       <td class="chiffre">${echapperTexte(indicateur.unite || '')} (${indicateur.sens > 0 ? 'hausse = amélioration' : 'hausse = dégradation'})</td>
+       <td class="source-note">${echapperTexte(indicateur.source || '')}</td></tr>`).join('');
+    return `<div style="margin-bottom:12px"><b style="color:${domaine.couleur}">${echapperTexte(domaine.libelle)}</b>
+      <span class="source-note">— ${echapperTexte(domaine.description || '')}</span>
+      <table><thead><tr><th>Indicateur</th><th>Formule du score</th><th>Unité et sens</th>
+      <th>Source</th></tr></thead><tbody>${indicateurs}</tbody></table></div>`;
+  }).join('');
+}
+function auditLeviersHtml(){
+  const familles = ((CATALOGUE && CATALOGUE.parametres) || {}).familles || [];
+  return familles.map(famille => {
+    const leviers = (famille.leviers || []).map(levier => {
+      const effets = Object.entries(levier.effets_directs || {})
+        .map(([theme, coefficient]) => `${echapperTexte(theme)} ${coefficient > 0 ? '+' : ''}${fmt(coefficient, 2)}`)
+        .join(', ') || '—';
+      return `<tr><td>${echapperTexte(levier.libelle)} <span class="source-note">(${echapperTexte(levier.type)})</span></td>
+        <td>${echapperTexte(levier.champ || '')} ${echapperTexte(levier.ligne || '')}</td>
+        <td>${effets}</td>
+        <td class="source-note">${echapperTexte(levier.source || '')}</td></tr>`;
+    }).join('');
+    return `<div style="margin-bottom:12px"><b>${echapperTexte(famille.libelle || famille.cle)}</b>
+      <table><thead><tr><th>Levier</th><th>Champ / ligne budgétaire</th>
+      <th>Effets déclarés (thème, coefficient)</th><th>Source</th></tr></thead>
+      <tbody>${leviers}</tbody></table></div>`;
+  }).join('');
+}
+function auditGardeFousHtml(bareme){
+  const lignes = (bareme.garde_fous || []).map(garde => {
+    const bornes = (garde.bornes || []).map(borne =>
+      `${borne.seuil === null || borne.seuil === undefined ? '∞' : fmt(borne.seuil, garde.precision)} `
+      + `→ ${echapperTexte((bareme.libelles_niveaux || {})[borne.niveau] || borne.niveau)}`
+    ).join(' ; ');
+    return `<tr><td>${echapperTexte(garde.libelle)}${garde.en_ecart ? ' <span class="source-note">(écart)</span>' : ''}</td>
+      <td>${echapperTexte(garde.strate_libelle || ('strate ' + garde.strate))}</td>
+      <td>${echapperTexte(bornes)}</td>
+      <td class="chiffre">${echapperTexte(garde.unite || '')}</td>
+      <td class="source-note">${echapperTexte(garde.source || '')}</td></tr>`;
+  }).join('');
+  return `<table><thead><tr><th>Grandeur surveillée</th><th>Strate</th>
+    <th>Seuils (valeur → niveau)</th><th>Unité</th><th>Source institutionnelle</th></tr></thead>
+    <tbody>${lignes}</tbody></table>`;
+}
+function auditMethodesHtml(){
+  const nbLeviers = (((CATALOGUE || {}).parametres || {}).defauts
+                     ? Object.keys(CATALOGUE.parametres.defauts).length : 0);
+  const nbDomaines = ((CATALOGUE || {}).domaines || []).length;
+  const nbIndicateurs = ((CATALOGUE || {}).domaines || [])
+    .reduce((somme, domaine) => somme + (domaine.indicateurs || []).length, 0);
+  return `<ul style="margin-left:16px;line-height:1.7">
+    <li><b>Scores 0-100 :</b> chaque domaine est noté par rapport à la trajectoire de référence
+      (aucun levier actif) : 50 = aucune politique. Les écarts sont des écarts de politique
+      publique, jamais des prophéties.</li>
+    <li><b>Dynamiques croisées :</b> la matrice levier × domaine est calculée par le moteur par
+      <b>différences finies</b> (chaque levier actif est rejoué isolément et comparé à la
+      trajectoire neutre) : aucun coefficient d'interaction n'est saisi à la main.</li>
+    <li><b>Conseiller temps réel :</b> chaque mouvement de réglage rejoue deux simulations
+      complètes (levier à sa position d'avant, puis d'après le geste, toutes choses égales) ;
+      la différence affichée est exactement celle de la décision, effets directs et ricochets
+      compris.</li>
+    <li><b>Périmètre chiffré :</b> ${nbLeviers} leviers, ${nbDomaines} domaines,
+      ${nbIndicateurs} indicateurs (formule + source), 31 garde-fous (26 absolus + 5 en écart),
+      14 préréglages, 11 scénarios.</li>
+    <li><b>Calibrage :</b> les grandeurs d'entrée (PIB, dette, OAT, BCE, inflation, chômage,
+      Brent, change) proviennent des API publiques officielles listées au bloc 1 ; les
+      multiplicateurs et élasticités sont cités dans chaque formule (bloc 2).</li>
+    <li><b>Code :</b> le moteur, le barème, le catalogue et cette page sont dans le dépôt
+      (Python standard, sans dépendance externe) : chaque formule affichée ici correspond à une
+      fonction du code, vérifiable ligne à ligne.</li>
+  </ul>`;
+}
+async function chargerAudit(){
+  const zoneSources = document.getElementById('audit-sources');
+  const zoneDomaines = document.getElementById('audit-domaines');
+  const zoneLeviers = document.getElementById('audit-leviers');
+  const zoneGardes = document.getElementById('audit-gardefous');
+  const zoneMethodes = document.getElementById('audit-methodes');
+  try {
+    if (zoneSources) zoneSources.innerHTML = auditSourcesHtml();
+    if (zoneDomaines) zoneDomaines.innerHTML = auditDomainesHtml();
+    if (zoneLeviers) zoneLeviers.innerHTML = auditLeviersHtml();
+    if (zoneMethodes) zoneMethodes.innerHTML = auditMethodesHtml();
+    if (zoneGardes){
+      const reponse = await fetch('/api/garde_fous');
+      const bareme = await reponse.json();
+      zoneGardes.innerHTML = (bareme && bareme.garde_fous)
+        ? auditGardeFousHtml(bareme)
+        : '<div class="source-note">barème indisponible</div>';
+    }
+    initialiserInfobulles();
+  } catch (erreur){
+    /* L'audit est un confort : une route muette ne casse pas le simulateur. */
+  }
+}
+
 (async function demarrer(){
   await chargerCatalogue();
   initialiserInfobulles();
   renderScenarios();
   await chargerContexte(false);
+  chargerAudit();
   chargerPreset('mandature', null);
   activerExports();
 })();

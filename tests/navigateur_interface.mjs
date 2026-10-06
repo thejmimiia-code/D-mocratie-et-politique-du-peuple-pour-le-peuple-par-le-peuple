@@ -308,6 +308,19 @@ noter("le mouvement du levier interroge le conseiller temps réel",
 noter("le conseiller rend la décision et ses ricochets dans la console",
       /Effet papillon|ricochet|directs|Conseiller/i.test(contenu("console-conseil")),
       contenu("console-conseil").slice(0, 140));
+noter("la veille affiche le coût / gain réel des réglages globaux croisés",
+      /Coût réel|Gain réel|effet budgétaire net nul/i.test(contenu("console-cout-global")),
+      contenu("console-cout-global").slice(0, 120));
+noter("le conseil cite le coût ou le gain réel du mouvement",
+      /Coût réel|Gain réel|cout-gain/i.test(contenu("console-conseil")),
+      (contenu("console-conseil").match(/cout-gain/g) || []).length + " bloc(s)");
+noter("l'audit de traçabilité est rendu en bas de page",
+      contenu("audit-gardefous").includes("Déficit public")
+      && contenu("audit-domaines").includes("Formule du score")
+      && contenu("audit-sources").includes("Grandeur d'entrée"),
+      "sources " + contenu("audit-sources").length
+      + " car. ; domaines " + contenu("audit-domaines").length
+      + " car. ; garde-fous " + contenu("audit-gardefous").length + " car.");
 noter("le compteur annonce les leviers affichés et modifiés",
       /97 levier\(s\) affiché\(s\)/.test(elements.get("compteur-leviers")?.textContent || ""),
       elements.get("compteur-leviers")?.textContent);
@@ -350,6 +363,9 @@ noter("la bulle décrit la chaîne d'interaction", grilleBulle.includes("Chaîne
 noter("la bulle affiche les répercussions mesurées", grilleBulle.includes("Répercussions mesurées"));
 noter("la bulle guide opportunités et désagréments", /Opportunités|Désagréments/.test(grilleBulle));
 noter("la bulle cite les effets déclarés au catalogue", grilleBulle.includes("Effets déclarés au catalogue"));
+noter("la bulle affiche le coût / gain réel du réglage en direct",
+      grilleBulle.includes("bulle-live") && /cout-gain (gain|cout|neutre)/.test(grilleBulle),
+      (grilleBulle.match(/cout-gain/g) || []).length + " bloc(s) coût/gain dans la bulle");
 noter("la bulle laisse les 97 réglages accessibles",
       (grilleBulle.match(/class="levier[ "]/g) || []).length === leviersComplets,
       `${(grilleBulle.match(/class="levier[ "]/g) || []).length} cartes`);

@@ -83,7 +83,7 @@ class TestStructureDuConseil(unittest.TestCase):
         conseil = self._conseil("tva_taux_normal", 0.0, 1.0)
         for champ in ("cle", "libelle", "mouvement", "verdict_niveau",
                       "domaines", "ricochets", "grandeurs", "garde_fous",
-                      "journal", "compensations", "lecture"):
+                      "journal", "compensations", "budget", "sources", "lecture"):
             self.assertIn(champ, conseil, f"champ manquant : {champ}")
         self.assertEqual(conseil["cle"], "tva_taux_normal")
         self.assertIn(conseil["libelle"], LEVIERS["tva_taux_normal"].libelle)
@@ -144,6 +144,38 @@ class TestStructureDuConseil(unittest.TestCase):
         self.assertIn(conseil["libelle"], conseil["lecture"])
         if conseil["ricochets"]:
             self.assertIn("ricochet", conseil["lecture"].lower())
+
+    def test_budget_reel_du_mouvement(self):
+        """Le coût / gain réel du mouvement est chiffré et cohérent."""
+        conseil = self._conseil("tva_energie_5_5", 0.0, 1.0)
+        budget = conseil["budget"]
+        self.assertAlmostEqual(budget["solde_delta_mde"],
+                               budget["recettes_delta_mde"] - budget["depenses_delta_mde"],
+                               places=1)
+        self.assertEqual(budget["horizon"], 5)
+        # Un mouvement nul n'a aucun coût ni gain.
+        nul = self._conseil("tva_taux_normal", 1.0, 1.0)
+        self.assertEqual(nul["budget"]["solde_delta_mde"], 0.0)
+
+    def test_budget_signe_dans_la_lecture(self):
+        """La lecture annonce le coût ou le gain net quand il existe."""
+        conseil = self._conseil("tva_energie_5_5", 0.0, 1.0)
+        if abs(conseil["budget"]["solde_delta_mde"]) >= 0.01:
+            attendu = "gain budgétaire" if conseil["budget"]["solde_delta_mde"] > 0 \
+                else "coût budgétaire"
+            self.assertIn(attendu, conseil["lecture"].lower())
+
+    def test_sources_officielles_citees(self):
+        """Les chiffres clefs des sources officielles sont traçables."""
+        conseil = self._conseil("tva_taux_normal", 0.0, 1.0)
+        sources = conseil["sources"]
+        self.assertGreaterEqual(len(sources), 8)
+        cles = {source["cle"] for source in sources}
+        self.assertIn("pib_nominal_mde", cles)
+        self.assertIn("taux_oat_10ans", cles)
+        for source in sources:
+            self.assertIn("libelle", source)
+            self.assertIn("source", source)
 
 
 class TestEndpointConseil(unittest.TestCase):

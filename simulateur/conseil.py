@@ -53,6 +53,15 @@ SEUIL_DOMAINE = 0.15
 #: Seuil au-dessous duquel une grandeur macro est tue.
 SEUIL_GRANDEUR_FACTOR = 0.5
 
+#: Chiffres clefs des sources officielles qui ancrent le calcul (traçabilité :
+#: chaque coût/gain affiché descend de ces valeurs de référence).
+SOURCES_CLES: tuple[str, ...] = (
+    "pib_nominal_mde", "deficit_public_pct_pib", "dette_publique_pct_pib",
+    "taux_oat_10ans", "taux_bund_10ans", "spread_oat_bund_bps",
+    "taux_bce_depot", "inflation_pct", "inflation_zone_euro_pct",
+    "chomage_pct", "brent_usd", "eur_usd",
+)
+
 
 def _format(valeur: float, precision: int) -> str:
     texte = f"{valeur:,.{precision}f}"
@@ -190,6 +199,37 @@ def conseil_mouvement(
             "favorable": sens * delta > 0,
         })
 
+    # ── Budget réel du mouvement : coût / gain en Md€ (année finale) ──────
+    budget = {
+        "recettes_delta_mde": round(
+            sortie_apres.synthese.get("recettes_nouvelles_mde", 0.0)
+            - sortie_avant.synthese.get("recettes_nouvelles_mde", 0.0), 2),
+        "depenses_delta_mde": round(
+            sortie_apres.synthese.get("depenses_nouvelles_mde", 0.0)
+            - sortie_avant.synthese.get("depenses_nouvelles_mde", 0.0), 2),
+        "solde_delta_mde": round(
+            sortie_apres.synthese.get("solde_mesures_mde", 0.0)
+            - sortie_avant.synthese.get("solde_mesures_mde", 0.0), 2),
+        "charge_dette_delta_mde": round(
+            sortie_apres.synthese.get("charge_dette_finale_mde", 0.0)
+            - sortie_avant.synthese.get("charge_dette_finale_mde", 0.0), 2),
+        "deficit_delta_pt_pib": round(
+            sortie_apres.synthese.get("deficit_final_pct", 0.0)
+            - sortie_avant.synthese.get("deficit_final_pct", 0.0), 3),
+        "horizon": horizon,
+    }
+
+    # ── Traçabilité : chiffres clefs des sources officielles ───────────────
+    contexte_dict = contexte.en_dict()
+    provenance = contexte_dict.get("provenance", {})
+    sources = [
+        {"cle": cle,
+         "valeur": contexte_dict.get(cle),
+         **{champ: provenance[cle].get(champ)
+            for champ in ("libelle", "unite", "periode", "source", "url", "statut")}}
+        for cle in SOURCES_CLES if cle in provenance
+    ]
+
     # ── Garde-fous dont le niveau change ───────────────────────────────────
     rang = {niveau: index for index, niveau in enumerate(NIVEAUX)}
     ind_avant = {e["cle"]: e for e in sortie_avant.diagnostic["indicateurs"]}
@@ -224,6 +264,15 @@ def conseil_mouvement(
     # ── Lecture du conseiller ──────────────────────────────────────────────
     mouvements = _formuler_mouvement(levier, valeur_avant, valeur_apres)
     phrases: list[str] = [mouvements.replace("**", "") + "."]
+    if abs(budget["solde_delta_mde"]) >= 0.01:
+        if budget["solde_delta_mde"] >= 0:
+            phrases.append(f"Gain budgétaire net : {_format(budget['solde_delta_mde'], 2)} Md€ "
+                           f"par an (recettes {_format_signe(budget['recettes_delta_mde'], 2)}, "
+                           f"dépenses {_format_signe(budget['depenses_delta_mde'], 2)}).")
+        else:
+            phrases.append(f"Coût budgétaire net : {_format(abs(budget['solde_delta_mde']), 2)} Md€ "
+                           f"par an (recettes {_format_signe(budget['recettes_delta_mde'], 2)}, "
+                           f"dépenses {_format_signe(budget['depenses_delta_mde'], 2)}).")
     gains = [d for d in domaines if d["favorable"]]
     pertes = [d for d in domaines if not d["favorable"]]
     if gains:
@@ -284,5 +333,7 @@ def conseil_mouvement(
         "garde_fous": garde_fous[:6],
         "journal": journal_nouveau[:6],
         "compensations": compensations,
+        "budget": budget,
+        "sources": sources,
         "lecture": " ".join(phrases),
     }

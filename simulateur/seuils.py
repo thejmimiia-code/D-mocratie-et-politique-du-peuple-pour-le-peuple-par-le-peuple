@@ -832,6 +832,43 @@ def evaluer_sortie(donnees: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def bareme_public() -> dict[str, Any]:
+    """Barème complet des garde-fous, pour la section « audit et traçabilité ».
+
+    Chaque entrée livre la grandeur surveillée, sa strate, ses bornes
+    (seuil → niveau → message) et la source institutionnelle : la veille
+    n'est pas une boîte noire, tout seuil est vérifiable à la source.
+    """
+    def borne(b: Borne) -> dict[str, Any]:
+        # Une borne infinie (ex. « au-delà de… ») devient nulle : JSON ne
+        # connaît pas Infinity et le navigateur doit pouvoir tout relire.
+        seuil = b.seuil if math.isfinite(b.seuil) else None
+        return {"seuil": seuil, "niveau": b.niveau, "message": b.message}
+
+    def entree(garde_fou: GardeFou, en_ecart: bool) -> dict[str, Any]:
+        return {
+            "cle": garde_fou.cle,
+            "libelle": garde_fou.libelle,
+            "strate": garde_fou.strate,
+            "strate_libelle": LIBELLES_STRATES.get(garde_fou.strate, ""),
+            "sens": garde_fou.sens,
+            "unite": garde_fou.unite,
+            "precision": garde_fou.precision,
+            "source": garde_fou.source,
+            "famille": garde_fou.famille,
+            "en_ecart": en_ecart,
+            "bornes": [borne(b) for b in garde_fou.bornes],
+        }
+
+    return {
+        "niveaux": list(NIVEAUX),
+        "libelles_niveaux": LIBELLES_NIVEAUX,
+        "libelles_strates": {str(cle): libelle for cle, libelle in LIBELLES_STRATES.items()},
+        "garde_fous": ([entree(g, en_ecart=False) for g in GARDE_FOUS]
+                       + [entree(g, en_ecart=True) for g in GARDE_FOUS_ECART]),
+    }
+
+
 def resume_court(diagnostic: dict[str, Any]) -> dict[str, Any]:
     """Version condensée (comparateur de préréglages, tableau de bord)."""
     verdict = diagnostic.get("verdict", {})

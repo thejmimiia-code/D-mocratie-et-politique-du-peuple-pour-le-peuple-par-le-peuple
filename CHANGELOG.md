@@ -4,6 +4,48 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.7.0] — 2026-10-06
+
+### Ajout — Coût / gain réel en direct (bulle + veille) et audit de traçabilité complet
+
+La bulle du réglage déplacé se rafraîchit désormais **dès le mouvement**, et
+deux indicateurs visuels affichent en temps réel le coût / gain réel : l'un
+dans la console de veille pour les réglages globaux croisés, l'autre dans la
+bulle pour le réglage précis — en rouge / vert transparent, ancrés sur les
+chiffres clefs des sources officielles, citées partout.
+
+- **`simulateur/conseil.py`** : le conseil livre maintenant le `budget` réel
+  du mouvement (Δ recettes, Δ dépenses, Δ solde, Δ charge de la dette,
+  Δ déficit en Md€ / pt de PIB) et les `sources` : les chiffres clefs
+  officiels qui ancrent le calcul (PIB, OAT, Bund, spread, BCE, inflation,
+  chômage, Brent, change), chacun avec sa valeur, sa période et sa source.
+- **`simulateur/seuils.py`** : `bareme_public()` publie le barème complet des
+  31 garde-fous (26 absolus + 5 en écart) avec strates, bornes et sources
+  institutionnelles ; les bornes infinies sont sérialisées en JSON strict.
+- **`simulateur/dashboard.py`** : route `GET /api/garde_fous` (audit).
+- **`simulateur/interface.py`** :
+  - la bulle du réglage porte un bloc « mesure live » qui affiche
+    immédiatement « calcul en cours » dès le début du geste, puis le
+    **coût / gain réel de ce réglage précis** (bannière rouge ou verte en
+    transparence, détail recettes / dépenses / déficit / charge de la dette,
+    sources officielles citées), rafraîchi par mise à jour DOM directe sans
+    re-rendu de la grille ;
+  - la console de veille affiche le **coût / gain réel des réglages globaux
+    croisés** (recettes nouvelles, dépenses nouvelles, solde net, déficit et
+    dette finals), recalculé à chaque simulation ;
+  - nouvelle section « 🔍 Audit & traçabilité » en bas de page : sources
+    officielles de chaque donnée d'entrée (valeur, période, statut, licence,
+    URL), formule + source des 74 indicateurs des 20 domaines, champ + effets
+    déclarés + source des 97 leviers, barème complet des garde-fous, méthode
+    des dynamiques croisées — tout recoupement est possible, le simulateur
+    n'est pas une boîte noire ; bouton « 🔍 Audit & sources » dans l'en-tête ;
+  - pied de page et bannière **MRSC** : outil open-source produit par son
+    créateur pour l'intérêt général, gratuit, paternité protégée.
+- **Tests** : budget et sources du conseil, barème public, blocs live de la
+  bulle et de la veille, section audit, attribution MRSC ; le harnais
+  navigateur vérifie le rendu du coût global, de l'audit et du bloc live dans
+  la bulle. Suite : 388 tests.
+
 ## [1.6.0] — 2026-10-06
 
 ### Ajout — Conseiller temps réel (« effet papillon ») sur chaque mouvement de réglage
