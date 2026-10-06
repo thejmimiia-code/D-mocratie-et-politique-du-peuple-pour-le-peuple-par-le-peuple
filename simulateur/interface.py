@@ -262,6 +262,18 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .cout-gain.neutre{background:rgba(147,163,189,.12);border-color:var(--border)}
 .cout-gain .detail{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;color:var(--texte-dim);font-size:.72rem}
 .cout-gain .trace{margin-top:6px;font-size:.66rem;color:#7b8aa5;font-style:italic}
+/* Badge live sous le levier manipulé et puce du ruban : toujours visibles. */
+.cout-live-zone{grid-column:1/-1}
+.cout-live{margin-top:6px;border-radius:9px;padding:5px 10px;font-size:.76rem;font-weight:600;
+  border:1px solid;font-variant-numeric:tabular-nums}
+.cout-live.gain{background:rgba(34,197,94,.20);border-color:rgba(34,197,94,.55);color:#86efac}
+.cout-live.cout{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.55);color:#fca5a5}
+.cout-live.neutre{background:rgba(147,163,189,.12);border-color:var(--border);color:var(--texte-dim);font-weight:400}
+.ruban-cout{font-size:.72rem;padding:3px 10px;border-radius:999px;border:1px solid;
+  white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
+.ruban-cout.gain{background:rgba(34,197,94,.20);border-color:rgba(34,197,94,.55);color:#86efac}
+.ruban-cout.cout{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.55);color:#fca5a5}
+.ruban-cout.neutre{background:rgba(147,163,189,.12);border-color:var(--border);color:var(--texte-dim)}
 /* Bulle explicative : le bloc « mesure live » doit se lire d'un coup d'œil. */
 .bulle-levier .bulle-live{margin:8px 0 2px}
 /* Audit et traçabilité : tableaux denses et lisibles en bas de page. */
@@ -305,6 +317,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <span class="console-verdict" id="ruban-verdict">en attente de la première simulation…</span>
     <span class="ruban-strates" id="ruban-strates"></span>
     <span class="ruban-pop" id="ruban-population">risque population —</span>
+    <span class="ruban-cout neutre" id="ruban-cout" data-aide="<b>Coût / gain réel du programme actif</b>Solde net des réglages globaux croisés (recettes nouvelles − dépenses nouvelles), recalculé en temps réel à chaque mouvement. Rouge = coût réel, vert = gain réel, en Md€ par an.">💶 coût / gain réel : —</span>
     <span class="ruban-actions">
       <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()" data-aide="<b>Détail des seuils</b>Replie ou déplie le corps de la console de veille pour libérer l'écran : le verdict et les cinq strates restent affichés.">Masquer le détail des seuils</button>
       <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : les 97 paramètres tiennent à l'écran, tous réglables en direct.">Vue compacte</button>
@@ -1008,9 +1021,53 @@ function bulleLiveHtml(cle){
 function majBulleLive(){
   // Mise à jour immédiate du bloc live de la bulle ouverte, sans re-rendu :
   // indispensable pendant qu'un curseur est en cours de manipulation.
-  if (!BULLE_OUVERTE) return;
-  const zone = document.getElementById('bulle-live');
-  if (zone) zone.innerHTML = bulleLiveHtml(BULLE_OUVERTE);
+  if (BULLE_OUVERTE){
+    const zone = document.getElementById('bulle-live');
+    if (zone) zone.innerHTML = bulleLiveHtml(BULLE_OUVERTE);
+  }
+  majBadgeCoutLive();
+}
+/* Badge live sous le levier manipulé : coût / gain réel de ce réglage précis,
+   visible immédiatement sans ouvrir la bulle. */
+function badgeCoutLiveHtml(cle){
+  if (!DERNIER_CONSEIL || DERNIER_CONSEIL.cle !== cle || !DERNIER_CONSEIL.budget) return '';
+  const solde = DERNIER_CONSEIL.budget.solde_delta_mde || 0;
+  if (Math.abs(solde) < 0.005){
+    return '<div class="cout-live neutre">💶 Effet budgétaire de ce réglage : nul (mesuré par le moteur)</div>';
+  }
+  return solde > 0
+    ? `<div class="cout-live gain">💶 Gain réel de ce réglage : +${fmt(solde, 2)} Md€ / an</div>`
+    : `<div class="cout-live cout">💶 Coût réel de ce réglage : ${fmt(solde, 2)} Md€ / an</div>`;
+}
+function zoneCoutLiveHtml(cle){
+  return `<div class="cout-live-zone">${badgeCoutLiveHtml(cle)}</div>`;
+}
+function majBadgeCoutLive(){
+  // Écriture DOM directe : le badge du dernier levier déplacé est mis à jour
+  // dès que le moteur a répondu, même si la grille n'est pas reconstruite.
+  if (!DERNIER_CONSEIL || !DERNIER_CONSEIL.budget) return;
+  const carte = document.querySelector(`.levier[data-cle="${DERNIER_CONSEIL.cle}"]`);
+  if (!carte) return;
+  let zone = carte.querySelector('.cout-live-zone');
+  if (!zone){
+    zone = document.createElement('div');
+    zone.className = 'cout-live-zone';
+    carte.appendChild(zone);
+  }
+  zone.innerHTML = badgeCoutLiveHtml(DERNIER_CONSEIL.cle);
+}
+function placeholderMesure(cle){
+  // Retour immédiat dès le début du geste : le badge passe en « mesure en
+  // cours » avant même la réponse du serveur.
+  const carte = document.querySelector(`.levier[data-cle="${cle}"]`);
+  if (!carte) return;
+  let zone = carte.querySelector('.cout-live-zone');
+  if (!zone){
+    zone = document.createElement('div');
+    zone.className = 'cout-live-zone';
+    carte.appendChild(zone);
+  }
+  zone.innerHTML = '<div class="cout-live neutre">⏳ Mesure du coût / gain réel de ce mouvement…</div>';
 }
 function htmlBulle(bulle){
   return `<div class="bulle-levier">`
@@ -1113,14 +1170,14 @@ function renderLeviers(filtre){
              <span class="valeur" data-aide-levier="${levier.cle}">${valeurTexte}</span>${bouton}`
           : curseurCompact;
         return `<div class="levier compact${modifie ? ' modifie' : ''}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
-          ${contenuLevier}${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}</div>`;
+          ${contenuLevier}${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}</div>`;
       }
       const commande = levier.type === 'interrupteur' ? bascule : curseur;
       return `<div class="levier${modifie ? ' modifie' : ''}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
         ${commande}
         <div class="desc">${levier.description}</div>
         ${levier.source ? `<div class="source">Source : ${levier.source}</div>` : ''}
-        ${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}
+        ${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}
       </div>`;
     }).join('');
     return `<div class="famille${VUE_COMPACTE ? ' compacte' : ''}">
@@ -1162,8 +1219,9 @@ function majLevier(cle, valeur){
     }
   }
   planifierSimulation();
-  // Retour immédiat dans la bulle ouverte : le bloc live passe en « calcul en
-  // cours » dès le début du geste, puis la mesure réelle arrive du moteur.
+  // Retour immédiat dès le début du geste : le badge sous le levier passe en
+  // « mesure en cours », puis la mesure réelle arrive du moteur.
+  placeholderMesure(cle);
   if (BULLE_OUVERTE === cle){
     const zone = document.getElementById('bulle-live');
     if (zone) zone.innerHTML = '<div class="cout-gain neutre"><div>Mesure du coût / gain réel '
@@ -1314,12 +1372,20 @@ function renderAlertes(donnees){
    simulation. Ancré sur les chiffres clefs des sources officielles. */
 function renderCoutGlobal(donnees){
   const zone = document.getElementById('console-cout-global');
+  const ruban = document.getElementById('ruban-cout');
   if (!zone) return;
   const synthese = donnees.synthese || {};
   const recettes = synthese.recettes_nouvelles_mde || 0;
   const depenses = synthese.depenses_nouvelles_mde || 0;
   const solde = synthese.solde_mesures_mde || 0;
   const actifs = nombreLeviersActifs();
+  if (ruban){
+    ruban.className = 'ruban-cout ' + (solde > 0.005 ? 'gain' : (solde < -0.005 ? 'cout' : 'neutre'));
+    ruban.textContent = !actifs ? '💶 coût / gain réel : —'
+      : (solde > 0.005 ? `💶 gain réel : +${fmt(solde, 1)} Md€/an`
+         : (solde < -0.005 ? `💶 coût réel : ${fmt(solde, 1)} Md€/an`
+            : '💶 effet net : 0 Md€'));
+  }
   if (!actifs){
     zone.innerHTML = '<div class="cout-gain neutre"><div>Aucun levier actif : activez des réglages '
       + 'pour mesurer leur coût / gain réel croisé en temps réel.</div></div>';

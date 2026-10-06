@@ -305,7 +305,7 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         # Le bouton est présent dans les deux vues et la bulle suit le levier.
         self.assertEqual(self.script.count("&#39;"), 0)
         self.assertIn("${bouton}", self.script)
-        self.assertIn("${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}", self.script)
+        self.assertIn("${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}", self.script)
 
     def test_bulle_ne_souvre_que_pour_le_levier_choisi(self):
         """Une seule bulle ouverte à la fois, uniquement pour son levier."""
@@ -333,6 +333,29 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         # Le conseil stocké alimente la bulle et cite les sources officielles.
         self.assertIn("DERNIER_CONSEIL = conseil;", self.script)
         self.assertIn("sources officielles", self.script)
+
+    def test_badge_cout_gain_visible_sous_le_levier_et_dans_le_ruban(self):
+        """Les indicateurs visuels temps réel sont visibles sans ouvrir la
+        bulle : un badge sous le levier manipulé, une puce dans le ruban."""
+        # Le badge est rendu dans chaque carte de levier, vue confort et compacte.
+        self.assertIn("function badgeCoutLiveHtml(", self.script)
+        self.assertIn("function zoneCoutLiveHtml(", self.script)
+        self.assertIn("function majBadgeCoutLive(", self.script)
+        self.assertIn("function placeholderMesure(", self.script)
+        self.assertIn("${zoneCoutLiveHtml(levier.cle)}", self.script)
+        # Il apparaît dans les deux gabarits (confort et compact).
+        self.assertEqual(self.script.count("${zoneCoutLiveHtml(levier.cle)}"), 2)
+        # Le ruban porte la puce coût / gain, alimentée à chaque simulation.
+        self.assertIn('id="ruban-cout"', self.page)
+        self.assertIn("ruban-cout", self.script)
+        self.assertIn(".ruban-cout.gain{", self.page)
+        self.assertIn(".ruban-cout.cout{", self.page)
+        self.assertIn(".cout-live.gain{", self.page)
+        self.assertIn(".cout-live.cout{", self.page)
+        # renderCoutGlobal met à jour le ruban et la console.
+        rendu = self.script.split("function renderCoutGlobal(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("ruban-cout", rendu)
+        self.assertIn("console-cout-global", rendu)
 
     def test_infobulles_au_survol_des_reglages(self):
         """Curseurs, interrupteurs et boutons s'expliquent au survol.

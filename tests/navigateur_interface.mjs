@@ -314,6 +314,12 @@ noter("la veille affiche le coût / gain réel des réglages globaux croisés",
 noter("le conseil cite le coût ou le gain réel du mouvement",
       /Coût réel|Gain réel|cout-gain/i.test(contenu("console-conseil")),
       (contenu("console-conseil").match(/cout-gain/g) || []).length + " bloc(s)");
+noter("le levier manipulé affiche le badge coût / gain réel en temps réel",
+      /cout-live (gain|cout|neutre)|Mesure du coût/i.test(contenu("leviers-grille")),
+      (contenu("leviers-grille").match(/cout-live/g) || []).length + " badge(s)");
+noter("le ruban de veille affiche le coût / gain réel du programme actif",
+      /coût réel|gain réel|effet net/i.test(elements.get("ruban-cout")?.textContent || ""),
+      elements.get("ruban-cout")?.textContent);
 noter("l'audit de traçabilité est rendu en bas de page",
       contenu("audit-gardefous").includes("Déficit public")
       && contenu("audit-domaines").includes("Formule du score")
