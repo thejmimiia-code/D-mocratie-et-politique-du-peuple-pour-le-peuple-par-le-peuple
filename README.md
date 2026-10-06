@@ -132,6 +132,16 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
 Documentation détaillée : [`docs/SIMULATEUR_PARAMETRABLE.md`](docs/SIMULATEUR_PARAMETRABLE.md).
 Réglages du dépôt (description, sujets, aperçu social) : [`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md).
 
+### Page d'accueil statique
+
+Le dépôt inclut `index.html` à sa racine ainsi qu'une page d'index dans chaque
+dossier. Vercel peut donc servir le site comme des fichiers statiques, sans
+lancer le serveur Python. Le simulateur interactif reste disponible en local :
+`python -m simulateur.dashboard --port 8080`.
+
+Pour redéployer sur Vercel, choisissez la racine du dépôt comme **Root Directory**.
+
+
 ```bash
 # ligne de commande paramétrique :
 python -m simulateur.moteur_parametrique --preset mandature --json

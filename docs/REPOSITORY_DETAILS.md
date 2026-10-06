@@ -37,14 +37,22 @@ sait faire aujourd'hui.
 ## 2. Site web
 
 Le site déclaré (`https://d-mocratie-et-politique-du-peuple-p.vercel.app`)
-**renvoie une erreur 404** : l'application n'est plus servie. Deux options :
+**renvoyait une erreur 404** lors de l'audit du 5 octobre 2026 : il manquait un
+`index.html` à la racine. Une page d'accueil statique est maintenant présente,
+ainsi qu'une page d'index dans chaque dossier. Le changement prendra effet après
+un nouveau déploiement Vercel depuis la racine du dépôt.
+
+Les URL de prévisualisation `git-…vercel.app` peuvent rester protégées par les
+réglages d'accès de Vercel. Pour un site public, utilisez l'alias de production
+stable après avoir vérifié qu'il est accessible publiquement. Tant que ce n'est
+pas fait, les options sûres restent :
 
 | Option | Valeur à saisir |
 |---|---|
-| Vider le champ (recommandé tant qu'aucune instance n'est en ligne) | *(vide)* |
+| Vider le champ | *(vide)* |
 | Renvoyer vers la documentation du simulateur | `https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md` |
 
-Le simulateur se lance localement : `python -m simulateur.dashboard --port 8080`
+Le simulateur se lance aussi localement : `python -m simulateur.dashboard --port 8080`
 (voir § 5 du `README.md`).
 
 ## 3. Sujets (20 / 20)
