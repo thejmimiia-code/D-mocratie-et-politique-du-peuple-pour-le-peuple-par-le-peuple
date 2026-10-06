@@ -23,3 +23,6 @@ dist/
 
 # Cache local des relevés API publiques (données live, non versionné)
 .simulateur_cache/
+
+# Node.js dependencies
+node_modules/
