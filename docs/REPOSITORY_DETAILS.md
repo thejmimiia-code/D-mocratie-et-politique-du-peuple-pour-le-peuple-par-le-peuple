@@ -37,14 +37,24 @@ sait faire aujourd'hui.
 ## 2. Site web
 
 Le site déclaré (`https://d-mocratie-et-politique-du-peuple-p.vercel.app`)
-**renvoie une erreur 404** : l'application n'est plus servie. Deux options :
+renvoyait `404 DEPLOYMENT_NOT_FOUND` quand la branche `main` ne contenait ni
+page d'accueil ni fonctions API. La branche de travail ajoute maintenant à la
+racine la vraie interface interactive du simulateur et une fonction Python
+par route du moteur. Après fusion dans `main` et redéploiement Vercel, vérifier
+`/`, `/api/scenarios` et `POST /api/simuler` sur cette même adresse.
+
+Les URL de prévisualisation `git-…vercel.app` peuvent rester protégées par les
+réglages d'accès de Vercel. Pour rendre l'outil public, désactiver
+**Deployment Protection → Vercel Authentication** et utiliser l'alias stable
+de production. Tant que le déploiement de production n'est pas vérifié, les
+options sûres restent :
 
 | Option | Valeur à saisir |
 |---|---|
-| Vider le champ (recommandé tant qu'aucune instance n'est en ligne) | *(vide)* |
+| Vider le champ | *(vide)* |
 | Renvoyer vers la documentation du simulateur | `https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md` |
 
-Le simulateur se lance localement : `python -m simulateur.dashboard --port 8080`
+Le simulateur se lance aussi localement : `python -m simulateur.dashboard --port 8080`
 (voir § 5 du `README.md`).
 
 ## 3. Sujets (20 / 20)

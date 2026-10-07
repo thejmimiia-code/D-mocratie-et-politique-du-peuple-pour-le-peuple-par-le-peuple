@@ -144,6 +144,26 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
 Documentation détaillée : [`docs/SIMULATEUR_PARAMETRABLE.md`](docs/SIMULATEUR_PARAMETRABLE.md).
 Réglages du dépôt (description, sujets, aperçu social) : [`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md).
 
+### Déploiement Vercel du simulateur
+
+`index.html` à la racine est généré depuis la vraie page interactive `HTML_PAGE`.
+Les fonctions `api/*.py` exposent les routes du moteur sur le même domaine, ce
+qui permet à la page d'appeler ses URL absolues `/api/...` et d'être intégrée
+dans un `iframe`.
+
+```bash
+python3 outils/generer-index-simulateur.py
+python3 outils/generer-fonctions-api.py
+python3 outils/generer-index-simulateur.py --verifier
+python3 outils/generer-fonctions-api.py --verifier
+```
+
+Dans Vercel : **Framework Preset: Other**, **Build Command: vide**,
+**Output Directory: `.`**, **Install Command: vide**. Ne pas ajouter de règle de
+réécriture globale. Le code ne définit ni `X-Frame-Options` ni CSP `frame-ancestors`.
+Pour un accès public, désactiver **Security → Deployment Protection → Vercel Authentication**.
+
+
 ```bash
 # ligne de commande paramétrique :
 python -m simulateur.moteur_parametrique --preset mandature --json
