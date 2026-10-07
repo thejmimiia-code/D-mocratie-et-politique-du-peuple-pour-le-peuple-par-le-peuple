@@ -24,18 +24,22 @@ from simulateur.pont_api import FonctionAPI  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 ROUTES_MOTEUR = (
+    "bulle",
+    "bulles",
     "catalogue",
+    "comparer",
+    "conseil",
     "contexte",
     "donnees",
-    "simuler",
-    "comparer",
+    "export",
+    "garde_fous",
+    "lexique",
+    "marches",
     "presets",
-    "bulles",
-    "bulle",
     "proxy",
     "run",
     "scenarios",
-    "export",
+    "simuler",
 )
 
 
@@ -65,7 +69,7 @@ class TestContratVercel(unittest.TestCase):
             check=False,
         )
         self.assertEqual(commande.returncode, 0, commande.stdout + commande.stderr)
-        self.assertIn("12 routes du moteur", commande.stdout)
+        self.assertIn("16 routes du moteur", commande.stdout)
 
         for nom in ROUTES_MOTEUR:
             with self.subTest(route=nom):

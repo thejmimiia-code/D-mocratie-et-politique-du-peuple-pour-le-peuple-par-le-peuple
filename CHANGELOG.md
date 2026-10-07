@@ -4,6 +4,34 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.10.1] — 2026-10-08
+
+### Corrigé — Le contrat Vercel rattrape le moteur (`api/`, `index.html`)
+
+Deux tests de `tests/test_vercel_runtime.py` échouaient sur `main` : les
+artefacts générés n'avaient pas suivi le moteur. Les deux sont refaits.
+
+- **Quatre routes manquaient dans `api/`.** `conseil` (conseiller temps réel),
+  `lexique` et `marches` n'étaient pas déclarées dans le tuple `ROUTES` du
+  générateur. La quatrième, `garde_fous`, était invisible pour la vérification
+  elle-même : son expression régulière `(/api/[a-z]+)` ignorait le souligné, si
+  bien que la route n'a jamais pu être signalée comme manquante — alors que la
+  page l'appelle (`fetch('/api/garde_fous')`) et que
+  `docs/SIMULATEUR_PARAMETRABLE.md` la documente. L'expression est élargie à
+  `[a-z_]+`.
+- **`api/` passe de 12 à 16 routes** (+ `verifier-source`, fonction du site,
+  jamais écrasée). `--verifier` confirme l'accord avec le moteur.
+- **`index.html` régénéré** : il datait d'avant les changements de `HTML_PAGE`
+  — le générateur le disait lui-même (« index.html est différent de HTML_PAGE :
+  relancer le générateur »).
+- Les 16 routes sont servies par le pont WSGI, vérifiées une à une en HTTP
+  (13 en GET, 3 en POST) ; `conseil` et `donnees` restent réservées au POST.
+- **`README.md`** : l'offre Hobby de Vercel plafonne un déploiement à 12
+  fonctions ; `api/` en compte 17, donc le déploiement Vercel est refusé sur
+  l'offre gratuite. Le bouton Render, l'image Docker ou n'importe quel
+  hébergeur Python servent les 16 routes depuis un seul processus.
+- Tests : **540 réussis** ; `ruff check .` propre.
+
 ## [1.10.0] — 2026-10-08
 
 ### Ajout — Un lien public pour le simulateur (`simulateur/wsgi.py`)
@@ -55,6 +83,14 @@ simulateur exactement sur les leviers affichés.
 - 8 étapes de plus au harnais Node (`tests/navigateur_interface.mjs`), dont
   l'aller-retour complet — réglage modifié → lien → page rouverte sur ce
   réglage — et le refus d'un lien hostile.
+
+### Documentation
+
+- **`docs/HEBERGEMENT.md`** : le dépannage couvre désormais le parcours
+  **Blueprints** de Render — branche `main`, **Blueprint Path** vide, et le
+  message « Blueprint file `render.yaml` not found on main branch », qui vient
+  d'un arbre de dépôt mis en cache et se dissipe par **Retry** une fois
+  `render.yaml` présent sur `main`.
 
 ## [1.9.0] — 2026-10-08
 
