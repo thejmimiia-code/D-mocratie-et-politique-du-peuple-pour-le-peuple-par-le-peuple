@@ -440,10 +440,14 @@ def _resume(lignes: list[dict[str, Any]], synthese: dict) -> str:
     # Les grandeurs sont citées telles quelles : leur ajouter un article
     # (« les règles européennes ») supposerait de connaître leur genre et leur
     # nombre. La forme nominale évite une faute de grammaire.
+    # Le pluriel se construit à la main : « 1 grandeur(s) » se lit mal, et
+    # une synthèse se lit plus qu'elle ne se parse.
+    nom_hausse = "grandeur" + ("s" if len(favorables) > 1 else "")
+    nom_baisse = "grandeur" + ("s" if len(defavorables) > 1 else "")
     hausse = ", ".join(ligne["grandeur"] for ligne in favorables[:3])
     baisse = ", ".join(ligne["grandeur"] for ligne in defavorables[:3])
-    return (f"{tete}Le bilan est partagé : {len(favorables)} grandeur(s) dans le bon "
-            f"sens ({hausse}), {len(defavorables)} en sens inverse ({baisse}).")
+    return (f"{tete}Le bilan est partagé : {len(favorables)} {nom_hausse} dans le bon "
+            f"sens ({hausse}), {len(defavorables)} {nom_baisse} en sens inverse ({baisse}).")
 
 
 def lecture_claire(charge: dict[str, Any]) -> dict[str, Any]:
