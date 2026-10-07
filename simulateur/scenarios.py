@@ -204,7 +204,15 @@ def get_scenario_double_mandature() -> list[DecisionPolitique]:
             **_REGIME_CROISIERE,
         ),
     ]
-    return premiere + seconde
+    trajectoire = premiere + seconde
+    for decision in trajectoire:
+        decision.horizon_deux_mandatures = True
+        decision.entretien_capital_public_mde = 6.0
+        decision.effort_adaptation_climat_mde = 1.0
+        decision.capital_humain_mde = 2.0
+        decision.montee_capacite_defense_mde = 2.0
+        decision.reformes_structurelles_actives = 6.0
+    return trajectoire
 
 
 def get_scenario_alternance_2032() -> list[DecisionPolitique]:
@@ -247,7 +255,17 @@ def get_scenario_alternance_2032() -> list[DecisionPolitique]:
         )
         for annee in range(6, 11)
     ]
-    return premiere + seconde
+    trajectoire = premiere + seconde
+    for decision in trajectoire:
+        decision.horizon_deux_mandatures = True
+        decision.entretien_capital_public_mde = 6.0
+        decision.effort_adaptation_climat_mde = 1.0
+        decision.reformes_structurelles_actives = 6.0
+        if decision.annee <= 5:
+            # Même investissement de départ avant le scrutin de 2032.
+            decision.capital_humain_mde = 2.0
+            decision.montee_capacite_defense_mde = 2.0
+    return trajectoire
 
 
 def get_scenario_statut_quo() -> list[DecisionPolitique]:

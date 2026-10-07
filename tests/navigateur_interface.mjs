@@ -166,6 +166,7 @@ globalThis.fetch = async (url, options = {}) => {
       if (rang < sequence.length) cle = sequence[rang].route;
       rapport.postes_simuler.push({
         cle: cle,
+        horizon: envoye.horizon,
         leviers_actifs: Object.keys(envoye.parametres || {}).length,
         premier_levier_actif: Object.entries(envoye.parametres || {})
           .filter(([nom]) => (charge.defauts || {})[nom] !== undefined
@@ -214,6 +215,7 @@ const programme = `
                        'renderGraphique','renderDomaines','renderMatrice','renderJournal',
                        'reinitialiser','activerExports','exporter','rafraichirDonnees',
                        'terminerReglage','basculerDensite','basculerDetailsConsole','allerAuxLeviers',
+                       'horizonCourant','changerHorizon','renderBilanIntergenerationnel',
                        'filtreCourant','pucesHtml','majEffetsParLevier',
                        'ouvrirBulle','chargerBulle','htmlBulle','bulleBoutonHtml','libelleDomaine',
                        'initialiserInfobulles','survoler','masquerInfobulle','afficherInfobulle',
@@ -256,9 +258,9 @@ noter("affiche la provenance des chiffres", contenu("provenance").length > 200);
 noter("affiche l'impact du préréglage de démarrage", contenu("grid-impact").includes("carte metric"));
 noter("remplit le tableau année par année", contenu("results-table").includes("<tbody>"));
 noter("trace les courbes du graphique", contenu("svg-chart").includes("<polyline"));
-noter("le POST de simulation porte bien les 97 leviers",
-      (rapport.postes_simuler?.[0]?.leviers_actifs || 0) >= 90,
-      `${rapport.postes_simuler?.[0]?.leviers_actifs} leviers transmis`);
+noter("le POST de simulation porte tout le catalogue",
+      rapport.postes_simuler?.[0]?.leviers_actifs === leviersComplets,
+      `${rapport.postes_simuler?.[0]?.leviers_actifs} levier(s) transmis`);
 const impactPrereglage = contenu("grid-impact");
 
 /* 2. Un levier modifié par l'utilisateur relance la simulation. */
@@ -328,17 +330,19 @@ noter("l'audit de traçabilité est rendu en bas de page",
       + " car. ; domaines " + contenu("audit-domaines").length
       + " car. ; garde-fous " + contenu("audit-gardefous").length + " car.");
 noter("le compteur annonce les leviers affichés et modifiés",
-      /97 levier\(s\) affiché\(s\)/.test(elements.get("compteur-leviers")?.textContent || ""),
+      new RegExp(leviersComplets + " levier\\(s\\) affiché\\(s\\)")
+        .test(elements.get("compteur-leviers")?.textContent || ""),
       elements.get("compteur-leviers")?.textContent);
 
-/* 2 bis. Vue compacte : les 97 paramètres sur une ligne chacun. */
+/* 2 bis. Vue compacte : chaque paramètre sur une ligne. */
 apiPage.basculerDensite(true);
 for (let i = 0; i < 2; i += 1) await tourner();
 const compacts = (contenu("leviers-grille").match(/class="levier compact/g) || []).length;
-noter("la vue compacte affiche les 97 leviers", compacts === 97, `${compacts} leviers compacts`);
+noter("la vue compacte affiche tous les leviers", compacts === leviersComplets,
+      `${compacts} leviers compacts`);
 const curseurs = (contenu("leviers-grille").match(/oninput="majLevier/g) || []).length;
 const bascules = (contenu("leviers-grille").match(/onchange="majLevier/g) || []).length;
-noter("chaque levier compact garde sa commande", curseurs + bascules === 97,
+noter("chaque levier compact garde sa commande", curseurs + bascules === leviersComplets,
       `${curseurs} curseurs + ${bascules} interrupteurs = ${curseurs + bascules} commandes`);
 noter("le libellé du bouton de densité bascule",
       (elements.get("btn-densite")?.textContent || "").includes("confort"),
@@ -372,7 +376,7 @@ noter("la bulle cite les effets déclarés au catalogue", grilleBulle.includes("
 noter("la bulle affiche le coût / gain réel du réglage en direct",
       grilleBulle.includes("bulle-live") && /cout-gain (gain|cout|neutre)/.test(grilleBulle),
       (grilleBulle.match(/cout-gain/g) || []).length + " bloc(s) coût/gain dans la bulle");
-noter("la bulle laisse les 97 réglages accessibles",
+noter("la bulle laisse les 101 réglages accessibles",
       (grilleBulle.match(/class="levier[ "]/g) || []).length === leviersComplets,
       `${(grilleBulle.match(/class="levier[ "]/g) || []).length} cartes`);
 await apiPage.ouvrirBulle(cleLevier);
@@ -512,7 +516,20 @@ noter("récapitule les séries mises à jour dans le bouton",
       elements.get("btn-rafraichir")?.textContent);
 noter("aucune boîte d'alerte ouverte", rapport.alertes.length === 0, rapport.alertes.join(" | "));
 
-/* 8. Adaptateurs d'extraction, testés isolément sur des charges réalistes. */
+/* 8. L'horizon décennal est envoyé au moteur et son bilan reste lisible. */
+apiPage.changerHorizon(10);
+for (let i = 0; i < 6; i += 1) await tourner();
+const appelDecennal = rapport.postes_simuler?.at(-1);
+noter("le sélecteur accepte deux mandatures", apiPage.horizonCourant() === 10
+      && elements.get("horizon-simulation")?.value === "10");
+noter("la requête envoie l'horizon de dix ans", appelDecennal?.horizon === 10,
+      JSON.stringify(appelDecennal));
+noter("le résultat rend dix étapes et le bilan intergénérationnel",
+      apiPage.etat().SORTIE?.horizon === 10
+      && apiPage.etat().SORTIE?.etapes?.length === 10
+      && contenu("bilan-intergenerationnel").includes("Besoin de patrimoine non couvert"));
+
+/* 9. Adaptateurs d'extraction, testés isolément sur des charges réalistes. */
 const eurostat = apiPage.extraireEurostat(chargeExterne("eurostat"), "0");
 noter("adaptateur Eurostat", eurostat && eurostat.valeur === 2.5 && eurostat.periode === "2026-08");
 const sdmx = apiPage.extraireSdmx(chargeExterne("sdmx"));

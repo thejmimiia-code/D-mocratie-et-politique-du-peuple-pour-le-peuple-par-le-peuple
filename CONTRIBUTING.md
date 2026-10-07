@@ -30,7 +30,7 @@ python -m unittest discover -s tests -p "test_*.py" -v
 # 5. Lancer le simulateur
 python3 main.py mandature          # scénario en ligne de commande
 python3 -m simulateur.cli          # menu interactif
-python3 -m simulateur.dashboard --port 8080   # simulateur interactif : 97 leviers,
+python3 -m simulateur.dashboard --port 8080   # simulateur interactif : 101 leviers,
                                               # 20 domaines, console de veille
 ```
 

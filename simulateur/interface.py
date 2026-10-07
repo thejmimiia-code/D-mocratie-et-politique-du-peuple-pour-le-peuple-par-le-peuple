@@ -9,9 +9,9 @@ aucun CDN) qui contient :
     messages de seuil (tolérable → vigilance → risqué → hors-sol), risque pour la
     population, marges de manœuvre restantes et effet de la dernière modification ;
   * la cascade des 5 échelons systémiques, recalculée à chaque simulation ;
-  * la grille des scénarios types (9 situations historiques du dépôt) ;
+  * la grille des scénarios types du dépôt, rejoués année par année ;
   * les préréglages doctrinaux additionnels ;
-  * 97 leviers de politique publique réglables (curseurs, interrupteurs), chacun
+  * le catalogue de leviers de politique publique réglables (curseurs, interrupteurs), chacun
     annoté d'une **aide au survol** (plage, défaut, valeur courante, effets
     déclarés, mesures en direct) et d'une **bulle explicative** dépliable ;
   * des infobulles instantanées sur les boutons, cases à cocher, cartes de
@@ -55,6 +55,10 @@ header.entete{background:linear-gradient(135deg,#12305c,#2b1e56);border:1px soli
 header.entete h1{font-size:1.45rem;letter-spacing:.2px}
 header.entete p{color:var(--texte-dim);font-size:.88rem;margin-top:4px}
 .barre-contexte{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.select-horizon{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);
+  border-radius:999px;padding:4px 10px;background:var(--panel);color:var(--texte-dim);font-size:.78rem}
+.select-horizon select{font:inherit;color:var(--texte);background:var(--panel-2);border:1px solid var(--border);
+  border-radius:7px;padding:4px 7px}
 .pastille{border-radius:999px;padding:4px 12px;font-size:.75rem;border:1px solid var(--border);
   background:var(--panel);color:var(--texte-dim);white-space:nowrap}
 .pastille.live{border-color:var(--vert);color:#bbf7d0;background:rgba(34,197,94,.12)}
@@ -307,9 +311,16 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <span class="pastille" id="badge-contexte">contexte : chargement…</span>
       <span class="pastille" id="badge-date">—</span>
       <span class="pastille" id="badge-leviers">—</span>
+      <label class="select-horizon" data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">
+        Horizon <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
+          <option value="5" selected>1 mandature · 5 ans</option>
+          <option value="10">2 mandatures · 10 ans</option>
+        </select>
+      </label>
+      <span class="pastille" id="badge-horizon">une mandature · 5 ans</span>
       <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données (API publiques)</button>
-      <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène les 97 réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
-      <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule les 5 années, les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Compter moins d'une seconde.">Simuler avec impacts croisés</button>
+      <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène tous les réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
+      <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule l'horizon sélectionné (5 ou 10 ans), les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Le modèle reste une exploration, pas une prévision.">Simuler avec impacts croisés</button>
       <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
       <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
     </div>
@@ -323,8 +334,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <span class="ruban-cout neutre" id="ruban-cout" data-aide="<b>Coût / gain réel du programme actif</b>Solde net des réglages globaux croisés (recettes nouvelles − dépenses nouvelles), recalculé en temps réel à chaque mouvement. Rouge = coût réel, vert = gain réel, en Md€ par an.">💶 coût / gain réel : —</span>
     <span class="ruban-actions">
       <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()" data-aide="<b>Détail des seuils</b>Replie ou déplie le corps de la console de veille pour libérer l'écran : le verdict et les cinq strates restent affichés.">Masquer le détail des seuils</button>
-      <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : les 97 paramètres tiennent à l'écran, tous réglables en direct.">Vue compacte</button>
-      <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les 97 leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct.">Régler les 97 leviers</button>
+      <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : le catalogue tient à l'écran, tous réglables en direct.">Vue compacte</button>
+      <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct.">Régler les leviers</button>
       <button class="discret" onclick="allerAudit()" data-aide="<b>Audit &amp; traçabilité</b>Toutes les sources officielles, chaque formule, chaque seuil et la méthode des dynamiques croisées : le simulateur à livre ouvert, pas une boîte noire.">🔍 Audit &amp; sources</button>
     </span>
   </div>
@@ -368,8 +379,13 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   </section>
 
   <section class="bloc">
-    <h2>Surface d'impact de vos choix <span class="aide">recettes, dépenses et solde des mesures activées (année 5)</span></h2>
+    <h2>Surface d'impact de vos choix <span class="aide">recettes, dépenses et solde des mesures activées (année terminale)</span></h2>
     <div class="grille metrics" id="grid-impact"></div>
+  </section>
+
+  <section class="bloc" id="section-bilan-intergenerationnel">
+    <h2>Transmission entre générations <span class="aide">dette, besoins non couverts, investissements à maturité et risque climatique — composantes séparées, sans score synthétique</span></h2>
+    <div class="grille metrics" id="bilan-intergenerationnel"></div>
   </section>
 
   <section class="bloc">
@@ -378,7 +394,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   </section>
 
   <section class="bloc">
-    <h2>Scénarios types du dépôt <span class="aide">9 situations rejouées par le moteur d'origine, année par année — pour comparaison</span></h2>
+    <h2>Scénarios types du dépôt <span class="aide">situations rejouées par le moteur d'origine, année par année — pour comparaison</span></h2>
     <div class="grille scenarios" id="scenario-grid"></div>
   </section>
 
@@ -388,11 +404,11 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   </section>
 
   <section class="bloc" id="section-leviers">
-    <h2>Vos leviers <span class="aide">les 97 paramètres, tous visibles et actionnables — chaque geste se répercute en direct</span></h2>
+    <h2>Vos leviers <span class="aide">tous les paramètres du catalogue, visibles et actionnables — chaque geste se répercute en direct</span></h2>
     <div class="barre-leviers">
-      <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre les 97 leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
+      <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre tous les leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
-      <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : les 97 paramètres tiennent à l'écran tout en restant actionnables en direct.">
+      <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : le catalogue tient à l'écran tout en restant actionnable en direct.">
         <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> Vue compacte (une ligne par levier)
       </label>
     </div>
@@ -435,7 +451,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       Ce simulateur est un <b>modèle, pas une prophétie</b> : il rend explicites toutes ses
       hypothèses. Vous trouverez ici, de façon permanente et auditable : les sources officielles
       de chaque donnée d'entrée, la formule et la source de chaque indicateur des 20 domaines,
-      le champ et la source de chacun des 97 leviers, le barème institutionnel complet des
+      le champ et la source de chacun des leviers du catalogue, le barème institutionnel complet des
       garde-fous, et la méthode des dynamiques croisées. Tout recoupement est possible.
     </p>
     <details id="audit-sources-details" open>
@@ -447,7 +463,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <div class="corps" id="audit-domaines">chargement…</div>
     </details>
     <details id="audit-leviers-details">
-      <summary>3. Les 97 leviers : champ budgétaire, effets déclarés et source</summary>
+      <summary>3. Les leviers : champ budgétaire, effets déclarés et source</summary>
       <div class="corps" id="audit-leviers">chargement…</div>
     </details>
     <details id="audit-gardefous-details">
@@ -473,7 +489,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.7.4 (2026-10-06) — si les indicateurs coût / gain en € n'apparaissent pas, rechargez la page (F5) pour obtenir cette version.</span>
+    <span class="aide" id="version-interface">Interface v1.7.5 (2026-10-07) — rechargez la page (F5) pour obtenir l'horizon décennal et le bilan intergénérationnel.</span>
   </p>
 </div>
 
@@ -498,6 +514,17 @@ let CATALOGUE = null;
 let CONTEXTE = null;
 let SORTIE = null;
 let PARAMS = {};
+let HORIZON_SIMULATION = 5;
+function horizonCourant(){ return HORIZON_SIMULATION; }
+function changerHorizon(valeur, relancer){
+  HORIZON_SIMULATION = Number(valeur) === 10 ? 10 : 5;
+  const select = document.getElementById('horizon-simulation');
+  if (select) select.value = String(HORIZON_SIMULATION);
+  const badge = document.getElementById('badge-horizon');
+  if (badge) badge.textContent = HORIZON_SIMULATION === 10
+    ? 'deux mandatures · 10 ans' : 'une mandature · 5 ans';
+  if (relancer !== false && SORTIE) simuler(true);
+}
 //: Simulation précédente (paramètres envoyés + sortie) : c'est elle qui permet
 //: d'afficher la conséquence de la DERNIÈRE modification, en direct.
 let SIMULATION_PRECEDENTE = null;
@@ -510,7 +537,7 @@ let MOUVEMENT = null;
 let DERNIER_CONSEIL = null;
 //: Leviers touchés par la dernière modification (mis en évidence).
 let LEVIERS_MODIFIES = new Set();
-//: Vue compacte : une ligne par levier, pour que les 97 tiennent à l'écran.
+//: Vue compacte : une ligne par levier, pour que le catalogue tienne à l'écran.
 let VUE_COMPACTE = false;
 //: Vrai pendant qu'un curseur est manipulé : on ne reconstruit alors pas la
 //: grille, sinon le curseur serait remplacé sous les doigts de l'utilisateur.
@@ -518,7 +545,7 @@ let REGLAGE_EN_COURS = false;
 //: Bulles explicatives chargées depuis /api/bulle (une par levier, à la demande).
 let BULLES = {};
 //: Levier dont la bulle est dépliée : elle s'ouvre **dans** la carte du levier,
-//: jamais par-dessus, pour que les 97 réglages restent visibles et actionnables.
+//: jamais par-dessus, pour que tous les réglages restent visibles et actionnables.
 let BULLE_OUVERTE = null;
 //: Leviers déjà demandés au serveur (évite les appels répétés).
 let BULLES_DEMANDEES = new Set();
@@ -715,7 +742,7 @@ async function rafraichirDonnees(){
   if (SORTIE) simuler(false);
 }
 
-/* ── Leviers : les 97 paramètres, tous visibles et actionnables ────────── */
+/* ── Leviers : tout le catalogue, visible et actionnable ───────────────── */
 function filtreCourant(){
   const champ = document.getElementById('recherche-levier');
   return (champ && champ.value) || '';
@@ -1290,6 +1317,7 @@ function renderPresets(){
 function chargerPreset(cle, ev){
   const preset = CATALOGUE.parametres.presets[cle];
   if (!preset) return;
+  if (cle === 'double_mandature') changerHorizon(10, false);
   PARAMS = Object.assign({}, CATALOGUE.parametres.defauts, preset.parametres);
   // Les leviers du préréglage sont marqués comme modifiés : on voit d'un coup
   // d'œil ce que le programme change, et où il faut ajuster.
@@ -1319,11 +1347,12 @@ function marquerCarteActive(ev, cle){
 }
 function afficherScenarioHistorique(donnees){
   const final = donnees.resultats[donnees.resultats.length - 1];
+  const horizon = donnees.resultats.length;
   document.getElementById('grid-impact').innerHTML = `
     <div class="carte metric"><div class="libelle">Scénario historique</div>
       <div class="valeur">${donnees.nom}</div>
-      <div class="delta neutre">résultats du moteur d'origine (5 ans)</div></div>
-    <div class="carte metric"><div class="libelle">Déficit année 5</div>
+      <div class="delta neutre">résultats du moteur d'origine (${horizon} ans)</div></div>
+    <div class="carte metric"><div class="libelle">Déficit année ${final.annee}</div>
       <div class="valeur">${fmt(final.ratio_deficit_pib, 2)} % PIB</div>
       <div class="delta ${couleurDelta(-final.ratio_deficit_pib)}">dette ${fmt(final.ratio_dette_pib, 1)} % PIB</div></div>
     <div class="carte metric"><div class="libelle">OAT 10 ans</div>
@@ -1333,8 +1362,25 @@ function afficherScenarioHistorique(donnees){
       <div class="valeur">${fmt(final.tension_sociale_locale, 1)}/100</div>
       <div class="delta neutre">confiance ${fmt(final.confiance_democratique, 1)}/100</div></div>`;
   renderTableau(donnees.resultats);
+  const actifsMatures = {
+    cycle_long: final.investissements_matures_mde || 0,
+    capital_humain_proxy: final.capital_humain_mature_mde || 0,
+    capacites_bitd_proxy: final.capacites_defense_matures_mde || 0,
+  };
+  renderBilanIntergenerationnel({synthese: {bilan_intergenerationnel: {
+    annee_terminal: final.annee,
+    dette_publique_mde: final.dette_nominale_mde,
+    dette_publique_pct_pib: final.ratio_dette_pib,
+    besoin_non_couvert_capital_public_mde: final.dette_technique_infrastructures_mde || 0,
+    investissements_longs_engages_cumules_mde: final.investissements_longs_engages_cumules_mde || 0,
+    actifs_arrives_a_maturite_mde: actifsMatures,
+    risque_climat_annualise_hors_budget_mde: final.dommages_climat_subis_mde || 0,
+    dommages_climat_evites_annualises_hors_budget_mde: final.dommages_climat_evites_mde || 0,
+    note_methodologique: 'Composantes séparées, sans score synthétique ni pondération normative.'
+  }}});
+  changerHorizon(horizon, false);
   document.getElementById('badge-leviers').textContent =
-    `scénario « ${donnees.nom} » — 5 exercices simulés`;
+    `scénario « ${donnees.nom} » — ${horizon} exercice(s) simulé(s)`;
   activerExports();
 }
 
@@ -1343,15 +1389,18 @@ async function simuler(avecImpacts){
   const bouton = document.getElementById('btn-simuler');
   bouton.disabled = true;
   const parametresEnvoyes = Object.assign({}, PARAMS);
+  const horizon = horizonCourant();
   try {
     const reponse = await fetch('/api/simuler', {
       method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({parametres: parametresEnvoyes, avec_impacts: !!avecImpacts, max_impacts: 16})
+      body: JSON.stringify({parametres: parametresEnvoyes, horizon: horizon,
+                            avec_impacts: !!avecImpacts, max_impacts: 16})
     });
     const donnees = await reponse.json();
     if (donnees.error){ alert('Erreur de simulation : ' + donnees.error); return; }
     SORTIE = donnees;
     renderImpact(donnees);
+    renderBilanIntergenerationnel(donnees);
     renderStrates(donnees);
     renderTableau(donnees.etapes);
     renderGraphique(donnees.etapes);
@@ -1365,12 +1414,12 @@ async function simuler(avecImpacts){
                                {parametres: parametresEnvoyes, sortie: donnees});
     majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
     majConseilTempsReel(parametresEnvoyes);
-    SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees};
+    SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees, horizon: horizon};
     // La grille est reconstruite avec ses puces d'impact — sauf pendant qu'un
     // curseur est manipulé, pour ne pas le remplacer sous les doigts.
     if (!REGLAGE_EN_COURS) renderLeviers(filtreCourant());
     document.getElementById('badge-leviers').textContent =
-      `${nombreLeviersActifs()} leviers actifs · score moyen ${fmt(donnees.synthese.score_moyen_domaines,1)} (référence ${fmt(donnees.synthese.score_moyen_reference,1)})`;
+      `${nombreLeviersActifs()} leviers actifs · simulation ${horizon} ans · score moyen ${fmt(donnees.synthese.score_moyen_domaines,1)} (référence ${fmt(donnees.synthese.score_moyen_reference,1)})`;
     activerExports();
   } catch (erreur){
     alert('Le serveur n\'a pas répondu : ' + erreur);
@@ -1643,7 +1692,8 @@ async function majConseilTempsReel(parametresEnvoyes){
     const reponse = await fetch('/api/conseil', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({parametres: parametresEnvoyes, cle: cle,
-                            avant: MOUVEMENT.avant, apres: apres})
+                            avant: MOUVEMENT.avant, apres: apres,
+                            horizon: horizonCourant()})
     });
     const conseil = await reponse.json();
     // Le conseil affiché correspond au dernier mouvement réellement demandé.
@@ -1699,9 +1749,10 @@ function renderConseil(conseil){
 
 function renderImpact(donnees){
   const s = donnees.synthese;
+  const anneeTerminale = donnees.horizon || donnees.etapes?.length || 5;
   const cartes = [
-    ['Recettes nouvelles (an 5)', fmt(s.recettes_nouvelles_mde, 1) + ' Md€', 'mesures activées'],
-    ['Dépenses nouvelles (an 5)', fmt(s.depenses_nouvelles_mde, 1) + ' Md€', 'mesures activées'],
+    [`Recettes nouvelles (an ${anneeTerminale})`, fmt(s.recettes_nouvelles_mde, 1) + ' Md€', 'mesures activées'],
+    [`Dépenses nouvelles (an ${anneeTerminale})`, fmt(s.depenses_nouvelles_mde, 1) + ' Md€', 'mesures activées'],
     ['Solde des mesures', fmt(s.solde_mesures_mde, 1) + ' Md€',
       s.solde_mesures_mde >= 0 ? 'excédent de mesures' : 'coût net des mesures'],
     ['Déficit final', fmt(s.deficit_final_pct, 2) + ' % PIB',
@@ -1715,12 +1766,32 @@ function renderImpact(donnees){
     ['Risque de censure', fmt(s.risque_censure_final_pct, 0) + ' %',
       s.statut_pde ? 'PDE active' : 'PDE : conforme'],
     ['Croissance cumulée', (s.croissance_supplementaire_pts >= 0 ? '+' : '') + fmt(s.croissance_supplementaire_pts, 2) + ' %',
-      'PIB année 5 vs référence'],
+      `PIB année ${anneeTerminale} vs référence`],
     ['Domaines en hausse', String(s.nombre_domaines_en_hausse), `${s.nombre_domaines_en_baisse} en baisse`],
   ];
   document.getElementById('grid-impact').innerHTML = cartes.map(([libelle, valeur, sous]) =>
     `<div class="carte metric"><div class="libelle">${libelle}</div><div class="valeur">${valeur}</div>
       <div class="delta neutre">${sous}</div></div>`).join('');
+}
+function renderBilanIntergenerationnel(donnees){
+  const zone = document.getElementById('bilan-intergenerationnel');
+  const bilan = donnees.synthese?.bilan_intergenerationnel;
+  if (!zone || !bilan) return;
+  const actifs = bilan.actifs_arrives_a_maturite_mde || {};
+  const cartes = [
+    ['Dette publique', `${fmt(bilan.dette_publique_mde, 1)} Md€`, `${fmt(bilan.dette_publique_pct_pib, 1)} % PIB`],
+    ['Besoin de patrimoine non couvert (proxy)', `${fmt(bilan.besoin_non_couvert_capital_public_mde, 1)} Md€`, 'pas une dette comptable'],
+    ['Investissements longs engagés', `${fmt(bilan.investissements_longs_engages_cumules_mde, 1)} Md€`, 'cumul des flux modélisés'],
+    ['Cycle long arrivé à maturité', `${fmt(actifs.cycle_long, 1)} Md€`, 'stock modèle, pas rendement observé'],
+    ['Capital humain arrivé à maturité', `${fmt(actifs.capital_humain_proxy, 1)} Md€`, 'proxy sans rendement PIB présumé'],
+    ['Capacités BITD arrivées à maturité', `${fmt(actifs.capacites_bitd_proxy, 1)} Md€`, 'proxy de calendrier LPM'],
+    ['Risque climatique annualisé', `${fmt(bilan.risque_climat_annualise_hors_budget_mde, 2)} Md€`, 'hors déficit APU'],
+    ['Dommages climatiques évités (proxy)', `${fmt(bilan.dommages_climat_evites_annualises_hors_budget_mde, 2)} Md€`, 'hors recettes publiques'],
+  ];
+  zone.innerHTML = cartes.map(([libelle, valeur, sous]) =>
+    `<div class="carte metric"><div class="libelle">${libelle}</div><div class="valeur">${valeur}</div>
+      <div class="delta neutre">${sous}</div></div>`).join('')
+    + `<div class="source-note" style="grid-column:1/-1">${bilan.note_methodologique || ''} Données et hypothèses : audit de traçabilité et R&D P16-P21.</div>`;
 }
 function renderStrates(donnees){
   const dernier = donnees.etapes[donnees.etapes.length - 1];
@@ -1987,6 +2058,16 @@ function auditMethodesHtml(){
     <li><b>Périmètre chiffré :</b> ${nbLeviers} leviers, ${nbDomaines} domaines,
       ${nbIndicateurs} indicateurs (formule + source), 31 garde-fous (26 absolus + 5 en écart),
       14 préréglages, 11 scénarios.</li>
+    <li><b>Hypothèses P16-P21 (scénarios, pas observations) :</b> patrimoine : 145/24 = 6,04 Md€/an,
+      annualisation exploratoire des 140-150 Md€ de besoins à 2050 ; climat : 143/30 = 4,77 Md€/an
+      de pertes moyennes (hors budget APU), avec le ratio Barnier 8/30 annualisé uniquement comme
+      hypothèse de prévention ; maturités capital humain / BITD : 8 / 6 ans, sans rendement PIB ni
+      effet automatique sur le spread ; saturation administrative : seuil 8, hypothèse de stress-test.
+      Sources : <a href="https://www.ccomptes.fr/sites/default/files/2024-04/NEB-2023-Gestion-patrimoine-immobilier-Etat.pdf" rel="noopener">Cour des comptes</a>,
+      <a href="https://www.ecologie.gouv.fr/sites/default/files/documents/PNACC3.pdf" rel="noopener">PNACC-3</a>,
+      <a href="https://www.defense.gouv.fr/sites/default/files/ministere-armees/LPM.pdf" rel="noopener">LPM 2024-2030</a> et
+      <a href="https://www.insee.fr/fr/statistiques/9004289" rel="noopener">projections INSEE 2026</a>.
+      Les coefficients/délais qui ne sont pas des observations restent explicitement exploratoires.</li>
     <li><b>Calibrage :</b> les grandeurs d'entrée (PIB, dette, OAT, BCE, inflation, chômage,
       Brent, change) proviennent des API publiques officielles listées au bloc 1 ; les
       multiplicateurs et élasticités sont cités dans chaque formule (bloc 2).</li>

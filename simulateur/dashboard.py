@@ -4,7 +4,7 @@ simulateur/dashboard.py — Serveur web du simulateur macro-politique.
 
 Deux niveaux de service cohabitent :
 
-  * **Simulateur interactif** (page `/`) : 97 leviers réglables, contexte de
+  * **Simulateur interactif** (page `/`) : catalogue de leviers réglables, contexte de
     données publiques « instant T », 20 domaines d'impact, matrice croisée
     levier × domaine, exports.
       - `GET  /api/catalogue`  : leviers, familles, préréglages, domaines ;

@@ -396,6 +396,22 @@ class TestAPIparametrique(unittest.TestCase):
             self.assertTrue(impact["effets"])
             self.assertTrue(any(abs(e["effet_score"]) > 0 for e in impact["effets"]))
 
+    def test_simulation_horizon_deux_mandatures_expose_le_bilan(self):
+        statut, donnees = self._appel("/api/simuler", {
+            "parametres": {"capital_humain": 1.0},
+            "horizon": 10,
+            "avec_impacts": False,
+        })
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["horizon"], 10)
+        self.assertEqual(len(donnees["etapes"]), 10)
+        self.assertAlmostEqual(donnees["etapes"][0]["dommages_climat_subis_mde"], 143 / 30, places=2)
+        self.assertGreater(donnees["etapes"][-1]["capital_humain_mature_mde"], 0.0)
+        bilan = donnees["synthese"]["bilan_intergenerationnel"]
+        self.assertEqual(bilan["annee_terminal"], 10)
+        self.assertIn("actifs_arrives_a_maturite_mde", bilan)
+        self.assertIn("pas de score", bilan["note_methodologique"] or "")
+
     def test_le_diagnostic_de_seuils_accompagne_la_simulation(self):
         """POST /api/simuler renvoie les garde-fous par strate."""
         corps = json.dumps({"parametres": {"tva_taux_normal": 1.0}, "avec_impacts": False}).encode()

@@ -1064,7 +1064,7 @@ def decisions_depuis_flux(flux: dict[str, float]) -> dict[str, float]:
     }
 
 
-def decision_moteur(parametres: dict[str, float], annee: int) -> DecisionPolitique:
+def decision_moteur(parametres: dict[str, float], annee: int, *, horizon: int = 5) -> DecisionPolitique:
     """Construit la `DecisionPolitique` transmise au moteur pour une année.
 
     * les leviers rattachés à un champ du moteur y sont écrits directement ;
@@ -1072,7 +1072,11 @@ def decision_moteur(parametres: dict[str, float], annee: int) -> DecisionPolitiq
       `depenses_prioritaires_mde` (voir `model.py` et `moteur.py`).
     """
     index = max(0, annee - 1)
-    decision = DecisionPolitique(annee=annee, description=f"Année {annee} — leviers libres")
+    decision = DecisionPolitique(
+        annee=annee,
+        description=f"Année {annee} — leviers libres",
+        horizon_deux_mandatures=horizon > 5,
+    )
     recettes_libres = 0.0
     depenses_libres = 0.0
     for cle, levier in LEVIERS.items():

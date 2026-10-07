@@ -214,8 +214,14 @@ class TestLeviersEtPreset(unittest.TestCase):
 
     def test_preset_double_mandature_se_simule(self):
         contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
-        sortie = simuler(PRESETS["double_mandature"]["parametres"], contexte, avec_impacts=False)
-        self.assertEqual(len(sortie.etapes), 5)
+        sortie = simuler(
+            PRESETS["double_mandature"]["parametres"],
+            contexte,
+            horizon=10,
+            avec_impacts=False,
+        )
+        self.assertEqual(sortie.horizon, 10)
+        self.assertEqual(len(sortie.etapes), 10)
         # Le verrou constitutionnel est actif en fin de trajectoire.
         self.assertTrue(sortie.etapes[-1]["irreversibilite_reformes_active"])
         # Le garde-fou du verrou voyage avec le diagnostic de la simulation.

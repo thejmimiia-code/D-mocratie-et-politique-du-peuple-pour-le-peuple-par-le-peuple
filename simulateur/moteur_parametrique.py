@@ -139,7 +139,7 @@ def _executer_serie(parametres: dict[str, float], contexte: ContexteInstant,
     moteur = moteur_calibre(contexte)
     flux_par_annee: list[dict[str, float]] = []
     for annee in range(1, horizon + 1):
-        decision = decision_moteur(parametres, annee)
+        decision = decision_moteur(parametres, annee, horizon=horizon)
         moteur.appliquer_etape(decision)
         flux_par_annee.append(construire_flux(parametres, annee - 1))
     return moteur, flux_par_annee
@@ -388,6 +388,7 @@ class SortieSimulation:
     avertissements: list[str] = field(default_factory=list)
     impacts: list[dict[str, Any]] = field(default_factory=list)
     diagnostic: dict[str, Any] = field(default_factory=dict)
+    horizon: int = 5
 
     def en_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -400,6 +401,8 @@ def simuler(parametres: dict[str, float] | None = None,
             avec_impacts: bool = True,
             max_leviers_impacts: int = 24) -> SortieSimulation:
     """Exécute une simulation complète : moteur + domaines + matrice d'impacts."""
+    if not 1 <= horizon <= 10:
+        raise ValueError("L'horizon de simulation doit être compris entre 1 et 10 ans.")
     parametres_normalises = normaliser(parametres)
     contexte = contexte or construire_contexte()
     avertissements: list[str] = []
@@ -492,6 +495,27 @@ def simuler(parametres: dict[str, float] | None = None,
         ),
         "nombre_domaines_en_hausse": sum(1 for d in domaines if d.score > 50.5),
         "nombre_domaines_en_baisse": sum(1 for d in domaines if d.score < 49.5),
+        # P21 : un tableau de bord intergénérationnel en composantes physiques,
+        # sans indice composite ni pondération normative cachée.
+        "bilan_intergenerationnel": {
+            "annee_terminal": final.annee,
+            "dette_publique_mde": final.dette_nominale_mde,
+            "dette_publique_pct_pib": final.ratio_dette_pib,
+            "besoin_non_couvert_capital_public_mde": final.dette_technique_infrastructures_mde,
+            "investissements_longs_engages_cumules_mde": final.investissements_longs_engages_cumules_mde,
+            "actifs_arrives_a_maturite_mde": {
+                "cycle_long": final.investissements_matures_mde,
+                "capital_humain_proxy": final.capital_humain_mature_mde,
+                "capacites_bitd_proxy": final.capacites_defense_matures_mde,
+            },
+            "risque_climat_annualise_hors_budget_mde": final.dommages_climat_subis_mde,
+            "dommages_climat_evites_annualises_hors_budget_mde": final.dommages_climat_evites_mde,
+            "note_methodologique": (
+                "Composantes séparées, pas de score synthétique : les actifs mûrs, "
+                "la dette publique, le besoin de patrimoine non couvert et le risque "
+                "climatique n'ont ni la même unité ni la même incidence."
+            ),
+        },
     }
 
     journal: list[str] = []
@@ -524,6 +548,7 @@ def simuler(parametres: dict[str, float] | None = None,
             "domaines": [d.en_dict() for d in domaines],
             "synthese": synthese,
         }),
+        horizon=horizon,
     )
 
 

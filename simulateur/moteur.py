@@ -30,6 +30,30 @@ DELAI_MATURITE_INVESTISSEMENTS = 5
 RENDEMENT_INVESTISSEMENTS_MATURES = 0.08
 PLAFOND_RENDEMENT_PAR_PROGRAMME_MDE = 2.5
 
+#: Phase 2 — hypothèses de scénario (docs/RD_DOUBLE_MANDATURE.md, P16-P21).
+#: La Cour des comptes estime à 140-150 Md€ les besoins d'investissement des
+#: bâtiments publics à l'horizon 2050. Simple annualisation centrale sur 24 ans
+#: (2026-2050), PAS un besoin d'entretien officiel ni une dette observée.
+BESOIN_ANNUALISE_CAPITAL_PUBLIC_MDE = 145.0 / 24.0
+#: Un délai exploratoire de huit ans rend visibles, à l'horizon de deux
+#: mandatures, des investissements d'éducation/formation à cycle long. Il
+#: n'encode aucun taux de rendement macroéconomique.
+DELAI_MATURITE_CAPITAL_HUMAIN = 8
+#: Six ans, fenêtre d'une LPM (2024-2030), utilisée comme proxy de montée en
+#: capacité — pas une durée moyenne officielle de tous les programmes BITD.
+DELAI_MATURITE_CAPACITES_DEFENSE = 6
+#: PNACC-3 estime à 143 Md€ les sinistres climatiques cumulés 2020-2050.
+#: Leur annualisation uniforme (143/30) est un repère de scénario, pas une
+#: trajectoire annuelle observée ni une dépense des administrations publiques.
+DOMMAGES_CLIMAT_ANNUALISES_MDE = 143.0 / 30.0
+#: Le PNACC-3 rapporte, pour les projets soutenus par le fonds Barnier, 1 €
+#: investi pour 8 € de dommages évités. Annualisation illustrative sur 30 ans ;
+#: ce ratio ne se généralise pas à toutes les dépenses d'adaptation.
+RENDEMENT_PREVENTION_ANNUALISE = 8.0 / 30.0
+#: Seuil de saturation administratif utilisé pour un stress-test, sans valeur
+#: officielle universelle : à faire varier en analyse de sensibilité.
+SEUIL_SATURATION_ADMINISTRATIVE = 8
+
 
 class MoteurSimulationSystemique:
     """
@@ -83,6 +107,25 @@ class MoteurSimulationSystemique:
         # Registre des investissements à cycle long : (année de maturité, Md€).
         # Le rendement n'est compté qu'à maturité, jamais avant (courbe en J).
         self.investissements_differes: list[tuple[int, float]] = []
+        # Phase 2 (points P16-P21) : registres explicites de scénarios longs.
+        self.dette_technique_infrastructures_mde: float = 0.0
+        self.stock_adaptation_climat_mde: float = 0.0
+        self.investissements_capital_humain: list[tuple[int, float]] = []
+        self.investissements_capacites_defense: list[tuple[int, float]] = []
+
+    def _capital_humain_mature(self, annee: int) -> float:
+        """Investissements éducatifs arrivés à maturité (proxy en Md€), P18."""
+        return round(sum(
+            montant for annee_maturite, montant in self.investissements_capital_humain
+            if annee >= annee_maturite
+        ), 2)
+
+    def _capacites_defense_matures(self, annee: int) -> float:
+        """Investissements BITD arrivés à maturité (proxy en Md€), P19."""
+        return round(sum(
+            montant for annee_maturite, montant in self.investissements_capacites_defense
+            if annee >= annee_maturite
+        ), 2)
 
     def _investissements_matures(self, annee: int) -> tuple[float, float]:
         """Stock mature (Md€) et rendement annuel (Md€ de PIB) à l'année donnée.
@@ -221,6 +264,8 @@ class MoteurSimulationSystemique:
         stock_investissements_matures, rendement_investissements_matures = (
             self._investissements_matures(decision.annee)
         )
+        stock_capital_humain_mature = self._capital_humain_mature(decision.annee)
+        stock_capacites_defense_matures = self._capacites_defense_matures(decision.annee)
         impact_multiplicateur = (
             (decision.baisse_tva_energie_5_5_mde * 0.75)
             - ((decision.recettes_fraude_ia_mde + decision.taxe_superprofits_rachats_mde + decision.extension_ttf_mde + decision.recettes_pilier2_ocde_mde + decision.recettes_macf_carbone_mde) * 0.12)
@@ -403,6 +448,97 @@ class MoteurSimulationSystemique:
                 f"d'économies d'intérêts réinvestis en pouvoir d'achat et services publics."
             )
 
+        # ───────────────────────────────────────────────────────────────────────
+        # PROFONDEUR TEMPORELLE, PHASE 2 (R&D « deux mandatures », points P16-P21).
+        # Chaque dynamique est neutre tant que son champ reste à sa valeur par
+        # défaut, afin de préserver strictement les scénarios quinquennaux.
+        # ───────────────────────────────────────────────────────────────────────
+
+        # P16 : besoin de rattrapage du capital public (proxy annualisé, cf. doc).
+        # Il n'est activé que si l'appel simule une période longue (>5 ans) ; le
+        # stock est un besoin d'investissement non couvert, pas une dette comptable.
+        entretien_mde = max(0.0, decision.entretien_capital_public_mde)
+        if decision.horizon_deux_mandatures:
+            self.dette_technique_infrastructures_mde = max(
+                0.0,
+                self.dette_technique_infrastructures_mde
+                + BESOIN_ANNUALISE_CAPITAL_PUBLIC_MDE - entretien_mde,
+            )
+            if entretien_mde > 0.0 or self.dette_technique_infrastructures_mde > 0.0:
+                commentaires.append(
+                    f"[Deux mandatures, P16] Besoin annualisé de référence : "
+                    f"{BESOIN_ANNUALISE_CAPITAL_PUBLIC_MDE:.2f} Md€ ; effort déclaré "
+                    f"{entretien_mde:.1f} Md€ ; besoin non couvert cumulé (proxy) : "
+                    f"{self.dette_technique_infrastructures_mde:.1f} Md€."
+                )
+
+        # P17 : exposition climatique. Le chiffre annualisé est un proxy de
+        # pertes sociétales, distinct des dépenses APU : il n'est jamais ajouté
+        # au déficit public. Le rendement du fonds Barnier est annualisé sur
+        # 30 ans et constitue une hypothèse de scénario, pas un taux universel.
+        dommages_climat_subis_mde = 0.0
+        dommages_climat_evites_mde = 0.0
+        if decision.horizon_deux_mandatures:
+            self.stock_adaptation_climat_mde += max(
+                0.0, decision.effort_adaptation_climat_mde
+            )
+            dommages_climat_subis_mde = DOMMAGES_CLIMAT_ANNUALISES_MDE
+            dommages_climat_evites_mde = min(
+                dommages_climat_subis_mde,
+                self.stock_adaptation_climat_mde * RENDEMENT_PREVENTION_ANNUALISE,
+            )
+            if decision.effort_adaptation_climat_mde > 0.0:
+                commentaires.append(
+                    f"[Deux mandatures, P17] Risque annualisé : "
+                    f"{dommages_climat_subis_mde:.2f} Md€ ; dommages évités estimés : "
+                    f"{dommages_climat_evites_mde:.2f} Md€ (proxy hors déficit APU)."
+                )
+
+        # P18 : capital humain. On enregistre les cohortes de dépenses et leur
+        # date de maturité exploratoire, sans inventer de rendement PIB.
+        if decision.capital_humain_mde > 0.0:
+            self.investissements_capital_humain.append(
+                (decision.annee + DELAI_MATURITE_CAPITAL_HUMAIN,
+                 decision.capital_humain_mde)
+            )
+        if stock_capital_humain_mature > 0.0:
+            commentaires.append(
+                f"[Deux mandatures, P18] Stock d'investissements éducatifs arrivé "
+                f"à maturité (proxy) : {stock_capital_humain_mature:.1f} Md€."
+            )
+
+        # P19 : registre de montée en capacité BITD (délai LPM de référence).
+        # Le stock est exposé, mais n'est pas converti arbitrairement en spread.
+        if decision.montee_capacite_defense_mde > 0.0:
+            self.investissements_capacites_defense.append(
+                (decision.annee + DELAI_MATURITE_CAPACITES_DEFENSE,
+                 decision.montee_capacite_defense_mde)
+            )
+        if stock_capacites_defense_matures > 0.0:
+            commentaires.append(
+                f"[Deux mandatures, P19] Stock d'investissements BITD arrivé "
+                f"à maturité (proxy) : {stock_capacites_defense_matures:.1f} Md€."
+            )
+
+        # P20 : capacité d'exécution administrative. Le nombre simultané est un
+        # paramètre explicite (non inféré de tous les interrupteurs du catalogue).
+        # Le seuil et les effets ci-dessous sont des stress-test, non des valeurs
+        # institutionnelles universelles.
+        reformes_actives = max(0.0, decision.reformes_structurelles_actives)
+        if reformes_actives > SEUIL_SATURATION_ADMINISTRATIVE:
+            exces = reformes_actives - SEUIL_SATURATION_ADMINISTRATIVE
+            self.local.tension_sociale_territoriale = min(
+                100.0, self.local.tension_sociale_territoriale + exces * 0.3
+            )
+            self.national.confiance_democratique = max(
+                0.0, self.national.confiance_democratique - exces * 0.15
+            )
+            commentaires.append(
+                f"[Deux mandatures, P20] Charge simultanée : {reformes_actives:.0f} réformes "
+                f"(seuil exploratoire : {SEUIL_SATURATION_ADMINISTRATIVE}) ; stress-test "
+                "d'une capacité administrative saturée."
+            )
+
         # =========================================================================
         # 3. STRATE NATIONALE (État, Sécurité Sociale, Déficit au sens de Maastricht)
         # =========================================================================
@@ -537,6 +673,7 @@ class MoteurSimulationSystemique:
                 + (" (réformes verrouillées)." if decision.verrouillage_irreversibilite
                    else " (réformes révocables : risque d'alternance).")
             )
+
         if effets_geo.degradation_notation:
             self.mondial.note_souveraine = "BBB+"
             commentaires.append(
@@ -594,6 +731,13 @@ class MoteurSimulationSystemique:
             + effets_geo.surcout_defense_mde
             + decision.depenses_prioritaires_mde
             + decision.investissements_cycle_long_mde
+            # Phase 2 (P16-P19) : seuls les décaissements réellement choisis
+            # entrent dans le budget APU. Les dommages climatiques évités sont
+            # un indicateur sociétal distinct, pas une recette publique.
+            + max(0.0, decision.entretien_capital_public_mde)
+            + max(0.0, decision.effort_adaptation_climat_mde)
+            + max(0.0, decision.capital_humain_mde)
+            + max(0.0, decision.montee_capacite_defense_mde)
         )
         depenses_totales_apu = depenses_primaires_apu + charge_dette_effective
 
@@ -687,6 +831,19 @@ class MoteurSimulationSystemique:
             usure_politique_pts=round(usure_politique, 1),
             irreversibilite_reformes_active=bool(decision.verrouillage_irreversibilite),
             investissements_matures_mde=stock_investissements_matures,
+            dette_technique_infrastructures_mde=round(self.dette_technique_infrastructures_mde, 2),
+            entretien_capital_public_mde=round(max(0.0, decision.entretien_capital_public_mde), 2),
+            dommages_climat_subis_mde=round(dommages_climat_subis_mde, 2),
+            dommages_climat_evites_mde=round(dommages_climat_evites_mde, 2),
+            capital_humain_mature_mde=stock_capital_humain_mature,
+            capacites_defense_matures_mde=stock_capacites_defense_matures,
+            investissements_longs_engages_cumules_mde=round(
+                sum(montant for _, montant in self.investissements_differes)
+                + sum(montant for _, montant in self.investissements_capital_humain)
+                + sum(montant for _, montant in self.investissements_capacites_defense),
+                2,
+            ),
+            reformes_structurelles_actives=reformes_actives,
             commentaires=commentaires,
         )
 

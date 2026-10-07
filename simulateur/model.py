@@ -264,6 +264,16 @@ class DecisionPolitique:
     reinvestissement_dividende_dette_mde: float = 0.0 # Baisse de charge de la dette réinvestie (« second dividende »)
     investissements_cycle_long_mde: float = 0.0       # Investissements à rendement différé au-delà de 5 ans
 
+    # --- PROFONDEUR TEMPORELLE, PHASE 2 (R&D « deux mandatures », suite) ------
+    # Points stratégiques complémentaires (docs/RD_DOUBLE_MANDATURE.md, P16-P21).
+    # Les nouvelles dynamiques de référence ne s'activent qu'au-delà de 5 ans.
+    horizon_deux_mandatures: bool = False
+    entretien_capital_public_mde: float = 0.0         # Besoin d'entretien / rattrapage (P16)
+    effort_adaptation_climat_mde: float = 0.0         # Adaptation climatique anticipée (P17)
+    capital_humain_mde: float = 0.0                   # Éducation/formation (P18)
+    montee_capacite_defense_mde: float = 0.0          # Montée en capacité de la BITD (P19)
+    reformes_structurelles_actives: float = 0.0       # Nombre de réformes menées de front (P20)
+
 
 @dataclass
 class ResultatEtapeSimulation:
@@ -318,5 +328,15 @@ class ResultatEtapeSimulation:
     usure_politique_pts: float = 0.0
     irreversibilite_reformes_active: bool = False
     investissements_matures_mde: float = 0.0
+
+    # Profondeur temporelle, phase 2 (R&D « deux mandatures », P16-P21)
+    dette_technique_infrastructures_mde: float = 0.0   # P16 : besoin d'investissement non couvert (proxy)
+    entretien_capital_public_mde: float = 0.0          # P16 : effort annuel déclaré
+    dommages_climat_subis_mde: float = 0.0            # P17 : risque annualisé (hors budget APU)
+    dommages_climat_evites_mde: float = 0.0            # P17 : dommages évités estimés (hors budget APU)
+    capital_humain_mature_mde: float = 0.0             # P18 : investissements ayant atteint maturité
+    capacites_defense_matures_mde: float = 0.0         # P19 : investissements BITD ayant atteint maturité
+    investissements_longs_engages_cumules_mde: float = 0.0  # P21 : flux d'investissement cumulés
+    reformes_structurelles_actives: float = 0.0        # P20 : intensité simultanée déclarée
 
     commentaires: list[str] = field(default_factory=list)

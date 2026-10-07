@@ -1,4 +1,4 @@
-# Simulateur paramétrable — piloter 97 leviers et voir l'impact sur 20 domaines
+# Simulateur paramétrable — piloter 101 leviers et voir l'impact sur 20 domaines
 
 > Tableau de bord unique, sans dépendance externe : `python -m simulateur.dashboard --port 8080`
 > (ou `simulateur-mpol-dashboard` après installation).
@@ -7,7 +7,8 @@ Ce document décrit le fonctionnement interne du simulateur interactif introduit
 en octobre 2026. Il remplace le tableau de bord à cartes généralistes : au lieu
 de proposer quatre scénarios figés, il expose **tous les paramètres** du modèle,
 les croise dynamiquement, et recalcule les impacts domaine par domaine à chaque
-mouvement de curseur.
+mouvement de curseur. Le sélecteur d'horizon propose une ou deux mandatures
+(5 ou 10 ans) ; l'API accepte également les horizons intermédiaires de 1 à 10.
 
 ---
 
@@ -15,7 +16,7 @@ mouvement de curseur.
 
 ```
 ┌──────────────────────────── navigateur (page unique) ────────────────────────────┐
-│ 97 leviers (curseurs, interrupteurs, cibles)   ← leviers →   20 domaines notés    │
+│ 101 leviers (curseurs, interrupteurs, cibles)   ← leviers →   20 domaines notés    │
 │ recherche, préréglages, exports JSON/CSV        service       0-100 + indicateurs │
 │ « Rafraîchir les données » → API publiques en direct (fetch CORS)                 │
 └───────────────┬───────────────────────────────────────────┬─────────────────────┘
@@ -23,8 +24,8 @@ mouvement de curseur.
                 │ POST /api/simuler (leviers)               │ (valeurs relevées)
 ┌───────────────▼───────────────────────────────────────────▼─────────────────────┐
 │ serveur HTTP (bibliothèque standard, multi-thread, HTTP/1.1)                    │
-│  · moteur_parametrique.simuler()  → 5 étapes × 5 échelons + domaines + impacts  │
-│  · parametres.normaliser()        → validation et bornage des 97 leviers        │
+│  · moteur_parametrique.simuler()  → horizon 1-10 × 5 échelons + domaines       │
+│  · parametres.normaliser()        → validation et bornage des 101 leviers        │
 │  · domaines.evaluer_domaines()    → 74 indicateurs concrets, scores 0-100       │
 │  · donnees_live.construire_contexte() → chiffres publics datés et sourcés       │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -32,7 +33,7 @@ mouvement de curseur.
 
 | Module | Rôle |
 |---|---|
-| `simulateur/parametres.py` | 97 leviers (14 familles), 14 préréglages doctrinaux, `normaliser()`, `catalogue_public()` |
+| `simulateur/parametres.py` | 101 leviers (14 familles), 14 préréglages doctrinaux, `normaliser()`, `catalogue_public()` |
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs spécifiés (formule + source), `construire_flux()`, `decision_moteur()` |
 | `simulateur/seuils.py` | garde-fous par strate : bornes, messages, marges, risque population |
 | `simulateur/moteur_parametrique.py` | orchestrateur : trajectoire de référence, boucle de convergence, scores, matrice d'impacts |
@@ -43,12 +44,12 @@ mouvement de curseur.
 
 ---
 
-## 2. Les 97 leviers
+## 2. Les 101 leviers
 
 Chaque levier est un objet `Levier` documenté : clé, libellé, famille, description,
-unité, type, valeur par défaut, bornes, pas, profil temporel sur 5 ans, et
-rattachement au moteur (`champ` de `DecisionPolitique`, `ligne` budgétaire ou
-effets directs documentés).
+unité, type, valeur par défaut, bornes, pas, profil temporel de 5 ans (au-delà,
+la dernière fraction est maintenue) et rattachement au moteur (`champ` de
+`DecisionPolitique`, `ligne` budgétaire ou effets directs documentés).
 
 | Type | Comportement | Exemple |
 |---|---|---|
@@ -60,10 +61,33 @@ Deux règles structurent le moteur :
 
 1. **Les leviers « cible » fixent un niveau.** Le moteur ne fait jamais
    « niveau actuel + montant » : il compare le niveau voulu à la référence, ce
-   qui garantit l'idempotence de la simulation sur cinq ans.
+   qui garantit l'idempotence du moteur sur l'horizon sélectionné.
 2. **Les chocs exogènes sont appliqués en niveau.** Un choc pétrolier maintenu
    cinq ans reste à +X $/baril : il ne s'empile pas d'année en année
    (`MoteurSimulationSystemique._chocs_appliques`).
+
+### 2 bis. Un horizon d'une ou deux mandatures
+
+La barre d'en-tête offre **5 ans** (une mandature) ou **10 ans** (deux
+mandatures). L'API `/api/simuler` accepte `horizon` de 1 à 10 ; ce choix est
+également transmis au conseiller temps réel, au journal et au bilan de sortie.
+Le préréglage `double_mandature` sélectionne 10 ans automatiquement.
+
+La R&D de la période longue (P16-P21, détaillée dans
+[`RD_DOUBLE_MANDATURE.md`](RD_DOUBLE_MANDATURE.md)) suit quatre nouveaux
+leviers et réutilise l'adaptation climatique existante :
+
+- besoin de patrimoine public non couvert, annualisé comme **proxy** à partir
+  de l'estimation Cour des comptes à l'horizon 2050 (pas une dette comptable) ;
+- dommages climatiques annualisés et évités, séparés du budget APU ;
+- stocks d'investissements éducatifs et de défense arrivés à maturité après un
+  délai exploratoire (sans rendement macro présumé) ;
+- charge de réformes simultanées explicitement choisie par l'utilisateur,
+  avec seuil de saturation présenté comme stress-test.
+
+Le bloc **Transmission entre générations** affiche ces composantes sans score
+composite. Les coefficients/hypothèses P16-P21 et leurs sources sont
+reproduits dans l'audit de bas de page. Les valeurs ne sont pas des prévisions.
 
 ---
 
@@ -137,7 +161,7 @@ La console complète vit dans le flux de la page (elle défile) ; c'est un
 **ruban compact et collant** qui reste seul en haut de l'écran : verdict,
 compteur d'alertes et de hors-sol, cinq pastilles de strate (S1…S5), risque
 pour la population, et trois boutons — *Masquer le détail des seuils*,
-*Vue compacte*, *Régler les 97 leviers*. Le ruban mesure 44 pixels de haut :
+*Vue compacte*, *Régler les 101 leviers*. Le ruban mesure 44 pixels de haut :
 il ne recouvre jamais les paramètres.
 
 ### Tous les paramètres, visibles et actionnables
@@ -145,7 +169,7 @@ il ne recouvre jamais les paramètres.
 - **Vue confort** : une carte par famille, chaque levier avec sa description,
   sa source et son curseur.
 - **Vue compacte** (bascule dans la barre des leviers) : une ligne par levier —
-  nom, curseur, valeur — pour que **les 97 paramètres** tiennent à l'écran.
+  nom, curseur, valeur — pour que **les 101 paramètres** tiennent à l'écran.
 - Chaque geste part immédiatement : anti-rebond de 180 ms, puis simulation.
 - Pendant la manipulation d'un curseur, la grille **n'est pas reconstruite**
   (sinon le curseur serait remplacé sous les doigts) ; elle l'est au relâchement.
@@ -160,7 +184,7 @@ il ne recouvre jamais les paramètres.
 ## 5. La console de veille permanente
 
 En haut de la page, une console **épinglée** suit le défilement : elle reste
-visible pendant que l'on règle les 97 leviers. Elle répond à trois questions,
+visible pendant que l'on règle les 101 leviers. Elle répond à trois questions,
 en permanence et sans clic supplémentaire (le diagnostic voyage avec chaque
 simulation, aucune requête en plus) :
 
@@ -239,7 +263,7 @@ possible, ce n'est pas une boîte noire :
    statut (live / référence), source, URL, licence ;
 2. **les 20 domaines et leurs 74 indicateurs** — la formule du score et la
    source de chaque chiffre ;
-3. **les 97 leviers** — champ / ligne budgétaire, effets déclarés (thème et
+3. **les 101 leviers** — champ / ligne budgétaire, effets déclarés (thème et
    coefficient), source ;
 4. **les 31 garde-fous** (`GET /api/garde_fous`) — strate, bornes
    (seuil → niveau) et source institutionnelle de chaque seuil ;
@@ -291,7 +315,7 @@ diagnostic est attaché à chaque `SortieSimulation` et exposé par
 ## 6. Les bulles explicatives par réglage
 
 Chaque réglage porte un bouton **« interactions »** : la fiche s'ouvre **dans la
-carte du levier** (jamais par-dessus), donc les 97 paramètres restent visibles et
+carte du levier** (jamais par-dessus), donc les 101 paramètres restent visibles et
 actionnables pendant la lecture. Le contenu n'est pas rédigé à la main : il est
 calculé par `simulateur/bulles.py` à partir du catalogue, des 74 formules
 d'indicateurs et du moteur, puis servi par `GET /api/bulle?levier=…`.
@@ -321,11 +345,11 @@ Une bulle répond à trois questions, dans cet ordre :
    catalogue des autres leviers — de quoi corriger un désagrément sans
    improviser.
 
-État mesuré sur le catalogue actuel (réglage isolé, bornes des 97 leviers) :
+État mesuré sur le catalogue actuel (réglage isolé, bornes des 101 leviers) :
 
 | Constat | Valeur |
 |---|---|
-| Leviers déplaçant au moins un domaine à leurs bornes | **96 / 97** |
+| Leviers déplaçant au moins un domaine à leurs bornes | **100 / 101** |
 | Leviers dont un médiateur n'atteint pas les scores | **0** (tous passent par une formule, une autre échelle ou un agrégat) |
 | Seuil de mouvement retenu | 0,2 point de score |
 | Exception documentée | `clause_sauvegarde_defense` : aucun domaine ne bouge, mais la sortie des dépenses de défense du calcul PDE est journalisée en strate 3 |
@@ -353,7 +377,7 @@ le délai du `title` natif du navigateur et sans recouvrir durablement l'écran 
 
 La couche d'infobulle est **passive** (`pointer-events:none`) : elle ne capte
 aucun clic, disparaît au départ de la souris, au clic, au défilement et à
-l'ouverture d'une bulle — les 97 paramètres restent donc tous actionnables.
+l'ouverture d'une bulle — les 101 paramètres restent donc tous actionnables.
 Lecture du code : `initialiserInfobulles()`, `survoler()`, `texteAideLevier()`
 dans `simulateur/interface.py`.
 
@@ -395,11 +419,11 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | Route | Méthode | Contenu |
 |---|---|---|
 | `/` | GET | page unique du simulateur |
-| `/api/catalogue` | GET | familles, 97 leviers, 14 préréglages, 20 domaines |
+| `/api/catalogue` | GET | familles, 101 leviers, 14 préréglages, 20 domaines |
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
 | `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) ; `horizon` jusqu'à 10 ans pour la période de deux mandatures (`docs/RD_DOUBLE_MANDATURE.md`) |
 | `/api/comparer` | GET | comparaison des 14 préréglages **avec leur verdict de garde-fous** |
-| `/api/conseil` | POST | conseiller temps réel : lecture du **dernier mouvement** d'un levier (`cle`, `avant`, `apres`, `parametres`) — effets directs, ricochets, grandeurs, garde-fous, journal, compensations, **budget réel (Md€) et sources officielles** |
+| `/api/conseil` | POST | conseiller temps réel : lecture du **dernier mouvement** d'un levier (`cle`, `avant`, `apres`, `parametres`, `horizon`) — effets directs, ricochets, grandeurs, garde-fous, journal, compensations, **budget réel (Md€) et sources officielles** |
 | `/api/garde_fous` | GET | barème complet des 31 garde-fous : strates, bornes, sources institutionnelles (audit) |
 | `/api/bulles` | GET | bulles explicatives du catalogue (`?levier=`, `?detail=resume`, `?mesure=0`) |
 | `/api/bulle` | GET | bulle d'un levier : chaîne d'interaction, mesures par borne, lecture guidée |
@@ -424,7 +448,7 @@ jour dans [`REPOSITORY_DETAILS.md`](REPOSITORY_DETAILS.md), avec les scripts
    emplois) mais restent des choix. Ils sont lisibles, contestables et
    modifiables dans `domaines.py`.
 2. **Écarts, jamais niveaux.** Voir l'avertissement du § 4.
-3. **Horizon de 5 ans**, pas de projection démographique ni de cycle long.
+3. **Horizon sélectionnable de 5 ou 10 ans.** Il n'y a pas encore de module démographique détaillé par âge ni de budgets carbone ; les hypothèses P16-P21 sont des scénarios exploratoires, pas des prévisions.
 4. **Sources non redistribuables** (Yahoo, Stooq) : elles servent au rafraîchissement
    en direct, pas à l'embarquement de données ; le snapshot embarqué ne contient
    que des valeurs de sources réutilisables ou de référence documentaire du projet.

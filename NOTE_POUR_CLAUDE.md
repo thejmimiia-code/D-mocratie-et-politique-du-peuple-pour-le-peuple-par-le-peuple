@@ -46,7 +46,7 @@ faut le rendre fidèle à ce que le dépôt fait aujourd'hui.
 
 Pourquoi c'est important : la description annonce **4 échelons** alors que le
 moteur en compte **5** (la strate géopolitique a été ajoutée), et elle ne dit
-rien des 97 leviers, des 20 domaines d'impact, des données publiques en direct
+rien des 101 leviers, des 20 domaines d'impact, des données publiques en direct
 ni de la console de veille — c'est-à-dire de tout ce qui fait la valeur du
 dépôt. Aucun sujet n'étant défini, le dépôt n'apparaît dans aucune recherche
 thématique, et l'aperçu social est vide au partage d'un lien.
@@ -58,7 +58,7 @@ thématique, et l'aperçu social est vide au partage d'un lien.
 ### Description — 270 / 350 caractères
 
 ```
-Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 97 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
+Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 101 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
 ```
 
 ### Website
@@ -157,32 +157,33 @@ un fichier (comme au § 2), jamais à se connecter.
 - [ ] `gh api … --jq '.topics | length'` renvoie `20`
 - [ ] l'aperçu social est téléversé (`docs/apercu_social.png`, empreinte vérifiée)
 - [ ] `python3 outils/details_depot.py` affiche « Déjà à jour, rien à faire »
-- [ ] `python3 -m unittest discover -s tests -p "test_*.py"` reste vert (**388 tests**)
+- [ ] `python3 -m unittest discover -s tests -p "test_*.py"` reste vert (**399 tests**)
 - [ ] `ruff check .` reste vert
 - [ ] la section « Réglages du dépôt » de `docs/REPOSITORY_DETAILS.md` est à jour,
       et cette note peut être supprimée ou marquée comme faite
 
 ---
 
-## 6. Contexte du dépôt au moment de la note (5 octobre 2026)
+## 6. Contexte du dépôt au moment de la note (7 octobre 2026)
 
 Le dépôt a changé de nature : le tableau de bord à quatre cartes figées est
 remplacé par un **simulateur paramétrable**.
 
 | Brique | Contenu |
 |---|---|
-| `simulateur/parametres.py` | 97 leviers en 14 familles, 14 préréglages doctrinaux, `normaliser()` |
+| `simulateur/parametres.py` | 101 leviers en 14 familles, 14 préréglages doctrinaux, `normaliser()` |
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs (formule + source), médiateurs annuels |
-| `simulateur/moteur_parametrique.py` | références, convergence, scores 0-100, matrice d'impacts croisés |
+| `simulateur/moteur_parametrique.py` | références, convergence, scores 0-100, matrice d'impacts croisés, horizon 1-10 ans et ledger P21 |
 | `simulateur/donnees_live.py` | 38 indicateurs publics (Eurostat, BCE, Frankfurter, Banque mondiale, Opendatasoft, Yahoo, Stooq) |
 | `simulateur/seuils.py` | 31 garde-fous (26 absolus + 5 en écart) par strate : tolérable → vigilance → risqué → hors-sol ; `bareme_public()` pour l'audit |
 | `simulateur/conseil.py` | conseiller temps réel (« effet papillon ») : chaque mouvement rejoué avant/après, directs + ricochets, garde-fous, compensations |
-| `simulateur/interface.py` | page unique : ruban de veille, 97 leviers, 20 domaines, exports |
+| `simulateur/interface.py` | page unique : ruban de veille, 101 leviers, 20 domaines, exports |
 | `simulateur/dashboard.py` | API JSON : `/api/catalogue`, `/contexte`, `/simuler`, `/comparer`, `/conseil`, `/garde_fous`, `/presets`, `/proxy`, `/donnees` |
-| `tests/` | **388 tests verts**, dont un harnais Node qui exécute réellement la page |
+| `tests/` | **399 tests verts**, dont un harnais Node qui exécute réellement la page |
 
-État Git : branche `arena/01a10c67-d-mocratie-et-politique-du-peuple-pour-le-peuple`,
-**PR #14 ouverte** vers `main` (contient toute la refonte). Le dépôt distant suit.
+État Git au 7 octobre 2026 : branche `arena/43a71329-d-mocratie-et-politique-du-peu`,
+**PR #16 ouverte** vers `main` ; l'évolution P16-P21 et l'horizon interactif sont
+sur la même branche de travail.
 
 ---
 

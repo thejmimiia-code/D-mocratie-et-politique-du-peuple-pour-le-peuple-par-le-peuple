@@ -78,10 +78,11 @@ class TestInterfaceDansNode(unittest.TestCase):
             return reponse.read().decode("utf-8")
 
     @classmethod
-    def _simuler(cls, parametres):
+    def _simuler(cls, parametres, *, horizon=5, avec_impacts=True):
         return json.loads(cls._post(
             "/api/simuler",
-            {"parametres": parametres, "avec_impacts": True, "max_impacts": 16},
+            {"parametres": parametres, "horizon": horizon,
+             "avec_impacts": avec_impacts, "max_impacts": 16},
         ))
 
     @classmethod
@@ -108,6 +109,11 @@ class TestInterfaceDansNode(unittest.TestCase):
         sortie_variante = cls._simuler(variante)
         sortie_austerite = cls._simuler(catalogue["parametres"]["presets"]["austerite"]["parametres"])
         sortie_neutre = cls._simuler(defauts)
+        sortie_decennale = cls._simuler(
+            catalogue["parametres"]["presets"]["double_mandature"]["parametres"],
+            horizon=10,
+            avec_impacts=False,
+        )
 
         # Le conseiller temps réel rejoue le moteur sur le même mouvement que
         # l'utilisateur (position avant → position à l'instant T).
@@ -137,7 +143,8 @@ class TestInterfaceDansNode(unittest.TestCase):
         return {
             "defauts": defauts,
             "sequence_simuler": [{"route": route} for route, _ in sequence]
-                                 + [{"route": "POST /api/simuler#neutre"}],
+                                 + [{"route": "POST /api/simuler#neutre"},
+                                    {"route": "POST /api/simuler#decennal"}],
             "page": page,
             "api": {
                 "GET /api/catalogue": catalogue,
@@ -154,6 +161,7 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "POST /api/simuler#variante": sortie_variante,
                 "POST /api/simuler#austerite": sortie_austerite,
                 "POST /api/simuler#neutre": sortie_neutre,
+                "POST /api/simuler#decennal": sortie_decennale,
                 "POST /api/conseil": conseil,
                 "POST /api/donnees": {"ok": True},
             },

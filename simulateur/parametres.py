@@ -763,12 +763,17 @@ _lev(Levier(
     cle="adaptation_climat",
     libelle="Adaptation au changement climatique",
     famille="energie_climat",
-    description="Sécheresse, inondations, littoral, forêts, eau : le plan d'adaptation "
-                "national est financé à hauteur de ~0,2 % du PIB, le besoin est estimé à 1 %.",
+    description="Sécheresse, inondations, littoral, forêts, eau : le levier poursuit "
+                "les politiques d'adaptation. Sur dix ans (P17), un proxy de pertes "
+                "climatiques annualisées et de dommages évités est affiché séparément "
+                "du budget APU ; il n'est pas assimilé à une dépense publique ni à "
+                "une prévision annuelle.",
     unite="Md€", defaut=0.0, minimum=0.0, maximum=15.0, pas=0.5,
-    ligne="adaptation", profil=(0.4, 0.7, 0.9, 1.0, 1.0),
+    ligne="adaptation", champ="effort_adaptation_climat_mde",
+    profil=(0.4, 0.7, 0.9, 1.0, 1.0),
     effets_directs={"climat": 0.8, "resilience": 1.0, "territoires": 0.7, "agriculture": 0.6},
-    source="PNACC-3 ; rapport de la Cour des comptes sur l'adaptation (2024).",
+    source="PNACC-3 ; rapport de la Cour des comptes sur l'adaptation (2024) ; R&D "
+           "deux mandatures (docs/RD_DOUBLE_MANDATURE.md, point P17).",
 ))
 _lev(Levier(
     cle="transports_publics",
@@ -1114,6 +1119,73 @@ _lev(Levier(
     source="PPE ; LPM 2024-2030 ; sommet OTAN de La Haye (2025) ; dossier de "
            "mandature, chiffrage prévention santé ; R&D deux mandatures (point P6).",
 ))
+# ── Profondeur temporelle, phase 2 : points P16-P21 (R&D deux mandatures) ────
+_lev(Levier(
+    cle="entretien_capital_public",
+    libelle="Entretien du capital public (dette technique)",
+    famille="etat_fonction_publique",
+    description="Effort de maintenance et de rattrapage du patrimoine public : "
+                "bâtiments, ponts, rail, écoles et hôpitaux. Le simulateur compare "
+                "cet effort à une annualisation exploratoire des 140-150 Md€ de "
+                "besoins d'investissement estimés par la Cour des comptes à l'horizon "
+                "2050. Le stock non couvert est un proxy de scénario, pas une dette "
+                "comptable ni un montant officiel d'entretien annuel.",
+    unite="Md€", defaut=0.0, minimum=0.0, maximum=15.0, pas=0.5,
+    champ="entretien_capital_public_mde",
+    profil=(1.0, 1.0, 1.0, 1.0, 1.0),
+    effets_directs={"investissement": 0.4, "territoires": 0.4, "services_publics": 0.3},
+    source="Cour des comptes, analyse de l'exécution budgétaire 2023 — gestion du "
+           "patrimoine immobilier de l'État (140-150 Md€ de besoins d'investissement "
+           "à l'horizon 2050) ; annualisation exploratoire documentée au point P16.",
+))
+_lev(Levier(
+    cle="capital_humain",
+    libelle="Capital humain : éducation & formation",
+    famille="education_recherche",
+    description="Investissement additionnel d'éducation et de formation. Le coût "
+                "est immédiat ; le modèle suit la cohorte comme arrivée à maturité "
+                "après un délai exploratoire de huit ans. Aucun taux de rendement PIB "
+                "n'est présumé : le stock mature est affiché séparément.",
+    unite="Md€", defaut=0.0, minimum=0.0, maximum=15.0, pas=0.5,
+    champ="capital_humain_mde",
+    profil=(1.0, 1.0, 1.0, 1.0, 1.0),
+    effets_directs={"education": 0.5, "emploi": 0.4, "croissance": 0.3},
+    source="DEPP / Eurostat COFOG GF09 pour les dépenses d'éducation ; délai de "
+           "maturité de huit ans = hypothèse de scénario P18, sans rendement macro "
+           "attribué."
+))
+_lev(Levier(
+    cle="montee_capacite_defense",
+    libelle="Montée en capacité de défense (BITD)",
+    famille="regalien",
+    description="Investissement additionnel dans la base industrielle et "
+                "technologique de défense. Le coût est immédiat ; le modèle suit "
+                "le stock comme opérationnel après six ans (fenêtre LPM 2024-2030, "
+                "proxy de scénario). Aucun effet automatique sur les spreads n'est "
+                "présumé : le stock mature est affiché séparément.",
+    unite="Md€", defaut=0.0, minimum=0.0, maximum=20.0, pas=0.5,
+    champ="montee_capacite_defense_mde",
+    profil=(1.0, 1.0, 1.0, 1.0, 1.0),
+    effets_directs={"defense": 0.6, "souverainete": 0.4, "innovation": 0.3},
+    source="Loi de programmation militaire 2024-2030 (calendrier) ; délai de six "
+           "ans = hypothèse de montée en capacité, pas durée moyenne auditée."
+))
+_lev(Levier(
+    cle="charge_reformes_simultanees",
+    libelle="Grandes réformes menées de front",
+    famille="etat_fonction_publique",
+    description="Charge de mise en œuvre choisie pour le stress-test : nombre de "
+                "grands chantiers simultanés (et non nombre automatique de curseurs "
+                "ou d'interrupteurs activés). Au-delà de huit, un coût de saturation "
+                "administrative exploratoire s'applique à la confiance et à la tension. "
+                "Le seuil et les coefficients sont hypothétiques et doivent être testés "
+                "en sensibilité ; aucune borne officielle universelle n'existe.",
+    unite="réformes simultanées", defaut=0.0, minimum=0.0, maximum=16.0, pas=1.0,
+    champ="reformes_structurelles_actives", profil=(1.0, 1.0, 1.0, 1.0, 1.0),
+    effets_directs={"services_publics": -0.3, "stabilite_gouvernementale": -0.2},
+    source="Hypothèse de stress-test du moteur (P20), sans seuil officiel ; "
+           "à documenter par délais de mise en œuvre, évaluations et capacité RH.",
+))
 _lev(Levier(
     cle="reforme_proportionnelle",
     libelle="Scrutin proportionnel à l'Assemblée",
@@ -1412,10 +1484,10 @@ PRESETS: dict[str, dict[str, Any]] = {
     },
     "double_mandature": {
         "libelle": "Deux mandatures consécutives (2027-2037)",
-        "description": "Doctrine de la période de dix ans : les réformes de la mandature 1, "
-                       "puis leur verrouillage constitutionnel, le second dividende de la "
-                       "dette réinvesti, l'évaluation systématique et les investissements "
-                       "à cycle long récoltés en mandature 2.",
+        "description": "Doctrine de dix ans : réformes et verrou, second dividende, "
+                       "investissements de cycle long, rattrapage du patrimoine public, "
+                       "adaptation, capital humain, BITD et charge administrative. "
+                       "Hypothèses exploratoires distinctes des données observées.",
         "parametres": {
             "lutte_fraude_fiscale_ia": 10.0,
             "fraude_sociale": 2.5,
@@ -1437,6 +1509,11 @@ PRESETS: dict[str, dict[str, Any]] = {
             "clause_revoyure_evaluation": 1.0,
             "dividende_dette_reinvesti": 6.0,
             "investissements_cycle_long": 6.0,
+            "entretien_capital_public": 6.0,
+            "adaptation_climat": 1.0,
+            "capital_humain": 2.0,
+            "montee_capacite_defense": 2.0,
+            "charge_reformes_simultanees": 6.0,
             "dgf_delta": 0.0,
         },
         "couleur": "#2dd4bf",

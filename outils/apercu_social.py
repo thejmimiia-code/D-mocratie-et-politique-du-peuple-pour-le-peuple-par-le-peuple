@@ -108,7 +108,7 @@ def construire() -> Image.Image:
 
     # Les quatre chiffres clés, en cartes.
     chiffres = [
-        ("97", "leviers croisables", ACCENT),
+        ("101", "leviers croisables", ACCENT),
         ("20", "domaines notés 0-100", VERT),
         ("38", "indicateurs publics", AMBRE),
         ("5", "échelons en cascade", VIOLET),

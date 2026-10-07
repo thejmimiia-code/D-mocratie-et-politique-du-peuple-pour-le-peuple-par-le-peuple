@@ -4,6 +4,29 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.7.2] — 2026-10-07
+
+### R&D — Phase 2 « deux mandatures consécutives » (points P16-P21)
+
+- Le catalogue passe de **97 à 101 leviers** : rattrapage du patrimoine
+  public, capital humain à cycle long, capacité BITD et charge explicite de
+  réformes simultanées ; le levier d'adaptation existant est réutilisé.
+- Le simulateur propose un **horizon interactif de 5 ou 10 ans** ; le choix
+  est propagé à la requête `/api/simuler` et au conseiller `/api/conseil`.
+  Le préréglage « Deux mandatures » sélectionne 10 ans.
+- Le bilan P21 expose un **ledger intergénérationnel séparé**, sans score
+  composite : dette, besoin patrimonial proxy, investissements engagés/mûrs,
+  pertes climatiques annualisées et dommages évités.
+- Hypothèses documentées et non prophétiques : patrimoine 145/24 Md€/an,
+  climat 143/30 Md€/an (hors budget APU), ratio Barnier annualisé 8/30,
+  maturités exploratoires de 8 et 6 ans ; saturation administrative =
+  stress-test explicite, sans seuil officiel universel. Audit UI complété avec
+  les sources Cour des comptes, PNACC-3, LPM et INSEE.
+- Les dommages climatiques ne sont **pas** comptabilisés comme dépense APU ;
+  les stocks de capital humain/BITD ne reçoivent pas de rendement PIB ou de
+  prime de spread non mesurés.
+- Interface v1.7.5. Tests : **399 réussis** ; `ruff check .` propre.
+
 ## [1.7.1] — 2026-10-06
 
 ### Corrigé — Plus aucune bulle d'aide ne recouvre les résultats

@@ -116,7 +116,7 @@ class TestStructureDeLaPage(unittest.TestCase):
                         "le bloc coût/gain doit précéder le corps repliable")
         # Version d'interface visible pour diagnostiquer les pages périmées.
         self.assertIn('id="version-interface"', self.page)
-        self.assertIn("Interface v1.7.4", self.page)
+        self.assertIn("Interface v1.7.5", self.page)
         # Les cinq niveaux de seuil sont connus du rendu.
         for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
             self.assertIn(niveau, self.script)
@@ -124,7 +124,7 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("bandeau-hors-sol", self.script)
 
     def test_tous_les_leviers_sont_visibles_et_actionnables(self):
-        """Les 93 paramètres doivent être affichés, groupés et manipulables."""
+        """Tous les paramètres du catalogue doivent rester manipulables."""
         self.assertIn('id="section-leviers"', self.page)
         self.assertIn('id="compteur-leviers"', self.page)
         self.assertIn('id="case-densite"', self.page)
@@ -143,6 +143,16 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("majLevier('${levier.cle}', this.checked ? 1 : 0); terminerReglage()", self.script)
         # Le compte des leviers affichés est permanent.
         self.assertIn("levier(s) affiché(s)", self.script)
+
+    def test_horizon_cinq_ou_dix_ans_et_bilan_intergenerationnel(self):
+        self.assertIn('id="horizon-simulation"', self.page)
+        self.assertIn('value="10">2 mandatures', self.page)
+        self.assertIn("function changerHorizon(", self.script)
+        self.assertIn("horizon: horizon", self.script)
+        self.assertIn("horizon: horizonCourant()", self.script)
+        self.assertIn('id="bilan-intergenerationnel"', self.page)
+        self.assertIn("function renderBilanIntergenerationnel(", self.script)
+        self.assertIn("actifs_arrives_a_maturite_mde", self.script)
 
     def test_chaque_levier_recoit_l_impact_de_son_reglage(self):
         """Sous chaque curseur, l'effet mesuré du levier est affiché."""
@@ -244,7 +254,7 @@ class TestControlesUtilisateur(unittest.TestCase):
         self.assertIn("defauts[cle]", compteur)
         # Deux grilles, deux usages : scénarios du dépôt (moteur d'origine) et
         # préréglages doctrinaux (simulateur paramétrable).
-        self.assertIn("9 situations rejouées par le moteur d'origine", self.page)
+        self.assertIn("situations rejouées par le moteur d'origine", self.page)
         self.assertIn("chargées dans le simulateur puis ajustables", self.page)
         self.assertIn("preset-grid", self.page)
 
@@ -301,7 +311,7 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         """Chaque réglage porte un bouton qui ouvre une bulle calculée.
 
         La bulle doit rester **dans** la carte du levier (jamais par-dessus) :
-        l'utilisateur garde ses 93 paramètres visibles et actionnables.
+        l'utilisateur garde tous les paramètres visibles et actionnables.
         """
         self.assertIn("bulle-bouton", self.page)
         self.assertIn("bulle-levier", self.page)
@@ -401,7 +411,7 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("dernier mouvement", aide)
 
     def test_chaque_reglage_est_annote_pour_le_survol(self):
-        """Les zones interactives des 93 leviers portent leur aide."""
+        """Les zones interactives du catalogue portent leur aide."""
         self.assertGreaterEqual(self.script.count('data-aide-levier="${levier.cle}"'), 6)
         self.assertIn('<input type="range" data-aide-levier=', self.script)
         self.assertIn('<input type="checkbox" data-aide-levier=', self.script)
@@ -443,6 +453,11 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("function auditLeviersHtml(", self.script)
         self.assertIn("function auditGardeFousHtml(", self.script)
         self.assertIn("function auditMethodesHtml(", self.script)
+        self.assertIn("Hypothèses P16-P21", self.script)
+        self.assertIn("145/24", self.script)
+        self.assertIn("143/30", self.script)
+        self.assertIn("ratio Barnier 8/30", self.script)
+        self.assertIn("9004289", self.script)
         self.assertIn("chargerAudit();", self.script)
         # Le barème des garde-fous est servi par une route dédiée.
         self.assertIn("/api/garde_fous", self.script)

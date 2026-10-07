@@ -6,7 +6,7 @@
 >
 > **Règle de travail permanente** : ce document est la grille de lecture A→Z du
 > projet. Toute modification ultérieure du simulateur, du dossier de mandature
-> ou de la doctrine doit être passée au crible des quinze points ci-dessous —
+> ou de la doctrine doit être passée au crible des vingt-et-un points ci-dessous —
 > si un point redevient aveugle, il faut le dire ici avant de livrer.
 
 ---
@@ -17,8 +17,8 @@
 |---|---|---|
 | Doctrine | « Du peuple, par le peuple, pour le peuple » ; 20 leviers stratégiques ; plan à +60 Md€/an en année 5 | `DOSSIER_DE_MANDATURE_GLOBAL.md` |
 | Modèle gigogne | 5 échelons : local → national → européen → mondial → géopolitique | `simulateur/moteur.py`, `simulateur/model.py` |
-| Simulateur paramétrable | **97 leviers** en 14 familles, **14 préréglages** doctrinaux, 20 domaines notés 0-100 | `simulateur/parametres.py`, `simulateur/domaines.py` |
-| Garde-fous | 35 seuils « tolérable → vigilance → risqué → hors-sol » par strate | `simulateur/seuils.py` |
+| Simulateur paramétrable | **101 leviers** en 14 familles, **14 préréglages** doctrinaux, 20 domaines notés 0-100 | `simulateur/parametres.py`, `simulateur/domaines.py` |
+| Garde-fous | 31 seuils (26 absolus + 5 en écart), « tolérable → vigilance → risqué → hors-sol » | `simulateur/seuils.py` |
 | Scénarios | 11 scénarios : 4 budgétaires, 5 géopolitiques, **2 décennaux (nouveaux)** | `simulateur/scenarios.py` |
 | Données publiques | Eurostat, BCE, Frankfurter, Banque mondiale (à l'instant T) | `simulateur/donnees_live.py` |
 | R&D accumulées | Laboratoire mensuel, géopolitique exploratoire, registre UCDP, validation temporelle | `docs/LABORATOIRE_RD.md` et suivants |
@@ -30,8 +30,10 @@ Or la période pertinente d'un projet de transformation est celle de **deux
 mandatures consécutives (dix ans)** — c'est l'horizon maximal autorisé par la
 doctrine elle-même (non-cumul dans le temps, levier n° 6 : « max 2 mandats
 consécutifs »). Quinze points stratégiques, tous systématiques sur cette
-période, manquaient. Ils sont inventoriés, discutés et — pour ceux qui peuvent
-l'être honnêtement — implémentés ci-dessous.
+période, manquaient. La phase initiale a inventorié P1-P15 ; la revue A→Z
+de la phase 2 ajoute P16-P21, six dimensions transversales. Les 21 points
+sont brainstormés, sourcés et implémentés uniquement lorsque les hypothèses
+peuvent être affichées honnêtement ; le reste demeure explicitement ouvert.
 
 ---
 
@@ -59,7 +61,7 @@ l'être honnêtement — implémentés ci-dessous.
 
 ---
 
-## 2. Les quinze points stratégiques systématiques (inventaire + brainstorming)
+## 2. Les vingt-et-un points stratégiques systématiques (inventaire + brainstorming)
 
 > Chaque point est noté : **Manque** (ce qui était absent), **Systématique**
 > (pourquoi il revient sur toute période de deux mandatures), **Brainstorming**
@@ -314,6 +316,135 @@ l'être honnêtement — implémentés ci-dessous.
   l'essentiel ; un rappel des échéances de plans sera ajouté dans la
   trajectoire quand le cadre sera stabilisé côté européen.
 
+
+### P16. Le patrimoine public, la maintenance et la dette technique
+
+* **Manque** : le modèle regardait surtout les nouveaux investissements ; il ne
+  distinguait pas le coût d'un ouvrage neuf de l'entretien du patrimoine déjà
+  construit (bâtiments, ponts, rail, écoles et hôpitaux).
+* **Systématique** : dix ans de maintenance sous-financée laissent un besoin de
+  rattrapage aux équipes suivantes ; une dépense reportée n'est pas une économie
+  définitive. Il faut toutefois séparer besoin immobilier, entretien courant,
+  mise aux normes et adaptation climatique pour éviter les doubles comptes.
+* **Brainstorming** : suivre les inventaires d'actifs par propriétaire et leur
+  état physique ; comparer le maintien en condition, le remplacement, la
+  fermeture et la rénovation ; publier par secteur les restes à faire et les
+  coûts de cycle de vie.
+* **Statut** : un levier d'entretien/rattrapage et un **proxy de besoin non
+  couvert** sont ajoutés à l'horizon long. La Cour des comptes estimait les
+  besoins d'investissement des bâtiments publics à 140-150 Md€ à l'horizon
+  2050 ; le modèle annualise le point central (145 / 24 = 6,04 Md€/an, fenêtre
+  de scénario 2026-2050). Ce n'est ni un besoin officiel d'entretien annuel ni
+  une dette comptable observée. Le proxy augmente ou diminue à raison d'un euro
+  par euro de besoin annualisé non couvert ; il n'est pas converti en déficit,
+  pénalité de qualité ou coût de réparation sans données sectorielles.
+* **Source** : [Cour des comptes, analyse de l'exécution budgétaire 2023 —
+  gestion du patrimoine immobilier de l'État](https://www.ccomptes.fr/sites/default/files/2024-04/NEB-2023-Gestion-patrimoine-immobilier-Etat.pdf).
+
+### P17. L'adaptation climatique, les dommages et leur incidence
+
+* **Manque** : l'horizon de cinq ans ne rendait pas visible la différence entre
+  l'argent dépensé pour l'adaptation et les pertes climatiques qui pourraient
+  être évitées sur plusieurs décennies.
+* **Systématique** : prévention, protection littorale, eau, bâtiments et
+  résilience ont des échéances de vie longues ; leurs bénéfices ne se lisent pas
+  dans le seul solde budgétaire annuel.
+* **Brainstorming** : construire des trajectoires par aléa et territoire,
+  distinguer pertes assurées, pertes non assurées, reste à charge public et
+  dommages macroéconomiques ; comparer plusieurs scénarios climatiques et
+  horizons, sans traiter les pertes privées comme une dépense de l'État.
+* **Statut** : le PNACC-3 rapporte 143 Md€ de sinistres climatiques cumulés
+  estimés sur 2020-2050. Le prototype affiche 143/30 = 4,77 Md€/an comme
+  **moyenne annualisée uniforme de scénario**, sans prétendre que chaque année
+  subit ce montant. Le PNACC-3 rapporte également, pour des projets du fonds
+  Barnier, 1 € investi pour 8 € de dommages évités. Le prototype annualise ce
+  rapport sur 30 ans (8/30 par euro de stock d'adaptation) uniquement comme
+  hypothèse exploratoire. Les dommages subis/évités restent **hors budget APU** ;
+  seul le décaissement choisi d'adaptation affecte les dépenses publiques.
+* **Sources** : [PNACC-3](https://www.ecologie.gouv.fr/sites/default/files/documents/PNACC3.pdf) ;
+  [présentation officielle du PNACC-3 (10 mars 2025)](https://www.ecologie.gouv.fr/sites/default/files/documents/20250310_PNACC3_DP.pdf).
+
+### P18. Le capital humain, l'éducation et les cohortes de formation
+
+* **Manque** : le coût d'une dépense éducative apparaissait immédiatement,
+  tandis que la temporalité des compétences acquises n'était pas distinguée.
+* **Systématique** : les cohortes formées pendant la première mandature
+  poursuivent leur scolarité, formation ou reconversion au cours de la seconde ;
+  les mesures d'entrée et les résultats d'apprentissage ne sont pas simultanés.
+* **Brainstorming** : suivre les résultats par cohorte, territoire et origine
+  sociale (acquis, qualification, emploi, salaires), distinguer formation initiale
+  et continue et intégrer les délais propres à chaque filière.
+* **Statut** : le levier supplémentaire est comptabilisé immédiatement comme
+  dépense ; le moteur enregistre le stock arrivé à maturité après **huit ans**,
+  délai de scénario choisi pour rendre visible un cycle long. Aucun rendement
+  PIB, salarial ni retour fiscal automatique n'est appliqué : le stock est exposé
+  séparément tant qu'une évaluation causale par filière n'est pas intégrée.
+* **Sources de mesure à raccorder** : [DEPP, L'état de l'École 2025](https://www.education.gouv.fr/depp/l-etat-de-l-ecole-2025-467767) ;
+  données Eurostat COFOG GF09. Le délai de huit ans est une hypothèse de scénario,
+  pas une statistique DEPP/OCDE.
+
+### P19. La capacité industrielle de défense et les délais de production
+
+* **Manque** : les crédits de défense pouvaient être lus comme une capacité
+  opérationnelle immédiate ; l'outil industriel, les compétences, les chaînes
+  d'approvisionnement et les stocks ont des délais distincts.
+* **Systématique** : la LPM 2024-2030 traverse une mandature et son actualisation
+  en 2026 prolonge des engagements jusqu'en 2030. Les commandes aujourd'hui
+  financées structurent l'offre industrielle des années suivantes.
+* **Brainstorming** : suivre commande → capacité/usine → cadence → livraison →
+  disponibilité opérationnelle, par segment ; distinguer capacité nominale,
+  carnet de commandes, dépendances et stocks réellement disponibles.
+* **Statut** : un registre de cohortes d'investissements BITD rend visible le
+  stock « arrivé à maturité » après six ans, proxy inspiré de la fenêtre de la
+  LPM 2024-2030. Le décaissement est compté dès l'année où il est décidé ; le
+  stock mature n'est pas automatiquement converti en baisse de spread, confiance
+  ou disponibilité militaire. Il ne s'agit pas d'une durée moyenne auditée.
+* **Source** : [Ministère des Armées, actualisation de la LPM 2024-2030
+  (avril 2026)](https://www.defense.gouv.fr/sites/default/files/ministere-armees/LPM.pdf).
+
+### P20. La capacité d'exécution de l'État et la simultanéité des réformes
+
+* **Manque** : les réformes étaient empilées comme si les administrations
+  disposaient d'une capacité illimitée, sans conflit de calendrier, de compétences
+  ou de conduite du changement.
+* **Systématique** : sur dix ans, les chantiers s'enchaînent ; le nombre de
+  réformes simultanées et les ressources (agents, systèmes, budgets, élus locaux)
+  influencent la mise en œuvre et le délai avant résultat.
+* **Brainstorming** : compter les chantiers majeurs réellement ouverts, mesurer
+  les postes vacants, délais de décrets, taux de réalisation et écarts à
+  l'évaluation ; séquencer ou arrêter les projets sous-performants. Ne pas
+  assimiler automatiquement « interrupteur activé » et réforme exécutée.
+* **Statut** : un levier explicite permet à l'utilisateur de choisir le nombre
+  de réformes majeures menées de front (il n'est pas déduit des interrupteurs).
+  Le seuil central 8 et les effets de stress (+0,3 pt de tension et −0,15 pt de
+  confiance par réforme au-delà) sont **hypothétiques**, non des seuils officiels.
+  Ils doivent être soumis à une analyse de sensibilité et ne sont pas des
+  estimations causales.
+* **Pistes de données** : bilans annuels de performance de la Cour des comptes,
+  délais de mise en œuvre des lois, inspections et évaluations LOLF ; aucun seuil
+  universel ne ressort de ces sources.
+
+### P21. Le bilan intergénérationnel sans score composite caché
+
+* **Manque** : dette, actifs construits, besoin de rattrapage, transition
+  climatique et structure démographique pouvaient être agrégés ou commentés
+  ensemble sans afficher leur unité, leur porteur ni leur période.
+* **Systématique** : deux mandatures redistribuent dans le temps coûts et
+  avantages ; un euro de dette, un stock de compétences et un dommage climatique
+  évité ne sont ni fongibles ni portés par les mêmes ménages/générations.
+* **Brainstorming** : publier côte à côte dette nominale et dette/PIB, besoins
+  patrimoniaux non couverts, investissements engagés et arrivés à maturité,
+  risques climatiques évités et incidence par âge/revenu/territoire. N'additionner
+  ces composantes qu'avec des pondérations explicites, justifiées et débattues.
+* **Statut** : le JSON et la page présentent un **ledger de composantes**, sans
+  indicateur synthétique « de fardeau » ni pourcentage fabriqué de nouveaux
+  électeurs. La démographie est contextualisée par les projections INSEE 2026 :
+  scénario central à 69,8 millions d'habitants en 2037 ; le solde naturel serait
+  négatif à partir de 2025. Cela ne permet pas de déduire mécaniquement le
+  renouvellement de l'électorat (inscription, âge électoral, migrations et
+  participation restent à traiter).
+* **Source** : [INSEE, projections de population 2026 à l'horizon 2070](https://www.insee.fr/fr/statistiques/9004289).
+
 ---
 
 ## 3. Traduction dans le code (ce qui est livré)
@@ -378,32 +509,67 @@ compteurs de scénarios (11), de préréglages (14) et de leviers (97) sont mis 
 jour dans `test_integration_branches.py`, `test_dashboard.py`,
 `test_parametres.py` et `tests/navigateur_interface.mjs`.
 
+
+### 3.6 Phase 2 — leviers, hypothèses et horizon interactif
+
+La phase 2 ajoute quatre leviers (entretien/rattrapage du patrimoine, capital
+humain à cycle long, capacité industrielle de défense, charge de réformes
+simultanées) et réutilise le levier d'adaptation climatique déjà présent. Le
+catalogue passe de **97 à 101 leviers** ; les 14 préréglages, les 11 scénarios
+et les 31 garde-fous existants sont conservés. Le préréglage « Deux mandatures »
+charge des valeurs illustratives (6 Md€/an de patrimoine, 1 Md€/an d'adaptation,
+2 Md€/an de capital humain et de BITD, six réformes simultanées) — ce ne sont
+pas des recommandations ni des dépenses observées.
+
+- `POST /api/simuler` accepte maintenant `horizon` de 1 à 10 ans ; le sélecteur
+  interactif propose 5 ou 10 ans. Les phases longues sont explicitement signalées
+  dans la sortie, le conseiller effet papillon reprend le même horizon et le
+  préréglage décennal sélectionne 10 ans.
+- P16 suit un besoin patrimonial non couvert par cumul simple d'euros ; il est
+  un proxy distinct de la dette Maastricht, sans surcoût macro inventé.
+- P17 sépare les pertes climatiques annualisées et évitées (hors APU) des
+  dépenses d'adaptation qui, elles, sont comptées au budget.
+- P18/P19 exposent des stocks cohortés arrivés à maturité après 8/6 ans, sans
+  taux de rendement PIB ni baisse de spread supposés.
+- P20 n'infère pas la charge d'exécution depuis les interrupteurs du catalogue :
+  l'utilisateur renseigne explicitement la simultanéité ; le seuil/coefficient
+  reste un stress-test documenté.
+- P21 ajoute `synthese.bilan_intergenerationnel` : dette, besoin patrimonial,
+  investissements cumulés, stocks mûrs et risque climatique, séparés par unité.
+  Aucun indicateur composite ou taux de renouvellement électoral n'est inventé.
+- Le bloc « Transmission entre générations » est visible dans l'interface, dans
+  les scénarios de 5 ou 10 ans et dans les exports. Les tests dédiés vérifient
+  délais, séparation budget/dommages, mappage des leviers et neutralité 5 ans.
+
+
 ---
 
 ## 4. Résultats exécutés (moteur calé à l'instant T, données de référence)
 
-> Exécution réelle du 6 octobre 2026 (`MoteurSimulationSystemique`, calibrage
+> Exécution réelle du 7 octobre 2026 (`MoteurSimulationSystemique`, calibrage
 > par défaut du projet). Avertissement : le solde au-delà de l'année 5 est la
 > conséquence mécanique de marges récurrentes constantes (+60 Md€/an) sur un
 > PIB nominal croissant ; une doctrine réaliste recyclera l'excédent
 > supplémentaire (voir Limites).
 
-### 4.1 Trajectoire « deux mandatures » (années 5 à 10)
+### 4.1 Trajectoire « deux mandatures » avec les hypothèses P16-P20 (années 5 à 10)
 
-| Année | Déficit (% PIB) | Dette (% PIB) | OAT 10 ans | Spread (bps) | Tension | Confiance | Usure | Inv. matures |
-|---|---|---|---|---|---|---|---|---|
-| 5 (élection 2032) | −0,56 | 119,4 | 3,47 % | 59,2 | 5,8 | 77,5 | 0 | 0 |
-| 6 (verrou) | −1,56 | 115,6 | 3,35 % | 47,2 | 5,0 | **80,5** | 0 | 0 |
-| 7 (dividende 3 Md€) | −2,47 | 110,9 | 3,35 % | 47,2 | 4,1 | 80,5 | 0 | 0 |
-| 8 | −3,36 | 105,4 | 3,35 % | 47,2 | 4,1 | 79,7 | 10 | 0 |
-| 9 (1ʳᵉ maturité) | −4,26 | 99,2 | 3,35 % | 47,2 | 4,1 | 78,9 | 20 | 4 Md€ |
-| 10 (élection 2037) | −5,14 | **92,2** | 3,39 % | **51,2** | 5,2 | 78,1 | 30 | 9 Md€ |
+| Année | Déficit (% PIB) | Dette (% PIB) | OAT 10 ans | Spread (bps) | Tension | Confiance | Usure | Inv. cycle long mûrs | Besoin patrimonial non couvert (proxy) | Dommages climat évités/an (proxy) |
+|---|---|---|---|---|---|---|---|---|---|---|
+| 5 (élection 2032) | −0,22 | 121,1 | 3,47 % | 59,2 | 5,8 | 77,5 | 0 | 0 | 0,21 Md€ | 1,33 Md€ |
+| 6 (verrou) | −1,23 | 117,6 | 3,35 % | 47,2 | 5,0 | **80,5** | 0 | 0 | 0,25 Md€ | 1,60 Md€ |
+| 7 (dividende 3 Md€) | −2,14 | 113,2 | 3,35 % | 47,2 | 4,1 | 80,5 | 0 | 0 | 0,29 Md€ | 1,87 Md€ |
+| 8 | −3,04 | 108,0 | 3,35 % | 47,2 | 4,1 | 79,7 | 10 | 0 | 0,33 Md€ | 2,13 Md€ |
+| 9 (1ʳᵉ maturité) | −3,95 | 102,0 | 3,35 % | 47,2 | 4,1 | 78,9 | 20 | 4 Md€ | 0,38 Md€ | 2,40 Md€ |
+| 10 (élection 2037) | −4,83 | **95,2** | 3,39 % | **51,2** | 5,2 | 78,1 | 30 | 9 Md€ | 0,42 Md€ | 2,67 Md€ |
 
-Lecture : la dette passe sous 100 % du PIB en année 9 ; le verrou constitutionnel
-plafonne la prime électorale de 2037 à +4 bps (51,2 − 47,2) alors que l'usure
-est à 30 ; la confiance culmine en année 6 (+3 pts par rapport à l'année 5)
-puis cède lentement à l'usure (−2,4 pts entre le pic et 2037) sans jamais
-revenir sous son niveau de fin de mandature 1.
+Le risque climatique annualisé de référence affiché est 4,77 Md€/an (hors budget APU) ;
+le besoin patrimonial non couvert est un proxy de l'annualisation Cour des comptes,
+pas une dette comptable. À la fin de l'année 10, les stocks éducatif et BITD mûrs
+valent respectivement 4 et 8 Md€ dans le scénario, sans rendement PIB/spread ajouté.
+La dette passe sous 100 % du PIB seulement en année 10. Le verrou constitutionnel
+plafonne la prime électorale de 2037 à +4 bps (51,2 − 47,2) ; la confiance culmine
+en année 6 puis cède à l'usure, sans revenir sous son niveau de fin de mandature 1.
 
 ### 4.2 Comparaison à l'année 10 : avec verrou vs alternance sans verrou
 
@@ -414,11 +580,14 @@ revenir sous son niveau de fin de mandature 1.
 | Confiance démocratique | 78,1 / 100 | 70,9 / 100 | −7,2 |
 | Risque de censure | 25,3 % | 33,7 % | +8,4 pts |
 | Usure politique | 30 / 100 | 70 / 100 | +40 |
-| Dette (% PIB) | 92,2 | 91,5 | ≈ (les deux trajectoires gardent les marges fiscales) |
+| Dette (% PIB) | 95,2 | 94,1 | +1,2 pts (le scénario verrouillé finance plus d'investissements en mandature 2) |
 
-Lecture : à marges fiscales identiques, ce qui distingue les deux trajectoires
-est **politique et financier** : confiance, climat social, stabilité
-parlementaire et coût du crédit. C'est précisément ce que le verrou protège.
+Lecture : cette comparaison de scénarios ne constitue **pas une attribution
+causale isolée au verrou**. L'alternance gèle aussi des investissements de
+seconde mandature et le réinvestissement de dividendes ; ces choix modifient le
+solde et la dette. Les écarts de confiance, climat social et spread doivent être
+lus à la lumière de l'ensemble des hypothèses affichées, pas comme l'effet pur
+d'une disposition constitutionnelle.
 
 ### 4.3 Garde-fous (console de veille)
 
@@ -428,6 +597,16 @@ parlementaire et coût du crédit. C'est précisément ce que le verrou protège
   `irreversibilite_reformes_active` → **vigilance**, message expliquant le
   risque d'abrogation par alternance — c'est le rappel permanent du point
   aveugle de la période.
+
+### 4.4 Lecture P21 du bilan intergénérationnel
+
+Le bilan de fin de trajectoire est un ledger et non un score : dette publique
+95,2 % du PIB ; besoin patrimonial non couvert (proxy) 0,42 Md€ ; investissements
+à cycle long cumulés, stocks arrivés à maturité ; dommages climatiques annualisés
+4,77 Md€ et dommages évités estimés 2,67 Md€/an (hors budget APU). Les stocks
+mûrs ne sont pas soustraits de la dette financière et les pertes évitées ne sont
+pas présentées comme des recettes de l'État. Chaque unité et hypothèse reste
+visible dans l'export JSON et la section « Transmission entre générations ».
 
 ---
 
@@ -451,12 +630,26 @@ parlementaire et coût du crédit. C'est précisément ce que le verrou protège
 5. **Le calendrier électoral est simplifié** : seules les années de scrutin
    national général (2032, 2037) sont modélisées ; les scrutins intermédiaires
    (européennes 2029-2034, municipales 2032) ne le sont pas encore.
-6. **L'horizon du simulateur interactif reste 5 ans dans l'interface** ;
-   l'horizon 10 est disponible par API (`horizon: 10`) et par scénarios
-   dédiés. Un sélecteur d'horizon dans la page est une piste ouverte.
-7. **Pas de module démographique ni de budgets carbone** (P9, P10) :
-   documentés, non implémentés — ils exigent des sources supplémentaires et un
-   calibrage « instant T » équivalent au reste du simulateur.
+6. **Le simulateur interactif propose 5 ou 10 ans**, mais pas encore une durée
+   intermédiaire par défaut. L'horizon décennal est le point de départ du
+   prototype P16-P21 ; ses hypothèses annualisées ne constituent pas une
+   prévision de trajectoire.
+7. **Pas de module démographique par âge ni de budgets carbone** (P9, P10) :
+   documentés, non implémentés. P21 reprend le contexte INSEE, mais ne calcule
+   pas la part des nouveaux électeurs, faute de données et de méthode adaptées.
+8. **Annualisations P16/P17** : les 145/24 Md€ et 143/30 Md€ sont des
+   transformations de grandeurs cumulées/horizon 2050 en moyenne de scénario ;
+   elles ne sont ni des crédits annuels votés ni une trajectoire annuelle
+   climatique observée. Le ratio Barnier est spécifique aux projets étudiés.
+9. **Maturités P18/P19** : huit et six ans servent à rendre visibles des délais
+   longs ; aucune productivité, amélioration scolaire, cadence militaire ou
+   détente de taux n'est inférée automatiquement.
+10. **Capacité d'exécution P20** : seuil huit et coefficients sont des paramètres
+    hypothétiques. Tester au moins les seuils 5/8/12 avant toute interprétation.
+11. **Incidence P21** : le ledger n'attribue pas encore actifs et passifs par
+    âge, revenu, territoire ou cohorte ; les stocks ne sont pas additionnés à la
+    dette en un solde patrimonial net.
+
 
 ---
 
@@ -480,9 +673,19 @@ Toute modification du projet doit répondre, point par point, à ces questions :
 8. Qui la **reprend** à la fin des deux mandatures (P14) ?
 9. Les **tests de neutralité** (scénarios quinquennaux inchangés) sont-ils
    toujours verts ?
+10. Le **besoin patrimonial** P16 est-il séparé de la dette comptable, daté et
+    annualisé sans être présenté comme un crédit voté ?
+11. Les **pertes climatiques** P17 restent-elles distinctes des dépenses APU et
+    des recettes publiques ; le rapport coût/efficacité est-il transférable ?
+12. Les délais de **formation et de maturité BITD** P18/P19 ont-ils une source
+    ou sont-ils étiquetés comme hypothèse, sans rendement non mesuré ?
+13. La **capacité administrative** P20 est-elle renseignée explicitement, avec
+    seuil testé en sensibilité plutôt qu'inféré du nombre de curseurs ?
+14. Le ledger **P21** sépare-t-il unités et porteurs des coûts/actifs ; évite-t-il
+    un score composite ou une part de nouveaux électeurs fabriqués ?
 
 ---
 
-*Document rédigé le 6 octobre 2026 dans le cadre de la R&D continue du dépôt.
+*Document rédigé le 7 octobre 2026 dans le cadre de la R&D continue du dépôt.
 Toutes les valeurs chiffrées de la section 4 sont issues d'exécutions réelles
 du simulateur à la date de rédaction.*
