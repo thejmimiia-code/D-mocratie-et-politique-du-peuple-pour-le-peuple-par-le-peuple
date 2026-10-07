@@ -91,10 +91,32 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("classList.toggle('replie')", self.script)
         for identifiant in ("console-verdict", "console-strates", "console-danger",
                             "console-population", "console-derniere-modification",
-                            "console-alertes", "console-marges"):
+                            "console-alertes", "console-marges", "console-conseil",
+                            "console-cout-global"):
             self.assertIn(f'id="{identifiant}"', self.page, identifiant)
         self.assertIn("function renderConsole(", self.script)
         self.assertIn("function renderDerniereModification(", self.script)
+        # Le conseiller temps réel (« effet papillon ») est branché sur la page.
+        self.assertIn("function majConseilTempsReel(", self.script)
+        self.assertIn("function renderConseil(", self.script)
+        self.assertIn("let MOUVEMENT = null;", self.script)
+        self.assertIn("let DERNIER_CONSEIL = null;", self.script)
+        self.assertIn("/api/conseil", self.script)
+        self.assertIn("effet papillon", self.page.lower())
+        # Le coût / gain réel des réglages globaux croisés est dans la veille.
+        self.assertIn("function renderCoutGlobal(", self.script)
+        self.assertIn("Coût / gain réel des réglages globaux croisés", self.page)
+        self.assertIn(".cout-gain.gain{", self.page)
+        self.assertIn(".cout-gain.cout{", self.page)
+        # Le bloc coût / gain est hors de la zone repliable : il reste visible
+        # même quand le détail des seuils est masqué.
+        self.assertIn("cout-global-veille", self.page)
+        self.assertLess(self.page.index('id="console-cout-global"'),
+                        self.page.index('id="console-corps"'),
+                        "le bloc coût/gain doit précéder le corps repliable")
+        # Version d'interface visible pour diagnostiquer les pages périmées.
+        self.assertIn('id="version-interface"', self.page)
+        self.assertIn("Interface v1.8.0", self.page)
         # Les cinq niveaux de seuil sont connus du rendu.
         for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
             self.assertIn(niveau, self.script)
@@ -102,7 +124,7 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("bandeau-hors-sol", self.script)
 
     def test_tous_les_leviers_sont_visibles_et_actionnables(self):
-        """Les 93 paramètres doivent être affichés, groupés et manipulables."""
+        """Tous les paramètres du catalogue doivent rester manipulables."""
         self.assertIn('id="section-leviers"', self.page)
         self.assertIn('id="compteur-leviers"', self.page)
         self.assertIn('id="case-densite"', self.page)
@@ -122,6 +144,16 @@ class TestStructureDeLaPage(unittest.TestCase):
         # Le compte des leviers affichés est permanent.
         self.assertIn("levier(s) affiché(s)", self.script)
 
+    def test_horizon_cinq_ou_dix_ans_et_bilan_intergenerationnel(self):
+        self.assertIn('id="horizon-simulation"', self.page)
+        self.assertIn('value="10">2 mandatures', self.page)
+        self.assertIn("function changerHorizon(", self.script)
+        self.assertIn("horizon: horizon", self.script)
+        self.assertIn("horizon: horizonCourant()", self.script)
+        self.assertIn('id="bilan-intergenerationnel"', self.page)
+        self.assertIn("function renderBilanIntergenerationnel(", self.script)
+        self.assertIn("actifs_arrives_a_maturite_mde", self.script)
+
     def test_chaque_levier_recoit_l_impact_de_son_reglage(self):
         """Sous chaque curseur, l'effet mesuré du levier est affiché."""
         self.assertIn("function pucesHtml(", self.script)
@@ -139,12 +171,21 @@ class TestStructureDeLaPage(unittest.TestCase):
         # sinon le curseur serait remplacé sous les doigts de l'utilisateur.
         self.assertIn("if (!REGLAGE_EN_COURS) renderLeviers(filtreCourant());", self.script)
         self.assertIn("REGLAGE_EN_COURS = true", self.script)
+        # Le mouvement (position avant vs position à l'instant T) est capturé
+        # pour TOUS les leviers, avant toute écriture de la nouvelle valeur.
+        maj = self.script.split("function majLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("MOUVEMENT = {cle: cle, avant: PARAMS[cle]}", maj)
+        self.assertLess(maj.index("MOUVEMENT = {cle: cle, avant: PARAMS[cle]}"),
+                        maj.index("PARAMS[cle] = valeur"),
+                        "la position d'avant doit être lue avant l'écriture")
 
     def test_console_branchee_sur_chaque_simulation(self):
         """Chaque simulation recalcule la console et l'effet de la mesure."""
         simuler = self.script.split("async function simuler(", 1)[1].split("\nfunction ", 1)[0]
         self.assertIn("renderConsole(donnees);", simuler)
+        self.assertIn("renderCoutGlobal(donnees);", simuler)
         self.assertIn("renderDerniereModification(", simuler)
+        self.assertIn("majConseilTempsReel(parametresEnvoyes);", simuler)
         self.assertIn("SIMULATION_PRECEDENTE", simuler)
         # C'est bien le jeu de paramètres envoyé qui est mémorisé, pas l'objet
         # mutable `PARAMS` (sinon la comparaison porterait sur le même objet).
@@ -213,7 +254,7 @@ class TestControlesUtilisateur(unittest.TestCase):
         self.assertIn("defauts[cle]", compteur)
         # Deux grilles, deux usages : scénarios du dépôt (moteur d'origine) et
         # préréglages doctrinaux (simulateur paramétrable).
-        self.assertIn("9 situations rejouées par le moteur d'origine", self.page)
+        self.assertIn("situations rejouées par le moteur d'origine", self.page)
         self.assertIn("chargées dans le simulateur puis ajustables", self.page)
         self.assertIn("preset-grid", self.page)
 
@@ -270,7 +311,7 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         """Chaque réglage porte un bouton qui ouvre une bulle calculée.
 
         La bulle doit rester **dans** la carte du levier (jamais par-dessus) :
-        l'utilisateur garde ses 93 paramètres visibles et actionnables.
+        l'utilisateur garde tous les paramètres visibles et actionnables.
         """
         self.assertIn("bulle-bouton", self.page)
         self.assertIn("bulle-levier", self.page)
@@ -283,13 +324,57 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         # Le bouton est présent dans les deux vues et la bulle suit le levier.
         self.assertEqual(self.script.count("&#39;"), 0)
         self.assertIn("${bouton}", self.script)
-        self.assertIn("${pucesHtml(levier.cle)}${bulleHtml(levier.cle)}", self.script)
+        self.assertIn("${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}", self.script)
 
     def test_bulle_ne_souvre_que_pour_le_levier_choisi(self):
         """Une seule bulle ouverte à la fois, uniquement pour son levier."""
         self.assertIn("if (BULLE_OUVERTE !== cle) return '';", self.script)
         self.assertIn("BULLE_OUVERTE = cle;", self.script)
         self.assertIn("BULLE_OUVERTE = null;", self.script)
+
+    def test_bulle_rafraichie_en_direct_avec_cout_gain_reel(self):
+        """La bulle du réglage se rafraîchit dès le mouvement, avec le coût /
+        gain réel de ce réglage précis, en rouge / vert transparent."""
+        # Le bloc live est rendu dans chaque bulle, au sommet de la fiche.
+        self.assertIn('id="bulle-live"', self.script)
+        self.assertIn("function bulleLiveHtml(", self.script)
+        self.assertIn("function coutGainHtml(", self.script)
+        self.assertIn("function majBulleLive(", self.script)
+        # Mise à jour DOM directe (sans re-rendu) dès la réponse du conseiller.
+        self.assertIn("majBulleLive();", self.script)
+        # Retour immédiat dès le début du geste, avant même la réponse serveur.
+        maj = self.script.split("function majLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("if (BULLE_OUVERTE === cle)", maj)
+        self.assertIn("Mesure du coût / gain réel", maj)
+        # Rouge / vert en transparence, comme le bandeau hors-sol.
+        self.assertIn(".cout-gain.gain{background:linear-gradient(90deg,rgba(34,197,94,.34)", self.page)
+        self.assertIn(".cout-gain.cout{background:linear-gradient(90deg,rgba(239,68,68,.34)", self.page)
+        # Le conseil stocké alimente la bulle et cite les sources officielles.
+        self.assertIn("DERNIER_CONSEIL = conseil;", self.script)
+        self.assertIn("sources officielles", self.script)
+
+    def test_badge_cout_gain_visible_sous_le_levier_et_dans_le_ruban(self):
+        """Les indicateurs visuels temps réel sont visibles sans ouvrir la
+        bulle : un badge sous le levier manipulé, une puce dans le ruban."""
+        # Le badge est rendu dans chaque carte de levier, vue confort et compacte.
+        self.assertIn("function badgeCoutLiveHtml(", self.script)
+        self.assertIn("function zoneCoutLiveHtml(", self.script)
+        self.assertIn("function majBadgeCoutLive(", self.script)
+        self.assertIn("function placeholderMesure(", self.script)
+        self.assertIn("${zoneCoutLiveHtml(levier.cle)}", self.script)
+        # Il apparaît dans les deux gabarits (confort et compact).
+        self.assertEqual(self.script.count("${zoneCoutLiveHtml(levier.cle)}"), 2)
+        # Le ruban porte la puce coût / gain, alimentée à chaque simulation.
+        self.assertIn('id="ruban-cout"', self.page)
+        self.assertIn("ruban-cout", self.script)
+        self.assertIn(".ruban-cout.gain{", self.page)
+        self.assertIn(".ruban-cout.cout{", self.page)
+        self.assertIn(".cout-live.gain{", self.page)
+        self.assertIn(".cout-live.cout{", self.page)
+        # renderCoutGlobal met à jour le ruban et la console.
+        rendu = self.script.split("function renderCoutGlobal(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("ruban-cout", rendu)
+        self.assertIn("console-cout-global", rendu)
 
     def test_infobulles_au_survol_des_reglages(self):
         """Curseurs, interrupteurs et boutons s'expliquent au survol.
@@ -311,9 +396,22 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         # Survol, sortie de souris, focus clavier, clic (pour ne pas masquer l'aide).
         for evenement in ("mouseover", "mouseout", "focusin", "focusout", "mousedown", "scroll"):
             self.assertIn(evenement, self.script)
+        # Jamais d'aide flottante par-dessus un résultat en cours de lecture :
+        # ni pendant un réglage, ni quand une bulle « interactions » est ouverte.
+        survoler = self.script.split("function survoler(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("if (REGLAGE_EN_COURS || BULLE_OUVERTE){ masquerInfobulle(); return; }",
+                      survoler)
+        maj = self.script.split("function majLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("masquerInfobulle();", maj)
+        ouvrir = self.script.split("async function ouvrirBulle(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("masquerInfobulle();", ouvrir)
+        # L'aide du levier reflète le dernier mouvement en temps réel.
+        aide = self.script.split("function texteAideLevier(", 1)[1].split("\nfunction ", 1)[0]
+        self.assertIn("MOUVEMENT && MOUVEMENT.cle === cle", aide)
+        self.assertIn("dernier mouvement", aide)
 
     def test_chaque_reglage_est_annote_pour_le_survol(self):
-        """Les zones interactives des 93 leviers portent leur aide."""
+        """Les zones interactives du catalogue portent leur aide."""
         self.assertGreaterEqual(self.script.count('data-aide-levier="${levier.cle}"'), 6)
         self.assertIn('<input type="range" data-aide-levier=', self.script)
         self.assertIn('<input type="checkbox" data-aide-levier=', self.script)
@@ -339,6 +437,43 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("Comment lire les scores", self.page)
         self.assertIn("trajectoire de référence", self.page)
         self.assertIn("écarts de politique publique", self.page)
+
+    def test_section_audit_tracabilite_en_bas_de_page(self):
+        """Pas de boîte noire : sources, formules, seuils et méthode sont
+        livrés en bas de page, vérifiables et recoupables."""
+        self.assertIn('id="section-audit"', self.page)
+        for identifiant in ("audit-sources", "audit-domaines", "audit-leviers",
+                            "audit-gardefous", "audit-methodes"):
+            self.assertIn(f'id="{identifiant}"', self.page, identifiant)
+        # Les cinq blocs de recoupement et leur rendu.
+        self.assertIn("Audit &amp; traçabilité", self.page)
+        self.assertIn("function chargerAudit(", self.script)
+        self.assertIn("function auditSourcesHtml(", self.script)
+        self.assertIn("function auditDomainesHtml(", self.script)
+        self.assertIn("function auditLeviersHtml(", self.script)
+        self.assertIn("function auditGardeFousHtml(", self.script)
+        self.assertIn("function auditMethodesHtml(", self.script)
+        self.assertIn("Hypothèses P16-P21", self.script)
+        self.assertIn("145/24", self.script)
+        self.assertIn("143/30", self.script)
+        self.assertIn("ratio Barnier 8/30", self.script)
+        self.assertIn("9004289", self.script)
+        self.assertIn("chargerAudit();", self.script)
+        # Le barème des garde-fous est servi par une route dédiée.
+        self.assertIn("/api/garde_fous", self.script)
+        # L'échappement protège l'audit de toute injection.
+        self.assertIn("function echapperTexte(", self.script)
+        # Un bouton de l'en-tête mène à l'audit.
+        self.assertIn("allerAudit()", self.script)
+        self.assertIn("function allerAudit(", self.script)
+
+    def test_attribution_et_banniere_mrsc(self):
+        """L'outil est open-source sous bannière MRSC : la paternité est
+        protégée et l'usage gratuit, énoncés en bas de page."""
+        self.assertIn("Bannière MRSC", self.page)
+        self.assertIn("MRSC", self.page)
+        self.assertIn("nul ne peut s'en attribuer", self.page.lower())
+        self.assertIn("par le peuple, pour le peuple", self.page.lower())
 
 
 if __name__ == "__main__":

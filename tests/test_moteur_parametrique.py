@@ -49,6 +49,24 @@ class TestContratDeSimulation(unittest.TestCase):
         court = simuler({"reforme_ric": 1.0}, self.contexte, horizon=3, avec_impacts=False)
         self.assertEqual(len(court.etapes), 3)
 
+    def test_trajectoires_de_reference_flux_et_taux_immobilier_exposes(self):
+        sortie = simuler(
+            {"smic_revalorisation": 2.0}, self.contexte, horizon=3, avec_impacts=False
+        )
+        self.assertEqual(len(sortie.etapes_reference), 3)
+        self.assertEqual(len(sortie.flux_annuels), 3)
+        self.assertEqual(len(sortie.flux_reference), 3)
+        self.assertEqual(len(sortie.domaines_reference), 20)
+        self.assertEqual(sortie.flux_annuels[0]["annee"], 1)
+        self.assertGreater(sortie.flux_annuels[0]["levier:smic_revalorisation"], 0)
+        for etape in sortie.etapes + sortie.etapes_reference:
+            self.assertAlmostEqual(
+                etape["taux_credit_immobilier_menages"],
+                self.contexte.taux_credit_immobilier_menages_pct
+                + etape["taux_oat_pct"] - self.contexte.taux_oat_10ans,
+            )
+        self.assertIn("taux_credit_immobilier_final", sortie.synthese)
+
     def test_sortie_json_serialisable(self):
         charge = self.neutre.en_dict()
         texte = json.dumps(charge, ensure_ascii=False)

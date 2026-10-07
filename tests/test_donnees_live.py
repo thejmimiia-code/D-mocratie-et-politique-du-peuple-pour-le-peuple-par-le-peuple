@@ -25,13 +25,45 @@ from simulateur.donnees_live import (
     VARIABLE_HORS_LIGNE,
     ContexteInstant,
     Lecture,
+    ad_eurostat,
     browser_payload,
     charger_cache,
     collecter,
     construire_contexte,
     hors_ligne_force,
+    libelle_qualite,
+    qualite_eurostat,
     sauver_cache,
 )
+
+
+class TestAdaptateurEurostat(unittest.TestCase):
+    """Les périodes absentes et marqueurs de qualité restent traçables."""
+
+    def test_retenue_du_dernier_point_publie_et_marqueur(self):
+        charge = {
+            "value": {"0": 1.1},
+            "status": {"0": "e"},
+            "dimension": {
+                "time": {
+                    "category": {
+                        "index": {"2026-08": 0, "2026-09": 1},
+                    },
+                },
+            },
+        }
+        valeur, periode = ad_eurostat(charge)
+        self.assertEqual(valeur, 1.1)
+        self.assertEqual(periode, "2026-08")
+        code = qualite_eurostat(charge, "0")
+        self.assertEqual(code, "e")
+        self.assertEqual(libelle_qualite(code), "estimée (code e)")
+
+    def test_un_indicateur_de_prix_par_categorie_est_expose(self):
+        fiche = browser_payload(["inflation_ipch_cp01"])["inflation_ipch_cp01"]
+        self.assertIn("coicop18=CP01", fiche["sources"][0]["url"])
+        self.assertIn("lastTimePeriod=12", fiche["sources"][0]["url"])
+        self.assertIn("Mensuelle", fiche["frequence"])
 
 
 class TestRegistreIndicateurs(unittest.TestCase):
@@ -110,6 +142,14 @@ class TestRepliEtCorrespondance(unittest.TestCase):
         champs = {f.name for f in fields(ContexteInstant)}
         for champ in _CORRESPONDANCE:
             self.assertIn(champ, champs)
+
+    def test_taux_habitat_est_source_et_calibrable(self):
+        contexte = construire_contexte(utiliser_cache=False, hors_ligne=True)
+        self.assertEqual(contexte.taux_credit_immobilier_menages_pct, 3.2)
+        info = contexte.provenance["taux_credit_immobilier_menages_pct"]
+        self.assertEqual(info["periode"], "2026-08")
+        self.assertIn("BCE MIR", info["source"])
+        self.assertIn("Mensuelle", info["frequence"])
 
 
 class TestModeHorsLigne(unittest.TestCase):
@@ -240,6 +280,9 @@ class TestContexteInstant(unittest.TestCase):
                 info = provenance[champ]
                 self.assertTrue(info["libelle"])
                 self.assertTrue(info["source"])
+                self.assertTrue(info["frequence"])
+                self.assertIn("qualite", info)
+                self.assertIn("date_collecte", info)
                 self.assertIn(info["statut"], {"live", "reference", "indisponible", "mixte"})
                 self.assertIn("licence", info)
 
@@ -248,6 +291,21 @@ class TestContexteInstant(unittest.TestCase):
         self.assertIn("spread_oat_bund_bps", charge)
         self.assertIn("charge_dette_estimee_mde", charge)
         json.dumps(charge)
+
+    def test_provenance_live_garde_date_frequence_et_marqueur(self):
+        lectures = {
+            "taux_oat_france_10ans": Lecture(
+                cle="taux_oat_france_10ans", valeur=3.9, periode="2026-09",
+                fournisseur="test", url="https://example.org/", statut="live",
+                qualite_code="p", horodatage="2026-10-07T12:00:00+00:00",
+            )
+        }
+        contexte = construire_contexte(lectures=lectures)
+        info = contexte.provenance["taux_oat_10ans"]
+        self.assertEqual(info["date_collecte"], "2026-10-07")
+        self.assertIn("Mensuelle", info["frequence"])
+        self.assertEqual(info["qualite_code"], "p")
+        self.assertEqual(info["qualite"], "provisoire (code p)")
 
 
 class TestCollecteEtCache(unittest.TestCase):

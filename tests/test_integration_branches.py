@@ -34,8 +34,8 @@ class TestIntegrationBranches(unittest.TestCase):
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn('convergence_ww3', r.stdout)
 
-    def test_neuf_scenarios_cli_exports(self):
-        self.assertEqual(len(CATALOGUE_SCENARIOS), 9)
+    def test_onze_scenarios_cli_exports(self):
+        self.assertEqual(len(CATALOGUE_SCENARIOS), 11)
         with tempfile.TemporaryDirectory() as dossier:
             for scenario, (fabrique, _) in CATALOGUE_SCENARIOS.items():
                 with self.subTest(scenario=scenario):
@@ -47,7 +47,7 @@ class TestIntegrationBranches(unittest.TestCase):
                     self.assertEqual(data['nombre_etapes'], len(fabrique()))
                     self.assertIn('non calibrés', ' '.join(data['resultats'][0]['commentaires']))
 
-    def test_neuf_scenarios_api_dashboard(self):
+    def test_onze_scenarios_api_dashboard(self):
         for scenario, (fabrique, _) in CATALOGUE_SCENARIOS.items():
             with self.subTest(scenario=scenario):
                 data = run_simulation_api(scenario)

@@ -44,6 +44,9 @@
    * Démontage méthodique des 10 attaques de mauvaise foi des oppositions et éditorialistes
    * Les parades juridiques, arguments constitutionnels et phrases de clôture
 9. **RÉPERTOIRE DES SOURCES OFFICIELLES ET DOCUMENTS DE RÉFÉRENCE VÉRIFIABLES**
+10. **DEUX MANDATURES CONSÉCUTIVES (2027-2037)** — les vingt-et-un points stratégiques
+    de la période de dix ans, leur traduction dans le simulateur et les résultats
+    exécutés (R&D : `docs/RD_DOUBLE_MANDATURE.md`).
 
 ---
 
@@ -491,3 +494,69 @@ Ce plan repose sur des textes juridiques en vigueur, des arrêts constitutionnel
     * *Code de la commande publique* (Articles L. 2112-2 et L. 2113-10).
     * *Code de la consommation* (Article L. 470-2).
     * *Loi n° 88-227 du 11 mars 1988* sur la transparence financière de la vie politique.
+
+
+---
+
+# CHAPITRE X. DEUX MANDATURES CONSÉCUTIVES (2027-2037) : LA PÉRIODE DE DIX ANS
+
+Le présent dossier est conçu pour une mandature ; mais la doctrine elle-même
+(non-cumul dans le temps, levier n° 6 : deux mandats consécutifs au maximum)
+fait de la **période de dix ans** l'horizon naturel du projet. La R&D dédiée
+— [`docs/RD_DOUBLE_MANDATURE.md`](docs/RD_DOUBLE_MANDATURE.md) — inventorie les
+vingt-et-un points stratégiques qui n'existent que sur cette période et les
+traduit dans le simulateur (101 leviers, 14 préréglages, 11 scénarios,
+31 garde-fous).
+
+## 1. Les vingt-et-un points systématiques de la période de dix ans
+
+| # | Point stratégique | Traduction dans le simulateur |
+|---|---|---|
+| 1 | Horizon de dix ans | Scénarios `double_mandature`, `alternance_2032` (10 exercices) ; API `horizon: 10` |
+| 2 | Calendrier électoral (2032, 2037) | `annee_electorale_majeure` : prime de spread +12 bps si réformes révocables, +4 bps verrouillées |
+| 3 | Réversibilité / risque d'alternance | Levier et garde-fou `verrouillage_irreversibilite` |
+| 4 | Usure du capital politique | `usure_politique_pts` + garde-fou dédié (cible ≤ 20/100) |
+| 5 | Second dividende de la dette (maturité 8,5 ans) | Levier `dividende_dette_reinvesti` (dépense gagée, sans déficit) |
+| 6 | Investissements à cycle long (EPR2, LPM, prévention) | Levier `investissements_cycle_long` (courbe en J, maturité 5 ans) |
+| 7 | Séquencement constitutionnel | Verrou actif en année 6 du scénario `double_mandature` |
+| 8 | Calendrier européen (CFP 2028-2034, 2029) | Analysé ; porté par les garde-fous PDE/TPI existants |
+| 9 | Horloge démographique (dépendance, générations) | Projections INSEE 2026 en contexte ; pas de module par âge ni de part électorale simulée |
+| 10 | Budgets carbone quinquennaux | Piste ouverte (données à calibrer « instant T ») |
+| 11 | Choc majeur quasi certain sur dix ans | Composable avec les leviers de choc existants |
+| 12 | Syndrome de la seconde mandature | Doctrine « seconde mandature utile » (consolider, évaluer, transmettre) |
+| 13 | Évaluation et clauses de revoyure | Levier `clause_revoyure_evaluation` |
+| 14 | Transmission et Collège civique | Documenté ; calendrier de mise en place visé années 8-9 |
+| 15 | Plans budgétaires pluriannuels successifs | Documenté ; porté par l'effort structurel existant |
+| 16 | Patrimoine public et besoin de rattrapage | Proxy annualisé Cour des comptes (140-150 Md€ à 2050), distinct de la dette comptable |
+| 17 | Adaptation et dommages climatiques | PNACC-3 : annualisation de scénario, dommages évités hors budget APU |
+| 18 | Capital humain et cohortes | Délai exploratoire de 8 ans ; stock mûr exposé, sans rendement PIB supposé |
+| 19 | Capacité industrielle de défense (BITD) | Délai proxy LPM de 6 ans ; stock mûr exposé, sans prime de spread supposée |
+| 20 | Capacité d'exécution de l'État | Nombre de réformes simultanées explicite ; seuil 8 = stress-test, non norme officielle |
+| 21 | Bilan intergénérationnel sans score caché | Ledger séparé : dette, besoin patrimonial, investissements mûrs, risque climatique |
+
+## 2. Synthèse des résultats exécutés (7 octobre 2026)
+
+| Année | Trajectoire « deux mandatures » | Déficit (% PIB) | Dette (% PIB) | Spread (bps) | Confiance |
+|---|---|---|---|---|---|
+| 5 (élection 2032) | réformes révocables | −0,22 | 121,1 | 59,2 | 77,5 |
+| 6 (verrou constitutionnel) | ancrage des acquis | −1,23 | 117,6 | 47,2 | 80,5 |
+| 10 (élection 2037) | réformes verrouillées | −4,83 | 95,2 | 51,2 | 78,1 |
+
+À l'année 10, la trajectoire **sans verrou** (stress-test `alternance_2032`)
+présente +8 bps de spread, +6 pts de tension sociale, −7,2 pts de confiance et
++8,4 pts de risque de censure. L'alternance gèle aussi plusieurs investissements
+de seconde mandature : cette comparaison n'isole donc pas l'effet causal du seul verrou.
+Sur deux mandatures, l'irréversibilité
+constitutionnelle des réformes n'est pas un luxe doctrinal, c'est un
+paramètre budgétaire.
+
+Le bilan P21 à l'année 10 expose séparément : besoin patrimonial non couvert
+(proxy) **0,42 Md€**, dommage climatique annualisé **4,77 Md€/an** et dommage
+évité estimé **2,67 Md€/an** (hors budget APU), capital humain mûr **4 Md€**,
+capacités BITD mûres **8 Md€**. Ces composantes ne sont pas soustraites de la
+dette financière et ne forment pas un score unique.
+
+> Lecture : ces valeurs sont des explorations du modèle à périmètre constant
+> (marges récurrentes de +60 Md€/an non recyclées au-delà de l'année 5),
+> jamais des prévisions. Le détail, les limites et la grille de relecture
+> permanente figurent dans `docs/RD_DOUBLE_MANDATURE.md`.
