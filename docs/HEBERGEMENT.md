@@ -185,6 +185,9 @@ calcule rien, idéale pour le `healthCheckPath` d'un hébergeur.
   un déploiement, ajouter la variable d'environnement `SIMULATEUR_LOG=1`.
 - **Deux workers** suffisent largement : une simulation complète prend une
   cinquantaine de millisecondes de calcul.
+- **Le partage par lien suit l'adresse.** Le bouton « 🔗 Partager mes réglages »
+  écrit les leviers dans l'URL : il fonctionne avec n'importe quelle adresse
+  ci-dessus, sans configuration supplémentaire.
 
 ### Dépannage
 

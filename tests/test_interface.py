@@ -585,5 +585,45 @@ class TestFluiditeDuRendu(unittest.TestCase):
         self.assertIn("  chargerLexique();", self.script)
 
 
+class TestReglagesPartageables(unittest.TestCase):
+    """Un réglage se transmet : c'est un lien, pas un fichier à expliquer."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.script = _script(cls.page)
+
+    def test_un_bouton_de_partage_est_dans_la_barre(self):
+        self.assertIn('id="btn-partage"', self.page)
+        self.assertIn("onclick=\"partagerReglages()\"", self.page)
+        self.assertIn('id="avis-lien"', self.page)
+
+    def test_le_lien_ne_transporte_que_ce_qui_a_bouge(self):
+        """Les 101 paramètres n'ont rien à faire dans une adresse."""
+        self.assertIn("function reglagesModifies()", self.script)
+        self.assertIn("function lienReglages()", self.script)
+        self.assertIn("?sim=", self.script)
+        # La comparaison se fait contre les valeurs neutres du catalogue.
+        self.assertIn("CATALOGUE.parametres.defauts", self.script)
+
+    def test_une_adresse_recue_n_est_jamais_crue(self):
+        """Seules les clés connues du catalogue et les nombres passent."""
+        self.assertIn("function reglagesDepuisLien(", self.script)
+        self.assertIn("hasOwnProperty.call(defauts, cle)", self.script)
+        self.assertIn("typeof valeur === 'number' && isFinite(valeur)", self.script)
+        # Un JSON illisible est ignoré, jamais rendu en texte dans la page.
+        self.assertIn("catch (erreur){ return repris; }", self.script)
+
+    def test_l_avis_est_ecrit_en_texte_et_non_en_html(self):
+        """L'adresse peut contenir n'importe quoi : rien n'est injecté."""
+        self.assertIn("zone.textContent =", self.script)
+
+    def test_le_programme_de_depart_ne_s_ajoute_pas_aux_reglages_repris(self):
+        """Sinon le lien ne rouvrirait pas la simulation partagée."""
+        self.assertIn("const depuisLien = appliquerLien();", self.script)
+        self.assertIn("if (depuisLien) simuler(true); else chargerPreset('mandature', null);",
+                      self.script)
+
+
 if __name__ == "__main__":
     unittest.main()

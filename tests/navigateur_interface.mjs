@@ -112,6 +112,9 @@ globalThis.document = {
   body: new Element("body"),
 };
 globalThis.window = globalThis;
+// Adresse de la page : le lien partageable s'y construit. Sans elle, le
+// script lèverait une erreur au lieu de fabriquer une adresse.
+globalThis.location = { origin: "http://127.0.0.1:8000", pathname: "/", search: "" };
 globalThis.alert = (message) => { rapport.alertes.push(String(message)); };
 globalThis.Blob = class Blob {
   constructor(parties) { this.parties = parties; this.contenu = parties.join(""); }
@@ -226,6 +229,8 @@ const programme = `
                        'chargerLexique','definirLexique','baliserTermes','appliquerLexique',
                        'marquerTextes','rendreLexique','filtrerLexique','ouvrirLexique',
                        'ouvrirModale','fermerModale','ouvrirGuide','contenuGuide','guideDejaVu',
+                       'reglagesModifies','lienReglages','reglagesDepuisLien','appliquerLien',
+                       'partagerReglages','avisLien',
                        'renderLecture','marquerSommaire','contenuOngletStrate','rendreOngletStrate']) {
       api[nom] = eval(nom);
     }
@@ -696,6 +701,45 @@ noter("adaptateur Banque mondiale", bm && bm.valeur === 30.4 && bm.periode === "
 const yahoo = apiPage.extraireGenerique("yahoo",
   { chart: { result: [{ meta: { regularMarketPrice: 101.69, regularMarketTime: 1759600000 } }] } }, null);
 noter("adaptateur Yahoo (via proxy)", yahoo && yahoo.valeur === 101.69);
+
+/* 10. Lien partageable : un réglage se transmet par l'adresse, et rien d'autre. */
+apiPage.majLevier(cleLevier, defauts[cleLevier] + 3.0);
+const lienPartage = apiPage.lienReglages();
+noter("le lien partagé reprend l'adresse de la page",
+      lienPartage.startsWith("http://") && lienPartage.includes("?sim="), lienPartage.slice(0, 70));
+const brutLien = new URL(lienPartage).searchParams.get("sim") || "{}";
+const reprisLien = JSON.parse(brutLien);
+noter("le lien ne transporte que les leviers déplacés",
+      Object.keys(reprisLien).length > 0 && Object.keys(reprisLien).length < 40
+      && Object.prototype.hasOwnProperty.call(reprisLien, cleLevier),
+      `${Object.keys(reprisLien).length} levier(s) : ${Object.keys(reprisLien).slice(0, 4).join(", ")}`);
+noter("le lien se relit à l'identique",
+      JSON.stringify(apiPage.reglagesDepuisLien(brutLien)) === JSON.stringify(reprisLien),
+      JSON.stringify(apiPage.reglagesDepuisLien(brutLien)) === JSON.stringify(reprisLien)
+        ? "aller-retour fidèle" : "le contenu relu diffère");
+const hostile = apiPage.reglagesDepuisLien(
+  JSON.stringify({ [cleLevier]: 5, levier_invente: 99, texte: "bonjour", liste: [1, 2] }));
+noter("un lien hostile ne peut pas injecter un réglage inconnu",
+      Object.keys(hostile).length === 1 && hostile[cleLevier] === 5, JSON.stringify(hostile));
+noter("un lien illisible est ignoré sans erreur",
+      Object.keys(apiPage.reglagesDepuisLien("ceci n'est pas du json")).length === 0
+      && Object.keys(apiPage.reglagesDepuisLien(null)).length === 0
+      && Object.keys(apiPage.reglagesDepuisLien(JSON.stringify([1, 2, 3]))).length === 0);
+noter("partager renvoie l'adresse calculée, sans copier dans le vide",
+      (await apiPage.partagerReglages()) === lienPartage);
+noter("un lien absent ne déclenche aucun réglage repris",
+      apiPage.reglagesDepuisLien("").tva_taux_normal === undefined);
+
+/* Le trajet complet : on repart du neutre, puis on ouvre l'adresse. */
+apiPage.majLevier(cleLevier, defauts[cleLevier]);
+globalThis.location.search = "?sim=" + encodeURIComponent(brutLien);
+const applique = apiPage.appliquerLien();
+noter("l'adresse partagée est reprise à l'ouverture de la page",
+      applique === true
+      && apiPage.etat().PARAMS[cleLevier] === defauts[cleLevier] + 3.0
+      && (elements.get("avis-lien")?.textContent || "").includes("levier"),
+      `appliqué : ${applique} · valeur ${apiPage.etat().PARAMS[cleLevier]} · avis « ${elements.get("avis-lien")?.textContent || ""} »`);
+globalThis.location.search = "";
 
 /* ── Rapport ────────────────────────────────────────────────────────────── */
 rapport.elements = Object.fromEntries(

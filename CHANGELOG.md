@@ -34,6 +34,28 @@ exactement ce qui tourne en ligne.
   par HTTP avec `wsgiref`, et la CI vérifie le point d'entrée à chaque push.
 - Aucune formule, donnée source ou seuil n'est modifié.
 
+### Ajout — Partager un réglage par lien
+
+Un budget se discute : encore faut-il pouvoir le montrer, pas seulement le
+décrire. Un bouton **🔗 Partager mes réglages** copie une adresse qui rouvre le
+simulateur exactement sur les leviers affichés.
+
+- Le lien ne transporte que les **leviers réellement déplacés** par rapport aux
+  valeurs neutres du catalogue (`?sim=` + JSON compact) : quelques centaines de
+  caractères, jamais les 101 paramètres.
+- Une adresse reçue n'est **jamais crue** : seules les clés présentes dans le
+  catalogue sont reprises, et seulement si la valeur est un nombre fini. Une
+  clé inconnue, une chaîne, un tableau ou un JSON illisible sont ignorés sans
+  erreur. Rien n'est injecté dans le HTML : l'avis est écrit en `textContent`.
+- Le programme de départ (« mandature ») est laissé de côté quand l'adresse
+  porte des réglages : sinon il s'y ajouterait et le lien ne rouvrirait pas la
+  simulation partagée. Un bandeau indique combien de leviers ont été repris.
+- Rien ne quitte le navigateur : l'adresse est fabriquée côté client, le
+  serveur ne la voit pas passer.
+- 8 étapes de plus au harnais Node (`tests/navigateur_interface.mjs`), dont
+  l'aller-retour complet — réglage modifié → lien → page rouverte sur ce
+  réglage — et le refus d'un lien hostile.
+
 ## [1.9.0] — 2026-10-08
 
 ### Ajout — Compréhensible pour tous : lexique, lecture en clair, guide et sommaire

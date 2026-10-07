@@ -398,6 +398,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <span class="pastille" id="badge-horizon">une mandature · 5 ans</span>
       <button id="btn-lexique" onclick="ouvrirLexique()" data-aide="<b>Lexique</b>Chaque mot technique employé par la page, défini en français ordinaire, avec un repère chiffré. Les termes soulignés en pointillé dans la page s'expliquent aussi au survol.">📖 Lexique</button>
       <button id="btn-guide" onclick="ouvrirGuide()" data-aide="<b>Guide de démarrage</b>Quatre étapes pour comprendre ce que fait le simulateur, ce qu'il mesure et ce qu'il ne mesure pas.">❓ Guide</button>
+      <button id="btn-partage" onclick="partagerReglages()" data-aide="<b>Partager mes réglages</b>Copie une adresse qui rouvre le simulateur exactement sur les réglages affichés. Utile pour soumettre un budget au débat : rien n'est envoyé au serveur, tout est dans le lien.">🔗 Partager mes réglages</button>
       <span class="separateur" aria-hidden="true"></span>
       <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène tous les réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
       <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données (API publiques)</button>
@@ -406,6 +407,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
       <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
     </div>
+    <p class="aide" id="avis-lien" hidden></p>
   </header>
 
   <nav class="sommaire" id="sommaire" aria-label="Sommaire de la page">
@@ -626,7 +628,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.10.0 (2026-10-08) — même routeur en local et en ligne, hébergeable partout; rechargez la page (F5).</span>
+    <span class="aide" id="version-interface">Interface v1.10.0 (2026-10-08) — partagez vos réglages par lien, même routeur en local et en ligne; rechargez la page (F5).</span>
   </p>
 </div>
 
@@ -2331,6 +2333,95 @@ function marquerGuideVu(){
   } catch (erreur){ /* sans conséquence */ }
 }
 
+/* ── Réglages partageables par lien ─────────────────────────────────────────
+   Un budget se discute : encore faut-il pouvoir le montrer. Le lien ne
+   transporte que les leviers réellement déplacés, relus par-dessus les valeurs
+   neutres à l'ouverture — quelques centaines de caractères, jamais les 101
+   paramètres. Rien ne quitte le navigateur et rien n'est envoyé au serveur :
+   l'adresse suffit, elle se colle dans un message ou un tract. */
+function reglagesModifies(){
+  const defauts = (CATALOGUE && CATALOGUE.parametres && CATALOGUE.parametres.defauts) || {};
+  const modifies = {};
+  Object.keys(PARAMS).forEach(cle => {
+    if (PARAMS[cle] !== defauts[cle]) modifies[cle] = PARAMS[cle];
+  });
+  return modifies;
+}
+
+function lienReglages(){
+  const modifies = reglagesModifies();
+  const base = (window.location && window.location.origin ? window.location.origin : '')
+    + (window.location && window.location.pathname ? window.location.pathname : '/');
+  if (!Object.keys(modifies).length) return base;
+  return base + '?sim=' + encodeURIComponent(JSON.stringify(modifies));
+}
+
+function reglagesDepuisLien(texte){
+  /* Une adresse se transmet de main en main : on n'en croit jamais le contenu.
+     Seuls les leviers réellement présents dans le catalogue sont repris, et
+     seulement si la valeur est un nombre — jamais une chaîne, jamais une clé
+     inconnue. Aucune valeur n'est injectée dans le HTML. */
+  const defauts = (CATALOGUE && CATALOGUE.parametres && CATALOGUE.parametres.defauts) || {};
+  const repris = {};
+  if (!texte) return repris;
+  let brut;
+  try { brut = JSON.parse(texte); } catch (erreur){ return repris; }
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return repris;
+  Object.keys(brut).forEach(cle => {
+    const valeur = brut[cle];
+    if (Object.prototype.hasOwnProperty.call(defauts, cle)
+        && typeof valeur === 'number' && isFinite(valeur)) repris[cle] = valeur;
+  });
+  return repris;
+}
+
+function avisLien(nombre){
+  const zone = document.getElementById('avis-lien');
+  if (!zone) return;
+  zone.textContent = `Réglages repris du lien : ${nombre} levier`
+    + (nombre > 1 ? 's' : '') + ' replacé' + (nombre > 1 ? 's' : '')
+    + '. Modifiez-les, comparez, puis partagez à votre tour.';
+  zone.hidden = false;
+}
+
+function appliquerLien(){
+  /* Renvoie vrai si l'adresse portait des réglages : le programme de départ
+     (« mandature ») est alors laissé de côté, sinon il s'ajouterait aux
+     réglages repris et le lien ne décrirait plus ce que l'on a partagé. */
+  const texte = (typeof URLSearchParams !== 'undefined' && window.location)
+    ? new URLSearchParams(window.location.search).get('sim') : null;
+  const repris = reglagesDepuisLien(texte);
+  const nombre = Object.keys(repris).length;
+  if (!nombre) return false;
+  PARAMS = Object.assign({}, PARAMS, repris);
+  avisLien(nombre);
+  return true;
+}
+
+async function partagerReglages(){
+  const lien = lienReglages();
+  const bouton = document.getElementById('btn-partage');
+  const libelle = bouton ? bouton.textContent : '';
+  const pressePapiers = typeof navigator !== 'undefined' && navigator.clipboard
+    && typeof navigator.clipboard.writeText === 'function';
+  if (pressePapiers){
+    try {
+      await navigator.clipboard.writeText(lien);
+      if (bouton){
+        bouton.textContent = '✅ Lien copié';
+        setTimeout(() => { bouton.textContent = libelle; }, 2500);
+      }
+      return lien;
+    } catch (erreur){ /* repli : on montre l'adresse */ }
+  }
+  /* Sans presse-papiers accessible (navigation non chiffrée, vieux
+     navigateur), l'adresse reste recopiable à la main. */
+  if (typeof window !== 'undefined' && typeof window.prompt === 'function'){
+    window.prompt('Copiez cette adresse : elle rouvre le simulateur sur vos réglages.', lien);
+  }
+  return lien;
+}
+
 /* ── Sommaire : situer le lecteur dans la page ──────────────────────────── */
 function initialiserModale(){
   if (!document.addEventListener) return;
@@ -3122,7 +3213,10 @@ async function chargerAudit(){
   // Le lexique se charge en tâche de fond : les termes soulignés apparaissent
   // dès la première simulation, sans rien retarder.
   chargerLexique();
-  chargerPreset('mandature', null);
+  // Une adresse partagée décrit déjà un réglage complet : le programme de
+  // départ ne s'y ajoute pas, sinon le lien ne rouvrirait pas la même chose.
+  const depuisLien = appliquerLien();
+  if (depuisLien) simuler(true); else chargerPreset('mandature', null);
   activerExports();
   // Premier relevé de cotations séparé, sans retarder l'initialisation du moteur.
   rafraichirMarches(true);

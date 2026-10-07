@@ -529,6 +529,40 @@ renvoyée) ; `Vary: Accept-Encoding` accompagne toute réponse compressible, pou
 qu'aucun intermédiaire ne serve du gzip à un client qui ne le décode pas ; et
 rien de tout cela ne modifie une formule, une donnée source ou un seuil.
 
+## 10 quater. Partager un réglage par lien
+
+Un budget se discute : encore faut-il pouvoir le montrer. Le bouton
+**🔗 Partager mes réglages** (barre du haut) copie une adresse qui rouvre le
+simulateur exactement sur les leviers affichés.
+
+**Ce que le lien contient.** Seuls les leviers **réellement déplacés** par
+rapport aux valeurs neutres du catalogue sont écrits dans l'adresse (`?sim=`),
+au format JSON compact : une poignée de leviers tient en quelques centaines de
+caractères, là où les 101 paramètres pèseraient plusieurs kilo-octets. À
+l'ouverture, ces écarts sont relus **par-dessus les valeurs neutres** ; le
+programme de départ (« mandature ») est alors laissé de côté, sinon il
+s'ajouterait aux réglages repris et le lien ne rouvrirait pas la simulation
+partagée. Un bandeau le signale : *« Réglages repris du lien : N levier(s)
+replacé(s). »*
+
+**Ce que le lien ne peut pas faire.** Une adresse se transmet de main en main :
+son contenu n'est jamais cru. Seules les clés **présentes dans le catalogue**
+sont reprises, et seulement si la valeur est un **nombre fini** — une clé
+inconnue, une chaîne de caractères, un tableau ou un JSON illisible sont
+ignorés sans erreur. Aucune valeur du lien n'est jamais injectée dans le HTML :
+l'avis affiché est écrit en texte (`textContent`).
+
+**Ce qui ne quitte pas le navigateur.** Rien : l'adresse est fabriquée côté
+client, le serveur n'en sait rien et ne la voit pas passer. Le profil ménage, le
+portefeuille boursier et les montants saisis restent locaux, comme le reste.
+
+**Côté serveur**, l'équivalent existe pour l'automatisation : `GET
+/api/simuler?params={"effort_defense_pct_pib":3.5}` renvoie la même simulation
+que le `POST`, sans corps de requête — pratique pour un script ou un tableau de
+bord tiers. Les valeurs sont normalisées comme partout ailleurs : un levier
+exprimé en écart (la TVA, par exemple, se règle en points et non en taux
+affiché) est ramené à sa plage admissible plutôt que refusé.
+
 ## 11. Limites assumées
 
 1. **Modèle, pas prophétie.** Les coefficients sont documentés et sourcés

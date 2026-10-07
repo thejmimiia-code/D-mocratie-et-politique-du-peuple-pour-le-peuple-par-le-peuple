@@ -146,6 +146,12 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
   **« Lire le résultat »** remet chaque simulation en phrases complètes
   (`simulateur/clarte.py`), un **guide de démarrage** en quatre étapes s'ouvre à
   la première visite et un **sommaire** donne l'ordre de lecture ;
+- **un réglage se partage par une adresse** : le bouton « 🔗 Partager mes
+  réglages » copie un lien qui rouvre le simulateur exactement sur les leviers
+  affichés — de quoi soumettre un budget au débat au lieu de le décrire. Seuls
+  les leviers réellement déplacés voyagent (jamais les 101 paramètres), et une
+  adresse reçue n'est jamais crue : seules les clés connues du catalogue et les
+  valeurs numériques sont reprises ;
 - **fluidité mesurée** : réponses compressées à la demande (**une simulation
   passe de 255 Kio à 37 Kio**, soit 85 % de moins), onglets de strate rendus à
   l'ouverture seulement, matrice levier × domaine conservée pendant les réglages,
@@ -190,6 +196,10 @@ gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 simulateur.w
 Le point d'entrée WSGI **réutilise le routeur du serveur local** au lieu d'en
 dupliquer un second : ce qui est vérifié sur le poste est ce qui tourne en
 ligne. Aucune base de données, aucun secret, aucune donnée personnelle.
+
+Le bouton « 🔗 Partager mes réglages » fonctionne avec n'importe laquelle de
+ces adresses : le lien transporte les leviers dans l'URL, le serveur n'en
+sait rien.
 
 ---
 
