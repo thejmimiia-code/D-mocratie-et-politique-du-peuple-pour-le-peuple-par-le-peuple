@@ -78,10 +78,11 @@ class TestInterfaceDansNode(unittest.TestCase):
             return reponse.read().decode("utf-8")
 
     @classmethod
-    def _simuler(cls, parametres):
+    def _simuler(cls, parametres, *, horizon=5, avec_impacts=True):
         return json.loads(cls._post(
             "/api/simuler",
-            {"parametres": parametres, "avec_impacts": True, "max_impacts": 16},
+            {"parametres": parametres, "horizon": horizon,
+             "avec_impacts": avec_impacts, "max_impacts": 16},
         ))
 
     @classmethod
@@ -108,6 +109,20 @@ class TestInterfaceDansNode(unittest.TestCase):
         sortie_variante = cls._simuler(variante)
         sortie_austerite = cls._simuler(catalogue["parametres"]["presets"]["austerite"]["parametres"])
         sortie_neutre = cls._simuler(defauts)
+        sortie_decennale = cls._simuler(
+            catalogue["parametres"]["presets"]["double_mandature"]["parametres"],
+            horizon=10,
+            avec_impacts=False,
+        )
+
+        # Le conseiller temps réel rejoue le moteur sur le même mouvement que
+        # l'utilisateur (position avant → position à l'instant T).
+        conseil = json.loads(cls._post("/api/conseil", {
+            "parametres": variante,
+            "cle": cle,
+            "avant": defauts[cle],
+            "apres": defauts[cle] + 1.0,
+        }))
 
         # Sources publiques : le navigateur les interroge directement, sauf
         # celles qui ne renvoient pas d'en-tête CORS (relais /api/proxy).
@@ -128,11 +143,13 @@ class TestInterfaceDansNode(unittest.TestCase):
         return {
             "defauts": defauts,
             "sequence_simuler": [{"route": route} for route, _ in sequence]
-                                 + [{"route": "POST /api/simuler#neutre"}],
+                                 + [{"route": "POST /api/simuler#neutre"},
+                                    {"route": "POST /api/simuler#decennal"}],
             "page": page,
             "api": {
                 "GET /api/catalogue": catalogue,
                 "GET /api/contexte": contexte,
+                "GET /api/marches": json.loads(cls._get("/api/marches")),
                 "GET /api/presets": json.loads(cls._get("/api/presets")),
                 "GET /api/comparer": json.loads(cls._get("/api/comparer")),
                 "GET /api/scenarios": json.loads(cls._get("/api/scenarios")),
@@ -140,10 +157,13 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "GET /api/proxy": proxy,
                 "GET /api/bulle": bulle,
                 "GET /api/bulles": json.loads(cls._get("/api/bulles?detail=resume")),
+                "GET /api/garde_fous": json.loads(cls._get("/api/garde_fous")),
                 "POST /api/simuler": sortie_prereglage,
                 "POST /api/simuler#variante": sortie_variante,
                 "POST /api/simuler#austerite": sortie_austerite,
                 "POST /api/simuler#neutre": sortie_neutre,
+                "POST /api/simuler#decennal": sortie_decennale,
+                "POST /api/conseil": conseil,
                 "POST /api/donnees": {"ok": True},
             },
             "externe": externes,
@@ -202,12 +222,12 @@ class TestInterfaceDansNode(unittest.TestCase):
         telechargements = self.rapport.get("telechargements", [])
         self.assertEqual(len(telechargements), 2, f"téléchargements : {telechargements}")
 
-    def test_la_console_de_veille_reagit_a_un_prenrereglage_dangereux(self):
-        """Le parcours a chargé l'austérité : le hors-sol doit être signalé."""
+    def test_la_console_signale_l_austerite_puis_recalcule_le_scenario_de_reference(self):
+        """Le rouge signale les risques; le neutre doit être recalculé, pas blanchi artificiellement."""
         etapes = {etape["nom"]: etape["ok"] for etape in self.rapport.get("etapes", [])}
         self.assertTrue(etapes.get("le bandeau hors-sol apparaît"), "aucun bandeau hors-sol affiché")
         self.assertTrue(etapes.get("au moins une strate est marquée hors-sol"))
-        self.assertTrue(etapes.get("le retour au neutre efface le bandeau hors-sol"))
+        self.assertTrue(etapes.get("la réinitialisation recalcule le scénario de référence sans levier actif"))
 
 
 if __name__ == "__main__":

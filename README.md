@@ -10,6 +10,15 @@ Ce dépôt rassemble les travaux complets de doctrine institutionnelle, le plan 
 > « Son principe est : gouvernement du peuple, par le peuple et pour le peuple. »  
 > — *Constitution de la République française du 4 octobre 1958, Article 2, alinéa 5.*
 
+**Bannière MRSC — propriété intellectuelle et usage.** Cet outil open-source est produit par son
+créateur pour l'intérêt général et mis gratuitement à disposition de toutes et tous :
+utilisation, étude, modification et partage libres ; **nul ne peut s'en attribuer la paternité**.
+Il porte l'ambition d'une vie meilleure et d'une gestion de la nation réellement faite
+« par le peuple, pour le peuple » — une prise de conscience politique par la base,
+citoyenne par citoyenne, citoyen par citoyen. Le simulateur est un modèle, pas une prophétie :
+toutes ses sources officielles, formules et seuils sont livrés dans la section
+« Audit & traçabilité » de la page, à livre ouvert.
+
 ---
 
 ## II. LE MODÈLE SYSTÉMIQUE GIGOGNE (POUPÉES RUSSES)
@@ -86,6 +95,8 @@ python3 main.py hormuz               # Strate 5 — Fermeture du détroit d'Horm
 python3 main.py escalade_nucleaire   # Strate 5 — Seuil nucléaire tactique OTAN-Russie
 python3 main.py convergence_ww3      # Strate 5 — Convergence Chine-Russie-Iran (WW3)
 python3 main.py resilience           # Mandature + réarmement OTAN 3,50 % du PIB
+python3 main.py double_mandature     # Deux mandatures consécutives 2027-2037 (verrou, dividende de la dette)
+python3 main.py alternance_2032      # Stress-test : dix ans sans verrou constitutionnel
 ```
 
 ### 2. Menu interactif
@@ -120,11 +131,12 @@ simulateur-mpol-dashboard
 
 La page servie est un **simulateur paramétrable complet**, et non un jeu de cartes figées :
 
-- **93 leviers** pilotables (fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux), avec recherche et 13 préréglages doctrinaux ;
+- **101 leviers** pilotables (fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux), avec recherche et 14 préréglages doctrinaux ;
 - **20 domaines d'action publique** — 74 indicateurs concrets, chacun avec sa formule et sa source — notés de 0 à 100 par rapport à la trajectoire de référence (50 = aucune politique) ;
 - **cascade des 5 échelons** (locale → nationale → européenne → mondiale → géopolitique) et journal causal, année par année ;
 - **console de veille permanente**, résumée en un ruban collant (verdict, 5 strates, risque population) : messages de seuil (tolérable → vigilance → risqué → hors-sol), marges de manœuvre restantes, effet différé de **chaque** modification et **puces d'impact sous chaque levier réglé** ;
-- **les 93 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
+- **conseiller temps réel « effet papillon »** : chaque mouvement de réglage (curseur ou interrupteur, sans exception) est rejoué par le moteur, position avant vs position à l'instant T, et la console affiche en direct effets directs, ricochets, garde-fous basculés et pistes de compensation ;
+- **les 101 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
 - **matrice d'impacts croisés** levier × domaine, calculée par le modèle par différences finies (aucun coefficient saisi à la main) ;
 - **données publiques « à l'instant T »** : le serveur interroge les API (Eurostat, BCE, Frankfurter, Banque mondiale) et, s'il n'a pas de réseau, le bouton « Rafraîchir les données » les interroge **depuis votre navigateur** puis transmet les valeurs au simulateur — provenance, période et licence affichées pour chaque chiffre ;
 - **exports JSON et CSV** de la simulation complète.
@@ -170,6 +182,13 @@ python -m simulateur.laboratoire --nombre 500 --graine 20261003
 ```
 
 Ces expériences interrogent le modèle ; elles ne constituent pas des prévisions.
+
+## Deux mandatures consécutives (2027-2037)
+
+[Inventaire des points stratégiques systématiques de la période de dix ans]
+(docs/RD_DOUBLE_MANDATURE.md) : calendrier électoral, verrou constitutionnel,
+usure du capital politique, second dividende de la dette, investissements à
+cycle long — avec deux scénarios décennaux exécutables et 16 tests dédiés.
 
 ## Conflits et risques systémiques
 

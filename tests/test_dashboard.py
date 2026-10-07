@@ -225,13 +225,13 @@ class TestDashboardInterface(unittest.TestCase):
         self.assertIn("function activerExports()", js)
         self.assertIn("activerExports();", js)
 
-    def test_neuf_scenarios_exposes(self):
-        """Les 9 scénarios sont exposés côté serveur et injectés dans la page."""
+    def test_onze_scenarios_exposes(self):
+        """Les 11 scénarios sont exposés côté serveur et injectés dans la page."""
         status, body = self._get("/api/scenarios")
         self.assertEqual(status, 200)
         data = json.loads(body)
-        self.assertEqual(len(data["scenarios"]), 9)
-        self.assertEqual(len(SCENARIOS), 9)
+        self.assertEqual(len(data["scenarios"]), 11)
+        self.assertEqual(len(SCENARIOS), 11)
         for key in [
             "mandature",
             "statut_quo",
@@ -242,6 +242,8 @@ class TestDashboardInterface(unittest.TestCase):
             "escalade_nucleaire",
             "convergence_ww3",
             "resilience",
+            "double_mandature",
+            "alternance_2032",
         ]:
             self.assertIn(key, SCENARIOS)
             self.assertIn(key, self.page)
@@ -285,7 +287,7 @@ class TestDashboardInterface(unittest.TestCase):
                 resp = conn.getresponse()
                 self.assertEqual(resp.status, 200)
                 payload = json.loads(resp.read().decode("utf-8"))
-                self.assertEqual(len(payload["scenarios"]), 9)
+                self.assertEqual(len(payload["scenarios"]), 11)
                 self.assertFalse(resp.will_close)
             # Une 404 sans corps doit annoncer Content-Length: 0, sinon le
             # client attend indéfiniment la fin d'une réponse keep-alive.
@@ -347,7 +349,15 @@ class TestAPIparametrique(unittest.TestCase):
         familles = donnees["parametres"]["familles"]
         leviers = [levier for famille in familles for levier in famille["leviers"]]
         self.assertGreaterEqual(len(leviers), 90)
-        self.assertEqual(len(donnees["parametres"]["presets"]), 13)
+        self.assertEqual(len(donnees["parametres"]["presets"]), 14)
+
+    def test_catalogue_boursier_sans_collecte_expose_les_marches_sans_faux_cours(self):
+        statut, donnees = self._appel("/api/marches")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["nombre_indices"], 13)
+        self.assertEqual(len(donnees["indices"]), 13)
+        self.assertTrue(all(item["cours"] is None for item in donnees["indices"]))
+        self.assertIn("non exhaustif", donnees["avertissement"])
 
     def test_contexte_avec_sources_navigateur(self):
         statut, donnees = self._appel("/api/contexte")
@@ -393,6 +403,22 @@ class TestAPIparametrique(unittest.TestCase):
         for impact in donnees["impacts"]:
             self.assertTrue(impact["effets"])
             self.assertTrue(any(abs(e["effet_score"]) > 0 for e in impact["effets"]))
+
+    def test_simulation_horizon_deux_mandatures_expose_le_bilan(self):
+        statut, donnees = self._appel("/api/simuler", {
+            "parametres": {"capital_humain": 1.0},
+            "horizon": 10,
+            "avec_impacts": False,
+        })
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["horizon"], 10)
+        self.assertEqual(len(donnees["etapes"]), 10)
+        self.assertAlmostEqual(donnees["etapes"][0]["dommages_climat_subis_mde"], 143 / 30, places=2)
+        self.assertGreater(donnees["etapes"][-1]["capital_humain_mature_mde"], 0.0)
+        bilan = donnees["synthese"]["bilan_intergenerationnel"]
+        self.assertEqual(bilan["annee_terminal"], 10)
+        self.assertIn("actifs_arrives_a_maturite_mde", bilan)
+        self.assertIn("pas de score", bilan["note_methodologique"] or "")
 
     def test_le_diagnostic_de_seuils_accompagne_la_simulation(self):
         """POST /api/simuler renvoie les garde-fous par strate."""
@@ -472,10 +498,40 @@ class TestAPIparametrique(unittest.TestCase):
         self.assertEqual(statut, 400)
         self.assertIn("error", donnees)
 
+    def test_garde_fous_bareme_public(self):
+        """GET /api/garde_fous livre le barème complet, auditable (audit)."""
+        statut, donnees = self._appel("/api/garde_fous")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["niveaux"],
+                         ["favorable", "tolerable", "vigilance", "risque", "hors_sol"])
+        self.assertGreaterEqual(len(donnees["garde_fous"]), 31)
+        deficit = next(garde for garde in donnees["garde_fous"]
+                       if garde["cle"] == "deficit_final_pct")
+        self.assertIn("Maastricht", deficit["source"])
+        self.assertTrue(deficit["bornes"], "chaque garde-fou expose ses bornes")
+
+    def test_conseil_budget_reel_et_sources(self):
+        """POST /api/conseil livre le coût/gain réel du mouvement et ses sources."""
+        statut, conseil = self._appel("/api/conseil", {
+            "parametres": {"tva_energie_5_5": 1.0},
+            "cle": "tva_energie_5_5", "avant": 0.0, "apres": 1.0,
+        })
+        self.assertEqual(statut, 200)
+        budget = conseil["budget"]
+        for champ in ("recettes_delta_mde", "depenses_delta_mde", "solde_delta_mde",
+                      "charge_dette_delta_mde", "deficit_delta_pt_pib"):
+            self.assertIn(champ, budget)
+        self.assertAlmostEqual(budget["solde_delta_mde"],
+                               budget["recettes_delta_mde"] - budget["depenses_delta_mde"],
+                               places=1)
+        self.assertGreaterEqual(len(conseil["sources"]), 8,
+                                "les chiffres clefs des sources officielles sont cités")
+        self.assertIn("libelle", conseil["sources"][0])
+
     def test_comparer_les_presets(self):
         statut, donnees = self._appel("/api/comparer")
         self.assertEqual(statut, 200)
-        self.assertEqual(len(donnees["comparaison"]), 13)
+        self.assertEqual(len(donnees["comparaison"]), 14)
         for entree in donnees["comparaison"]:
             self.assertEqual(len(entree["scores"]), 20)
 

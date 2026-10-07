@@ -4,6 +4,210 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.8.0] — 2026-10-07
+
+### Ajout — Vues locales, nationales, européennes, mondiales, géopolitiques, ménages et boursières
+
+- L'interface ajoute **sept onglets** comparant chaque trajectoire au scénario
+  de référence : finances territoriales observées, comptes nationaux et flux
+  budgétaires par levier, repères européens, transmission mondiale/géopolitique,
+  profil de ménage et marchés boursiers.
+- Le profil ménage reste dans le navigateur : revenus, cotisations, IR par part
+  de quotient familial, aides déclarées, panier INSEE par poste, prix projetés
+  et mensualité théorique d'un prêt. Ce n'est ni une liquidation fiscale, ni
+  une moyenne de foyer, ni un droit individuel; le profil n'est jamais envoyé
+  à l'API.
+- `/api/marches` et `simulateur/marches.py` proposent un univers **représentatif
+  de 13 indices**, avec devise, source tierce, cours, variation, horodatages,
+  liens de places et état de fraîcheur. Les fermetures locales/jours fériés
+  possibles, retards et cours de plus de 72 h sont explicitement signalés;
+  aucun cours manquant n'est remplacé par zéro.
+- Les curseurs de stress et expositions P/L brutes sont séparés du moteur macro.
+  Ils couvrent les tranches marginales IR (barème 2026, par part), entreprises,
+  associations, organismes/établissements publics et privés, élus à titre
+  personnel, communes, EPCI/métropoles, départements, régions/CTU et outre-mer.
+  Les expositions sont des saisies de scénario, non des portefeuilles ou
+  détentions observés; les catégories peuvent se recouvrir et sont à saisir
+  sans double compte.
+- Les repères territoriaux signalent les limites : hameaux/quartiers sans budget
+  autonome, données OFGL agrégées, absence de projection par collectivité
+  individuelle et absence de ventilation DROM/COM dans ce build. L'onglet
+  national sépare flux budgétaires de leviers et comptes publics observés.
+- Fraîcheur distincte du calcul : un scénario se recalcule immédiatement, mais
+  les cours dépendent du fournisseur tiers et des séances de chaque place.
+  Indices non exhaustifs, pas de change/frais/dividendes/fiscalité dans le P/L;
+  les chocs boursiers ne modifient pas encore PIB, emploi, impôts ou dette.
+- Ajustement de seuil : une baisse modélisée de pouvoir d'achat de 9,8 points
+  d'indice passe en « risque » plutôt qu'en « hors-sol »; le seuil de rupture
+  interne au simulateur est explicité à −15 % (ce n'est pas un seuil officiel),
+  évitant qu'une trajectoire de référence déclenche seule le bandeau le plus grave.
+- Interface v1.8.0. Tests : **416 réussis** ; `ruff check .` propre.
+
+## [1.7.2] — 2026-10-07
+
+### R&D — Phase 2 « deux mandatures consécutives » (points P16-P21)
+
+- Le catalogue passe de **97 à 101 leviers** : rattrapage du patrimoine
+  public, capital humain à cycle long, capacité BITD et charge explicite de
+  réformes simultanées ; le levier d'adaptation existant est réutilisé.
+- Le simulateur propose un **horizon interactif de 5 ou 10 ans** ; le choix
+  est propagé à la requête `/api/simuler` et au conseiller `/api/conseil`.
+  Le préréglage « Deux mandatures » sélectionne 10 ans.
+- Le bilan P21 expose un **ledger intergénérationnel séparé**, sans score
+  composite : dette, besoin patrimonial proxy, investissements engagés/mûrs,
+  pertes climatiques annualisées et dommages évités.
+- Hypothèses documentées et non prophétiques : patrimoine 145/24 Md€/an,
+  climat 143/30 Md€/an (hors budget APU), ratio Barnier annualisé 8/30,
+  maturités exploratoires de 8 et 6 ans ; saturation administrative =
+  stress-test explicite, sans seuil officiel universel. Audit UI complété avec
+  les sources Cour des comptes, PNACC-3, LPM et INSEE.
+- Les dommages climatiques ne sont **pas** comptabilisés comme dépense APU ;
+  les stocks de capital humain/BITD ne reçoivent pas de rendement PIB ou de
+  prime de spread non mesurés.
+- Interface v1.7.5. Tests : **399 réussis** ; `ruff check .` propre.
+
+## [1.7.1] — 2026-10-06
+
+### Corrigé — Plus aucune bulle d'aide ne recouvre les résultats
+
+- Les infobulles volantes ne s'affichent plus **pendant un réglage en cours**
+  ni **quand une bulle « interactions » est ouverte** : le badge coût/gain
+  live, la fiche d'interactions et la console de veille restent lisibles,
+  rien ne vient les couvrir. Le verrou est dans `survoler()`, unique chemin
+  d'affichage — valable pour l'ensemble des réglages et des fonctionnalités.
+- L'infobulle est aussi masquée dès le début d'un geste sur un levier et à
+  l'ouverture/fermeture d'une bulle.
+- Le coût / gain global des réglages croisés sort de la zone repliable : il
+  est désormais juste sous le verdict de la console, toujours visible.
+- Version d'interface affichée en pied de page (v1.7.4) pour repérer les
+  pages périmées. Tests : 389.
+
+## [1.7.0] — 2026-10-06
+
+### Ajout — Coût / gain réel en direct (bulle + veille) et audit de traçabilité complet
+
+La bulle du réglage déplacé se rafraîchit désormais **dès le mouvement**, et
+deux indicateurs visuels affichent en temps réel le coût / gain réel : l'un
+dans la console de veille pour les réglages globaux croisés, l'autre dans la
+bulle pour le réglage précis — en rouge / vert transparent, ancrés sur les
+chiffres clefs des sources officielles, citées partout.
+
+- **`simulateur/conseil.py`** : le conseil livre maintenant le `budget` réel
+  du mouvement (Δ recettes, Δ dépenses, Δ solde, Δ charge de la dette,
+  Δ déficit en Md€ / pt de PIB) et les `sources` : les chiffres clefs
+  officiels qui ancrent le calcul (PIB, OAT, Bund, spread, BCE, inflation,
+  chômage, Brent, change), chacun avec sa valeur, sa période et sa source.
+- **`simulateur/seuils.py`** : `bareme_public()` publie le barème complet des
+  31 garde-fous (26 absolus + 5 en écart) avec strates, bornes et sources
+  institutionnelles ; les bornes infinies sont sérialisées en JSON strict.
+- **`simulateur/dashboard.py`** : route `GET /api/garde_fous` (audit).
+- **`simulateur/interface.py`** :
+  - la bulle du réglage porte un bloc « mesure live » qui affiche
+    immédiatement « calcul en cours » dès le début du geste, puis le
+    **coût / gain réel de ce réglage précis** (bannière rouge ou verte en
+    transparence, détail recettes / dépenses / déficit / charge de la dette,
+    sources officielles citées), rafraîchi par mise à jour DOM directe sans
+    re-rendu de la grille ;
+  - la console de veille affiche le **coût / gain réel des réglages globaux
+    croisés** (recettes nouvelles, dépenses nouvelles, solde net, déficit et
+    dette finals), recalculé à chaque simulation ;
+  - nouvelle section « 🔍 Audit & traçabilité » en bas de page : sources
+    officielles de chaque donnée d'entrée (valeur, période, statut, licence,
+    URL), formule + source des 74 indicateurs des 20 domaines, champ + effets
+    déclarés + source des 97 leviers, barème complet des garde-fous, méthode
+    des dynamiques croisées — tout recoupement est possible, le simulateur
+    n'est pas une boîte noire ; bouton « 🔍 Audit & sources » dans l'en-tête ;
+  - pied de page et bannière **MRSC** : outil open-source produit par son
+    créateur pour l'intérêt général, gratuit, paternité protégée.
+- **Tests** : budget et sources du conseil, barème public, blocs live de la
+  bulle et de la veille, section audit, attribution MRSC ; le harnais
+  navigateur vérifie le rendu du coût global, de l'audit et du bloc live dans
+  la bulle. Suite : 388 tests.
+
+## [1.6.0] — 2026-10-06
+
+### Ajout — Conseiller temps réel (« effet papillon ») sur chaque mouvement de réglage
+
+Chaque geste sur un réglage — **tous** les leviers, curseurs comme
+interrupteurs, sans exception — est désormais traité comme une décision : la
+position à l'instant T comparée à la position avant le dernier mouvement. Le
+conseiller met à jour **en temps réel** toutes les interactions et tous les
+textes d'aide de la console de veille.
+
+- **`simulateur/conseil.py`** (nouveau) : le moteur est rejoué deux fois, le
+  levier à sa position d'avant puis d'après le geste, toutes choses égales ;
+  la différence exacte de la décision alimente une lecture de conseiller
+  spécialisé : formulation du mouvement, effets **directs** (thèmes déclarés)
+  et effets **par ricochet** (les domaines qui bougent sans être déclarés —
+  l'effet papillon mesuré, pas supposé), grandeurs qui basculent, garde-fous
+  dont le niveau change, journal institutionnel nouveau, pistes de
+  compensation et verdict global.
+- **`simulateur/dashboard.py`** : route `POST /api/conseil` (corps :
+  `parametres`, `cle`, `avant`, `apres`, `horizon` optionnel) ; 400 si la
+  `cle` manque.
+- **`simulateur/interface.py`** : panneau « 🦋 Conseiller temps réel » dans la
+  console de veille ; `MOUVEMENT` capture la position d'avant chaque geste
+  avant toute écriture, la simulation déclenchée appelle `/api/conseil` et
+  rend la lecture, les ricochets, les garde-fous et les compensations ;
+  l'aide au survol du levier rappelle le dernier mouvement.
+- **Tests** : `tests/test_conseil.py` (16 tests : formulation, structure,
+  isolation du mouvement, direct vs ricochet, seuils de bruit, garde-fous,
+  endpoint) ; deux étapes navigateur vérifient l'appel `/api/conseil` et le
+  rendu du panneau. Suite : 380 tests.
+
+## [1.5.0] — 2026-10-06
+
+### Ajout — R&D « deux mandatures consécutives » (2027-2037)
+
+Inventaire et modélisation des points stratégiques qui n'existent que sur la
+période de dix ans : calendrier électoral, verrou constitutionnel, usure du
+capital politique, second dividende de la dette, investissements à cycle long.
+Document de référence : [`docs/RD_DOUBLE_MANDATURE.md`](docs/RD_DOUBLE_MANDATURE.md).
+
+- **`simulateur/model.py`** : six nouveaux champs de `DecisionPolitique`, tous
+  neutres par défaut (`annee_electorale_majeure`, `usure_politique_pts`,
+  `verrouillage_irreversibilite`, `clause_revoyure_evaluation`,
+  `reinvestissement_dividende_dette_mde`, `investissements_cycle_long_mde`) ;
+  trois champs de résultat (`usure_politique_pts`,
+  `irreversibilite_reformes_active`, `investissements_matures_mde`).
+- **`simulateur/moteur.py`** : prime de risque électorale sur le spread
+  (+12 bps sans verrou, +4 bps verrouillé), usure du capital politique
+  (confiance, tension, risque de censure), verrou constitutionnel
+  (+2 pts de confiance), clauses de revoyure, dividende de la dette réinvesti
+  (multiplicateur 0,55, dépense gagée sans déficit) et investissements à cycle
+  long (coût immédiat, rendement 8 %/an plafonné 2,5 Md€ par programme après
+  cinq ans : courbe en J).
+- **`simulateur/scenarios.py`** : deux scénarios décennaux —
+  `get_scenario_double_mandature()` (2027-2037 : mandature 1, élection 2032,
+  verrou en année 6, dividende 3→8 Md€, usure croissante, élection 2037) et
+  `get_scenario_alternance_2032()` (stress-test sans verrou).
+- **`simulateur/cli.py`, `simulateur/dashboard.py`, `extension_eva/main.py`** :
+  scénarios `double_mandature` et `alternance_2032` exposés au menu (options
+  14-15), à la ligne de commande, à l'API du tableau de bord et à l'adaptateur
+  ÉVA (11 scénarios au total).
+- **`simulateur/parametres.py`** : quatre leviers dédiés
+  (`verrouillage_irreversibilite`, `clause_revoyure_evaluation`,
+  `dividende_dette_reinvesti`, `investissements_cycle_long`) et le préréglage
+  « Deux mandatures consécutives (2027-2037) » — catalogue porté de **93 à
+  97 leviers** et de **13 à 14 préréglages** ; bulles explicatives générées
+  automatiquement pour les nouveaux leviers.
+- **`simulateur/seuils.py`** : deux garde-fous nouveaux — « Usure du capital
+  politique » (strate 2, cible ≤ 20 pts sur dix ans) et « Verrou
+  constitutionnel des réformes » (strate 2 : l'absence de verrou est signalée
+  en vigilance sur toute simulation, car c'est le risque systémique de la
+  période). Garde-fous portés de 33 à 35.
+- **`tests/test_double_mandature.py`** : 16 tests nouveaux — neutralité
+  stricte des scénarios quinquennaux (valeurs publiées vérifiées au centième),
+  complétude des scénarios décennaux, dynamiques isolées, leviers pilotant
+  réellement le moteur, garde-fous présents dans le diagnostic. Compteurs mis
+  à jour dans `test_integration_branches.py`, `test_dashboard.py`,
+  `test_parametres.py` et `tests/navigateur_interface.mjs`.
+- **Documentation** : `README.md` (scénarios et section R&D),
+  `docs/README.md` (index), références « 93 leviers / 13 préréglages »
+  actualisées dans la documentation vivante et les outils du dépôt
+  (`outils/details_depot.py`, `outils/apercu_social.py`,
+  `docs/SIMULATEUR_PARAMETRABLE.md`, `docs/REPOSITORY_DETAILS.md`).
+
 ## [1.4.3] — 2026-10-05
 
 ### Correction — Repli documentaire exprimé dans l'unité du modèle

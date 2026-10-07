@@ -166,6 +166,7 @@ globalThis.fetch = async (url, options = {}) => {
       if (rang < sequence.length) cle = sequence[rang].route;
       rapport.postes_simuler.push({
         cle: cle,
+        horizon: envoye.horizon,
         leviers_actifs: Object.keys(envoye.parametres || {}).length,
         premier_levier_actif: Object.entries(envoye.parametres || {})
           .filter(([nom]) => (charge.defauts || {})[nom] !== undefined
@@ -214,14 +215,18 @@ const programme = `
                        'renderGraphique','renderDomaines','renderMatrice','renderJournal',
                        'reinitialiser','activerExports','exporter','rafraichirDonnees',
                        'terminerReglage','basculerDensite','basculerDetailsConsole','allerAuxLeviers',
+                       'horizonCourant','changerHorizon','renderBilanIntergenerationnel',
                        'filtreCourant','pucesHtml','majEffetsParLevier',
                        'ouvrirBulle','chargerBulle','htmlBulle','bulleBoutonHtml','libelleDomaine',
                        'initialiserInfobulles','survoler','masquerInfobulle','afficherInfobulle',
                        'texteAideLevier','texteAideElement','puceHtml',
-                       'extraireEurostat','extraireSdmx','extraireGenerique']) {
+                       'extraireEurostat','extraireSdmx','extraireGenerique',
+                       'afficherOngletStrate','renderOngletsStrates','rafraichirMarches',
+                       'calculerStressMarche','modifierStressMarche','modifierExpositionActeur']) {
       api[nom] = eval(nom);
     }
-    api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE, SORTIE: SORTIE });
+    api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
+                        SORTIE: SORTIE, MARCHES: MARCHES, ONGLET_STRATE_ACTIF: ONGLET_STRATE_ACTIF });
     return api;
   })()
 `;
@@ -247,18 +252,69 @@ for (let i = 0; i < 6; i += 1) await tourner();
 /* 1. Démarrage : catalogue, presets, contexte, préréglage actif. */
 const leviersComplets = (contenu("leviers-grille").match(/class="levier[ "]/g) || []).length;
 noter("charge le catalogue des leviers", leviersComplets > 50, `${leviersComplets} cartes`);
-noter("affiche les 13 préréglages", (elements.get("preset-grid")?.children.length || 0) === 13,
+noter("affiche les 14 préréglages", (elements.get("preset-grid")?.children.length || 0) === 14,
       `${elements.get("preset-grid")?.children.length} cartes`);
-noter("affiche les 9 scénarios historiques", (elements.get("scenario-grid")?.children.length || 0) === 9,
+noter("affiche les 11 scénarios", (elements.get("scenario-grid")?.children.length || 0) === 11,
       `${elements.get("scenario-grid")?.children.length} cartes`);
 noter("affiche les métriques du contexte instant T", contenu("grid-metrics").includes("PIB nominal"));
 noter("affiche la provenance des chiffres", contenu("provenance").length > 200);
 noter("affiche l'impact du préréglage de démarrage", contenu("grid-impact").includes("carte metric"));
 noter("remplit le tableau année par année", contenu("results-table").includes("<tbody>"));
+noter("les onglets local, national, européen, mondial, géopolitique, ménages et boursier sont rendus",
+      contenu("panneau-strate-local").includes("Finances locales observées")
+      && contenu("panneau-strate-national").includes("Comptes nationaux simulés")
+      && contenu("panneau-strate-europe").includes("Indicateurs européens simulés")
+      && contenu("panneau-strate-mondial").includes("Trajectoire mondiale du moteur")
+      && contenu("panneau-strate-geopolitique").includes("Indice de tension géopolitique")
+      && contenu("menage-resultats").includes("Profil modifiable")
+      && contenu("panneau-strate-boursier").includes("Rafraîchir les cotations"));
+const clesOnglets = ['local','national','europe','mondial','geopolitique','menages','boursier'];
+clesOnglets.forEach(cle => apiPage.afficherOngletStrate(cle));
+noter("la navigation active les sept onglets au clavier et par ARIA",
+      apiPage.etat().ONGLET_STRATE_ACTIF === "boursier"
+      && elements.get("tab-strate-boursier")?.attributs["aria-selected"] === "true"
+      && elements.get("tab-strate-boursier")?.tabIndex === 0
+      && elements.get("tab-strate-local")?.tabIndex === -1);
+apiPage.afficherOngletStrate("local");
+noter("le profil ménage n'est pas présenté comme un budget observé",
+      contenu("menage-resultats").includes("jamais transmis à l'API")
+      && contenu("panneau-strate-menages").includes("pas budget observé"));
+noter("la vue boursière cite l'horodatage et les limites de son flux",
+      contenu("panneau-strate-boursier").includes("Horodatage du cours")
+      && contenu("panneau-strate-boursier").includes("possiblement différés")
+      && contenu("panneau-strate-boursier").includes("collecté"));
+noter("la couverture distingue hameaux, métropoles, France métropolitaine et outre-mer",
+      contenu("panneau-strate-local").includes("Hameau")
+      && contenu("panneau-strate-local").includes("EPCI et métropoles")
+      && contenu("panneau-strate-local").includes("France métropolitaine")
+      && contenu("panneau-strate-local").includes("DROM / COM"));
+noter("les expositions boursières territoriales sont détaillées sans devenir des données observées",
+      contenu("panneau-strate-boursier").includes("Communes / communes nouvelles")
+      && contenu("panneau-strate-boursier").includes("DROM / COM / Nouvelle-Calédonie")
+      && contenu("panneau-strate-boursier").includes("exposition saisie"));
+noter("le budget national distingue recettes fiscales, dépenses et solde des leviers",
+      contenu("panneau-strate-national").includes("Impôt sur le revenu")
+      && contenu("panneau-strate-national").includes("Dépenses publiques simulées")
+      && contenu("panneau-strate-national").includes("Solde net des leviers"));
 noter("trace les courbes du graphique", contenu("svg-chart").includes("<polyline"));
-noter("le POST de simulation porte bien les 93 leviers",
-      (rapport.postes_simuler?.[0]?.leviers_actifs || 0) >= 90,
-      `${rapport.postes_simuler?.[0]?.leviers_actifs} leviers transmis`);
+const cotationsChargees = apiPage.etat().MARCHES?.indices || [];
+noter("charge les 13 repères boursiers déclarés", cotationsChargees.length === 13,
+      `${cotationsChargees.length} indices`);
+if (cotationsChargees.length){
+  cotationsChargees.filter(x => x.cle !== 'cac40').forEach(x => apiPage.modifierStressMarche(x.cle,'actif',false));
+  apiPage.modifierStressMarche('cac40','actif',true);
+  apiPage.modifierStressMarche('cac40','choc',10);
+  apiPage.modifierExpositionActeur('ir_0',10000);
+}
+noter("un choc boursier met à jour la plus-value brute du groupe saisi",
+      Math.abs((apiPage.calculerStressMarche?.().stressPct || 0) - (cotationsChargees.length ? 10 : 0)) < 0.01
+      && (cotationsChargees.length === 0 || contenu("pnl-acteur-ir_0").includes("1 000,00 €")));
+noter("le stress de portefeuille ne déclenche pas une fausse simulation macro",
+      (rapport.postes_simuler || []).length === 1,
+      `${(rapport.postes_simuler || []).length} appel(s) de simulation après chargement initial`);
+noter("le POST de simulation porte tout le catalogue",
+      rapport.postes_simuler?.[0]?.leviers_actifs === leviersComplets,
+      `${rapport.postes_simuler?.[0]?.leviers_actifs} levier(s) transmis`);
 const impactPrereglage = contenu("grid-impact");
 
 /* 2. Un levier modifié par l'utilisateur relance la simulation. */
@@ -299,18 +355,48 @@ noter("le levier réglé est mis en évidence",
 noter("le levier réglé reçoit ses puces d'impact",
       contenu("leviers-grille").includes("puce-effect"),
       (contenu("leviers-grille").match(/puce-effect/g) || []).length + " puce(s)");
+/* Le conseiller temps réel (« effet papillon ») : le geste est une décision —
+   position avant vs position à l'instant T — rejouée par le moteur. */
+for (let i = 0; i < 6; i += 1) await tourner();
+noter("le mouvement du levier interroge le conseiller temps réel",
+      rapport.appels.some((appel) => appel.startsWith("POST /api/conseil")),
+      rapport.appels.filter((appel) => appel.startsWith("POST /api/conseil")).length + " appel(s)");
+noter("le conseiller rend la décision et ses ricochets dans la console",
+      /Effet papillon|ricochet|directs|Conseiller/i.test(contenu("console-conseil")),
+      contenu("console-conseil").slice(0, 140));
+noter("la veille affiche le coût / gain réel des réglages globaux croisés",
+      /Coût réel|Gain réel|effet budgétaire net nul/i.test(contenu("console-cout-global")),
+      contenu("console-cout-global").slice(0, 120));
+noter("le conseil cite le coût ou le gain réel du mouvement",
+      /Coût réel|Gain réel|cout-gain/i.test(contenu("console-conseil")),
+      (contenu("console-conseil").match(/cout-gain/g) || []).length + " bloc(s)");
+noter("le levier manipulé affiche le badge coût / gain réel en temps réel",
+      /cout-live (gain|cout|neutre)|Mesure du coût/i.test(contenu("leviers-grille")),
+      (contenu("leviers-grille").match(/cout-live/g) || []).length + " badge(s)");
+noter("le ruban de veille affiche le coût / gain réel du programme actif",
+      /coût réel|gain réel|effet net/i.test(elements.get("ruban-cout")?.textContent || ""),
+      elements.get("ruban-cout")?.textContent);
+noter("l'audit de traçabilité est rendu en bas de page",
+      contenu("audit-gardefous").includes("Déficit public")
+      && contenu("audit-domaines").includes("Formule du score")
+      && contenu("audit-sources").includes("Grandeur d'entrée"),
+      "sources " + contenu("audit-sources").length
+      + " car. ; domaines " + contenu("audit-domaines").length
+      + " car. ; garde-fous " + contenu("audit-gardefous").length + " car.");
 noter("le compteur annonce les leviers affichés et modifiés",
-      /93 levier\(s\) affiché\(s\)/.test(elements.get("compteur-leviers")?.textContent || ""),
+      new RegExp(leviersComplets + " levier\\(s\\) affiché\\(s\\)")
+        .test(elements.get("compteur-leviers")?.textContent || ""),
       elements.get("compteur-leviers")?.textContent);
 
-/* 2 bis. Vue compacte : les 93 paramètres sur une ligne chacun. */
+/* 2 bis. Vue compacte : chaque paramètre sur une ligne. */
 apiPage.basculerDensite(true);
 for (let i = 0; i < 2; i += 1) await tourner();
 const compacts = (contenu("leviers-grille").match(/class="levier compact/g) || []).length;
-noter("la vue compacte affiche les 93 leviers", compacts === 93, `${compacts} leviers compacts`);
+noter("la vue compacte affiche tous les leviers", compacts === leviersComplets,
+      `${compacts} leviers compacts`);
 const curseurs = (contenu("leviers-grille").match(/oninput="majLevier/g) || []).length;
 const bascules = (contenu("leviers-grille").match(/onchange="majLevier/g) || []).length;
-noter("chaque levier compact garde sa commande", curseurs + bascules === 93,
+noter("chaque levier compact garde sa commande", curseurs + bascules === leviersComplets,
       `${curseurs} curseurs + ${bascules} interrupteurs = ${curseurs + bascules} commandes`);
 noter("le libellé du bouton de densité bascule",
       (elements.get("btn-densite")?.textContent || "").includes("confort"),
@@ -341,7 +427,10 @@ noter("la bulle décrit la chaîne d'interaction", grilleBulle.includes("Chaîne
 noter("la bulle affiche les répercussions mesurées", grilleBulle.includes("Répercussions mesurées"));
 noter("la bulle guide opportunités et désagréments", /Opportunités|Désagréments/.test(grilleBulle));
 noter("la bulle cite les effets déclarés au catalogue", grilleBulle.includes("Effets déclarés au catalogue"));
-noter("la bulle laisse les 93 réglages accessibles",
+noter("la bulle affiche le coût / gain réel du réglage en direct",
+      grilleBulle.includes("bulle-live") && /cout-gain (gain|cout|neutre)/.test(grilleBulle),
+      (grilleBulle.match(/cout-gain/g) || []).length + " bloc(s) coût/gain dans la bulle");
+noter("la bulle laisse les 101 réglages accessibles",
       (grilleBulle.match(/class="levier[ "]/g) || []).length === leviersComplets,
       `${(grilleBulle.match(/class="levier[ "]/g) || []).length} cartes`);
 await apiPage.ouvrirBulle(cleLevier);
@@ -370,6 +459,20 @@ noter("la couche d'infobulle ne capte aucun clic",
 apiPage.masquerInfobulle();
 noter("l'infobulle disparaît au départ de la souris",
       elements.get("infobulle")?.classList.contains("visible") === false);
+/* Aucune aide flottante ne doit recouvrir une bulle « interactions » ouverte :
+   le résultat affiché derrière doit rester lisible. */
+await apiPage.ouvrirBulle(cleLevier);
+for (let i = 0; i < 4; i += 1) await tourner();
+apiPage.survoler(cibleAide);
+noter("aucune infobulle ne recouvre la bulle « interactions » ouverte",
+      elements.get("infobulle")?.classList.contains("visible") === false,
+      "infobulle masquée tant qu'une bulle est ouverte");
+await apiPage.ouvrirBulle(cleLevier);
+for (let i = 0; i < 2; i += 1) await tourner();
+apiPage.survoler(cibleAide);
+noter("l'infobulle revient une fois la bulle refermée",
+      elements.get("infobulle")?.classList.contains("visible") === true);
+apiPage.masquerInfobulle();
 const boutonsAnnotes = (charge.page.match(/data-aide="/g) || []).length;
 noter("les boutons d'action portent aussi une aide", boutonsAnnotes >= 10,
       `${boutonsAnnotes} éléments annotés dans la page`);
@@ -427,13 +530,17 @@ const restreints = (contenu("leviers-grille").match(/class="levier[ "]/g) || [])
 noter("le filtre réduit la liste", restreints > 0 && restreints < leviersComplets,
       `${restreints} sur ${leviersComplets}`);
 apiPage.reinitialiser();
-for (let i = 0; i < 4; i += 1) await tourner();
+for (let i = 0; i < 10; i += 1) await tourner();
 const tousNuls = Object.entries(apiPage.etat().PARAMS)
   .every(([cle, valeur]) => Math.abs(valeur - defauts[cle]) < 1e-9);
 noter("la réinitialisation remet tous les leviers au neutre", tousNuls);
 noter("la grille complète est rétablie",
       (contenu("leviers-grille").match(/class="levier[ "]/g) || []).length === leviersComplets);
-noter("le retour au neutre efface le bandeau hors-sol", !contenu("console-danger").includes("HORS-SOL"));
+const posteNeutre = rapport.postes_simuler?.at(-1);
+noter("la réinitialisation recalcule le scénario de référence sans levier actif",
+      tousNuls && posteNeutre?.cle === "POST /api/simuler#neutre"
+      && (posteNeutre?.premier_levier_actif || []).length === 0,
+      `${posteNeutre?.cle} · alertes de référence : ${contenu("console-danger").slice(0,140)}`);
 noter("le verdict reste calculé après réinitialisation",
       /tolérable|vigilance|risqué|hors-sol|favorable/i.test(
         elements.get("console-verdict")?.textContent || ""));
@@ -467,7 +574,20 @@ noter("récapitule les séries mises à jour dans le bouton",
       elements.get("btn-rafraichir")?.textContent);
 noter("aucune boîte d'alerte ouverte", rapport.alertes.length === 0, rapport.alertes.join(" | "));
 
-/* 8. Adaptateurs d'extraction, testés isolément sur des charges réalistes. */
+/* 8. L'horizon décennal est envoyé au moteur et son bilan reste lisible. */
+apiPage.changerHorizon(10);
+for (let i = 0; i < 6; i += 1) await tourner();
+const appelDecennal = rapport.postes_simuler?.at(-1);
+noter("le sélecteur accepte deux mandatures", apiPage.horizonCourant() === 10
+      && elements.get("horizon-simulation")?.value === "10");
+noter("la requête envoie l'horizon de dix ans", appelDecennal?.horizon === 10,
+      JSON.stringify(appelDecennal));
+noter("le résultat rend dix étapes et le bilan intergénérationnel",
+      apiPage.etat().SORTIE?.horizon === 10
+      && apiPage.etat().SORTIE?.etapes?.length === 10
+      && contenu("bilan-intergenerationnel").includes("Besoin de patrimoine non couvert"));
+
+/* 9. Adaptateurs d'extraction, testés isolément sur des charges réalistes. */
 const eurostat = apiPage.extraireEurostat(chargeExterne("eurostat"), "0");
 noter("adaptateur Eurostat", eurostat && eurostat.valeur === 2.5 && eurostat.periode === "2026-08");
 const sdmx = apiPage.extraireSdmx(chargeExterne("sdmx"));

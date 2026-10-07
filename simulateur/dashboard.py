@@ -4,11 +4,12 @@ simulateur/dashboard.py — Serveur web du simulateur macro-politique.
 
 Deux niveaux de service cohabitent :
 
-  * **Simulateur interactif** (page `/`) : 93 leviers réglables, contexte de
+  * **Simulateur interactif** (page `/`) : catalogue de leviers réglables, contexte de
     données publiques « instant T », 20 domaines d'impact, matrice croisée
     levier × domaine, exports.
       - `GET  /api/catalogue`  : leviers, familles, préréglages, domaines ;
       - `GET  /api/contexte`   : contexte réel + provenance + sources navigateur ;
+      - `GET  /api/marches`    : 13 indices représentatifs, cotations à la demande et fraîcheur ;
       - `POST /api/donnees`    : valeurs collectées par le navigateur (API publiques) ;
       - `POST /api/simuler`    : simulation paramétrique complète ;
       - `GET  /api/comparer`   : comparaison des préréglages à l'année finale ;
@@ -42,6 +43,7 @@ from urllib.parse import parse_qs, urlparse
 
 from simulateur.bulles import DETAILS, bulle_levier, bulles_catalogue
 from simulateur.cli import CATALOGUE_SCENARIOS, SCENARIOS_DISPONIBLES, executer_scenario
+from simulateur.conseil import conseil_mouvement
 from simulateur.donnees_live import (
     INDICATEURS,
     Lecture,
@@ -52,6 +54,7 @@ from simulateur.donnees_live import (
     sauver_cache,
 )
 from simulateur.interface import HTML_PAGE
+from simulateur.marches import obtenir_cotations
 from simulateur.moteur_parametrique import (
     catalogue_complet,
     comparer,
@@ -59,7 +62,9 @@ from simulateur.moteur_parametrique import (
 from simulateur.moteur_parametrique import (
     simuler as simuler_parametrique,
 )
+from simulateur.observatoire import observatoire_public
 from simulateur.parametres import PRESETS
+from simulateur.seuils import bareme_public
 
 #: Catalogue des scénarios historiques : clé → (fabrique de décisions, nom,
 #: description, couleur). `fn` est exposé pour la compatibilité des tests.
@@ -118,6 +123,20 @@ SCENARIOS: dict[str, dict[str, Any]] = {
         "couleur": "#38bdf8",
         "fn": CATALOGUE_SCENARIOS["resilience"][0],
     },
+    "double_mandature": {
+        "nom": "Deux mandatures consécutives (2027-2037)",
+        "description": "Dix ans : verrou constitutionnel des réformes, second dividende "
+                       "de la dette réinvesti, investissements à cycle long.",
+        "couleur": "#2dd4bf",
+        "fn": CATALOGUE_SCENARIOS["double_mandature"][0],
+    },
+    "alternance_2032": {
+        "nom": "Stress-test : alternance 2032",
+        "description": "Deux mandatures sans verrou constitutionnel : réformes révocables, "
+                       "usure maximale du capital politique.",
+        "couleur": "#f43f5e",
+        "fn": CATALOGUE_SCENARIOS["alternance_2032"][0],
+    },
 }
 
 #: Référence de contexte réutilisée entre les requêtes (mise en cache mémoire).
@@ -173,6 +192,7 @@ def enregistrer_donnees_navigateur(lectures_brutes: dict[str, Any]) -> dict[str,
             url=brut.get("url") or "",
             statut="live",
             detail="collecté par le navigateur de l'utilisateur",
+            qualite_code=(str(brut["qualite_code"]) if brut.get("qualite_code") else None),
         )
     if lectures:
         try:
@@ -317,8 +337,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._send_json({
                 "contexte": contexte.en_dict(),
                 "browser": browser_payload(),
+                "observatoire": observatoire_public(),
                 "diagnostic": rapport_collecte(),
             })
+
+        elif chemin == "/api/marches":
+            actualiser = query.get("refresh", ["0"])[0] in ("1", "true", "oui")
+            self._send_json(obtenir_cotations(actualiser=actualiser))
 
         elif chemin == "/api/simuler":
             parametres = self._parametres_depuis_requete(None, query)
@@ -336,6 +361,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif chemin == "/api/comparer":
             try:
                 self._send_json(comparer(contexte=contexte_courant()))
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/garde_fous":
+            # Barème complet (audit et traçabilité) : chaque seuil est livré
+            # avec sa strate, ses bornes et sa source institutionnelle.
+            try:
+                self._send_json(bareme_public())
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
@@ -479,6 +512,28 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 return
             try:
                 self._send_json(enregistrer_donnees_navigateur(corps.get("lectures") or {}))
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/conseil":
+            # Conseiller temps réel (« effet papillon ») : compare deux exécutions
+            # réelles du moteur, le levier à sa position avant le dernier
+            # mouvement puis à sa position à l'instant T, toutes choses égales.
+            if not isinstance(corps, dict) or not corps.get("cle"):
+                self._send_json({"error": "Corps JSON avec « cle » attendu."}, status=400)
+                return
+            try:
+                conseil = conseil_mouvement(
+                    corps.get("parametres") or {},
+                    str(corps["cle"]),
+                    float(corps.get("avant", 0.0)),
+                    float(corps.get("apres", corps.get("avant", 0.0))),
+                    contexte_courant(),
+                    horizon=int(corps.get("horizon", 5)),
+                )
+                self._send_json(conseil)
+            except (TypeError, ValueError) as exc:
+                self._send_json({"error": str(exc)}, status=400)
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
