@@ -40,6 +40,11 @@ disponibilité, version de Python. Il ne reste qu'à valider.
 - Render déploie la branche **par défaut** (`main`) : le bouton ne fonctionne
   qu'une fois les modifications fusionnées. Depuis une branche, déployez
   manuellement et choisissez cette branche à l'écran.
+- Par le **tableau de bord Blueprints** plutôt que par le bouton, laissez
+  **Blueprint Path** vide — le fichier est à la racine du dépôt — et **Branch**
+  sur `main`. Si `render.yaml` vient d'être fusionné, la page peut afficher
+  « Blueprint file `render.yaml` not found on main branch » : elle garde en
+  cache l'arbre du dépôt, le bouton **Retry** suffit alors à la rafraîchir.
 - L'offre gratuite **endort le service** après quelques minutes sans visite : la
   première ouverture suivante prend une trentaine de secondes, les suivantes
   sont immédiates. C'est le comportement normal du palier gratuit, pas un bug.
@@ -193,6 +198,8 @@ calcule rien, idéale pour le `healthCheckPath` d'un hébergeur.
 
 | Symptôme | Cause probable |
 |---|---|
+| « Blueprint file `render.yaml` not found on main branch » | Render ne lit que la branche **par défaut** et garde l'arbre du dépôt en cache : le fichier n'existait pas encore sur `main` quand la page a été ouverte, ou vient tout juste d'y être fusionné. Fusionner d'abord, puis **Retry**. La création manuelle (New → Web Service) reste possible sans Blueprint. |
+| Le dépôt n'apparaît pas dans la liste des Blueprints | L'application GitHub de Render n'a pas accès à ce dépôt : l'autoriser dans **GitHub → Settings → Applications → Render → Configure**, puis recharger la page. |
 | « 502 Bad Gateway » juste après le déploiement | Le service n'écoute pas sur `$PORT` : vérifier la commande de démarrage. |
 | « 404 » sur toutes les routes, page d'accueil comprise | L'application est montée sous un préfixe (`SCRIPT_NAME`) non géré par le proxy. Servir à la racine. |
 | La page s'ouvre vide | Premier réveil de l'offre gratuite : attendre ~30 s et recharger. |

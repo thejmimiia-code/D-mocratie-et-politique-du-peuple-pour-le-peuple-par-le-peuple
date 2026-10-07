@@ -179,6 +179,15 @@ Dans Vercel : **Framework Preset: Other**, **Build Command: vide**,
 réécriture globale. Le code ne définit ni `X-Frame-Options` ni CSP `frame-ancestors`.
 Pour un accès public, désactiver **Security → Deployment Protection → Vercel Authentication**.
 
+> ⚠️ **Plafond de l'offre Hobby : 12 fonctions par déploiement.** `api/` contient
+> une fonction par route du moteur — 16 routes plus `verifier-source` — donc
+> davantage que ce plafond, et le déploiement est refusé sur l'offre gratuite.
+> Pour rester gratuit, le simulateur se sert d'un seul processus : bouton Render,
+> image Docker ou n'importe quel hébergeur Python, voir
+> [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md). Sur Vercel, il faudrait réunir
+> les routes en **une seule** fonction, donc n'ajouter que la réécriture
+> `vercel.json` correspondante — jamais la règle globale déconseillée ci-dessus.
+
 
 ```bash
 # ligne de commande paramétrique :

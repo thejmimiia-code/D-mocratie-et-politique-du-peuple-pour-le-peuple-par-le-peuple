@@ -30,18 +30,22 @@ FONCTIONS_DU_SITE: tuple[str, ...] = ("verifier-source",)
 
 #: Routes du moteur à exposer (voir `simulateur/dashboard.py`, do_GET/do_POST).
 ROUTES: tuple[str, ...] = (
+    "bulle",
+    "bulles",
     "catalogue",
+    "comparer",
+    "conseil",
     "contexte",
     "donnees",
-    "simuler",
-    "comparer",
+    "export",
+    "garde_fous",
+    "lexique",
+    "marches",
     "presets",
-    "bulles",
-    "bulle",
     "proxy",
     "run",
     "scenarios",
-    "export",
+    "simuler",
 )
 
 GABARIT = '''"""Fonction Vercel — route {route} du simulateur.
@@ -68,7 +72,9 @@ class handler(FonctionAPI):
 def routes_du_moteur() -> set[str]:
     """Routes réellement servies, lues dans le source du moteur."""
     source = (RACINE / "simulateur" / "dashboard.py").read_text(encoding="utf-8")
-    return set(re.findall(r'chemin == "(/api/[a-z]+)"', source))
+    # `[a-z_]+` et non `[a-z]+` : sans le souligné, `/api/garde_fous` restait
+    # invisible pour cette vérification — donc jamais signalée comme manquante.
+    return set(re.findall(r'chemin == "(/api/[a-z_]+)"', source))
 
 
 def main() -> int:
