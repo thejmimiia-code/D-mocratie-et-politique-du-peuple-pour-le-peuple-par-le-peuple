@@ -4,6 +4,86 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.9.0] — 2026-10-08
+
+### Ajout — Compréhensible pour tous : lexique, lecture en clair, guide et sommaire
+
+Un outil démocratique qui n'est lisible que par ceux qui savent déjà n'est pas
+un outil démocratique. Quatre dispositifs, tous servis sans dépendance externe :
+
+- **`simulateur/lexique.py`** : **83 termes** en six catégories (budget, marchés,
+  Europe, géopolitique, vie quotidienne, lire le simulateur), servis par
+  `GET /api/lexique` (recherche par `?q=`). Règle de rédaction : on n'explique
+  pas un mot de métier par un autre mot de métier — « spread » est défini comme
+  « l'écart entre le taux auquel la France emprunte et celui de l'Allemagne »,
+  pas comme un « écart de rendement souverain ». Chaque entrée porte sa
+  définition, un repère chiffré quand il existe, et des renvois.
+- **Soulignement des termes techniques** dans les textes affichés (console de
+  veille, lecture en clair, alertes, provenance) : la définition s'affiche au
+  survol ou au focus clavier. Le balisage respecte les attributs HTML — un `>`
+  à l'intérieur d'un `data-aide` n'est pas une fin de balise.
+- **`simulateur/clarte.py`** : la **« lecture en clair »** d'une simulation. Le
+  module ne calcule rien : il relit la sortie du moteur et en tire une dizaine
+  de phrases complètes (solde du programme, déficit, dette, taux d'emprunt,
+  pouvoir d'achat, domaines, climat social, règles européennes, alertes),
+  servies dans le champ `lecture` de `/api/simuler`. Un déficit négatif est dit
+  « excédent », une dépense négative « économie », et chaque lecture rappelle
+  ses limites. Aucune phrase ne porte de jugement politique.
+- **Guide de démarrage** en quatre étapes, affiché à la première visite
+  seulement (mémorisé dans le navigateur, jamais transmis au serveur) et
+  rouvrable depuis l'en-tête. **Sommaire** en haut de page : comprendre → ce que
+  ça donne → régler → mesurer → vérifier.
+- Interface v1.9.0.
+
+### Ajout — Compression HTTP négociée (`simulateur/compression.py`)
+
+- Les réponses sont compressées quand le navigateur le demande : **une
+  simulation complète passe de 255 Kio à 37 Kio sur le réseau (85 %)**, le
+  catalogue de 104 à 25 Kio, le contexte de 97 à 14 Kio, la page de 203 à
+  57 Kio. Le contenu est identique ; aucune formule ni donnée n'est touchée.
+- Négociation conforme : qualités (`q=`), refus (`q=0`), joker (`*`), préférence
+  du serveur à qualité égale. Brotli et Zstandard sont utilisés s'ils sont
+  importables, `gzip` sinon ; jamais requis.
+- **Jamais à perte** : sous 512 octets, ou si le résultat n'est pas plus petit
+  que l'original, la charge brute est renvoyée telle quelle.
+- `Vary: Accept-Encoding` sur toute réponse compressible, pour qu'aucun
+  intermédiaire ne redistribue du gzip à un client qui ne le décode pas.
+
+### Ajout — Rendu différé des onglets et matrice préservée
+
+- Les sept vues par strate ne sont plus reconstruites à chaque simulation :
+  seul l'onglet ouvert l'est, les autres le sont à leur ouverture. Le harnais
+  Node vérifie qu'un onglet jamais visité reste vide — c'est l'économie
+  recherchée — et que chacun se remplit bien à l'activation.
+- La matrice levier × domaine n'était plus recalculée pendant qu'un curseur
+  bougeait, donc vidée à chaque geste : l'information disparaissait sous les
+  yeux. La dernière matrice calculée est conservée, avec son état de fraîcheur
+  affiché (« dernière matrice calculée ») plutôt qu'un écran vide.
+
+### Ajout — Cache du catalogue de bulles
+
+- `GET /api/bulles` coûtait **4,5 s** à chaque appel (101 bulles, 2,1 Mio de
+  JSON). Le contenu ne dépendant que du catalogue et du contexte, il est
+  mémoïsé : **57 ms** aux appels suivants, invalidé par un rafraîchissement des
+  données (l'horodatage du contexte entre dans la clé de cache).
+
+### Documentation
+
+- **`docs/RD_OPTIMISATION_FLUIDITE.md`** : protocole, mesures exécutées, gains
+  et — surtout — ce que ces mesures ne disent pas (mesures locales, rendu
+  navigateur non profilé, lisibilité non mesurable automatiquement).
+- **`outils/mesurer_fluidite.py`** : campagne reproductible, sans réseau,
+  bibliothèque standard uniquement (`--markdown`, `--json`).
+
+### Modifié
+
+- Le badge de version d'interface n'est plus figé dans un test : la suite
+  vérifie la forme du badge, pas un numéro précis.
+- Libellé de la section « Domaines » aligné sur le lexique : un score de 50 est
+  un écart **nul** avec la référence, non une « situation de départ ».
+
+Tests : **508 réussis** (416 → 508) ; `ruff check .` propre.
+
 ## [1.8.0] — 2026-10-07
 
 ### Ajout — Vues locales, nationales, européennes, mondiales, géopolitiques, ménages et boursières

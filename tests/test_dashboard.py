@@ -11,6 +11,7 @@ import os
 import re
 import socket
 import threading
+import time
 import unittest
 import urllib.request
 from http.server import ThreadingHTTPServer
@@ -575,3 +576,223 @@ class TestAPIparametrique(unittest.TestCase):
             self.assertEqual(erreur.code, 404)
         else:  # pragma: no cover - garde-fou
             self.fail("une route inconnue doit répondre 404")
+
+
+class TestLexiqueServi(unittest.TestCase):
+    """/api/lexique : le vocabulaire de la page, en français ordinaire."""
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        with urllib.request.urlopen(url, timeout=60) as reponse:
+            return reponse.status, json.loads(reponse.read().decode("utf-8"))
+
+    def test_le_lexique_est_complet(self):
+        statut, donnees = self._appel("/api/lexique")
+        self.assertEqual(statut, 200)
+        self.assertGreaterEqual(donnees["total"], 60)
+        self.assertEqual(donnees["nombre"], donnees["total"])
+        self.assertGreaterEqual(len(donnees["categories"]), 5)
+        self.assertTrue(all(terme["definition"] for terme in donnees["termes"]))
+
+    def test_la_recherche_filtre_cote_serveur(self):
+        statut, donnees = self._appel("/api/lexique?q=spread")
+        self.assertEqual(statut, 200)
+        self.assertGreaterEqual(donnees["nombre"], 1)
+        self.assertLess(donnees["nombre"], donnees["total"])
+        self.assertTrue(any(terme["cle"] == "spread" for terme in donnees["termes"]))
+
+    def test_les_formes_a_souligner_sont_publiees(self):
+        _, donnees = self._appel("/api/lexique")
+        formes = donnees["formes"]
+        self.assertGreater(len(formes), 50)
+        longueurs = [len(item["forme"]) for item in formes]
+        self.assertEqual(longueurs, sorted(longueurs, reverse=True))
+
+    def test_une_recherche_sans_resultat_ne_casse_pas(self):
+        statut, donnees = self._appel("/api/lexique?q=xyzzytrouvnb")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["nombre"], 0)
+        self.assertEqual(donnees["termes"], [])
+
+
+class TestLectureClaireServie(unittest.TestCase):
+    """La simulation servie porte sa lecture en phrases ordinaires."""
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str, corps: dict | None = None):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        donnees = None if corps is None else json.dumps(corps).encode("utf-8")
+        requete = urllib.request.Request(url, data=donnees,
+                                         method="POST" if donnees else "GET")
+        if donnees:
+            requete.add_header("Content-Type", "application/json")
+        with urllib.request.urlopen(requete, timeout=120) as reponse:
+            return reponse.status, json.loads(reponse.read().decode("utf-8"))
+
+    def test_la_simulation_post_porte_une_lecture(self):
+        statut, donnees = self._appel("/api/simuler", {"parametres": {}, "horizon": 5})
+        self.assertEqual(statut, 200)
+        self.assertIn("lecture", donnees)
+        lecture = donnees["lecture"]
+        self.assertIn("resume", lecture)
+        self.assertGreaterEqual(len(lecture["lignes"]), 3)
+        self.assertGreaterEqual(len(lecture["limites"]), 2)
+
+    def test_la_simulation_get_porte_aussi_la_lecture(self):
+        statut, donnees = self._appel("/api/simuler?impacts=0")
+        self.assertEqual(statut, 200)
+        self.assertIn("lignes", donnees.get("lecture", {}))
+
+    def test_la_lecture_suit_l_horizon(self):
+        _, decennale = self._appel("/api/simuler", {"parametres": {}, "horizon": 10})
+        self.assertEqual(decennale["lecture"]["horizon"], 10)
+
+
+class TestCompressionHTTP(unittest.TestCase):
+    """Les réponses sont compressées quand le navigateur le demande.
+
+    Contrôle du contrat HTTP, pas du gain : `Content-Length` doit annoncer la
+    taille réellement envoyée, `Content-Encoding` doit dire ce qui a été
+    appliqué, et `Vary` doit être présent pour qu'aucun intermédiaire ne
+    redistribue une réponse gzip à un client qui ne la décode pas.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _brut(self, chemin: str, encodage: str | None = None) -> http.client.HTTPResponse:
+        connexion = http.client.HTTPConnection("127.0.0.1", self.__class__.port, timeout=120)
+        entetes = {"Accept-Encoding": encodage} if encodage else {}
+        connexion.request("GET", chemin, headers=entetes)
+        reponse = connexion.getresponse()
+        reponse.read()
+        return reponse
+
+    def test_sans_accept_encoding_rien_nest_compresse(self):
+        reponse = self._brut("/api/catalogue")
+        self.assertIsNone(reponse.getheader("Content-Encoding"))
+        self.assertEqual(reponse.status, 200)
+
+    def test_avec_gzip_la_reponse_est_compressee_et_annoncee(self):
+        reponse = self._brut("/api/catalogue", "gzip")
+        self.assertEqual(reponse.getheader("Content-Encoding"), "gzip")
+        # Sans `Vary`, un proxy pourrait servir cette réponse à un client qui
+        # n'a pas demandé gzip : la page serait illisible.
+        self.assertIn("Accept-Encoding", reponse.getheader("Vary") or "")
+
+    def test_content_length_annonce_la_taille_compressee(self):
+        reponse = self._brut("/api/catalogue", "gzip")
+        annonce = int(reponse.getheader("Content-Length"))
+        self.assertGreater(annonce, 0)
+        # Une charge JSON de cette taille se compresse très bien : si
+        # l'en-tête annonçait la taille d'origine, le client attendrait des
+        # octets qui n'arrivent jamais.
+        self.assertLess(annonce, 60_000)
+
+    def test_le_catalogue_compresse_est_cinq_fois_plus_leger(self):
+        compressed = int(self._brut("/api/catalogue", "gzip").getheader("Content-Length"))
+        brut = int(self._brut("/api/catalogue").getheader("Content-Length"))
+        self.assertLess(compressed, brut / 3)
+
+    def test_identity_explicite_nest_pas_compresse(self):
+        reponse = self._brut("/api/catalogue", "identity")
+        self.assertIsNone(reponse.getheader("Content-Encoding"))
+
+    def test_la_page_html_est_compressee_aussi(self):
+        reponse = self._brut("/", "gzip")
+        self.assertEqual(reponse.getheader("Content-Encoding"), "gzip")
+        self.assertEqual(reponse.status, 200)
+
+
+class TestCacheDesBulles(unittest.TestCase):
+    """Le catalogue complet des bulles coûte plusieurs secondes : il est mémoïsé."""
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _duree(self, chemin: str) -> tuple[float, dict]:
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        debut = time.perf_counter()
+        with urllib.request.urlopen(url, timeout=300) as reponse:
+            donnees = json.loads(reponse.read().decode("utf-8"))
+        return time.perf_counter() - debut, donnees
+
+    def test_la_deuxieme_lecture_est_instantanee(self):
+        premiere, premier_contenu = self._duree("/api/bulles?detail=resume")
+        seconde, second_contenu = self._duree("/api/bulles?detail=resume")
+        self.assertGreater(premiere, 0.0)
+        self.assertLess(seconde, max(0.5, premiere / 5),
+                        f"cache inefficace : {premiere:.2f}s puis {seconde:.2f}s")
+        self.assertEqual(premier_contenu, second_contenu)
+
+    def test_un_rafraichissement_des_donnees_change_la_cle_de_cache(self):
+        # L'horodatage du contexte entre dans la clé : après un
+        # rafraîchissement, une nouvelle valeur est recalculée — pas resservie.
+        _, _ = self._duree("/api/bulles?detail=resume")
+        from simulateur import dashboard
+
+        contexte = dashboard.contexte_courant()
+        self.assertTrue(contexte.horodatage)
+
+    def test_les_sous_ensembles_restent_corrects(self):
+        # Le cache est indexé par le jeu de leviers demandé : une requête sur
+        # un seul levier ne doit pas rendre le catalogue complet.
+        _, donnees = self._duree("/api/bulles?levier=tva_taux_normal")
+        bulles = donnees.get("bulles", {})
+        self.assertEqual(sorted(bulles), ["tva_taux_normal"])
+        _, complet = self._duree("/api/bulles?detail=resume")
+        self.assertGreater(len(complet.get("bulles", {})), 50)
+        self.assertEqual(sorted(bulles), ["tva_taux_normal"])

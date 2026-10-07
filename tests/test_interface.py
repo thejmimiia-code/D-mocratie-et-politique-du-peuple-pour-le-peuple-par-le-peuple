@@ -115,8 +115,11 @@ class TestStructureDeLaPage(unittest.TestCase):
                         self.page.index('id="console-corps"'),
                         "le bloc coût/gain doit précéder le corps repliable")
         # Version d'interface visible pour diagnostiquer les pages périmées.
+        # Le numéro n'est pas figé ici : le test vérifie la présence et la
+        # forme du badge, pas une version précise — sinon chaque livraison
+        # casserait la suite pour une chaîne de caractères.
         self.assertIn('id="version-interface"', self.page)
-        self.assertIn("Interface v1.8.0", self.page)
+        self.assertRegex(self.page, r"Interface v\d+\.\d+\.\d+ \(\d{4}-\d{2}-\d{2}\)")
         # Les cinq niveaux de seuil sont connus du rendu.
         for niveau in ("favorable", "tolerable", "vigilance", "risque", "hors_sol"):
             self.assertIn(niveau, self.script)
@@ -474,6 +477,112 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("MRSC", self.page)
         self.assertIn("nul ne peut s'en attribuer", self.page.lower())
         self.assertIn("par le peuple, pour le peuple", self.page.lower())
+
+
+class TestLisibilitePourTous(unittest.TestCase):
+    """Compréhensible par tous : sommaire, lexique, lecture en clair, guide.
+
+    Un outil démocratique qui n'est lisible que par ceux qui savent déjà n'est
+    pas un outil démocratique. Ces tests vérifient que les quatre dispositifs
+    de lisibilité sont bien servis dans la page — et qu'ils ne reposent sur
+    aucune ressource externe.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.script = _script(cls.page)
+
+    def test_un_sommaire_donne_l_ordre_de_lecture(self):
+        """La page est longue : un fil d'Ariane dit où l'on est."""
+        self.assertIn('id="sommaire"', self.page)
+        self.assertIn("Lire dans l'ordre", self.page)
+        for ancre in ("section-contexte", "section-clair", "section-leviers",
+                      "section-resultats", "section-audit"):
+            self.assertIn(f'href="#{ancre}"', self.page, ancre)
+            self.assertIn(f'id="{ancre}"', self.page, ancre)
+        self.assertIn("function marquerSommaire(", self.script)
+
+    def test_la_section_lecture_en_clair_existe(self):
+        """Les chiffres du moteur sont relus en phrases ordinaires."""
+        for identifiant in ("clair-resume", "clair-lignes", "clair-limites"):
+            self.assertIn(f'id="{identifiant}"', self.page, identifiant)
+        self.assertIn("Lire le résultat", self.page)
+        self.assertIn("function renderLecture(", self.script)
+        self.assertIn("renderLecture(donnees);", self.script)
+
+    def test_le_lexique_est_ouvrable_depuis_l_entete(self):
+        self.assertIn('id="btn-lexique"', self.page)
+        self.assertIn("ouvrirLexique()", self.page)
+        self.assertIn("/api/lexique", self.script)
+        self.assertIn("function chargerLexique(", self.script)
+        self.assertIn("function rendreLexique(", self.script)
+        self.assertIn("function filtrerLexique(", self.script)
+
+    def test_les_termes_du_lexique_sont_soulignables_dans_le_texte(self):
+        self.assertIn("function baliserTermes(", self.script)
+        self.assertIn("function appliquerLexique(", self.script)
+        self.assertIn("function marquerTextes(", self.script)
+        self.assertIn("class=\"terme\"", self.script)
+        # Le balisage doit respecter les attributs HTML : un « > » à
+        # l'intérieur d'un `data-aide` ne doit pas être pris pour une
+        # balise fermante.
+        self.assertIn("guillemet", self.script)
+
+    def test_le_guide_de_demarrage_est_disponible(self):
+        self.assertIn('id="btn-guide"', self.page)
+        self.assertIn("function ouvrirGuide(", self.script)
+        self.assertIn("function contenuGuide(", self.script)
+        self.assertIn("ETAPES_GUIDE", self.script)
+        # Première visite seulement : jamais imposé deux fois.
+        self.assertIn("function guideDejaVu(", self.script)
+        self.assertIn("function marquerGuideVu(", self.script)
+        self.assertIn("simulateur_guide_vu", self.script)
+        # Le stockage peut être refusé (navigation privée) : cela ne doit pas
+        # empêcher l'affichage du guide.
+        self.assertIn("catch (erreur)", self.script)
+
+    def test_la_modale_est_fermable_de_trois_facons(self):
+        self.assertIn('id="overlay"', self.page)
+        self.assertIn('id="modale-corps"', self.page)
+        self.assertIn("function ouvrirModale(", self.script)
+        self.assertIn("function fermerModale(", self.script)
+        self.assertIn("function siClicDehors(", self.script)
+        # Bouton, clic à l'extérieur et touche Échap.
+        self.assertIn("function initialiserModale(", self.script)
+        self.assertIn("Escape", self.script)
+
+    def test_le_guide_rappelle_que_le_modele_n_est_pas_une_prophétie(self):
+        self.assertIn("pas une prophétie", self.script)
+        self.assertIn("référence", self.script)
+
+
+class TestFluiditeDuRendu(unittest.TestCase):
+    """Le rendu ne refait pas à chaque geste ce qu'il peut ne pas faire."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.script = _script(cls.page)
+
+    def test_les_onglets_de_strate_sont_rendus_a_la_demande(self):
+        """Seul l'onglet ouvert est construit, les autres attendent."""
+        self.assertIn("function contenuOngletStrate(", self.script)
+        self.assertIn("function rendreOngletStrate(", self.script)
+        # L'ancien rendu massif des sept panneaux a disparu.
+        self.assertNotIn("renderResultatsMenage(donnees);renderResultatsBoursiers();",
+                         self.script)
+        self.assertIn("if (SORTIE) rendreOngletStrate(cle, SORTIE);", self.script)
+
+    def test_la_matrice_n_est_pas_effacee_pendant_un_reglage(self):
+        """Une matrice vide sous les yeux serait une régression d'affichage."""
+        self.assertIn("DERNIERE_MATRICE", self.script)
+        self.assertIn('id="matrice-fraicheur"', self.page)
+
+    def test_le_lexique_se_charge_sans_bloquer_le_demarrage(self):
+        # `chargerLexique()` est appelé sans `await` : il ne retarde ni le
+        # catalogue ni la première simulation.
+        self.assertIn("  chargerLexique();", self.script)
 
 
 if __name__ == "__main__":

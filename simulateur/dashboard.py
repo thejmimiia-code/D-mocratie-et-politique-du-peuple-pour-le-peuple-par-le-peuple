@@ -38,11 +38,14 @@ import traceback
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Lock
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from simulateur.bulles import DETAILS, bulle_levier, bulles_catalogue
+from simulateur.clarte import lecture_claire
 from simulateur.cli import CATALOGUE_SCENARIOS, SCENARIOS_DISPONIBLES, executer_scenario
+from simulateur.compression import EN_TETE_VARY, repondre
 from simulateur.conseil import conseil_mouvement
 from simulateur.donnees_live import (
     INDICATEURS,
@@ -54,6 +57,7 @@ from simulateur.donnees_live import (
     sauver_cache,
 )
 from simulateur.interface import HTML_PAGE
+from simulateur.lexique import lexique_public
 from simulateur.marches import obtenir_cotations
 from simulateur.moteur_parametrique import (
     catalogue_complet,
@@ -169,6 +173,54 @@ def contexte_courant(rafraichir: bool = False):
     return _CONTEXTE_CACHE["contexte"]
 
 
+_CACHE_BULLES: dict[tuple, Any] = {}
+_VERROU_BULLES = Lock()
+
+
+def catalogue_bulles(contexte, cles=None, avec_mesure: bool = True, detail: str = "resume"):
+    """Catalogue de bulles **mémoïsé** : le calcul complet coûte plusieurs secondes.
+
+    Mesuré sur ce dépôt : la construction des 101 bulles « détail complet »
+    prenait environ 4,6 s et produisait 2,1 Mio de JSON. Le contenu ne dépend
+    que du catalogue des leviers et du contexte « instant T » : il est donc
+    identique d'une requête à l'autre tant que le contexte n'a pas changé. On le
+    calcule une fois, puis on le ressert.
+
+    La clé de cache contient l'horodatage du contexte : un « Rafraîchir les
+    données » change l'horodatage et invalide donc naturellement le cache. Un
+    verrou évite que deux requêtes concurrentes ne calculent la même chose.
+    """
+    cle_cache = (detail, avec_mesure, tuple(cles or ()), contexte.mode, contexte.horodatage)
+    with _VERROU_BULLES:
+        if cle_cache in _CACHE_BULLES:
+            return _CACHE_BULLES[cle_cache]
+    resultat = bulles_catalogue(contexte, cles=cles, avec_mesure=avec_mesure, detail=detail)
+    with _VERROU_BULLES:
+        # Petit cache : au-delà de 6 entrées on repart de zéro (les variantes
+        # « résumé / complet » et les sous-ensembles de leviers sont en nombre
+        # fini, mais un usage soutenu ne doit pas faire croître la mémoire).
+        if len(_CACHE_BULLES) >= 6:
+            _CACHE_BULLES.clear()
+        _CACHE_BULLES[cle_cache] = resultat
+    return resultat
+
+
+def _avec_lecture(sortie) -> dict[str, Any]:
+    """Ajoute la « lecture en clair » à une sortie de simulation sérialisée.
+
+    Les chiffres du moteur sont exacts ; ils ne sont pas forcément lisibles par
+    quelqu'un qui ne pratique pas les finances publiques. `lecture_claire`
+    traduit la trajectoire en phrases ordinaires, à partir des mêmes nombres —
+    jamais à côté d'eux.
+    """
+    charge = sortie.en_dict()
+    try:
+        charge["lecture"] = lecture_claire(charge)
+    except Exception:  # pragma: no cover - la lecture est un confort
+        charge["lecture"] = {}
+    return charge
+
+
 def enregistrer_donnees_navigateur(lectures_brutes: dict[str, Any]) -> dict[str, Any]:
     """Fusionne des valeurs collectées par le navigateur dans le cache local.
 
@@ -244,21 +296,38 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
 
+    def _preparer_charge(self, charge: bytes) -> tuple[bytes, str | None]:
+        """Compresse la charge si le navigateur l'accepte (voir compression.py).
+
+        Le gain est mesuré et documenté dans docs/RD_OPTIMISATION_FLUIDITE.md :
+        une simulation complète passe d'environ 240 Kio à une trentaine de Kio
+        sur le réseau, pour le même contenu.
+        """
+        return repondre(self.headers.get("Accept-Encoding"), charge)
+
     def _send_html(self, contenu: str) -> None:
-        charge = contenu.encode("utf-8")
+        charge, encodage = self._preparer_charge(contenu.encode("utf-8"))
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(charge)))
+        self.send_header("Vary", EN_TETE_VARY)
+        if encodage:
+            self.send_header("Content-Encoding", encodage)
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         if not self._tete_seulement:
             self.wfile.write(charge)
 
     def _send_json(self, donnees: dict[str, Any], status: int = 200) -> None:
-        charge = json.dumps(donnees, ensure_ascii=False, default=str).encode("utf-8")
+        charge, encodage = self._preparer_charge(
+            json.dumps(donnees, ensure_ascii=False, default=str).encode("utf-8")
+        )
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(charge)))
+        self.send_header("Vary", EN_TETE_VARY)
+        if encodage:
+            self.send_header("Content-Encoding", encodage)
         self.end_headers()
         if not self._tete_seulement:
             self.wfile.write(charge)
@@ -352,7 +421,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 sortie = simuler_parametrique(
                     parametres, contexte_courant(), avec_impacts=avec_impacts
                 )
-                self._send_json(sortie.en_dict())
+                self._send_json(_avec_lecture(sortie))
             except ValueError as exc:
                 self._send_json({"error": str(exc)}, status=400)
             except Exception:
@@ -380,7 +449,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             avec_mesure = query.get("mesure", ["1"])[0] not in ("0", "false", "non")
             brutes = [cle for valeur in query.get("levier", []) for cle in valeur.split(",") if cle]
             try:
-                self._send_json(bulles_catalogue(
+                self._send_json(catalogue_bulles(
                     contexte_courant(), cles=brutes or None,
                     avec_mesure=avec_mesure, detail=detail,
                 ))
@@ -404,6 +473,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": str(exc)}, status=400)
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/lexique":
+            # Lexique « compréhensible pour tous » : chaque terme technique
+            # employé par la page, défini en français ordinaire, cherchable.
+            recherche = query.get("q", [""])[0]
+            self._send_json(lexique_public(recherche or None))
 
         elif chemin == "/api/presets":
             self._send_json({"presets": PRESETS})
@@ -500,7 +575,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     avec_impacts=bool(corps.get("avec_impacts", True)),
                     max_leviers_impacts=int(corps.get("max_impacts", 16)),
                 )
-                self._send_json(sortie.en_dict())
+                self._send_json(_avec_lecture(sortie))
             except ValueError as exc:
                 self._send_json({"error": str(exc)}, status=400)
             except Exception:
