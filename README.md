@@ -160,6 +160,37 @@ python -m simulateur.moteur_parametrique --preset mandature --json
 python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --levier reforme_ric=1
 ```
 
+### 6. Obtenir une adresse publique (lien à partager)
+
+Un dépôt n'est pas un site : rien n'exécute le code. Trois façons d'obtenir une
+adresse permanente, détaillées dans [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md) :
+
+- **En deux clics**, sans ligne de commande : le bouton ci-dessous crée un
+  service gratuit chez Render à partir de ce dépôt, qui lit `render.yaml`.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fthejmimiia-code%2FD-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple)
+
+- **En une commande**, sur n'importe quelle machine qui a Docker : une image
+  publique est publiée dans le registre GitHub
+  (`ghcr.io/thejmimiia-code/d-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple`).
+
+```bash
+docker run -p 8080:8080 ghcr.io/thejmimiia-code/d-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple:latest
+```
+
+- **Chez n'importe quel hébergeur Python** (Railway, Fly, Scalingo, Heroku,
+  VPS…) : le dépôt fournit un point d'entrée WSGI (`simulateur/wsgi.py`) et un
+  `Procfile`.
+
+```bash
+pip install -r requirements.txt
+gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 simulateur.wsgi:application
+```
+
+Le point d'entrée WSGI **réutilise le routeur du serveur local** au lieu d'en
+dupliquer un second : ce qui est vérifié sur le poste est ce qui tourne en
+ligne. Aucune base de données, aucun secret, aucune donnée personnelle.
+
 ---
 
 ## V. RÉSULTATS DU PLAN DE MANDATURE (ANNÉE 5)

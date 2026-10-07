@@ -34,6 +34,7 @@ import argparse
 import csv as csv_mod
 import json
 import os
+import sys
 import traceback
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -627,12 +628,30 @@ def create_server(host: str = "0.0.0.0", port: int = 8080) -> ThreadingHTTPServe
     return serveur
 
 
+def _port_defaut() -> int:
+    """Port d'écoute : celui de l'hébergeur s'il en impose un, sinon 8080.
+
+    Presque toutes les plateformes (Render, Railway, Heroku, Scalingo, Fly,
+    Clever Cloud…) injectent ``PORT`` et refusent toute autre valeur. Lire la
+    variable permet de garder la même commande en local et en ligne, tout en
+    laissant ``--port`` gagner lorsqu'il est fourni explicitement.
+    """
+    brut = os.environ.get("PORT", "").strip()
+    try:
+        return int(brut) if brut else 8080
+    except ValueError:
+        print(f"  PORT invalide ({brut!r}) — repli sur 8080.", file=sys.stderr)
+        return 8080
+
+
 def main() -> None:
     analyseur = argparse.ArgumentParser(
         description="Simulateur macro-politique — serveur web interactif"
     )
-    analyseur.add_argument("--host", default="0.0.0.0", help="Adresse d'écoute (défaut : 0.0.0.0)")
-    analyseur.add_argument("--port", type=int, default=8080, help="Port d'écoute (défaut : 8080)")
+    analyseur.add_argument("--host", default=os.environ.get("HOST", "0.0.0.0"),
+                           help="Adresse d'écoute (défaut : $HOST ou 0.0.0.0)")
+    analyseur.add_argument("--port", type=int, default=_port_defaut(),
+                           help="Port d'écoute (défaut : $PORT ou 8080)")
     analyseur.add_argument("--rafraichir", action="store_true",
                            help="Interroge les API publiques au démarrage")
     arguments = analyseur.parse_args()

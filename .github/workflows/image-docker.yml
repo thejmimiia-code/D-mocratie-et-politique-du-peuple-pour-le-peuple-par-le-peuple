@@ -1,0 +1,46 @@
+name: Image Docker
+
+# Publie une image prête à l'emploi dans le registre GitHub (GHCR).
+# L'image est le moyen le plus simple de donner un lien utilisable : une fois
+# publiée, n'importe quelle machine ou hébergeur la lance en une commande.
+#
+#   docker run -p 8080:8080 ghcr.io/<propriétaire>/<dépôt>:latest
+#
+# Le nom de l'image est écrit en minuscules : GHCR refuse les majuscules.
+on:
+  push:
+    branches: [main, master]
+  # Déclenchement manuel : onglet Actions → « Run workflow », utile pour
+  # publier une image depuis une branche sans attendre la fusion.
+  workflow_dispatch:
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Connexion au registre GitHub
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Construire et publier
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          # « latest » sur la branche par défaut, sinon le nom de la branche.
+          tags: |
+            ghcr.io/thejmimiia-code/d-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple:latest
+            ghcr.io/thejmimiia-code/d-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple:${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

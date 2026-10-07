@@ -1,0 +1,24 @@
+# Déploiement Render (Blueprint) — https://render.com
+#
+# Utilisé par le bouton « Deploy to Render » du README : Render lit ce fichier,
+# crée le service et n'a besoin de rien d'autre. `$PORT` est fourni par Render,
+# ce qui explique qu'aucun port n'est écrit en dur.
+services:
+  - type: web
+    name: simulateur-macro-politique
+    runtime: python
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: pip install -r requirements.txt
+    startCommand: >-
+      gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+      simulateur.wsgi:application
+    # Sonde de disponibilité : une route JSON qui ne calcule rien.
+    healthCheckPath: /api/lexique
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # Journaux d'accès : décommenter pour diagnostiquer un déploiement.
+      # - key: SIMULATEUR_LOG
+      #   value: "1"

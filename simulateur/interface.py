@@ -626,7 +626,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.9.0 (2026-10-08) — lexique, lecture en clair, onglets à la demande et compression des échanges; rechargez la page (F5).</span>
+    <span class="aide" id="version-interface">Interface v1.10.0 (2026-10-08) — même routeur en local et en ligne, hébergeable partout; rechargez la page (F5).</span>
   </p>
 </div>
 

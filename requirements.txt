@@ -1,0 +1,10 @@
+# Dépendances d'HÉBERGEMENT uniquement — pas d'exécution.
+#
+# Le simulateur n'a aucune dépendance : bibliothèque standard seule, y compris
+# pour le serveur web (`python3 -m simulateur.dashboard`) et pour
+# l'interface WSGI (`simulateur/wsgi.py`, testable avec `wsgiref`).
+#
+# Ce fichier n'est lu que par les plateformes qui servent l'application en
+# ligne et attendent un serveur WSGI de production (gunicorn). Ne rien ajouter
+# ici : `pip install -r requirements.txt` doit rester une formalité.
+gunicorn>=22.0

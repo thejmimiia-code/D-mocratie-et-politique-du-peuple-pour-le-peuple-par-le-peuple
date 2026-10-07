@@ -4,6 +4,36 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.10.0] — 2026-10-08
+
+### Ajout — Un lien public pour le simulateur (`simulateur/wsgi.py`)
+
+Le dépôt contient le code, mais rien ne l'exécute : un hébergeur impose son
+port, place un reverse proxy et attend une application **WSGI**. Ce module est
+le pont. Il **présente chaque requête WSGI au handler HTTP existant** — la
+requête est reconstituée en texte HTTP depuis l'`environ`, le handler lit et
+écrit dans des flux mémoire, et les en-têtes qu'il croyait envoyer sur le réseau
+sont interceptés avant d'atteindre le corps — plutôt que de dupliquer le
+routeur. Conséquence : un seul jeu de routes, et ce qui est vérifié en local est
+exactement ce qui tourne en ligne.
+
+- **Trois voies de publication**, documentées dans `docs/HEBERGEMENT.md` :
+  bouton **Render** en deux clics (`render.yaml`), **image Docker** publique
+  dans GHCR (construite par `.github/workflows/image-docker.yml`), et la ligne
+  `gunicorn … simulateur.wsgi:application` pour tout hébergeur Python.
+- **Fichiers d'hébergement** : `Procfile` (Heroku, Scalingo, Clever Cloud,
+  Railway, Dokku), `requirements.txt` (gunicorn **seul**, dépendance
+  d'hébergement et non d'exécution), `runtime.txt` (Python 3.11.9), `Dockerfile`
+  (non-root, avec sonde de santé), `.dockerignore`.
+- **`PORT` et `HOST`** sont lus dans l'environnement par
+  `python3 -m simulateur.dashboard` : la même commande sert en local et en
+  ligne, `--port` restant prioritaire.
+- En-têtes hop-by-hop écartés (`Connection`, `Server`, `Date`) : derrière un
+  proxy, « Connection: close » ferait fermer la connexion à chaque requête.
+- 21 tests (`tests/test_wsgi.py`), dont un qui sert réellement l'application
+  par HTTP avec `wsgiref`, et la CI vérifie le point d'entrée à chaque push.
+- Aucune formule, donnée source ou seuil n'est modifié.
+
 ## [1.9.0] — 2026-10-08
 
 ### Ajout — Compréhensible pour tous : lexique, lecture en clair, guide et sommaire
