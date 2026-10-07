@@ -83,6 +83,22 @@ jobs:
           python3 main.py mandature --export /tmp/smoke_test.csv
           python3 -c "import csv; rows=list(csv.DictReader(open('/tmp/smoke_test.csv'))); assert len(rows)==5; print(f'CSV export OK ({len(rows)} rows)')"
 
+      - name: Verify WSGI entrypoint (hébergement en ligne)
+        run: |
+          python3 - <<'PY'
+          import json, threading, urllib.request
+          from wsgiref.simple_server import make_server
+          from simulateur.wsgi import application
+
+          serveur = make_server("127.0.0.1", 8123, application)
+          threading.Thread(target=serveur.serve_forever, daemon=True).start()
+          with urllib.request.urlopen("http://127.0.0.1:8123/api/lexique") as reponse:
+              assert reponse.status == 200, reponse.status
+              assert json.load(reponse)["total"] > 0
+          serveur.shutdown()
+          print("Point d'entrée WSGI OK")
+          PY
+
       - name: Verify R&D import and chronological validation
         run: |
           python -m simulateur.import_ucdp --csv tests/fixtures/ged_schema_synthetique.csv --contrat tests/fixtures/contrat_ged_synthetique.json --sortie /tmp/rd-observations.jsonl --rapport /tmp/rd-import.json

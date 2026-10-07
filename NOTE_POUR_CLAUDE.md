@@ -179,6 +179,8 @@ remplacé par un **simulateur paramétrable**.
 | `simulateur/conseil.py` | conseiller temps réel (« effet papillon ») : chaque mouvement rejoué avant/après, directs + ricochets, garde-fous, compensations |
 | `simulateur/interface.py` | page unique : ruban de veille, 101 leviers, 20 domaines, exports |
 | `simulateur/dashboard.py` | API JSON : `/api/catalogue`, `/contexte`, `/simuler`, `/comparer`, `/conseil`, `/garde_fous`, `/presets`, `/proxy`, `/donnees` |
+| `simulateur/wsgi.py` | pont WSGI : branche le handler ci-dessus sur une requête d'hébergeur, sans dupliquer le routeur |
+| `Procfile`, `requirements.txt`, `runtime.txt`, `render.yaml`, `Dockerfile` | publication en ligne : hébergeur Python, bouton Render, image Docker (GHCR) |
 | `tests/` | **399 tests verts**, dont un harnais Node qui exécute réellement la page |
 
 État Git au 7 octobre 2026 : branche `arena/43a71329-d-mocratie-et-politique-du-peu`,

@@ -112,6 +112,9 @@ globalThis.document = {
   body: new Element("body"),
 };
 globalThis.window = globalThis;
+// Adresse de la page : le lien partageable s'y construit. Sans elle, le
+// script lèverait une erreur au lieu de fabriquer une adresse.
+globalThis.location = { origin: "http://127.0.0.1:8000", pathname: "/", search: "" };
 globalThis.alert = (message) => { rapport.alertes.push(String(message)); };
 globalThis.Blob = class Blob {
   constructor(parties) { this.parties = parties; this.contenu = parties.join(""); }
@@ -222,11 +225,19 @@ const programme = `
                        'texteAideLevier','texteAideElement','puceHtml',
                        'extraireEurostat','extraireSdmx','extraireGenerique',
                        'afficherOngletStrate','renderOngletsStrates','rafraichirMarches',
-                       'calculerStressMarche','modifierStressMarche','modifierExpositionActeur']) {
+                       'calculerStressMarche','modifierStressMarche','modifierExpositionActeur',
+                       'chargerLexique','definirLexique','baliserTermes','appliquerLexique',
+                       'marquerTextes','rendreLexique','filtrerLexique','ouvrirLexique',
+                       'ouvrirModale','fermerModale','ouvrirGuide','contenuGuide','guideDejaVu',
+                       'reglagesModifies','lienReglages','reglagesDepuisLien','appliquerLien',
+                       'partagerReglages','avisLien',
+                       'renderLecture','marquerSommaire','contenuOngletStrate','rendreOngletStrate']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
-                        SORTIE: SORTIE, MARCHES: MARCHES, ONGLET_STRATE_ACTIF: ONGLET_STRATE_ACTIF });
+                        SORTIE: SORTIE, MARCHES: MARCHES, ONGLET_STRATE_ACTIF: ONGLET_STRATE_ACTIF,
+                        LEXIQUE: LEXIQUE, LEXIQUE_PAR_CLE: LEXIQUE_PAR_CLE,
+                        REGEX_TERMES: REGEX_TERMES });
     return api;
   })()
 `;
@@ -260,14 +271,36 @@ noter("affiche les métriques du contexte instant T", contenu("grid-metrics").in
 noter("affiche la provenance des chiffres", contenu("provenance").length > 200);
 noter("affiche l'impact du préréglage de démarrage", contenu("grid-impact").includes("carte metric"));
 noter("remplit le tableau année par année", contenu("results-table").includes("<tbody>"));
-noter("les onglets local, national, européen, mondial, géopolitique, ménages et boursier sont rendus",
-      contenu("panneau-strate-local").includes("Finances locales observées")
-      && contenu("panneau-strate-national").includes("Comptes nationaux simulés")
-      && contenu("panneau-strate-europe").includes("Indicateurs européens simulés")
-      && contenu("panneau-strate-mondial").includes("Trajectoire mondiale du moteur")
-      && contenu("panneau-strate-geopolitique").includes("Indice de tension géopolitique")
-      && contenu("menage-resultats").includes("Profil modifiable")
-      && contenu("panneau-strate-boursier").includes("Rafraîchir les cotations"));
+/* Rendu des onglets : seul l'onglet ouvert est construit, les autres attendent
+   d'être activés. On parcourt donc les sept onglets un par un — c'est le
+   trajet réel d'un lecteur — et l'on vérifie que chacun se remplit à
+   l'activation. Le panneau qui n'a pas encore été visité reste vide : c'est
+   l'économie de calcul recherchée. */
+const attendusOnglets = {
+  local: "Finances locales observées",
+  national: "Comptes nationaux simulés",
+  europe: "Indicateurs européens simulés",
+  mondial: "Trajectoire mondiale du moteur",
+  geopolitique: "Indice de tension géopolitique",
+  menages: "Profil modifiable",
+  boursier: "Rafraîchir les cotations",
+};
+noter("l'onglet ouvert au démarrage est le seul rendu avant toute visite",
+      contenu("panneau-strate-local").includes(attendusOnglets.local)
+      && contenu("panneau-strate-national") === "",
+      `national : ${contenu("panneau-strate-national").length} caractère(s)`);
+for (const cle of Object.keys(attendusOnglets)) {
+  apiPage.afficherOngletStrate(cle);
+  for (let i = 0; i < 2; i += 1) await tourner();
+}
+noter("les onglets local, national, européen, mondial, géopolitique, ménages et boursier se rendent à l'ouverture",
+      Object.keys(attendusOnglets).every((cle) => {
+        const cible = cle === "menages" ? "menage-resultats" : `panneau-strate-${cle}`;
+        return contenu(cible).includes(attendusOnglets[cle]);
+      }),
+      Object.keys(attendusOnglets)
+        .filter((cle) => !contenu(cle === "menages" ? "menage-resultats" : `panneau-strate-${cle}`)
+          .includes(attendusOnglets[cle])).join(", ") || "les sept vues sont rendues");
 const clesOnglets = ['local','national','europe','mondial','geopolitique','menages','boursier'];
 clesOnglets.forEach(cle => apiPage.afficherOngletStrate(cle));
 noter("la navigation active les sept onglets au clavier et par ARIA",
@@ -500,6 +533,73 @@ noter("l'effet de la dernière modification est affiché",
       || contenu("console-derniere-modification").includes("modifié"),
       contenu("console-derniere-modification").slice(0, 140));
 
+/* 3 quater. Lecture en clair : les mêmes chiffres, en phrases ordinaires. */
+const lecture = apiPage.etat().SORTIE?.lecture || {};
+const lignesClaires = lecture.lignes || [];
+noter("la simulation porte une lecture en clair", lignesClaires.length >= 3,
+      `${lignesClaires.length} phrase(s)`);
+noter("chaque phrase de la lecture est complète et pondérée",
+      lignesClaires.every(ligne => typeof ligne.texte === "string" && ligne.texte.length > 40
+        && typeof ligne.niveau === "string" && typeof ligne.valeur === "string"),
+      lignesClaires.map(ligne => ligne.niveau).join(", "));
+noter("la lecture est rendue dans la page", contenu("clair-lignes").includes("clair-ligne")
+      && (contenu("clair-lignes").match(/clair-ligne/g) || []).length >= 3,
+      `${(contenu("clair-lignes").match(/clair-ligne/g) || []).length} ligne(s) affichée(s)`);
+noter("la lecture rappelle ses limites", (contenu("clair-limites").match(/<li>/g) || []).length >= 2,
+      `${(contenu("clair-limites").match(/<li>/g) || []).length} limite(s) affichée(s)`);
+noter("la synthèse de lecture est affichée",
+      (elements.get("clair-resume")?.textContent || "").length > 30,
+      elements.get("clair-resume")?.textContent);
+
+/* 3 quinquies. Lexique : le jargon expliqué, souligné et cherchable. */
+await apiPage.chargerLexique();
+const lexiqueCharge = apiPage.etat();
+noter("le lexique est chargé depuis l'API",
+      Object.keys(lexiqueCharge.LEXIQUE_PAR_CLE || {}).length >= 40,
+      `${Object.keys(lexiqueCharge.LEXIQUE_PAR_CLE || {}).length} terme(s) indexé(s)`);
+const balise = apiPage.baliserTermes("<p>Le spread et la dette publique augmentent.</p>");
+noter("les termes techniques sont soulignés dans les textes",
+      (balise.match(/class="terme"/g) || []).length >= 2, balise.slice(0, 160));
+noter("le soulignement ne touche jamais l'intérieur d'une balise",
+      apiPage.baliserTermes('<span data-aide="<b>PIB</b> dette">le PIB</span>')
+        .includes('data-aide="<b>PIB</b> dette"'),
+      apiPage.baliserTermes('<span data-aide="<b>PIB</b> dette">le PIB</span>'));
+noter("un terme déjà souligné n'est pas réenveloppé",
+      apiPage.baliserTermes(balise) === balise);
+apiPage.ouvrirLexique("");
+for (let i = 0; i < 2; i += 1) await tourner();
+noter("le lexique s'ouvre dans une modale",
+      elements.get("overlay")?.classList.contains("visible") === true);
+noter("le lexique regroupe ses termes par catégorie",
+      (contenu("modale-corps").match(/lexique-categorie/g) || []).length >= 4,
+      `${(contenu("modale-corps").match(/lexique-categorie/g) || []).length} catégorie(s)`);
+apiPage.filtrerLexique("spread");
+noter("la recherche filtre le lexique",
+      contenu("modale-corps").includes("Spread")
+      && !contenu("modale-corps").includes("Taxe foncière"),
+      contenu("modale-corps").slice(0, 120));
+/* Le balisage s'applique aux textes réellement rendus : la console de veille
+   contient des attributs `data-aide` dont la valeur est du HTML — un « > »
+   interne ne doit pas être pris pour une fin de balise. */
+apiPage.marquerTextes();
+const consoleMarquee = contenu("console-corps");
+noter("le soulignement du lexique ne corrompt pas les aides de la console",
+      contenu("console-corps").includes('data-aide="<b>')
+      || !contenu("console-corps").includes("data-aide="),
+      consoleMarquee.slice(0, 140));
+noter("les textes de la lecture en clair sont balisés à leur tour",
+      contenu("clair-lignes").includes('class="terme"')
+      || !/PIB|dette|déficit/i.test(contenu("clair-lignes")),
+      contenu("clair-lignes").slice(0, 140));
+apiPage.fermerModale();
+noter("la modale se referme",
+      elements.get("overlay")?.classList.contains("visible") === false);
+apiPage.ouvrirGuide();
+noter("le guide de démarrage décrit quatre étapes",
+      (contenu("modale-corps").match(/guide-etape/g) || []).length === 4,
+      `${(contenu("modale-corps").match(/guide-etape/g) || []).length} étape(s)`);
+apiPage.fermerModale();
+
 /* 3 ter. Un préréglage dangereux doit déclencher l'alerte hors-sol. */
 apiPage.chargerPreset("austerite", null);
 for (let i = 0; i < 6; i += 1) await tourner();
@@ -601,6 +701,45 @@ noter("adaptateur Banque mondiale", bm && bm.valeur === 30.4 && bm.periode === "
 const yahoo = apiPage.extraireGenerique("yahoo",
   { chart: { result: [{ meta: { regularMarketPrice: 101.69, regularMarketTime: 1759600000 } }] } }, null);
 noter("adaptateur Yahoo (via proxy)", yahoo && yahoo.valeur === 101.69);
+
+/* 10. Lien partageable : un réglage se transmet par l'adresse, et rien d'autre. */
+apiPage.majLevier(cleLevier, defauts[cleLevier] + 3.0);
+const lienPartage = apiPage.lienReglages();
+noter("le lien partagé reprend l'adresse de la page",
+      lienPartage.startsWith("http://") && lienPartage.includes("?sim="), lienPartage.slice(0, 70));
+const brutLien = new URL(lienPartage).searchParams.get("sim") || "{}";
+const reprisLien = JSON.parse(brutLien);
+noter("le lien ne transporte que les leviers déplacés",
+      Object.keys(reprisLien).length > 0 && Object.keys(reprisLien).length < 40
+      && Object.prototype.hasOwnProperty.call(reprisLien, cleLevier),
+      `${Object.keys(reprisLien).length} levier(s) : ${Object.keys(reprisLien).slice(0, 4).join(", ")}`);
+noter("le lien se relit à l'identique",
+      JSON.stringify(apiPage.reglagesDepuisLien(brutLien)) === JSON.stringify(reprisLien),
+      JSON.stringify(apiPage.reglagesDepuisLien(brutLien)) === JSON.stringify(reprisLien)
+        ? "aller-retour fidèle" : "le contenu relu diffère");
+const hostile = apiPage.reglagesDepuisLien(
+  JSON.stringify({ [cleLevier]: 5, levier_invente: 99, texte: "bonjour", liste: [1, 2] }));
+noter("un lien hostile ne peut pas injecter un réglage inconnu",
+      Object.keys(hostile).length === 1 && hostile[cleLevier] === 5, JSON.stringify(hostile));
+noter("un lien illisible est ignoré sans erreur",
+      Object.keys(apiPage.reglagesDepuisLien("ceci n'est pas du json")).length === 0
+      && Object.keys(apiPage.reglagesDepuisLien(null)).length === 0
+      && Object.keys(apiPage.reglagesDepuisLien(JSON.stringify([1, 2, 3]))).length === 0);
+noter("partager renvoie l'adresse calculée, sans copier dans le vide",
+      (await apiPage.partagerReglages()) === lienPartage);
+noter("un lien absent ne déclenche aucun réglage repris",
+      apiPage.reglagesDepuisLien("").tva_taux_normal === undefined);
+
+/* Le trajet complet : on repart du neutre, puis on ouvre l'adresse. */
+apiPage.majLevier(cleLevier, defauts[cleLevier]);
+globalThis.location.search = "?sim=" + encodeURIComponent(brutLien);
+const applique = apiPage.appliquerLien();
+noter("l'adresse partagée est reprise à l'ouverture de la page",
+      applique === true
+      && apiPage.etat().PARAMS[cleLevier] === defauts[cleLevier] + 3.0
+      && (elements.get("avis-lien")?.textContent || "").includes("levier"),
+      `appliqué : ${applique} · valeur ${apiPage.etat().PARAMS[cleLevier]} · avis « ${elements.get("avis-lien")?.textContent || ""} »`);
+globalThis.location.search = "";
 
 /* ── Rapport ────────────────────────────────────────────────────────────── */
 rapport.elements = Object.fromEntries(

@@ -55,6 +55,7 @@ header.entete{background:linear-gradient(135deg,#12305c,#2b1e56);border:1px soli
 header.entete h1{font-size:1.45rem;letter-spacing:.2px}
 header.entete p{color:var(--texte-dim);font-size:.88rem;margin-top:4px}
 .barre-contexte{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
+.barre-contexte .separateur{width:1px;height:22px;background:var(--border);margin:0 2px}
 .select-horizon{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);
   border-radius:999px;padding:4px 10px;background:var(--panel);color:var(--texte-dim);font-size:.78rem}
 .select-horizon select{font:inherit;color:var(--texte);background:var(--panel-2);border:1px solid var(--border);
@@ -320,6 +321,59 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .audit td.chiffre{font-variant-numeric:tabular-nums;white-space:nowrap}
 .audit .formule{font-family:ui-monospace,Consolas,monospace;font-size:.68rem;color:var(--texte)}
 .audit .source-note{color:#7b8aa5}
+/* ── Sommaire : lire la page dans l'ordre ──────────────────────────────────
+   La page est longue : ce bandeau dit où l'on est et dans quel ordre lire.
+   Il reprend la logique du parcours : comprendre, régler, mesurer, vérifier. */
+.sommaire{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px;padding:8px 10px;
+  background:var(--panel);border:1px solid var(--border);border-radius:12px}
+.sommaire .titre-sommaire{font-size:.68rem;text-transform:uppercase;letter-spacing:.6px;color:var(--texte-dim)}
+.sommaire a{font-size:.75rem;text-decoration:none;color:var(--texte-dim);background:var(--panel-2);
+  border:1px solid var(--border);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.sommaire a:hover{border-color:var(--accent);color:var(--texte)}
+.sommaire a.actif{border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,.12)}
+.sommaire .etape{font-size:.66rem;color:#7b8aa5;padding:0 4px}
+/* ── Lecture en clair ─────────────────────────────────────────────────────
+   Les chiffres du moteur sont justes ; la section « lire le résultat » les
+   remet en phrases. Une ligne par question que l'on se pose vraiment. */
+.clair-resume{background:var(--panel-2);border:1px solid var(--border);border-left:4px solid var(--accent);
+  border-radius:10px;padding:10px 13px;font-size:.88rem;margin-bottom:10px}
+.clair-lignes{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+.clair-ligne{background:var(--panel-2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:.8rem}
+.clair-ligne .clair-tete{display:flex;justify-content:space-between;gap:10px;align-items:baseline;margin-bottom:3px}
+.clair-ligne .clair-grandeur{font-weight:600;font-size:.76rem;color:var(--accent)}
+.clair-ligne .clair-valeur{font-size:.74rem;color:var(--texte);font-variant-numeric:tabular-nums}
+.clair-ligne.niveau-favorable{border-left:3px solid var(--vert)}
+.clair-ligne.niveau-defavorable{border-left:3px solid var(--rouge)}
+.clair-ligne.niveau-neutre{border-left:3px solid var(--border)}
+.clair-ligne .clair-explication{font-size:.7rem;color:var(--texte-dim);margin-top:5px}
+.clair-limites{margin-top:10px;font-size:.72rem;color:var(--texte-dim)}
+.clair-limites li{margin-left:16px}
+/* ── Termes du lexique soulignés dans le texte ──────────────────────────── */
+.terme{border-bottom:1px dotted var(--accent);cursor:help}
+/* ── Modale (lexique et guide) ──────────────────────────────────────────── */
+.overlay{position:fixed;inset:0;z-index:200;background:rgba(2,6,23,.72);display:none;
+  align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
+.overlay.visible{display:flex}
+.modale{background:var(--panel);border:1px solid var(--accent);border-radius:14px;max-width:920px;width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.modale-entete{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;
+  border-bottom:1px solid var(--border)}
+.modale-entete h2{font-size:1rem}
+.modale-corps{padding:14px 18px 18px;max-height:74vh;overflow:auto}
+.lexique-recherche{width:100%;margin-bottom:12px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);
+  background:var(--panel-2);color:var(--texte);font:inherit;font-size:.85rem}
+.lexique-categorie{margin-bottom:14px}
+.lexique-categorie h3{font-size:.85rem;color:var(--accent);margin-bottom:3px}
+.lexique-categorie p{font-size:.74rem;color:var(--texte-dim);margin-bottom:7px}
+.lexique-terme{border-top:1px solid var(--border);padding:7px 0;font-size:.79rem}
+.lexique-terme .lexique-mot{font-weight:600}
+.lexique-terme .lexique-repere{color:var(--texte-dim);font-size:.74rem;margin-top:3px}
+.lexique-terme .lexique-voir{font-size:.72rem;color:var(--accent);margin-top:3px}
+.lexique-vide{color:var(--texte-dim);font-size:.8rem}
+.guide-etape{background:var(--panel-2);border:1px solid var(--border);border-radius:11px;padding:12px 14px;margin-bottom:10px}
+.guide-etape h3{font-size:.88rem;margin-bottom:4px;color:var(--accent)}
+.guide-etape p{font-size:.82rem;color:var(--texte)}
+.guide-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
   .levier.compact{grid-template-columns:1fr 70px auto}}
@@ -342,13 +396,36 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
         </select>
       </label>
       <span class="pastille" id="badge-horizon">une mandature · 5 ans</span>
-      <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données (API publiques)</button>
+      <button id="btn-lexique" onclick="ouvrirLexique()" data-aide="<b>Lexique</b>Chaque mot technique employé par la page, défini en français ordinaire, avec un repère chiffré. Les termes soulignés en pointillé dans la page s'expliquent aussi au survol.">📖 Lexique</button>
+      <button id="btn-guide" onclick="ouvrirGuide()" data-aide="<b>Guide de démarrage</b>Quatre étapes pour comprendre ce que fait le simulateur, ce qu'il mesure et ce qu'il ne mesure pas.">❓ Guide</button>
+      <button id="btn-partage" onclick="partagerReglages()" data-aide="<b>Partager mes réglages</b>Copie une adresse qui rouvre le simulateur exactement sur les réglages affichés. Utile pour soumettre un budget au débat : rien n'est envoyé au serveur, tout est dans le lien.">🔗 Partager mes réglages</button>
+      <span class="separateur" aria-hidden="true"></span>
       <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène tous les réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
+      <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données (API publiques)</button>
       <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule l'horizon sélectionné (5 ou 10 ans), les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Le modèle reste une exploration, pas une prévision.">Simuler avec impacts croisés</button>
+      <span class="separateur" aria-hidden="true"></span>
       <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
       <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
     </div>
+    <p class="aide" id="avis-lien" hidden></p>
   </header>
+
+  <nav class="sommaire" id="sommaire" aria-label="Sommaire de la page">
+    <span class="titre-sommaire">Lire dans l'ordre</span>
+    <a href="#section-contexte" onclick="marquerSommaire(this)">1. Où en est-on</a>
+    <span class="etape">›</span>
+    <a href="#section-clair" onclick="marquerSommaire(this)">2. Ce que ça donne</a>
+    <span class="etape">›</span>
+    <a href="#section-leviers" onclick="marquerSommaire(this)">3. Régler</a>
+    <span class="etape">›</span>
+    <a href="#section-resultats" onclick="marquerSommaire(this)">4. Mesurer</a>
+    <span class="etape">›</span>
+    <a href="#section-audit" onclick="marquerSommaire(this)">5. Vérifier</a>
+    <a href="#console-pilotage" class="discret" style="margin-left:auto" data-aide="<b>Console de veille</b>Le bandeau qui prévient quand un seuil est franchi.">Veille</a>
+    <a href="#section-strates" class="discret" data-aide="<b>Vues par strate</b>Local, national, Europe, monde, géopolitique, ménages, bourse.">Strates</a>
+    <a href="#section-domaines" class="discret" data-aide="<b>Domaines</b>Les 20 secteurs de l'action publique, notés par écart à la référence.">Domaines</a>
+    <a href="#section-matrice" class="discret" data-aide="<b>Matrice</b>L'effet de chaque levier sur chaque domaine, mesuré par différences finies.">Matrice</a>
+  </nav>
 
   <div class="ruban-veille" id="ruban-veille">
     <span class="ruban-titre">Veille permanente</span>
@@ -368,7 +445,17 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 
   <div class="infobulle" id="infobulle" role="tooltip" aria-hidden="true"></div>
 
-  <section class="bloc">
+  <div class="overlay" id="overlay" aria-hidden="true" onclick="siClicDehors(event)">
+    <div class="modale" role="dialog" aria-modal="true" aria-labelledby="modale-titre" id="modale">
+      <div class="modale-entete">
+        <h2 id="modale-titre">Lexique</h2>
+        <button class="discret" onclick="fermerModale()" data-aide="<b>Fermer</b>Revient au simulateur ; le réglage en cours n'est pas perdu.">Fermer ✕</button>
+      </div>
+      <div class="modale-corps" id="modale-corps"></div>
+    </div>
+  </div>
+
+  <section class="bloc" id="section-contexte">
     <h2>Contexte « instant T » <span class="aide">données publiques réellement collectées, avec provenance et licence</span></h2>
     <div class="grille metrics" id="grid-metrics"></div>
   </section>
@@ -402,7 +489,14 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     </div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-clair">
+    <h2>🧭 Lire le résultat <span class="aide">la même simulation, expliquée phrase par phrase — sans jargon, à partir des chiffres déjà calculés</span></h2>
+    <div class="clair-resume" id="clair-resume">en attente de la première simulation…</div>
+    <div class="clair-lignes" id="clair-lignes"></div>
+    <ul class="clair-limites" id="clair-limites"></ul>
+  </section>
+
+  <section class="bloc" id="section-impact">
     <h2>Surface d'impact de vos choix <span class="aide">recettes, dépenses et solde des mesures activées (année terminale)</span></h2>
     <div class="grille metrics" id="grid-impact"></div>
   </section>
@@ -412,7 +506,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="grille metrics" id="bilan-intergenerationnel"></div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-cascade">
     <h2>Cascade systémique des 5 échelons <span class="aide">locale → nationale → européenne → mondiale → géopolitique</span></h2>
     <div class="strates-cascade" id="strates-cascade"></div>
   </section>
@@ -438,12 +532,12 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="panneau-strate" id="panneau-strate-boursier" role="tabpanel" aria-labelledby="tab-strate-boursier"></div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-scenarios">
     <h2>Scénarios types du dépôt <span class="aide">situations rejouées par le moteur d'origine, année par année — pour comparaison</span></h2>
     <div class="grille scenarios" id="scenario-grid"></div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-presets">
     <h2>Préréglages doctrinaux <span class="aide">des combinaisons cohérentes de leviers, chargées dans le simulateur puis ajustables curseur par curseur</span></h2>
     <div class="grille scenarios" id="preset-grid"></div>
   </section>
@@ -460,32 +554,32 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="leviers-grille" id="leviers-grille"></div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-resultats">
     <h2>Résultats année par année <span class="aide">tableau détaillé des 5 échelons</span></h2>
     <div class="defilable"><table id="results-table"></table></div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-trajectoires">
     <h2>Trajectoires clés <span class="aide">déficit, dette, taux OAT, tension sociale et confiance</span></h2>
     <svg class="svg-chart" id="svg-chart" viewBox="0 0 900 210" preserveAspectRatio="none"></svg>
   </section>
 
-  <section class="bloc">
-    <h2>Domaines d'action publique <span class="aide">score 0-100 (50 = situation de départ) et indicateurs concrets</span></h2>
+  <section class="bloc" id="section-domaines">
+    <h2>Domaines d'action publique <span class="aide">score 0-100 (50 = aucun écart avec la référence) et indicateurs concrets</span></h2>
     <div class="grille domaines" id="domaines-grille"></div>
   </section>
 
-  <section class="bloc">
-    <h2>Matrice croisée levier × domaine <span class="aide">effet marginal de chaque levier actif, calculé par le modèle (différences finies)</span></h2>
+  <section class="bloc" id="section-matrice">
+    <h2>Matrice croisée levier × domaine <span class="aide">effet marginal de chaque levier actif, calculé par le modèle (différences finies) — <span id="matrice-fraicheur">en attente d'une simulation complète</span></span></h2>
     <div class="defilable"><table class="matrice" id="matrice-impacts"></table></div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-journal">
     <h2>Journal causal du moteur <span class="aide">rétroactions générées année par année</span></h2>
     <div class="journal" id="journal"></div>
   </section>
 
-  <section class="bloc">
+  <section class="bloc" id="section-provenance">
     <h2>Sources, licences et fraîcheur <span class="aide">ce que le simulateur sait, et ce qu'il ne sait pas</span></h2>
     <div class="provenance" id="provenance"></div>
   </section>
@@ -534,7 +628,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.8.0 (2026-10-07) — strates, profil ménages et cotations indicatives; rechargez la page (F5).</span>
+    <span class="aide" id="version-interface">Interface v1.10.0 (2026-10-08) — partagez vos réglages par lien, même routeur en local et en ligne; rechargez la page (F5).</span>
   </p>
 </div>
 
@@ -742,6 +836,30 @@ function renderContexte(){
 /* ── Vues par strate : trajectoire comparée et profil ménage local ─────── */
 const CLES_ONGLETS_STRATE = ['local','national','europe','mondial','geopolitique','menages','boursier'];
 let ANNEE_MENAGE = 0;
+function contenuOngletStrate(cle, donnees){
+  switch (cle){
+    case 'local': return afficherLocal(donnees);
+    case 'national': return afficherNational(donnees);
+    case 'europe': return afficherEurope(donnees);
+    case 'mondial': return afficherMonde(donnees);
+    case 'geopolitique': return afficherGeopolitique(donnees);
+    case 'menages': return afficherMenages(donnees);
+    case 'boursier': return contenuBoursier();
+    default: return '';
+  }
+}
+function rendreOngletStrate(cle, donnees){
+  // Rendu à la demande. Les sept vues (tableaux, profil de ménage, cotations)
+  // représentaient l'essentiel du travail d'affichage à chaque simulation ;
+  // reconstruire six panneaux que personne ne regarde faisait perdre ce temps
+  // à chaque mouvement de curseur. On ne construit que l'onglet visible, et on
+  // le (re)construit au moment où il devient visible.
+  const panneau = document.getElementById(`panneau-strate-${cle}`);
+  if (!panneau) return;
+  panneau.innerHTML = contenuOngletStrate(cle, donnees) || '';
+  if (cle === 'menages') rendreResultatsMenage(donnees, ANNEE_MENAGE);
+  if (cle === 'boursier') renderResultatsBoursiers();
+}
 function afficherOngletStrate(cle){
   if (!CLES_ONGLETS_STRATE.includes(cle)) return;
   ONGLET_STRATE_ACTIF = cle;
@@ -755,6 +873,7 @@ function afficherOngletStrate(cle){
     }
     if (panneau) panneau.className = nom === cle ? 'panneau-strate actif' : 'panneau-strate';
   });
+  if (SORTIE) rendreOngletStrate(cle, SORTIE);
 }
 function afficherNombre(valeur, precision, unite){
   return `${fmt(valeur, precision)}${unite ? ` ${unite}` : ''}`;
@@ -1191,10 +1310,9 @@ async function rafraichirMarches(silencieux){
   }finally{if(bouton){bouton.disabled=false;bouton.textContent='⟳ Rafraîchir les cotations';}renderOngletsStrates(SORTIE);}
 }
 function renderOngletsStrates(donnees){
+  // Seul l'onglet ouvert est (re)construit : voir `rendreOngletStrate`.
   if(!donnees)return;
-  const panels={local:afficherLocal(donnees),national:afficherNational(donnees),europe:afficherEurope(donnees),mondial:afficherMonde(donnees),geopolitique:afficherGeopolitique(donnees),menages:afficherMenages(donnees),boursier:contenuBoursier()};
-  CLES_ONGLETS_STRATE.forEach(cle=>{const panel=document.getElementById(`panneau-strate-${cle}`);if(panel)panel.innerHTML=panels[cle]||'';});
-  afficherOngletStrate(ONGLET_STRATE_ACTIF);renderResultatsMenage(donnees);renderResultatsBoursiers();
+  rendreOngletStrate(ONGLET_STRATE_ACTIF, donnees);
 }
 
 function extraireEurostat(charge, chemin){
@@ -1969,6 +2087,387 @@ function afficherScenarioHistorique(donnees){
   activerExports();
 }
 
+/* ── Lexique : le vocabulaire de la page, en français ordinaire ─────────────
+   Le simulateur emploie des mots de métier (spread, PDE, point de base…). Ce
+   lexique les définit sans jargon, les souligne dans les textes affichés et
+   s'ouvre aussi en panneau complet. Rien n'est inventé ici : chaque définition
+   renvoie à une grandeur réellement calculée par le modèle.                  */
+let LEXIQUE = null;
+let LEXIQUE_PAR_CLE = {};
+let TABLE_TERMES = {};
+let REGEX_TERMES = null;
+
+function formeMarquable(forme){
+  // On ne souligne ni les formes trop courtes (faux positifs en pagaille),
+  // ni celles qui contiennent un chiffre (« 3 % », « OAT 10 ans »).
+  if (!forme || forme.length < 3) return false;
+  if (/[0-9]/.test(forme)) return false;
+  return true;
+}
+
+function definirLexique(donnees){
+  LEXIQUE = donnees;
+  LEXIQUE_PAR_CLE = {};
+  (donnees.termes || []).forEach(terme => { LEXIQUE_PAR_CLE[terme.cle] = terme; });
+  TABLE_TERMES = {};
+  const formes = [];
+  (donnees.formes || []).forEach(item => {
+    if (!formeMarquable(item.forme)) return;
+    TABLE_TERMES[item.forme.toLowerCase()] = item.cle;
+    formes.push(item.forme.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  });
+  formes.sort((a, b) => b.length - a.length);
+  // Bornes « lettre » et non « \b » : \b est ASCII, il se trompe sur « été ».
+  REGEX_TERMES = formes.length
+    ? new RegExp('(?<![\\p{L}\\d])(' + formes.join('|') + ')(?![\\p{L}\\d])', 'giu')
+    : null;
+}
+
+async function chargerLexique(){
+  if (LEXIQUE) return LEXIQUE;
+  try {
+    const reponse = await fetch('/api/lexique');
+    const donnees = await reponse.json();
+    if (donnees && donnees.termes) definirLexique(donnees);
+  } catch (erreur){
+    /* Le lexique est un confort : une route muette ne casse pas la page. */
+  }
+  return LEXIQUE;
+}
+
+function echapperAttribut(texte){
+  return echapperTexte(texte || '').replace(/"/g, '&quot;');
+}
+
+function marquerUnTerme(trouve){
+  const cle = TABLE_TERMES[trouve.toLowerCase()];
+  const terme = cle ? LEXIQUE_PAR_CLE[cle] : null;
+  if (!terme) return trouve;
+  const aide = `<b>${echapperAttribut(terme.terme)}</b>${echapperAttribut(terme.definition)}`
+    + (terme.repere ? `<br><i>Repère :</i> ${echapperAttribut(terme.repere)}` : '')
+    + '<br><i>Du lexique — « 📖 Lexique » en haut de page pour tout lire.</i>';
+  return `<span class="terme" data-aide="${aide}">${trouve}</span>`;
+}
+
+function baliserTermes(html){
+  if (!REGEX_TERMES || !html) return html;
+  const texte = String(html);
+  // Déjà balisé : on ne réécrit pas par-dessus (sinon les balises s'imbriquent).
+  if (texte.indexOf('class="terme"') !== -1) return texte;
+  let sortie = '';
+  let i = 0;
+  while (i < texte.length){
+    const ouvrant = texte.indexOf('<', i);
+    if (ouvrant === -1){ sortie += texte.slice(i).replace(REGEX_TERMES, marquerUnTerme); break; }
+    sortie += texte.slice(i, ouvrant).replace(REGEX_TERMES, marquerUnTerme);
+    // On recopie la balise telle quelle : le « > » qui la ferme peut être
+    // à l'intérieur d'un attribut (data-aide contient du HTML), donc on
+    // parcourt la balise en respectant les guillemets au lieu de s'arrêter
+    // au premier « > » venu — sinon on injecterait des balises dans un
+    // attribut et la page serait cassée.
+    let j = ouvrant + 1;
+    let guillemet = null;
+    while (j < texte.length){
+      const caractere = texte[j];
+      if (guillemet){
+        if (caractere === guillemet) guillemet = null;
+      } else if (caractere === '"' || caractere === "'"){
+        guillemet = caractere;
+      } else if (caractere === '>'){
+        j += 1;
+        break;
+      }
+      j += 1;
+    }
+    sortie += texte.slice(ouvrant, j);
+    i = j;
+  }
+  return sortie;
+}
+
+function appliquerLexique(id){
+  const zone = document.getElementById(id);
+  if (!zone || !REGEX_TERMES) return;
+  zone.innerHTML = baliserTermes(zone.innerHTML);
+}
+
+function marquerTextes(){
+  if (!REGEX_TERMES) return;
+  ['section-clair', 'clair-lignes', 'zone-alertes', 'console-corps', 'provenance']
+    .forEach(appliquerLexique);
+}
+
+/* ── Modale : lexique et guide ──────────────────────────────────────────── */
+function ouvrirModale(titre, contenuHtml){
+  const overlay = document.getElementById('overlay');
+  const corps = document.getElementById('modale-corps');
+  const titreModale = document.getElementById('modale-titre');
+  if (!overlay || !corps) return;
+  if (titreModale) titreModale.textContent = titre;
+  corps.innerHTML = contenuHtml || '';
+  overlay.classList.add('visible');
+  overlay.setAttribute('aria-hidden', 'false');
+  masquerInfobulle();
+}
+
+function fermerModale(){
+  const overlay = document.getElementById('overlay');
+  if (!overlay) return;
+  overlay.classList.remove('visible');
+  overlay.setAttribute('aria-hidden', 'true');
+}
+
+function siClicDehors(evenement){
+  if (evenement && evenement.target && evenement.target.id === 'overlay') fermerModale();
+}
+
+function rendreLexique(recherche){
+  const corps = document.getElementById('modale-corps');
+  if (!corps) return;
+  if (!LEXIQUE){
+    corps.innerHTML = '<div class="lexique-vide">Lexique en cours de chargement…</div>';
+    return;
+  }
+  const motif = (recherche || '').trim().toLowerCase();
+  const garder = terme => !motif
+    || String(terme.terme).toLowerCase().includes(motif)
+    || String(terme.definition).toLowerCase().includes(motif)
+    || String(terme.repere).toLowerCase().includes(motif)
+    || (terme.formes || []).some(forme => String(forme).toLowerCase().includes(motif));
+  const libellesVoir = cles => (cles || [])
+    .map(cle => (LEXIQUE_PAR_CLE[cle] || {}).terme || cle)
+    .map(echapperTexte).join(' · ');
+  const groupes = (LEXIQUE.categories || []).map(categorie => {
+    const termes = (LEXIQUE.termes || []).filter(
+      terme => terme.categorie === categorie.cle && garder(terme));
+    if (!termes.length) return '';
+    return `<div class="lexique-categorie">
+      <h3>${echapperTexte(categorie.libelle)}</h3>
+      <p>${echapperTexte(categorie.introduction)}</p>
+      ${termes.map(terme => `<div class="lexique-terme">
+        <div class="lexique-mot">${echapperTexte(terme.terme)}</div>
+        <div>${echapperTexte(terme.definition)}</div>
+        ${terme.repere ? `<div class="lexique-repere">Repère : ${echapperTexte(terme.repere)}</div>` : ''}
+        ${(terme.voir || []).length ? `<div class="lexique-voir">Voir aussi : ${libellesVoir(terme.voir)}</div>` : ''}
+      </div>`).join('')}
+    </div>`;
+  }).join('');
+  const precision = motif
+    ? ` — filtré par « ${echapperTexte(motif)} »`
+    : ' — le jargon du simulateur, expliqué sans jargon.';
+  corps.innerHTML =
+    `<input class="lexique-recherche" id="lexique-champ" aria-label="Rechercher un terme du lexique"
+       placeholder="Chercher un mot : spread, dette, pouvoir d'achat…"
+       value="${echapperAttribut(recherche || '')}" oninput="filtrerLexique(this.value)">
+     <div class="aide" style="margin-bottom:10px">${LEXIQUE.nombre} mot(s) sur ${LEXIQUE.total}${precision}</div>
+     ${groupes || '<div class="lexique-vide">Aucun terme ne correspond à cette recherche.</div>'}`;
+}
+
+function filtrerLexique(valeur){
+  rendreLexique(valeur);
+  const champ = document.getElementById('lexique-champ');
+  if (champ && typeof champ.focus === 'function'){
+    champ.focus();
+    if (typeof champ.setSelectionRange === 'function'){
+      const fin = String(champ.value || '').length;
+      champ.setSelectionRange(fin, fin);
+    }
+  }
+}
+
+async function ouvrirLexique(recherche){
+  await chargerLexique();
+  ouvrirModale('📖 Lexique — les mots du simulateur, en français ordinaire', '');
+  rendreLexique(recherche || '');
+  const champ = document.getElementById('lexique-champ');
+  if (champ && typeof champ.focus === 'function') champ.focus();
+}
+
+/* ── Guide de démarrage : quatre étapes, pas de jargon ──────────────────── */
+const ETAPES_GUIDE = [
+  ['Vous êtes aux commandes',
+   'Les réglages plus bas sont des décisions publiques possibles : un taux, une règle, une dépense. '
+   + 'Bougez-en un seul et tout se recalcule — budget, dette, emploi, climat social. Rien n\'est '
+   + 'envoyé nulle part : le calcul se fait sur le serveur, vos réglages restent votre affaire.'],
+  ['Tout est comparé à une référence',
+   'Le simulateur recalcule toujours, en parallèle, ce qui se passerait sans votre décision. Les '
+   + 'chiffres affichés sont donc des ÉCARTS par rapport à cette référence : un score de 50 veut '
+   + 'dire « aucun effet », ce n\'est ni une bonne ni une mauvaise note.'],
+  ['La veille vous prévient',
+   'Le bandeau collé en haut indique si la trajectoire franchit un seuil : tolérable, vigilance, '
+   + 'risqué, hors-sol. Ce sont des repères du modèle — pas des seuils officiels, sauf quand la '
+   + 'source est citée.'],
+  ['Vérifiez tout',
+   'Chaque donnée a une source, chaque indicateur une formule, chaque seuil un barème : tout est '
+   + 'dans « 🔍 Audit &amp; traçabilité », en bas de page. Et gardez en tête la règle du dépôt : '
+   + 'un modèle n\'est pas une prophétie.'],
+];
+
+function contenuGuide(){
+  return ETAPES_GUIDE.map(([titre, texte], rang) =>
+    `<div class="guide-etape"><h3>${rang + 1}. ${titre}</h3><p>${texte}</p></div>`).join('')
+    + '<div class="guide-actions">'
+    + '<button class="primaire" onclick="fermerModale()">Compris, commencer</button>'
+    + '<button onclick="fermerModale();ouvrirLexique(\'\')">📖 Ouvrir le lexique</button>'
+    + '</div>'
+    + '<div class="aide" style="margin-top:10px">Vous pourrez rouvrir ce guide et le lexique à '
+    + 'tout moment depuis les boutons en haut de page.</div>';
+}
+
+function ouvrirGuide(){
+  ouvrirModale('❓ Comment lire ce simulateur', contenuGuide());
+}
+
+function guideDejaVu(){
+  try {
+    return typeof localStorage !== 'undefined'
+      && localStorage.getItem('simulateur_guide_vu') === '1';
+  } catch (erreur){
+    return false; // navigation privée, stockage refusé : on montre le guide
+  }
+}
+
+function marquerGuideVu(){
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem('simulateur_guide_vu', '1');
+  } catch (erreur){ /* sans conséquence */ }
+}
+
+/* ── Réglages partageables par lien ─────────────────────────────────────────
+   Un budget se discute : encore faut-il pouvoir le montrer. Le lien ne
+   transporte que les leviers réellement déplacés, relus par-dessus les valeurs
+   neutres à l'ouverture — quelques centaines de caractères, jamais les 101
+   paramètres. Rien ne quitte le navigateur et rien n'est envoyé au serveur :
+   l'adresse suffit, elle se colle dans un message ou un tract. */
+function reglagesModifies(){
+  const defauts = (CATALOGUE && CATALOGUE.parametres && CATALOGUE.parametres.defauts) || {};
+  const modifies = {};
+  Object.keys(PARAMS).forEach(cle => {
+    if (PARAMS[cle] !== defauts[cle]) modifies[cle] = PARAMS[cle];
+  });
+  return modifies;
+}
+
+function lienReglages(){
+  const modifies = reglagesModifies();
+  const base = (window.location && window.location.origin ? window.location.origin : '')
+    + (window.location && window.location.pathname ? window.location.pathname : '/');
+  if (!Object.keys(modifies).length) return base;
+  return base + '?sim=' + encodeURIComponent(JSON.stringify(modifies));
+}
+
+function reglagesDepuisLien(texte){
+  /* Une adresse se transmet de main en main : on n'en croit jamais le contenu.
+     Seuls les leviers réellement présents dans le catalogue sont repris, et
+     seulement si la valeur est un nombre — jamais une chaîne, jamais une clé
+     inconnue. Aucune valeur n'est injectée dans le HTML. */
+  const defauts = (CATALOGUE && CATALOGUE.parametres && CATALOGUE.parametres.defauts) || {};
+  const repris = {};
+  if (!texte) return repris;
+  let brut;
+  try { brut = JSON.parse(texte); } catch (erreur){ return repris; }
+  if (!brut || typeof brut !== 'object' || Array.isArray(brut)) return repris;
+  Object.keys(brut).forEach(cle => {
+    const valeur = brut[cle];
+    if (Object.prototype.hasOwnProperty.call(defauts, cle)
+        && typeof valeur === 'number' && isFinite(valeur)) repris[cle] = valeur;
+  });
+  return repris;
+}
+
+function avisLien(nombre){
+  const zone = document.getElementById('avis-lien');
+  if (!zone) return;
+  zone.textContent = `Réglages repris du lien : ${nombre} levier`
+    + (nombre > 1 ? 's' : '') + ' replacé' + (nombre > 1 ? 's' : '')
+    + '. Modifiez-les, comparez, puis partagez à votre tour.';
+  zone.hidden = false;
+}
+
+function appliquerLien(){
+  /* Renvoie vrai si l'adresse portait des réglages : le programme de départ
+     (« mandature ») est alors laissé de côté, sinon il s'ajouterait aux
+     réglages repris et le lien ne décrirait plus ce que l'on a partagé. */
+  const texte = (typeof URLSearchParams !== 'undefined' && window.location)
+    ? new URLSearchParams(window.location.search).get('sim') : null;
+  const repris = reglagesDepuisLien(texte);
+  const nombre = Object.keys(repris).length;
+  if (!nombre) return false;
+  PARAMS = Object.assign({}, PARAMS, repris);
+  avisLien(nombre);
+  return true;
+}
+
+async function partagerReglages(){
+  const lien = lienReglages();
+  const bouton = document.getElementById('btn-partage');
+  const libelle = bouton ? bouton.textContent : '';
+  const pressePapiers = typeof navigator !== 'undefined' && navigator.clipboard
+    && typeof navigator.clipboard.writeText === 'function';
+  if (pressePapiers){
+    try {
+      await navigator.clipboard.writeText(lien);
+      if (bouton){
+        bouton.textContent = '✅ Lien copié';
+        setTimeout(() => { bouton.textContent = libelle; }, 2500);
+      }
+      return lien;
+    } catch (erreur){ /* repli : on montre l'adresse */ }
+  }
+  /* Sans presse-papiers accessible (navigation non chiffrée, vieux
+     navigateur), l'adresse reste recopiable à la main. */
+  if (typeof window !== 'undefined' && typeof window.prompt === 'function'){
+    window.prompt('Copiez cette adresse : elle rouvre le simulateur sur vos réglages.', lien);
+  }
+  return lien;
+}
+
+/* ── Sommaire : situer le lecteur dans la page ──────────────────────────── */
+function initialiserModale(){
+  if (!document.addEventListener) return;
+  document.addEventListener('keydown', evenement => {
+    if (evenement && evenement.key === 'Escape') fermerModale();
+  });
+}
+
+function marquerSommaire(lien){
+  if (!document.querySelectorAll) return;
+  document.querySelectorAll('.sommaire a').forEach(ancre => ancre.classList.remove('actif'));
+  if (lien && lien.classList) lien.classList.add('actif');
+}
+
+/* ── Lecture en clair ─────────────────────────────────────────────────────
+   Le moteur produit des nombres exacts et illisibles. La section « Lire le
+   résultat » les remet en phrases, à partir des mêmes chiffres — jamais à
+   côté d'eux. Aucune phrase n'ajoute d'information absente de la sortie.   */
+function renderLecture(donnees){
+  const zoneResume = document.getElementById('clair-resume');
+  const zoneLignes = document.getElementById('clair-lignes');
+  const zoneLimites = document.getElementById('clair-limites');
+  if (!zoneResume || !zoneLignes) return;
+  const lecture = (donnees && donnees.lecture) || null;
+  if (!lecture || !(lecture.lignes || []).length){
+    zoneResume.textContent = 'La lecture en clair apparaît après la première simulation.';
+    zoneLignes.innerHTML = '';
+    if (zoneLimites) zoneLimites.innerHTML = '';
+    return;
+  }
+  zoneResume.textContent = lecture.resume || '';
+  zoneLignes.innerHTML = (lecture.lignes || []).map(ligne =>
+    `<div class="clair-ligne niveau-${ligne.niveau || 'neutre'}">
+       <div class="clair-tete">
+         <span class="clair-grandeur">${echapperTexte(ligne.grandeur)}</span>
+         <span class="clair-valeur">${echapperTexte(ligne.valeur)}</span>
+       </div>
+       <div>${echapperTexte(ligne.texte)}</div>
+       <div class="clair-explication">${echapperTexte(ligne.explication || '')}</div>
+     </div>`).join('');
+  if (zoneLimites){
+    zoneLimites.innerHTML = (lecture.limites || [])
+      .map(limite => `<li>${echapperTexte(limite)}</li>`).join('');
+  }
+}
+
 /* ── Simulation paramétrique ────────────────────────────────────────────── */
 async function simuler(avecImpacts){
   const bouton = document.getElementById('btn-simuler');
@@ -1985,6 +2484,7 @@ async function simuler(avecImpacts){
     if (donnees.error){ alert('Erreur de simulation : ' + donnees.error); return; }
     SORTIE = donnees;
     renderImpact(donnees);
+    renderLecture(donnees);
     renderBilanIntergenerationnel(donnees);
     renderStrates(donnees);
     renderOngletsStrates(donnees);
@@ -1996,6 +2496,8 @@ async function simuler(avecImpacts){
     renderAlertes(donnees);
     renderConsole(donnees);
     renderCoutGlobal(donnees);
+    // Les termes techniques des textes affichés deviennent lisibles au survol.
+    marquerTextes();
     renderDerniereModification(SIMULATION_PRECEDENTE,
                                {parametres: parametresEnvoyes, sortie: donnees});
     majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
@@ -2481,11 +2983,24 @@ function renderDomaines(donnees){
     </div>`;
   }).join('');
 }
+let DERNIERE_MATRICE = '';
 function renderMatrice(donnees){
+  const zone = document.getElementById('matrice-impacts');
+  if (!zone) return;
+  const fraicheur = document.getElementById('matrice-fraicheur');
   const impacts = donnees.impacts || [];
   if (!impacts.length){
-    document.getElementById('matrice-impacts').innerHTML =
+    // Pendant qu'un curseur bouge, la matrice exigerait une simulation par
+    // levier : l'écran se figerait. On garde la dernière matrice calculée et
+    // on l'annonce, plutôt que d'effacer l'information sous les yeux.
+    if (DERNIERE_MATRICE){
+      zone.innerHTML = DERNIERE_MATRICE;
+      if (fraicheur) fraicheur.textContent = 'dernière matrice calculée — « Simuler avec impacts croisés » la remet à jour';
+      return;
+    }
+    zone.innerHTML =
       '<tbody><tr><td>Aucun levier actif : activez des leviers puis lancez « Simuler avec impacts croisés ».</td></tr></tbody>';
+    if (fraicheur) fraicheur.textContent = 'en attente d\'une simulation complète';
     return;
   }
   const domaines = donnees.domaines.map(d => d.cle);
@@ -2502,7 +3017,9 @@ function renderMatrice(donnees){
     }).join('');
     html += `<tr><td>${impact.libelle}</td>${cellules}</tr>`;
   });
-  document.getElementById('matrice-impacts').innerHTML = html + '</tbody>';
+  DERNIERE_MATRICE = html + '</tbody>';
+  zone.innerHTML = DERNIERE_MATRICE;
+  if (fraicheur) fraicheur.textContent = 'calculée à la dernière simulation complète';
 }
 function renderJournal(donnees){
   const lignes = (donnees.journal || []).map(texte => `<div>${texte}</div>`).join('');
@@ -2689,13 +3206,25 @@ async function chargerAudit(){
 (async function demarrer(){
   await chargerCatalogue();
   initialiserInfobulles();
+  initialiserModale();
   renderScenarios();
   await chargerContexte(false);
   chargerAudit();
-  chargerPreset('mandature', null);
+  // Le lexique se charge en tâche de fond : les termes soulignés apparaissent
+  // dès la première simulation, sans rien retarder.
+  chargerLexique();
+  // Une adresse partagée décrit déjà un réglage complet : le programme de
+  // départ ne s'y ajoute pas, sinon le lien ne rouvrirait pas la même chose.
+  const depuisLien = appliquerLien();
+  if (depuisLien) simuler(true); else chargerPreset('mandature', null);
   activerExports();
   // Premier relevé de cotations séparé, sans retarder l'initialisation du moteur.
   rafraichirMarches(true);
+  // Guide de première visite : quatre étapes, jamais imposé deux fois.
+  if (!guideDejaVu()){
+    ouvrirGuide();
+    marquerGuideVu();
+  }
 })();
 </script>
 </body>

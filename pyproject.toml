@@ -42,6 +42,9 @@ dev = [
 benchmark = [
     "pytest-benchmark>=4.0",
 ]
+serveur = [
+    "gunicorn>=22.0",
+]
 
 [project.scripts]
 simulateur-mpol = "simulateur.cli:lancer_menu_interactif"

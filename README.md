@@ -139,7 +139,23 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
 - **les 101 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
 - **matrice d'impacts croisés** levier × domaine, calculée par le modèle par différences finies (aucun coefficient saisi à la main) ;
 - **données publiques « à l'instant T »** : le serveur interroge les API (Eurostat, BCE, Frankfurter, Banque mondiale) et, s'il n'a pas de réseau, le bouton « Rafraîchir les données » les interroge **depuis votre navigateur** puis transmet les valeurs au simulateur — provenance, période et licence affichées pour chaque chiffre ;
-- **exports JSON et CSV** de la simulation complète.
+- **exports JSON et CSV** de la simulation complète ;
+- **compréhensible pour tous** : un **lexique de 83 termes** définit chaque mot
+  technique en français ordinaire (`GET /api/lexique`), les termes employés dans
+  la page sont soulignés et s'expliquent au survol, une section
+  **« Lire le résultat »** remet chaque simulation en phrases complètes
+  (`simulateur/clarte.py`), un **guide de démarrage** en quatre étapes s'ouvre à
+  la première visite et un **sommaire** donne l'ordre de lecture ;
+- **un réglage se partage par une adresse** : le bouton « 🔗 Partager mes
+  réglages » copie un lien qui rouvre le simulateur exactement sur les leviers
+  affichés — de quoi soumettre un budget au débat au lieu de le décrire. Seuls
+  les leviers réellement déplacés voyagent (jamais les 101 paramètres), et une
+  adresse reçue n'est jamais crue : seules les clés connues du catalogue et les
+  valeurs numériques sont reprises ;
+- **fluidité mesurée** : réponses compressées à la demande (**une simulation
+  passe de 255 Kio à 37 Kio**, soit 85 % de moins), onglets de strate rendus à
+  l'ouverture seulement, matrice levier × domaine conservée pendant les réglages,
+  catalogue de bulles mémoïsé (4,5 s → 57 ms).
 
 Documentation détaillée : [`docs/SIMULATEUR_PARAMETRABLE.md`](docs/SIMULATEUR_PARAMETRABLE.md).
 Réglages du dépôt (description, sujets, aperçu social) : [`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md).
@@ -169,6 +185,41 @@ Pour un accès public, désactiver **Security → Deployment Protection → Verc
 python -m simulateur.moteur_parametrique --preset mandature --json
 python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --levier reforme_ric=1
 ```
+
+### 6. Obtenir une adresse publique (lien à partager)
+
+Un dépôt n'est pas un site : rien n'exécute le code. Trois façons d'obtenir une
+adresse permanente, détaillées dans [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md) :
+
+- **En deux clics**, sans ligne de commande : le bouton ci-dessous crée un
+  service gratuit chez Render à partir de ce dépôt, qui lit `render.yaml`.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https%3A%2F%2Fgithub.com%2Fthejmimiia-code%2FD-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple)
+
+- **En une commande**, sur n'importe quelle machine qui a Docker : une image
+  publique est publiée dans le registre GitHub
+  (`ghcr.io/thejmimiia-code/d-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple`).
+
+```bash
+docker run -p 8080:8080 ghcr.io/thejmimiia-code/d-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple:latest
+```
+
+- **Chez n'importe quel hébergeur Python** (Railway, Fly, Scalingo, Heroku,
+  VPS…) : le dépôt fournit un point d'entrée WSGI (`simulateur/wsgi.py`) et un
+  `Procfile`.
+
+```bash
+pip install -r requirements.txt
+gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120 simulateur.wsgi:application
+```
+
+Le point d'entrée WSGI **réutilise le routeur du serveur local** au lieu d'en
+dupliquer un second : ce qui est vérifié sur le poste est ce qui tourne en
+ligne. Aucune base de données, aucun secret, aucune donnée personnelle.
+
+Le bouton « 🔗 Partager mes réglages » fonctionne avec n'importe laquelle de
+ces adresses : le lien transporte les leviers dans l'URL, le serveur n'en
+sait rien.
 
 ---
 
@@ -259,6 +310,21 @@ python -m simulateur.import_ucdp \
   --csv tests/fixtures/ged_schema_synthetique.csv \
   --contrat tests/fixtures/contrat_ged_synthetique.json
 ```
+
+### Optimisation, fluidité et lisibilité (R&D)
+
+[Protocole, mesures exécutées et limites](docs/RD_OPTIMISATION_FLUIDITE.md) :
+compression HTTP négociée, rendu différé, cache des bulles, lexique et lecture
+en clair. Rien de ce chantier ne modifie une formule, une donnée source ou un
+seuil du modèle.
+
+```bash
+python3 outils/mesurer_fluidite.py            # tableau des gains
+python3 outils/mesurer_fluidite.py --markdown # pour la documentation
+```
+
+Les mesures sont locales et hors ligne : le gain de volume est structurel, les
+durées dépendent de la machine.
 
 ### Audit technique de la PR
 

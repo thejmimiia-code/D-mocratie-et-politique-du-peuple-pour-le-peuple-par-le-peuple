@@ -41,6 +41,9 @@ mouvement de curseur. Le sélecteur d'horizon propose une ou deux mandatures
 | `simulateur/moteur.py`, `model.py` | moteur systémique à 5 échelons (inchangé) |
 | `simulateur/dashboard.py` | serveur HTTP + API JSON |
 | `simulateur/interface.py` | page HTML unique (CSS et JavaScript embarqués, zéro CDN) |
+| `simulateur/lexique.py` | 83 termes définis en français ordinaire, servis par `/api/lexique` |
+| `simulateur/clarte.py` | relecture d'une sortie de simulation en phrases ordinaires (champ `lecture`) |
+| `simulateur/compression.py` | négociation et application de la compression HTTP (bibliothèque standard) |
 
 ---
 
@@ -354,7 +357,7 @@ Une bulle répond à trois questions, dans cet ordre :
 | Seuil de mouvement retenu | 0,2 point de score |
 | Exception documentée | `clause_sauvegarde_defense` : aucun domaine ne bouge, mais la sortie des dépenses de défense du calcul PDE est journalisée en strate 3 |
 | Coût de calcul d'une bulle | ≈ 25 ms (mise en cache par contexte) |
-| Coût du catalogue complet | ≈ 2,5 s (`GET /api/bulles`) |
+| Coût du catalogue complet | ≈ 4,5 s au **premier** appel (`GET /api/bulles`), ≈ 57 ms ensuite : le catalogue est mémoïssé tant que le contexte « instant T » n'a pas changé |
 
 Réglages possibles : `GET /api/bulles?detail=resume` (sans le détail indicateur
 par indicateur ni le journal) et `?mesure=0` (chaîne d'interaction seule).
@@ -422,12 +425,13 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | `/api/catalogue` | GET | familles, 101 leviers, 14 préréglages, 20 domaines |
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
 | `/api/marches` | GET | catalogue de 13 indices; `?refresh=1` demande une collecte auprès du fournisseur tiers et ne garantit pas le temps réel |
-| `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**) ; `horizon` jusqu'à 10 ans pour la période de deux mandatures (`docs/RD_DOUBLE_MANDATURE.md`) |
+| `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**, **lecture en clair**) ; `horizon` jusqu'à 10 ans pour la période de deux mandatures (`docs/RD_DOUBLE_MANDATURE.md`) |
 | `/api/comparer` | GET | comparaison des 14 préréglages **avec leur verdict de garde-fous** |
 | `/api/conseil` | POST | conseiller temps réel : lecture du **dernier mouvement** d'un levier (`cle`, `avant`, `apres`, `parametres`, `horizon`) — effets directs, ricochets, grandeurs, garde-fous, journal, compensations, **budget réel (Md€) et sources officielles** |
 | `/api/garde_fous` | GET | barème complet des 31 garde-fous : strates, bornes, sources institutionnelles (audit) |
 | `/api/bulles` | GET | bulles explicatives du catalogue (`?levier=`, `?detail=resume`, `?mesure=0`) |
 | `/api/bulle` | GET | bulle d'un levier : chaîne d'interaction, mesures par borne, lecture guidée |
+| `/api/lexique` | GET | lexique « compréhensible pour tous » : 83 termes en 6 catégories, avec recherche `?q=` et la liste des formes à souligner |
 | `/api/presets` | GET | préréglages seuls |
 | `/api/proxy` | GET | relais d'une source du registre (liste blanche) |
 | `/api/donnees` | POST | valeurs relevées par le navigateur → recalibrage |
@@ -441,6 +445,123 @@ L'aperçu social, la description, les sujets et le site web déclarés sont tenu
 jour dans [`REPOSITORY_DETAILS.md`](REPOSITORY_DETAILS.md), avec les scripts
 `outils/details_depot.py` (bloc à coller) et `outils/apercu_social.py` (image
 1280 × 640).
+
+## 10 bis. Compréhensible pour tous
+
+Le simulateur manipule des grandeurs que personne n'emploie dans la vie
+courante. Cette section regroupe les quatre dispositifs qui rendent la page
+lisible sans rien retirer à la rigueur du modèle — et sans jamais ajouter un
+chiffre qui ne serait pas déjà calculé.
+
+### 📖 Le lexique (`GET /api/lexique`)
+
+83 termes en six catégories, définis **en français ordinaire**. La règle de
+rédaction est stricte : on n'explique pas un mot de métier par un autre mot de
+métier. « Spread » devient « l'écart entre le taux auquel la France emprunte et
+celui de l'Allemagne », pas « un écart de rendement souverain ». Chaque entrée
+porte sa définition, un repère chiffré quand il existe, et des renvois vers les
+termes voisins.
+
+Trois usages dans la page :
+
+| Usage | Comportement |
+|---|---|
+| Panneau (bouton « 📖 Lexique ») | liste complète, recherche instantanée, regroupée par catégorie |
+| Soulignement dans les textes | les termes techniques des messages affichés sont soulignés en pointillé ; la définition s'affiche au survol ou au focus clavier |
+| API | `?q=` filtre sur le libellé, les alias et le texte des définitions |
+
+Le balisage respecte les attributs HTML : un `>` situé à l'intérieur d'un
+attribut `data-aide` (qui peut contenir du HTML) n'est pas traité comme une fin
+de balise — sinon la page serait corrompue au premier `data-aide` venu.
+
+### 🧭 La « lecture en clair » (`simulateur/clarte.py`)
+
+Le module **ne calcule rien** : il relit la sortie du moteur et en tire une
+dizaine de phrases complètes, dans l'ordre des questions que l'on se pose
+vraiment — combien l'État gagne ou perd, où vont le déficit et la dette, à quel
+prix il emprunte, ce que ça change pour les ménages, quels secteurs bougent, où
+sont les alertes. Le résultat est servi dans le champ `lecture` de
+`/api/simuler`.
+
+Trois règles, chacune couverte par un test :
+
+1. **fidélité** — tout nombre affiché dans une phrase existe dans la charge du
+   moteur ;
+2. **honnêteté** — un déficit négatif est annoncé comme un excédent, une dépense
+   négative comme une économie, un domaine qui ne bouge pas n'est pas désigné
+   comme « le plus pénalisé » ;
+3. **neutralité** — aucune phrase ne dit « c'est bien » ou « c'est mal ». Les
+   niveaux (favorable / défavorable / neutre) qualifient un écart par rapport à
+   la référence du modèle, pas un jugement politique.
+
+### ❓ Le guide de démarrage
+
+Quatre étapes, affichées à la **première visite** : vous êtes aux commandes ·
+tout est comparé à une référence · la veille vous prévient · vérifiez tout. Le
+guide est mémorisé dans le navigateur (`localStorage`) et n'est **jamais**
+transmis au serveur ; en navigation privée, où le stockage est refusé, il
+s'affiche à nouveau plutôt que de disparaître. Rouvrable depuis l'en-tête.
+
+### 🗺️ Le sommaire
+
+La page est longue : un bandeau en haut rappelle l'ordre de lecture —
+*comprendre → ce que ça donne → régler → mesurer → vérifier* — avec des
+raccourcis vers chaque section.
+
+## 10 ter. Fluidité mesurée
+
+Les chiffres ci-dessous sont exécutés, reproductibles par
+`python3 outils/mesurer_fluidite.py`, et détaillés — limites comprises — dans
+[`RD_OPTIMISATION_FLUIDITE.md`](RD_OPTIMISATION_FLUIDITE.md).
+
+| Ce qui était lent | Ce qui l'expliquait | Ce qui est fait |
+|---|---|---|
+| Simulation : 255 Kio échangés à chaque geste | le JSON de sortie, en clair | compression HTTP négociée → **37 Kio** |
+| Catalogue : 104 Kio | idem | **25 Kio** |
+| Contexte : 97 Kio | idem | **14 Kio** |
+| Sept vues de strate reconstruites à chaque simulation | six panneaux invisibles | rendu à l'ouverture de l'onglet |
+| Matrice levier × domaine vidée pendant les réglages | non recalculée pendant le geste | dernière matrice conservée, fraîcheur annoncée |
+| `/api/bulles` : 4,5 s par appel | 101 bulles recalculées | mémoïsation → **57 ms** |
+
+Trois garde-fous : la compression ne s'applique **jamais à perte** (sous
+512 octets, ou si le résultat n'est pas plus petit, la charge brute est
+renvoyée) ; `Vary: Accept-Encoding` accompagne toute réponse compressible, pour
+qu'aucun intermédiaire ne serve du gzip à un client qui ne le décode pas ; et
+rien de tout cela ne modifie une formule, une donnée source ou un seuil.
+
+## 10 quater. Partager un réglage par lien
+
+Un budget se discute : encore faut-il pouvoir le montrer. Le bouton
+**🔗 Partager mes réglages** (barre du haut) copie une adresse qui rouvre le
+simulateur exactement sur les leviers affichés.
+
+**Ce que le lien contient.** Seuls les leviers **réellement déplacés** par
+rapport aux valeurs neutres du catalogue sont écrits dans l'adresse (`?sim=`),
+au format JSON compact : une poignée de leviers tient en quelques centaines de
+caractères, là où les 101 paramètres pèseraient plusieurs kilo-octets. À
+l'ouverture, ces écarts sont relus **par-dessus les valeurs neutres** ; le
+programme de départ (« mandature ») est alors laissé de côté, sinon il
+s'ajouterait aux réglages repris et le lien ne rouvrirait pas la simulation
+partagée. Un bandeau le signale : *« Réglages repris du lien : N levier(s)
+replacé(s). »*
+
+**Ce que le lien ne peut pas faire.** Une adresse se transmet de main en main :
+son contenu n'est jamais cru. Seules les clés **présentes dans le catalogue**
+sont reprises, et seulement si la valeur est un **nombre fini** — une clé
+inconnue, une chaîne de caractères, un tableau ou un JSON illisible sont
+ignorés sans erreur. Aucune valeur du lien n'est jamais injectée dans le HTML :
+l'avis affiché est écrit en texte (`textContent`).
+
+**Ce qui ne quitte pas le navigateur.** Rien : l'adresse est fabriquée côté
+client, le serveur n'en sait rien et ne la voit pas passer. Le profil ménage, le
+portefeuille boursier et les montants saisis restent locaux, comme le reste.
+
+**Côté serveur**, l'équivalent existe pour l'automatisation : `GET
+/api/simuler?params={"effort_defense_pct_pib":3.5}` renvoie la même simulation
+que le `POST`, sans corps de requête — pratique pour un script ou un tableau de
+bord tiers. Les valeurs sont normalisées comme partout ailleurs : un levier
+exprimé en écart (la TVA, par exemple, se règle en points et non en taux
+affiché) est ramené à sa plage admissible plutôt que refusé.
 
 ## 11. Limites assumées
 

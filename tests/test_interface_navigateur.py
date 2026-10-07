@@ -158,6 +158,7 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "GET /api/bulle": bulle,
                 "GET /api/bulles": json.loads(cls._get("/api/bulles?detail=resume")),
                 "GET /api/garde_fous": json.loads(cls._get("/api/garde_fous")),
+                "GET /api/lexique": json.loads(cls._get("/api/lexique")),
                 "POST /api/simuler": sortie_prereglage,
                 "POST /api/simuler#variante": sortie_variante,
                 "POST /api/simuler#austerite": sortie_austerite,
@@ -221,6 +222,18 @@ class TestInterfaceDansNode(unittest.TestCase):
         """Les deux boutons d'export déclenchent un téléchargement."""
         telechargements = self.rapport.get("telechargements", [])
         self.assertEqual(len(telechargements), 2, f"téléchargements : {telechargements}")
+
+    def test_un_reglage_se_partage_par_une_adresse(self):
+        """Le lien ne transporte que les leviers déplacés et se relit sans confiance."""
+        etapes = {etape["nom"]: etape["ok"] for etape in self.rapport.get("etapes", [])}
+        for nom in ("le lien partagé reprend l'adresse de la page",
+                    "le lien ne transporte que les leviers déplacés",
+                    "le lien se relit à l'identique",
+                    "un lien hostile ne peut pas injecter un réglage inconnu",
+                    "un lien illisible est ignoré sans erreur",
+                    "partager renvoie l'adresse calculée, sans copier dans le vide",
+                    "l'adresse partagée est reprise à l'ouverture de la page"):
+            self.assertTrue(etapes.get(nom), f"étape absente ou fausse : {nom}")
 
     def test_la_console_signale_l_austerite_puis_recalcule_le_scenario_de_reference(self):
         """Le rouge signale les risques; le neutre doit être recalculé, pas blanchi artificiellement."""
