@@ -176,9 +176,9 @@ REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
         code_ou_traite="Code général des impôts",
         article="Article 235 ter ZD",
         titre="Taxe sur les Transactions Financières (TTF)",
-        texte_integral="Taxe de 0,3 % sur les acquisitions de titres de sociétés françaises cotées de plus d'1 Md€ de capitalisation.",
+        texte_integral="Résumé vérifié sur Légifrance (version en vigueur au 01/01/2026, modifiée par la loi n° 2026-103 du 19 février 2026, art. 17) : taxe de 0,4 % (taux fixé au V) sur l'acquisition à titre onéreux de titres de capital admis à la négociation sur un marché réglementé, émis par une société dont le siège est en France et dont la capitalisation dépasse 1 Md€ au 1er décembre de l'année précédente.",
         strate_impactee="Mondial",
-        effet_simulation="Étendue au trading haute fréquence (>80% d'annulations) et prélevée au dépositaire Euroclear (+5 Md€/an).",
+        effet_simulation="Proposition modélisée, hors droit positif : extension au trading haute fréquence (>80 % d'annulations) et prélèvement au dépositaire Euroclear (+5 Md€/an, non vérifié).",
     ),
     "ENV_L229_25": ArticleDeLoi(
         identifiant="ENV_L229_25",

@@ -179,12 +179,12 @@ _lev(Levier(
     articles=("CGI_278_0_BIS_B", ),
     libelle="TVA sur l'énergie à 5,5 %",
     famille="fiscalite_menages",
-    description="Bascule l'électricité et le gaz au taux réduit de 5,5 %. Depuis le 1er août 2025, l'abonnement est au taux normal de 20 % (loi de finances pour 2025) ; les carburants relèvent du taux normal de 20 %. Coût ≈ 9 Md€/an selon le dossier de mandature (chiffrage non vérifié).",
+    description="Rétablit le taux réduit de 5,5 % sur les abonnements d'électricité et de gaz. Ce taux a été supprimé par l'article 20 de la loi n° 2025-127 du 14 février 2025 pour les périodes débutant à compter du 1er août 2025 (taux normal de 20 % depuis). Le taux réduit ne visait que l'abonnement, non la consommation : le périmètre du chiffrage reste à arbitrer. Coût ≈ 9 Md€/an selon le dossier de mandature (chiffrage non vérifié).",
     unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
     champ="baisse_tva_energie_5_5_mde", facteur=9.0,
     profil=(1.0, 1.0, 1.0, 1.0, 1.0),
     effets_directs={"pouvoir_achat": 3.8, "inflation": -0.35, "pauvrete": -0.4},
-    source="CGI art. 278-0 bis B (abonnements, supprimé au 1er août 2025) ; fournisseurs-electricite.com (consulté le 08/10/2026) ; chiffrage DOSSIER_DE_MANDATURE_GLOBAL.md (non vérifié).",
+    source="CGI art. 278-0 bis B (version antérieure au 1er août 2025) ; loi n° 2025-127 du 14 février 2025, art. 20 (BOFiP BOI-RES-TVA-000209, version du 26/08/2026, consultée le 08/10/2026) ; chiffrage DOSSIER_DE_MANDATURE_GLOBAL.md (non vérifié).",
 ))
 _lev(Levier(
     cle="csg_crds_hausse",
@@ -320,19 +320,19 @@ _lev(Levier(
     articles=("REG_UE_2022_1854_SOLIDARITE", ),
     libelle="Superprofits — contribution temporaire",
     famille="fiscalite_entreprises",
-    description="Contribution temporaire sur les bénéfices excédentaires des secteurs pétrole brut, gaz naturel, charbon et raffinage, sur le modèle du règlement (UE) 2022/1854, dont l'application est limitée aux exercices 2022 et 2023. Montant ≈ 6 Md€/an selon le dossier de mandature (chiffrage non vérifié).",
+    description="Contribution temporaire sur les bénéfices excédentaires des secteurs pétrole brut, gaz naturel, charbon et raffinage, sur le modèle du chapitre III du règlement (UE) 2022/1854 : exercices 2022 et/ou 2023, profits au-delà de +20 % de la moyenne des exercices à partir de 2018, taux minimal de 33 %. Ce règlement n'est plus en vigueur (application jusqu'au 31 décembre 2023). Le champ modélisé (rachats d'actions) ne figure pas dans ce règlement : à arbitrer. Montant ≈ 6 Md€/an selon le dossier de mandature (chiffrage non vérifié).",
     unite="Md€", defaut=0.0, minimum=0.0, maximum=15.0, pas=0.5,
     champ="taxe_superprofits_rachats_mde",
     profil=(1.0, 1.0, 1.0, 1.0, 1.0),
     effets_directs={"inégalités": -0.5, "investissement": -0.2},
-    source="Règlement (UE) 2022/1854, articles 15 à 18 (EUR-Lex, consulté le 08/10/2026) ; chiffrage DOSSIER_DE_MANDATURE_GLOBAL.md (non vérifié).",
+    source="Règlement (UE) 2022/1854, chapitre III, articles 15 à 18 (EUR-Lex, consulté le 08/10/2026, mention « No longer in force ») ; rapport COM(2023) 768 du 30/11/2023 ; chiffrage DOSSIER_DE_MANDATURE_GLOBAL.md (non vérifié).",
 ))
 _lev(Levier(
     cle="extension_ttf",
     libelle="Taxe sur les transactions financières — extension",
     famille="fiscalite_entreprises",
-    description="Élargissement de l'assiette aux produits dérivés et aux transactions "
-                "intra-journalières : +5 Md€/an.",
+    description="Proposition : élargissement de l'assiette aux produits dérivés et aux transactions "
+                "intra-journalières : +5 Md€/an (non vérifié). Le droit actuel (art. 235 ter ZD CGI) vise les titres de capital.",
     unite="Md€", defaut=0.0, minimum=0.0, maximum=8.0, pas=0.5,
     champ="extension_ttf_mde",
     profil=(0.3, 0.6, 0.8, 1.0, 1.0),
@@ -793,7 +793,7 @@ _lev(Levier(
     ligne="transports", profil=(0.4, 0.65, 0.85, 1.0, 1.0),
     effets_directs={"climat": 0.7, "emploi": 0.5, "territoires": 0.8, "energie": 0.4,
                     "pouvoir_achat": 0.25},
-    source="Conseil d'orientation des infrastructures (rapport Duron) ; loi LOM.",
+    source="Conseil d'orientation des infrastructures (rapport Duron) ; loi n° 2019-1428 du 24 décembre 2019 (LOM, cadre juridique).",
 ))
 _lev(Levier(
     cle="moratoire_artificialisation",
@@ -926,7 +926,7 @@ _lev(Levier(
     profil=(0.3, 0.6, 0.85, 1.0, 1.0),
     effets_directs={"territoires": 1.0, "services_publics": 0.6, "confiance": 0.4,
                     "budget": 0.3},
-    source="Rapports du Comité d'évaluation des réformes de la décentralisation ; loi 3DS.",
+    source="Rapports du Comité d'évaluation des réformes de la décentralisation ; loi n° 2022-217 du 21 février 2022 (3DS, cadre juridique).",
 ))
 _lev(Levier(
     cle="fusion_doublons",

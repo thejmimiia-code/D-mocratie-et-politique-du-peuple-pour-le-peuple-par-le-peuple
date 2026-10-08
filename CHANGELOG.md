@@ -12,6 +12,13 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 - Page publique `docs/VERIFICATION_DONNEES.md`, générée par `outils/generer-page-verification.py`, et modèle de signalement `.github/ISSUE_TEMPLATE/donnee-a-verifier.md`.
 - Saisie citoyenne d'une valeur sourcée, marquée non vérifiée à l'écran et à l'impression, sans effet sur le calcul.
 
+### Corrigé — Libellés et sources vérifiés (2026-10-08)
+
+- Taux de la taxe sur les transactions financières dans le registre : 0,3 % → 0,4 % (art. 235 ter ZD CGI, Légifrance, version en vigueur au 01/01/2026).
+- `tva_energie_5_5` : le libellé ne dit plus que le taux réduit s'applique à l'électricité et au gaz en général ; il vise l'abonnement, supprimé au 1er août 2025 (BOFiP, art. 20 de la loi n° 2025-127).
+- `taxe_superprofits` : le règlement (UE) 2022/1854 est signalé comme n'étant plus en vigueur depuis le 31/12/2023.
+- Numéros des lois LOM (2019-1428) et 3DS (2022-217) ajoutés aux sources de leviers.
+
 ### Corrigé — Registre juridique et liens croisés (`simulateur/`)
 
 - Strate `Européen` remplacée par `Europe` ; liste fermée des strates testée.

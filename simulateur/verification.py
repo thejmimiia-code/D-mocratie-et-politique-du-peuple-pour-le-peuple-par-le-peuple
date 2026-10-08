@@ -70,15 +70,35 @@ INTERNE_DOSSIER = "Chiffrage interne au dossier de mandature : hypothèse, non v
 VERIFICATIONS_LEVIERS: dict[str, Verification] = {
     "tva_energie_5_5": Verification(
         "partiel", DATE_AUDIT,
-        "https://www.fournisseurs-electricite.com/contrat-electricite-gaz/taxes/tva",
-        "Taux normal de 20 % sur l'abonnement depuis le 1er août 2025 : vérifié sur sources "
-        "secondaires concordantes (08/2026). Carburants au taux normal. Coût de 9 Md€/an : non vérifié.",
+        "https://bofip.impots.gouv.fr/bofip/14705-PGP.html/identifiant=BOI-RES-TVA-000209-20260826",
+        "Suppression du taux réduit sur l'abonnement au 1er août 2025 : vérifiée sur le BOFiP "
+        "(art. 20 de la loi n° 2025-127). Périmètre du levier (consommation ou abonnement) et "
+        "coût de 9 Md€/an : non vérifiés.",
     ),
     "taxe_superprofits": Verification(
         "partiel", DATE_AUDIT,
         "https://eur-lex.europa.eu/eli/reg/2022/1854/oj?locale=fr",
-        "Périmètre (pétrole, gaz, charbon, raffinage) et durée (2022-2023) vérifiés sur le "
-        "règlement. Montant de 6 Md€/an : non vérifié.",
+        "Périmètre (pétrole, gaz, charbon, raffinage) et durée (exercices 2022 et/ou 2023) "
+        "vérifiés sur le règlement, qui n'est plus en vigueur (application jusqu'au 31/12/2023). "
+        "Champ modélisé (rachats d'actions) absent du règlement. Montant de 6 Md€/an : non vérifié.",
+    ),
+    "transports_publics": Verification(
+        "partiel", DATE_AUDIT,
+        "https://www.ecologie.gouv.fr/loi-dorientation-des-mobilites",
+        "Cadre juridique (loi n° 2019-1428 du 24/12/2019, LOM) vérifié sur ecologie.gouv.fr et Légifrance. "
+        "Montants du rapport Duron : non vérifiés.",
+    ),
+    "decentralisation": Verification(
+        "partiel", DATE_AUDIT,
+        "https://www.ecologie.gouv.fr/politiques-publiques/loi-3ds-relative-differenciation-decentralisation-deconcentration",
+        "Cadre juridique (loi n° 2022-217 du 21/02/2022, 3DS) vérifié sur ecologie.gouv.fr et l'Assemblée nationale. "
+        "Chiffres des rapports du comité d'évaluation : non vérifiés.",
+    ),
+    "extension_ttf": Verification(
+        "partiel", DATE_AUDIT,
+        "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053543343",
+        "Assiette actuelle (titres de capital, art. 235 ter ZD CGI) vérifiée sur Légifrance. "
+        "Extension aux dérivés et +5 Md€/an : proposition non vérifiée.",
     ),
     "encadrement_loyers": Verification(
         "partiel", DATE_AUDIT,
@@ -161,17 +181,24 @@ VERIFICATIONS_ARTICLES: dict[str, Verification] = {
         "https://bofip.impots.gouv.fr/bofip/9417-PGP.html/identifiant=BOI-TVA-LIQ-30-20-95-20251022",
         "BOFiP BOI-TVA-LIQ-30-20-95, version du 22/10/2025 consultée.",
     ),
+    "CGI_235_TER_ZD": Verification(
+        "verifie", DATE_AUDIT,
+        "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053543343",
+        "Taux de 0,4 % et seuil de capitalisation de 1 Md€ vérifiés sur Légifrance (version en vigueur "
+        "au 01/01/2026, loi n° 2026-103 du 19/02/2026). Extension modélisée : proposition, non vérifiée.",
+    ),
     "CGI_278_0_BIS_B": Verification(
-        "partiel", DATE_AUDIT,
-        "https://www.unafo.org/centre-de-ressources/abonnements-relatifs-aux-livraisons-delectricite-et-de-gaz-tva-a-taux-reduit/",
-        "Ancien régime (5,5 % sur les abonnements) confirmé par des sources secondaires ; "
-        "suppression au 1er août 2025 confirmée par des sources secondaires concordantes. "
-        "Texte officiel en vigueur à consulter sur Légifrance.",
+        "verifie", DATE_AUDIT,
+        "https://bofip.impots.gouv.fr/bofip/14705-PGP.html/identifiant=BOI-RES-TVA-000209-20260826",
+        "Suppression du taux réduit de 5,5 % sur les abonnements (électricité ≤ 36 kVA et gaz) pour "
+        "les périodes débutant à compter du 1er août 2025 : BOFiP BOI-RES-TVA-000209 (version du "
+        "26/08/2026), citant l'article 20 de la loi n° 2025-127. Texte intégral non relu sur Légifrance.",
     ),
     "REG_UE_2022_1854_SOLIDARITE": Verification(
-        "verifie", DATE_AUDIT,
+        "partiel", DATE_AUDIT,
         "https://eur-lex.europa.eu/eli/reg/2022/1854/oj?locale=fr",
-        "Règlement (UE) 2022/1854 consulté sur EUR-Lex (articles 15 à 18).",
+        "Articles 15 à 18 consultés sur EUR-Lex (mention « No longer in force ») ; chapitre III "
+        "applicable jusqu'au 31/12/2023 (clause finale ; rapport COM(2023) 768 du 30/11/2023).",
     ),
     "ELAN_ART_140": Verification(
         "verifie", DATE_AUDIT,

@@ -244,4 +244,15 @@ l'article 223 VJ (EUR-Lex et sources fiscales, 2024-2026).
 - `docs/VERIFICATION_DONNEES.md` est généré par `outils/generer-page-verification.py` (`--verifier` en contrôle) : une ligne par levier et par article, avec ancre.
 - Le simulateur affiche le statut sous chaque levier, un lien vers la page et un formulaire de signalement (`.github/ISSUE_TEMPLATE/donnee-a-verifier.md`). Le citoyen peut saisir sa propre valeur et sa source : elle est marquée « NON VÉRIFIÉE PAR LE MRSC » à l'écran et à l'impression, et n'entre pas dans le calcul.
 - Aucune valeur n'a été modifiée dans ce lot : aucune correction sans source officielle datée.
-- Reste à faire : vérifier les chiffres « date décalée » sur des sources 2026 ; traiter `tva_energie_5_5` et `taxe_superprofits` (sources incorrectes, à corriger après relecture de la modélisation) ; vérifier CGI 235 ter ZD, loi 3DS et LOM ; confronter DOSSIER_DE_MANDATURE aux sources datées.
+
+### Lot 5 — vérifications des textes et des libellés (8 octobre 2026)
+
+Aucune valeur chiffrée n'a été changée (défaut, plafond, facteur) : seuls les libellés, les sources et les statuts ont été corrigés, sur des sources datées.
+
+- `tva_energie_5_5` : le libellé disait « bascule au taux réduit » et plaçait la suppression au 1er août 2025 sans source. Vérifié sur le BOFiP BOI-RES-TVA-000209 (version du 26/08/2026) : article 20 de la loi n° 2025-127 du 14/02/2025, suppression du taux de 5,5 % sur les abonnements au 1er août 2025 pour les périodes débutant à compter de cette date. Le libellé dit maintenant « rétablit le taux réduit sur l'abonnement ». Le périmètre (abonnement ou consommation) et le coût de 9 Md€ restent à arbitrer et non vérifiés.
+- `taxe_superprofits` : le règlement (UE) 2022/1854 est marqué « No longer in force » sur EUR-Lex. Son chapitre III s'applique aux exercices 2022 et/ou 2023, jusqu'au 31/12/2023 (rapport COM(2023) 768 du 30/11/2023). Le champ modélisé (rachats d'actions) ne figure pas dans ce règlement. Statut de l'article : « partiel ».
+- `CGI_235_TER_ZD` : vérifié sur Légifrance (version en vigueur au 01/01/2026, loi n° 2026-103 du 19/02/2026). Le registre disait 0,3 % : le texte dit **0,4 %**, seuil 1 Md€ de capitalisation au 1er décembre. Corrigé. L'extension aux dérivés et au trading haute fréquence est une proposition, non du droit positif.
+- Loi 3DS : loi n° 2022-217 du 21/02/2022 (ecologie.gouv.fr, Assemblée nationale). Loi LOM : loi n° 2019-1428 du 24/12/2019 (ecologie.gouv.fr, Légifrance). Numéros ajoutés aux sources des leviers `transports_publics` et `decentralisation` (cadre juridique seulement ; les montants restent non vérifiés).
+- Dossier de mandature, déficit : Insee (27/03/2026, Informations rapides n° 78) : déficit 2025 = 5,1 % du PIB (152,5 Md€) ; dette 2025 = 115,6 % du PIB (3 460,5 Md€). Le dossier annonce que « -51 Md€/an » ramène le déficit « sous 3 % du PIB ». Sur la base 2025 : 152,5 − 51 = 101,5 Md€, soit environ 3,4 % du PIB (PIB 2025 ≈ 2 990 Md€, ordre de grandeur). Affirmation non tenue en l'état : **à corriger dans le dossier, non modifiée dans le modèle**.
+- Reste à faire : vérifier les autres chiffres du dossier (dépenses de défense, Cour des comptes, Insee par domaine) et les dates décalées (5 leviers) ; traiter l'arbitrage de `tva_energie_5_5` (périmètre) avec l'utilisateur.
+
