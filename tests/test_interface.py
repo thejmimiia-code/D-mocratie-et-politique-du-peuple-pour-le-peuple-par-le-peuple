@@ -164,7 +164,7 @@ class TestStructureDeLaPage(unittest.TestCase):
         self.assertIn("let DERNIERES_PUCES = {}", self.script)
         self.assertIn("let LEVIERS_MODIFIES = new Set()", self.script)
         self.assertIn("puce-effect", self.page)
-        self.assertIn("class=\"levier${modifie ? ' modifie' : ''}\"", self.script)
+        self.assertIn("class=\"levier${modifie ? ' modifie' : ''}${nonVerifie(levier)}\"", self.script)
         # Les effets viennent de la matrice du modèle quand elle est demandée…
         self.assertIn("(donnees.impacts || []).forEach(impact =>", self.script)
         # …et de la comparaison des deux dernières simulations sinon.

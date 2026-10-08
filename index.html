@@ -72,6 +72,20 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .levier .desc{font-size:.7rem;color:var(--texte-dim);margin-top:2px}
 .levier input[type=range]{width:100%;margin-top:5px;accent-color:var(--accent)}
 .levier .source{font-size:.66rem;color:#7b8aa5;font-style:italic;margin-top:3px}
+/* Statut de vérification : lisible sans couleur (texte + bordure), visible à l'impression et à la copie. */
+.vstatut{font-size:.66rem;margin-top:4px;padding:3px 6px;border-radius:4px;border:1px solid #3b4a66;color:#c9d3e6}
+.vstatut b{font-weight:600}
+.vstatut .vnote{font-style:italic;color:#9aa8c2;margin-top:2px}
+.vstatut-verifie{border-color:#2f8f5b;color:#bfe9d1}
+.vstatut-partiel{border-color:#4c7fd6}
+.vstatut-date_decalee,.vstatut-non_verifie,.vstatut-inaccessible{border-style:dashed;border-color:#d68a2b;color:#f3d6a6}
+.levier.non-verifie{border-style:dashed;border-color:#d68a2b}
+.saisie-citoyenne{margin-top:5px;font-size:.66rem;border:1px dashed #d68a2b;border-radius:4px;padding:4px 6px;background:repeating-linear-gradient(45deg,rgba(214,138,43,.10) 0 6px,transparent 6px 12px)}
+.saisie-citoyenne summary{cursor:pointer;color:#f3d6a6}
+.saisie-citoyenne input{width:100%;margin:2px 0;background:#0d1526;color:#e8edf7;border:1px solid #3b4a66;border-radius:3px;padding:2px 4px}
+.saisie-texte{font-weight:600;color:#f3d6a6;margin-top:3px}
+.saisie-etiquette{display:none}
+@media print{.saisie-etiquette{display:block;font-weight:700;color:#000}.vstatut{color:#000;border-color:#000}}
 .levier .ligne .bascule{margin-bottom:0}
 /* Infobulle instantanée : tout réglage ou bouton annoté s'explique au survol
    (et au focus clavier), sans jamais recouvrir les leviers durablement. */
@@ -1844,6 +1858,47 @@ function pucesHtml(cle){
   if (!effets.length) return '';
   return '<div class="puces">' + effets.map(puceHtml).join('') + '</div>';
 }
+function dateFrancaise(iso){ return iso ? String(iso).split('-').reverse().join('/') : ''; }
+function badgeVerificationHtml(levier){
+  const v = levier.verification || {};
+  const statut = v.statut || 'non_verifie';
+  const date = v.verifie_le ? ` (consulté le ${dateFrancaise(v.verifie_le)})` : '';
+  const source = v.source_url ? ` · <a href="${echapperTexte(v.source_url)}" target="_blank" rel="noopener">source</a>` : '';
+  return `<div class="vstatut vstatut-${statut}"><b>${echapperTexte(v.libelle || 'Non vérifié')}</b>${echapperTexte(date)}${source} · <a href="${echapperTexte(v.page || '#')}" target="_blank" rel="noopener">détail et contribution</a><div class="vnote">${echapperTexte(v.note || 'Statut non renseigné.')}</div></div>`;
+}
+function lireSaisie(cle){
+  try { return JSON.parse(localStorage.getItem('mrsc-saisie-' + cle) || '{}'); } catch(e){ return {}; }
+}
+function ecrireSaisie(cle, champ, valeur){
+  const donnees = lireSaisie(cle);
+  donnees[champ] = valeur;
+  try { localStorage.setItem('mrsc-saisie-' + cle, JSON.stringify(donnees)); } catch(e){}
+  return donnees;
+}
+function texteSaisie(cle, unite){
+  const d = lireSaisie(cle);
+  const valeur = (d.valeur === undefined || d.valeur === '') ? 'aucune valeur saisie' : `${d.valeur} ${unite || ''}`;
+  const source = d.source ? d.source : 'aucune source indiquée';
+  return `VALEUR CITOYENNE NON VÉRIFIÉE PAR LE MRSC : ${valeur} (source : ${source}). Ce chiffre n'entre pas dans le calcul du simulateur.`;
+}
+function majSaisie(cle, champ, valeur, unite){
+  ecrireSaisie(cle, champ, valeur);
+  document.querySelectorAll(`[data-saisie-texte="${cle}"]`).forEach(el => { el.textContent = texteSaisie(cle, unite); });
+}
+function saisieCitoyenneHtml(levier){
+  const v = levier.verification || {};
+  if (v.statut === 'verifie') return '';
+  const d = lireSaisie(levier.cle);
+  const unite = levier.unite === 'bool' ? '' : levier.unite;
+  return `<details class="saisie-citoyenne" data-cle="${levier.cle}">
+      <summary>Noter ma propre valeur sourcée (non vérifiée par le MRSC)</summary>
+      <label>Valeur citoyenne (${echapperTexte(unite)}) <input type="number" step="any" value="${d.valeur ?? ''}" oninput="majSaisie('${levier.cle}','valeur',this.value,'${echapperTexte(unite)}')"></label>
+      <label>Lien vers la source officielle <input type="url" value="${echapperTexte(d.source || '')}" oninput="majSaisie('${levier.cle}','source',this.value,'${echapperTexte(unite)}')"></label>
+      <div class="saisie-texte" data-saisie-texte="${levier.cle}">${echapperTexte(texteSaisie(levier.cle, unite))}</div>
+      <div class="saisie-etiquette">VALEUR CITOYENNE NON VÉRIFIÉE — ${echapperTexte(levier.libelle)}</div>
+    </details>`;
+}
+function nonVerifie(levier){ return (levier.verification && levier.verification.statut !== 'verifie') ? ' non-verifie' : ''; }
 function renderLeviers(filtre){
   const recherche = (filtre || '').toLowerCase();
   const zones = CATALOGUE.parametres.familles.map(famille => {
@@ -1879,14 +1934,15 @@ function renderLeviers(filtre){
                onchange="majLevier('${levier.cle}', this.checked ? 1 : 0); terminerReglage()"></label>
              <span class="valeur" data-aide-levier="${levier.cle}">${valeurTexte}</span>${bouton}`
           : curseurCompact;
-        return `<div class="levier compact${modifie ? ' modifie' : ''}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
-          ${contenuLevier}${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}</div>`;
+        return `<div class="levier compact${modifie ? ' modifie' : ''}${nonVerifie(levier)}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
+          ${contenuLevier}${badgeVerificationHtml(levier)}${saisieCitoyenneHtml(levier)}${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}</div>`;
       }
       const commande = levier.type === 'interrupteur' ? bascule : curseur;
-      return `<div class="levier${modifie ? ' modifie' : ''}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
+      return `<div class="levier${modifie ? ' modifie' : ''}${nonVerifie(levier)}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
         ${commande}
         <div class="desc">${levier.description}</div>
-        ${levier.source ? `<div class="source">Source : ${levier.source}</div>` : ''}
+        ${levier.source ? `<div class="source">Source citée : ${levier.source}</div>` : ''}
+        ${badgeVerificationHtml(levier)}${saisieCitoyenneHtml(levier)}
         ${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}
       </div>`;
     }).join('');
@@ -3083,11 +3139,12 @@ function auditLeviersHtml(){
       return `<tr><td>${echapperTexte(levier.libelle)} <span class="source-note">(${echapperTexte(levier.type)})</span></td>
         <td>${echapperTexte(levier.champ || '')} ${echapperTexte(levier.ligne || '')}</td>
         <td>${effets}</td>
-        <td class="source-note">${echapperTexte(levier.source || '')}</td></tr>`;
+        <td class="source-note">${echapperTexte(levier.source || '')}</td>
+        <td>${echapperTexte((levier.verification || {}).libelle || '')} <span class="source-note">${echapperTexte((levier.verification || {}).verifie_le || '')}</span></td></tr>`;
     }).join('');
     return `<div style="margin-bottom:12px"><b>${echapperTexte(famille.libelle || famille.cle)}</b>
       <table><thead><tr><th>Levier</th><th>Champ / ligne budgétaire</th>
-      <th>Effets déclarés (thème, coefficient)</th><th>Source</th></tr></thead>
+      <th>Effets déclarés (thème, coefficient)</th><th>Source</th><th>Statut de vérification</th></tr></thead>
       <tbody>${leviers}</tbody></table></div>`;
   }).join('');
 }

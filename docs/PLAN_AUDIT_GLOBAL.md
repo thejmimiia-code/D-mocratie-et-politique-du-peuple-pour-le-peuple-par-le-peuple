@@ -236,3 +236,12 @@ l'article 223 VJ (EUR-Lex et sources fiscales, 2024-2026).
   (9 Md€, effets directs) dont le point de départ (taux normal de 20 % sur
   l'abonnement depuis le 1er août 2025) doit être revu. Aucune valeur de
   simulation n'a été modifiée à ce stade.
+
+### Lot 4 — transparence : statut de vérification de chaque donnée (8 octobre 2026)
+
+- `simulateur/verification.py` : statuts `verifie`, `partiel`, `date_decalee`, `non_verifie`, `inaccessible` ; une source vérifiée exige une URL et une date (contrôlé par test).
+- 7 leviers ont un statut explicite (1 vérifié, 6 partiels, 5 datés de 2025 ou antérieurement) ; tous les autres sont `non_verifie` avec la mention de leur source citée. Aucun n'est encore `inaccessible` : aucune consultation n'a échoué à ce stade.
+- `docs/VERIFICATION_DONNEES.md` est généré par `outils/generer-page-verification.py` (`--verifier` en contrôle) : une ligne par levier et par article, avec ancre.
+- Le simulateur affiche le statut sous chaque levier, un lien vers la page et un formulaire de signalement (`.github/ISSUE_TEMPLATE/donnee-a-verifier.md`). Le citoyen peut saisir sa propre valeur et sa source : elle est marquée « NON VÉRIFIÉE PAR LE MRSC » à l'écran et à l'impression, et n'entre pas dans le calcul.
+- Aucune valeur n'a été modifiée dans ce lot : aucune correction sans source officielle datée.
+- Reste à faire : vérifier les chiffres « date décalée » sur des sources 2026 ; traiter `tva_energie_5_5` et `taxe_superprofits` (sources incorrectes, à corriger après relecture de la modélisation) ; vérifier CGI 235 ter ZD, loi 3DS et LOM ; confronter DOSSIER_DE_MANDATURE aux sources datées.

@@ -32,6 +32,8 @@ from collections.abc import Iterable
 from dataclasses import dataclass, field
 from typing import Any
 
+from simulateur.verification import en_dict as statut_verification
+
 # ────────────────────────────────────────────────────────────────────────────
 # Structures
 # ────────────────────────────────────────────────────────────────────────────
@@ -124,6 +126,7 @@ class Levier:
             "tags": list(self.tags),
             "precision": self.precision,
             "articles": list(self.articles),
+            "verification": statut_verification(self.cle, self.source),
         }
 
 

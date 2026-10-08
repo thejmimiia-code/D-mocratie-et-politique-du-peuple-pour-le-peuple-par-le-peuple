@@ -6,6 +6,12 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Ajouté — Transparence des données (`simulateur/`, `docs/`)
+
+- Statut de vérification pour chaque levier et article du registre (`simulateur/verification.py`), affiché sous chaque levier avec sa date et sa source.
+- Page publique `docs/VERIFICATION_DONNEES.md`, générée par `outils/generer-page-verification.py`, et modèle de signalement `.github/ISSUE_TEMPLATE/donnee-a-verifier.md`.
+- Saisie citoyenne d'une valeur sourcée, marquée non vérifiée à l'écran et à l'impression, sans effet sur le calcul.
+
 ### Corrigé — Registre juridique et liens croisés (`simulateur/`)
 
 - Strate `Européen` remplacée par `Europe` ; liste fermée des strates testée.
