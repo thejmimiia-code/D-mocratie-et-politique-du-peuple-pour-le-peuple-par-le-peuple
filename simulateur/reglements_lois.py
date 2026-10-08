@@ -488,6 +488,74 @@ REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
         strate_impactee="Local",
         effet_simulation="Protège les terres agricoles contre l'artificialisation (CDPENAF), installe les jeunes paysans et soutient les circuits courts.",
     ),
+    # -------------------------------------------------------------------------
+    # AJOUTS VÉRIFIÉS (audit du 8 octobre 2026) — résumé non textuel : le texte
+    # intégral fait foi sur la source indiquée dans `texte_integral`.
+    # -------------------------------------------------------------------------
+    "CGI_278_0_BIS_A": ArticleDeLoi(
+        identifiant="CGI_278_0_BIS_A",
+        code_ou_traite="Code général des impôts",
+        article="Article 278-0 bis A",
+        titre="Taux réduit de 5,5 % sur les travaux de rénovation énergétique",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Taux réduit de 5,5 % pour les prestations de rénovation énergétique des locaux d'habitation achevés depuis plus de deux ans. Source de doctrine : BOFiP BOI-TVA-LIQ-30-20-95 (version du 22/10/2025), consultée le 08/10/2026. Depuis le 1er mars 2025, les prestations comprenant une chaudière susceptible d'utiliser des combustibles fossiles sont exclues du taux réduit (III bis).",
+        strate_impactee="National",
+        effet_simulation="Encadre le taux réduit des travaux de rénovation énergétique des logements (loi de finances pour 2023, art. 65).",
+    ),
+    "CGI_278_0_BIS_B": ArticleDeLoi(
+        identifiant="CGI_278_0_BIS_B",
+        code_ou_traite="Code général des impôts",
+        article="Article 278-0 bis B (version antérieure au 1er août 2025)",
+        titre="Taux réduit de 5,5 % sur les abonnements d'électricité et de gaz (supprimé)",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Les abonnements d'électricité et de gaz étaient soumis au taux réduit de 5,5 %. Depuis le 1er août 2025, l'intégralité de la facture est au taux normal de 20 %, par suite de la loi de finances pour 2025 (art. 20, selon fournisseurs-electricite.com, consulté le 08/10/2026). Confirmé par dune-energie.fr (04/09/2026) et Ekwateur (20/01/2026).",
+        strate_impactee="National",
+        effet_simulation="Disposition supprimée au 1er août 2025 : le levier « TVA énergie » modélise un retour au taux réduit, non le régime actuel.",
+    ),
+    "REG_UE_2022_1854_SOLIDARITE": ArticleDeLoi(
+        identifiant="REG_UE_2022_1854_SOLIDARITE",
+        code_ou_traite="Règlement (UE) 2022/1854 du Conseil du 6 octobre 2022",
+        article="Articles 15 à 18",
+        titre="Contribution de solidarité temporaire sur les bénéfices excédentaires de l'énergie",
+        texte_integral="Résumé vérifié (texte intégral : https://eur-lex.europa.eu/eli/reg/2022/1854/oj?locale=fr, consulté le 08/10/2026). Contribution temporaire obligatoire sur les bénéfices excédentaires des secteurs du pétrole brut, du gaz naturel, du charbon et du raffinage ; bénéfices 2022 et/ou 2023 dépassant de plus de 20 % la moyenne des bénéfices imposables des quatre exercices commençant à partir du 1er janvier 2018 ; taux d'au moins 33 %. Nature temporaire (article 18).",
+        strate_impactee="Europe",
+        effet_simulation="Cadre de la contribution sur les superprofits énergétiques : limité aux exercices 2022 et 2023.",
+    ),
+    "ELAN_ART_140": ArticleDeLoi(
+        identifiant="ELAN_ART_140",
+        code_ou_traite="Loi n° 2018-1021 du 23 novembre 2018 (loi ELAN)",
+        article="Article 140",
+        titre="Expérimentation de l'encadrement des loyers dans les zones tendues",
+        texte_integral="Texte consulté sur https://www.legifrance.gouv.fr/eli/loi/2018/11/23/TERL1805474L/jo/article_140 (le 08/10/2026). Les établissements publics de coopération intercommunale compétents en matière d'habitat, la commune de Paris, les EPT de la métropole du Grand Paris, la métropole de Lyon et la métropole d'Aix-Marseille-Provence peuvent demander l'encadrement. Le préfet fixe chaque année le loyer de référence (médian), le loyer majoré (+20 %) et le loyer minoré (-30 %). Dispositif expérimental, appliqué à Paris, Lille, Plaine Commune et Est Ensemble (ecologie.gouv.fr, page du 28/10/2025).",
+        strate_impactee="Local",
+        effet_simulation="Activation de l'encadrement dans les territoires qui le demandent ; pas de généralisation prévue par le texte.",
+    ),
+    "LOI_APER_2023_175": ArticleDeLoi(
+        identifiant="LOI_APER_2023_175",
+        code_ou_traite="Loi n° 2023-175 du 10 mars 2023 (loi APER)",
+        article="Ensemble du texte ; zones d'accélération : article 15",
+        titre="Accélération de la production d'énergies renouvelables",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Simplifie les procédures d'énergies renouvelables, crée des zones d'accélération définies par les communes (article 15) et accélère le solaire et l'éolien en mer. Source secondaire consultée le 08/10/2026 : préfecture des Pyrénées-Orientales (page du 08/12/2025).",
+        strate_impactee="National",
+        effet_simulation="Cadre légal du déploiement des énergies renouvelables.",
+    ),
+    "LOI_JUSTICE_2023_1059": ArticleDeLoi(
+        identifiant="LOI_JUSTICE_2023_1059",
+        code_ou_traite="Loi n° 2023-1059 du 20 novembre 2023 (programmation de la justice)",
+        article="Article 1er et rapport annexé",
+        titre="Orientation et programmation du ministère de la justice 2023-2027",
+        texte_integral="Texte consulté sur https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000048430512 (le 08/10/2026). L'article 1er approuve le rapport annexé, qui fixe les orientations et la programmation des moyens de la mission « Justice » pour 2023-2027.",
+        strate_impactee="National",
+        effet_simulation="Trajectoire budgétaire de la justice (levier budget_justice).",
+    ),
+    "CP_432_13": ArticleDeLoi(
+        identifiant="CP_432_13",
+        code_ou_traite="Code pénal",
+        article="Article 432-13",
+        titre="Pantouflage : délit de prise illégale d'intérêts après des fonctions publiques",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Interdit, pendant trois ans après la cessation des fonctions, de prendre part à une entreprise privée que l'agent a contrôlée ou avec laquelle il a eu des relations de service. Peine : trois ans d'emprisonnement et 200 000 euros d'amende. Sources consultées le 08/10/2026 : AFA, guide sport opérateurs (2022) ; ANSM, fiche 3 (2020).",
+        strate_impactee="National",
+        effet_simulation="Encadre le levier de lutte contre le pantouflage et la transparence des reconversions.",
+    ),
+
 }
 
 

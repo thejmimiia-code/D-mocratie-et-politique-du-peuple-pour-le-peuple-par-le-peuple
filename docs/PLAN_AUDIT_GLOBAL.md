@@ -199,3 +199,40 @@ interactions à câbler vers l'échelon supérieur.
 - `CGI_235_TER_ZD` (Mondial) : numéro d'article à vérifier.
 - Valeurs chiffrées (`base_mde`, `defaut`, bornes, `source`) : contrôle levier par
   levier, avec année et lien. Aucune valeur modifiée à ce stade.
+
+### Lot 3 — textes manquants ajoutés et descriptions corrigées (8 octobre 2026)
+
+Date de consultation de toutes les sources : **08/10/2026**. Pour les pages
+secondaires (cabinets, presse, fournisseurs), la date de publication de la page
+est indiquée ; à remplacer par le texte officiel dès qu'il est consulté.
+
+| Point | Source retenue | Date de la source | Action |
+|---|---|---|---|
+| TVA énergie (CGI 278-0 bis B) : abonnements électricité et gaz au taux de 5,5 % supprimé au 1er août 2025 ; facture au taux normal de 20 % | fournisseurs-electricite.com ; dune-energie.fr ; Ekwateur | 18/08/2026 ; 04/09/2026 ; 20/01/2026 | Description du levier `tva_energie_5_5` corrigée ; carburants retirés (taux normal) ; article ajouté |
+| TVA rénovation énergétique (CGI 278-0 bis A) : 5,5 % ; chaudières fossiles exclues depuis le 1er mars 2025 | BOFiP BOI-TVA-LIQ-30-20-95 (version du 22/10/2025) | 22/10/2025 | Article ajouté au registre |
+| Contribution de solidarité (règlement (UE) 2022/1854, articles 15 à 18) : limitée aux bénéfices 2022/2023, taux minimum 33 % | EUR-Lex | 06/10/2022 (texte) | Levier `taxe_superprofits` : périmètre corrigé (pétrole, gaz, charbon, raffinage) ; « transport maritime » et « rachats d'actions » retirés ; article ajouté |
+| Encadrement des loyers (loi ELAN, article 140) : expérimentation à la demande des territoires | Légifrance ; ecologie.gouv.fr | 23/11/2018 (texte) ; 28/10/2025 (page) | Levier `encadrement_loyers` : « généralisation » retiré ; article ajouté |
+| Loi APER, n° 2023-175 du 10/03/2023 | Légifrance (référence) ; préfecture des Pyrénées-Orientales | 08/12/2025 (page) | Article ajouté ; levier `renouvelables` relié |
+| Loi de programmation de la justice, n° 2023-1059 du 20/11/2023 (article 1er et rapport annexé) | Légifrance | 20/11/2023 (texte) | Article ajouté ; levier `budget_justice` relié |
+| ONDAM 2026 : 274,4 Md€ (+3,1 %), LFSS pour 2026 | Vidal (adoption) ; La Base Lextenso ; FIPECO | 18/12/2025 ; 31/12/2025 ; 04/07/2025 | Levier `ondam_variation` : « ≈ 260 Md€ » remplacé par 274,4 Md€ (LFSS 2026) |
+| Pantouflage (Code pénal 432-13 : trois ans, 200 000 € d'amende) | AFA, guide (2022) ; ANSM, fiche 3 (2020) ; avocat (08/09/2026) | 2020 à 2026 | Article ajouté ; levier `reforme_anti_pantouflage` relié |
+
+Vérifié sans changement : décision n° 2017-752 DC du 8 septembre 2017 (Légifrance,
+texte de la décision) ; directive (UE) 2022/2523 transposée au CGI à partir de
+l'article 223 VJ (EUR-Lex et sources fiscales, 2024-2026).
+
+**Non vérifié, à ne pas présenter comme établi :**
+
+- `CGI_235_TER_ZD` : aucun texte officiel trouvé à cette date. À retirer ou à
+  remplacer par l'article exact.
+- Tous les chiffrages issus du `DOSSIER_DE_MANDATURE_GLOBAL.md` (9 Md€ pour la TVA
+  énergie, 6 Md€ pour la contribution, ratio renouvelables, etc.). Ils restent
+  des hypothèses du dossier, signalées comme telles dans les descriptions.
+- La comparaison européenne de la justice (0,35 % du PIB contre 0,5 % en
+  Allemagne) : source CEPEJ à consulter.
+- `tva_taux_normal` : base de 780 Md€ et 1 560 Md€ de consommation des ménages :
+  à rattacher à une publication Insee précise.
+- Modélisation : le levier `tva_energie_5_5` alimente le moteur avec un effet
+  (9 Md€, effets directs) dont le point de départ (taux normal de 20 % sur
+  l'abonnement depuis le 1er août 2025) doit être revu. Aucune valeur de
+  simulation n'a été modifiée à ce stade.

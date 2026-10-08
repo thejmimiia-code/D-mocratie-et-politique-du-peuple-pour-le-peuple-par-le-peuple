@@ -251,6 +251,20 @@ class TestRedondancesCorpusJuridique(unittest.TestCase):
         self.assertIn("CONST_ART_49_3", LEVIERS["usage_49_3"].articles)
         self.assertIn("REG_UE_2023_956_MACF", LEVIERS["macf_carbone_frontiere"].articles)
 
+    def test_corrections_verifiees_2026_sont_appliquees(self):
+        """Régression : les points vérifiés sur Légifrance / EUR-Lex (octobre 2026) restent corrigés."""
+        from simulateur.parametres import LEVIERS
+
+        tva = LEVIERS["tva_energie_5_5"]
+        self.assertNotIn("carburants au taux réduit", tva.description)
+        self.assertIn("1er août 2025", tva.description)
+        self.assertEqual(tva.articles, ("CGI_278_0_BIS_B",))
+        self.assertNotIn("transport maritime", LEVIERS["taxe_superprofits"].description)
+        self.assertEqual(LEVIERS["taxe_superprofits"].articles, ("REG_UE_2022_1854_SOLIDARITE",))
+        self.assertNotIn("Généralisation", LEVIERS["encadrement_loyers"].description)
+        self.assertEqual(LEVIERS["encadrement_loyers"].articles, ("ELAN_ART_140",))
+        self.assertIn("274,4", LEVIERS["ondam_variation"].description)
+
     def test_textes_fondateurs_presents(self):
         """Vérifie la présence nominative des articles fondamentaux."""
         corpus = get_corpus_lois()

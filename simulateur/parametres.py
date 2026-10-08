@@ -173,15 +173,15 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="tva_energie_5_5",
+    articles=("CGI_278_0_BIS_B", ),
     libelle="TVA sur l'énergie à 5,5 %",
     famille="fiscalite_menages",
-    description="Bascule le gaz, l'électricité et les carburants au taux réduit de 5,5 %. "
-                "Coût estimé ≈ 9 Md€/an (dossier de mandature).",
+    description="Bascule l'électricité et le gaz au taux réduit de 5,5 %. Depuis le 1er août 2025, l'abonnement est au taux normal de 20 % (loi de finances pour 2025) ; les carburants relèvent du taux normal de 20 %. Coût ≈ 9 Md€/an selon le dossier de mandature (chiffrage non vérifié).",
     unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
     champ="baisse_tva_energie_5_5_mde", facteur=9.0,
     profil=(1.0, 1.0, 1.0, 1.0, 1.0),
     effets_directs={"pouvoir_achat": 3.8, "inflation": -0.35, "pauvrete": -0.4},
-    source="Article 278-0 bis CGI ; chiffrage du DOSSIER_DE_MANDATURE_GLOBAL.md.",
+    source="CGI art. 278-0 bis B (abonnements, supprimé au 1er août 2025) ; fournisseurs-electricite.com (consulté le 08/10/2026) ; chiffrage DOSSIER_DE_MANDATURE_GLOBAL.md (non vérifié).",
 ))
 _lev(Levier(
     cle="csg_crds_hausse",
@@ -314,15 +314,15 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="taxe_superprofits",
+    articles=("REG_UE_2022_1854_SOLIDARITE", ),
     libelle="Superprofits — contribution temporaire",
     famille="fiscalite_entreprises",
-    description="Contribution sur les bénéfices exceptionnels (énergie, transport "
-                "maritime, rachats d'actions) : 6 Md€ par an selon le dossier.",
+    description="Contribution temporaire sur les bénéfices excédentaires des secteurs pétrole brut, gaz naturel, charbon et raffinage, sur le modèle du règlement (UE) 2022/1854, dont l'application est limitée aux exercices 2022 et 2023. Montant ≈ 6 Md€/an selon le dossier de mandature (chiffrage non vérifié).",
     unite="Md€", defaut=0.0, minimum=0.0, maximum=15.0, pas=0.5,
     champ="taxe_superprofits_rachats_mde",
     profil=(1.0, 1.0, 1.0, 1.0, 1.0),
     effets_directs={"inégalités": -0.5, "investissement": -0.2},
-    source="Règlement UE 2022/1854 (transposition) ; dossier de mandature.",
+    source="Règlement (UE) 2022/1854, articles 15 à 18 (EUR-Lex, consulté le 08/10/2026) ; chiffrage DOSSIER_DE_MANDATURE_GLOBAL.md (non vérifié).",
 ))
 _lev(Levier(
     cle="extension_ttf",
@@ -461,12 +461,11 @@ _lev(Levier(
     cle="ondam_variation",
     libelle="ONDAM — évolution de l'objectif de dépenses d'assurance maladie",
     famille="sante",
-    description="Variation en points de l'ONDAM (≈ 260 Md€). +1 pt ≈ 2,6 Md€. "
-                "Un ONDAM sous 2 %/an dégrade la qualité de prise en charge.",
+    description="Variation en points de l'ONDAM. ONDAM 2026 : 274,4 Md€ (+3,1 %) selon la LFSS pour 2026 ; 1 point ≈ 2,7 Md€ (1 % de l'ONDAM 2025 de 265,9 Md€). Un ONDAM sous 2 %/an dégrade la qualité de prise en charge : appréciation, non sourcée.",
     unite="pts", defaut=0.0, minimum=-2.0, maximum=3.0, pas=0.25,
     ligne="ondam", facteur=2.6, profil=(1.0, 1.0, 1.0, 1.0, 1.0),
     effets_directs={"sante": 0.9, "inflation": 0.02, "emploi": 0.3},
-    source="PLFSS — ONDAM ; Cour des comptes, rapport sur l'application des lois de financement.",
+    source="LFSS pour 2026 (adoptée définitivement le 16/12/2025, promulguée le 31/12/2025) ; vidal.fr (18/12/2025) ; FIPECO, fiche ONDAM (consultée le 08/10/2026).",
 ))
 _lev(Levier(
     cle="hopital_public",
@@ -693,14 +692,14 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="budget_justice",
+    articles=("LOI_JUSTICE_2023_1059", ),
     libelle="Budget de la justice",
     famille="regalien",
-    description="Moyens judiciaires (magistrats, greffes, numérique) : la France dépense "
-                "~0,35 % du PIB, contre 0,5 % en Allemagne.",
+    description="Moyens judiciaires (magistrats, greffes, numérique), dans le cadre de la programmation 2023-2027. Part du budget dans le PIB et comparaison avec l'Allemagne : non vérifiées.",
     unite="Md€", defaut=0.0, minimum=-2.0, maximum=10.0, pas=0.25,
     ligne="justice", profil=(0.5, 0.75, 0.9, 1.0, 1.0),
     effets_directs={"justice": 1.1, "securite": 0.4, "confiance": 0.5, "democratie": 0.3},
-    source="Conseil de l'Europe, CEPEJ ; loi de programmation de la justice 2023-2027.",
+    source="Loi n° 2023-1059 du 20 novembre 2023 (programmation de la justice 2023-2027), Légifrance ; comparaison européenne : CEPEJ (non vérifiée).",
 ))
 _lev(Levier(
     cle="lutte_criminalite_organisee",
@@ -744,14 +743,14 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="renouvelables",
+    articles=("LOI_APER_2023_175", ),
     libelle="Renouvelables (éolien, solaire, biogaz)",
     famille="energie_climat",
-    description="Accélération des appels d'offres et de la planification (loi APER). "
-                "1 Md€/an ≈ +1 point de part renouvelable.",
+    description="Accélération des appels d'offres et de la planification (loi APER). Ratio 1 Md€/an ≈ +1 point de part renouvelable : non vérifié.",
     unite="Md€", defaut=0.0, minimum=0.0, maximum=20.0, pas=0.5,
     ligne="renouvelables", profil=(0.6, 0.85, 1.0, 1.0, 1.0),
     effets_directs={"climat": 1.0, "energie": 0.7, "emploi": 0.5, "industrie": 0.3},
-    source="RTE, « Futurs énergétiques 2050 » ; loi APER (2023).",
+    source="Loi n° 2023-175 du 10 mars 2023 (APER), Légifrance ; RTE, « Futurs énergétiques 2050 » (référence non vérifiée à ce stade).",
 ))
 _lev(Levier(
     cle="renovation_thermique",
@@ -902,16 +901,16 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="encadrement_loyers",
+    articles=("ELAN_ART_140", ),
     libelle="Encadrement des loyers",
     famille="logement_territoires",
-    description="Généralisation de l'encadrement (loi ELAN) : effet sur le pouvoir "
-                "d'achat des locataires et sur l'offre locative.",
+    description="Activation de l'encadrement des loyers (dispositif expérimental de l'article 140 de la loi ELAN) dans les territoires qui en font la demande : loyer de référence, majoré de 20 % et minoré de 30 %. Effet sur le pouvoir d'achat des locataires et sur l'offre locative.",
     unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
     ligne="loyers", facteur=2.0,
     profil=(1.0, 1.0, 1.0, 1.0, 1.0),
     effets_directs={"logement": 0.7, "pouvoir_achat": 0.5, "pauvrete": -0.3,
                     "investissement": -0.3},
-    source="Évaluations de l'encadrement parisien et lillois ; loi ELAN art. 140.",
+    source="Loi n° 2018-1021 du 23 novembre 2018 (ELAN), article 140, Légifrance ; ecologie.gouv.fr (page du 28/10/2025, consultée le 08/10/2026).",
 ))
 _lev(Levier(
     cle="decentralisation",
@@ -1042,14 +1041,14 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reforme_anti_pantouflage",
+    articles=("CP_432_13", ),
     libelle="Anti-pantouflage & transparence des lobbys",
     famille="institutions_democratie",
-    description="Interdiction de pantouflage renforcée, registre public des représentants "
-                "d'intérêts, transparence des rendez-vous ministériels.",
+    description="Interdiction de pantouflage renforcée (article 432-13 du Code pénal : trois ans), registre public des représentants d'intérêts, transparence des rendez-vous ministériels.",
     unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
     champ="reforme_anti_pantouflage_lobbys",
     effets_directs={"democratie": 0.7, "confiance": 0.7, "inégalités": -0.3},
-    source="HATVP — rapports annuels ; loi Sapin II.",
+    source="Code pénal, article 432-13 ; loi n° 2016-1691 du 9 décembre 2016 (Sapin II) ; HATVP.",
 ))
 _lev(Levier(
     cle="reforme_non_cumul",

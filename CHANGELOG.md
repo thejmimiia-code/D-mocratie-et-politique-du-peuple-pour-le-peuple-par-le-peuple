@@ -11,6 +11,10 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 - Strate `Européen` remplacée par `Europe` ; liste fermée des strates testée.
 - Trois intitulés corrigés d'après Légifrance et EUR-Lex (directive 2022/2523,
   L. 711-1 du Code de commerce, directive 2022/542 article 1er point 22).
+- Textes manquants ajoutés au registre, vérifiés sur Légifrance, EUR-Lex et BOFiP
+  (CGI 278-0 bis A et B, règlement 2022/1854, loi ELAN art. 140, loi APER, loi
+  n° 2023-1059, Code pénal 432-13) ; 7 leviers corrigés (TVA énergie, superprofits,
+  encadrement des loyers, ONDAM 2026, pantouflage, renouvelables, justice).
 - Nouveau champ `Levier.articles` : 9 leviers reliés à leurs articles du registre,
   avec test d'intégrité.
 
