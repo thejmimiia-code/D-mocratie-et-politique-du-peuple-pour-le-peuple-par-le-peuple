@@ -163,7 +163,7 @@ Réglages du dépôt (description, sujets, aperçu social) : [`docs/REPOSITORY_D
 ### Déploiement Vercel du simulateur
 
 `index.html` à la racine est généré depuis la vraie page interactive `HTML_PAGE`.
-Les fonctions `api/*.py` exposent les routes du moteur sur le même domaine, ce
+La fonction `api/[...path].py` expose les routes du moteur sur le même domaine, ce
 qui permet à la page d'appeler ses URL absolues `/api/...` et d'être intégrée
 dans un `iframe`.
 
@@ -174,19 +174,19 @@ python3 outils/generer-index-simulateur.py --verifier
 python3 outils/generer-fonctions-api.py --verifier
 ```
 
+`outils/generer-fonctions-api.py` ne génère plus de fichiers : il vérifie que
+`api/` ne contient que la fonction attrape-tout et les fonctions du site.
+
 Dans Vercel : **Framework Preset: Other**, **Build Command: vide**,
 **Output Directory: `.`**, **Install Command: vide**. Ne pas ajouter de règle de
 réécriture globale. Le code ne définit ni `X-Frame-Options` ni CSP `frame-ancestors`.
 Pour un accès public, désactiver **Security → Deployment Protection → Vercel Authentication**.
 
-> ⚠️ **Plafond de l'offre Hobby : 12 fonctions par déploiement.** `api/` contient
-> une fonction par route du moteur — 16 routes plus `verifier-source` — donc
-> davantage que ce plafond, et le déploiement est refusé sur l'offre gratuite.
-> Pour rester gratuit, le simulateur se sert d'un seul processus : bouton Render,
-> image Docker ou n'importe quel hébergeur Python, voir
-> [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md). Sur Vercel, il faudrait réunir
-> les routes en **une seule** fonction, donc n'ajouter que la réécriture
-> `vercel.json` correspondante — jamais la règle globale déconseillée ci-dessus.
+> ✅ **Plafond de l'offre Hobby : 12 fonctions par déploiement.** `api/` ne contient
+> qu'une seule fonction pour les 16 routes du moteur, `[...path].py`, plus
+> `verifier-source` : deux fonctions au total. Aucune règle de réécriture
+> (`vercel.json`) n'est nécessaire. Pour un hébergement sans Vercel (un seul
+> processus), voir [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md).
 
 
 ```bash

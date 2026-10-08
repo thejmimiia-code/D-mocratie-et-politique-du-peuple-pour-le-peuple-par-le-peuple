@@ -4,6 +4,19 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [Non publié]
+
+### Modifié — Une seule fonction Vercel pour les routes du moteur (`api/`)
+
+- `api/` ne contient plus une fonction par route (16 fichiers) : la fonction
+  attrape-tout `api/[...path].py` sert toutes les routes `/api/*` du moteur, via
+  `simulateur.pont_api.PontAPI`, qui transmet la requête sans la réécrire.
+  `api/` compte désormais 2 fonctions, sous le plafond de 12 de l'offre Hobby.
+- `outils/generer-fonctions-api.py` vérifie ce contrat (`--verifier`) au lieu de
+  générer les fichiers. `verifier-source` reste une fonction du site.
+- `tests/test_vercel_runtime.py` : contrôle du contrat et appels HTTP à travers
+  la fonction unique. `index.html` est inchangé.
+
 ## [1.10.1] — 2026-10-08
 
 ### Corrigé — Le contrat Vercel rattrape le moteur (`api/`, `index.html`)
