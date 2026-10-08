@@ -116,6 +116,7 @@ python3 -m simulateur.dashboard --host 0.0.0.0 --port 8080
 | Fichier | Rôle |
 |---|---|
 | `simulateur/wsgi.py` | **Le pont.** Présente chaque requête WSGI au handler HTTP existant. C'est le seul point d'entrée utilisé en ligne. |
+| `api/[...path].py` | Fonction Vercel unique : sert toutes les routes du moteur (section 4). |
 | `Procfile` | Commande de démarrage pour les plateformes qui le détectent. |
 | `requirements.txt` | `gunicorn`, et rien d'autre — dépendance **d'hébergement**, pas d'exécution. |
 | `runtime.txt` | Version de Python (`3.11.9`). Render et Heroku le lisent. |
@@ -140,6 +141,50 @@ le réseau sont interceptés avant d'atteindre le corps. Rien de plus.
 Conséquence pratique : ce que vous vérifiez en local est exactement ce qui
 tourne en ligne. [`tests/test_wsgi.py`](../tests/test_wsgi.py) le garantit — 21
 tests, dont un qui sert réellement l'application par HTTP.
+
+---
+
+## 4. Vercel : une fonction pour toutes les routes
+
+Le même dépôt se déploie sur Vercel sans fichier de configuration. Réglages à appliquer
+dans le projet :
+
+- **Framework Preset : Other**, **Build Command : vide**, **Output Directory : `.`**,
+  **Install Command : vide**.
+- Aucun `vercel.json` et aucune règle de réécriture globale.
+- `api/` ne contient que deux fonctions. `api/[...path].py` sert toutes les routes
+  `/api/*` du moteur, via `simulateur/pont_api.py`. Vercel envoie `/api/<route>` vers
+  `api/[...path].py?...path=<route>` ; le pont rétablit alors le chemin demandé.
+  `api/verifier-source.py` est une fonction distincte, propre au site.
+
+Ce découpage est imposé par Vercel : chaque fichier `.py` de `api/` devient une
+fonction, et l'offre Hobby refuse un déploiement qui en compte plus de 12. Une
+fonction par route (dix-sept fichiers) serait donc refusée.
+
+Le système de fichiers des fonctions est en lecture seule, à l'exception de `/tmp`.
+Le cache des données publiques y est placé, et les exports sont construits en mémoire.
+
+Pour un accès public, désactiver **Security → Deployment Protection → Vercel
+Authentication**. Tant que cette protection est active, l'adresse de prévisualisation
+affiche une page de connexion au lieu du simulateur.
+
+Contrôle local, sans Vercel :
+
+```bash
+python3 outils/generer-fonctions-api.py --verifier
+python3 outils/generer-index-simulateur.py --verifier
+```
+
+Après un déploiement, vérifier sur l'adresse publique :
+
+1. le déploiement est au statut « Ready » et le journal de build ne signale aucun
+   plafond de fonctions ;
+2. `/api/scenarios` répond en JSON et contient `mandature` ;
+3. `/api/export?scenario=mandature&format=csv` télécharge un fichier CSV ;
+4. `/api/inconnue` répond 404.
+
+Une page HTML à la place du JSON signifie que la requête n'atteint pas la fonction :
+protection de déploiement encore active, ou routage à revoir.
 
 ---
 
@@ -179,8 +224,8 @@ calcule rien, idéale pour le `healthCheckPath` d'un hébergeur.
 - **Aucune donnée personnelle.** Le simulateur n'a ni base de données, ni
   compte, ni formulaire d'inscription. Aucun secret n'est à configurer.
 - **Le disque est éphémère** sur la plupart des offres gratuites. Sans
-  conséquence : les exports JSON/CSV écrivent un fichier temporaire, l'envoient,
-  puis l'effacent.
+  conséquence : les exports JSON/CSV sont construits en mémoire et n'écrivent
+  aucun fichier.
 - **Les appels sortants sont optionnels.** Le bouton « Rafraîchir les données »
   interroge des API publiques (Eurostat, BCE, Banque mondiale, Frankfurter). Si
   l'hébergeur bloque le réseau sortant, la page continue de fonctionner avec
@@ -201,6 +246,7 @@ calcule rien, idéale pour le `healthCheckPath` d'un hébergeur.
 | « Blueprint file `render.yaml` not found on main branch » | Render ne lit que la branche **par défaut** et garde l'arbre du dépôt en cache : le fichier n'existait pas encore sur `main` quand la page a été ouverte, ou vient tout juste d'y être fusionné. Fusionner d'abord, puis **Retry**. La création manuelle (New → Web Service) reste possible sans Blueprint. |
 | Le dépôt n'apparaît pas dans la liste des Blueprints | L'application GitHub de Render n'a pas accès à ce dépôt : l'autoriser dans **GitHub → Settings → Applications → Render → Configure**, puis recharger la page. |
 | « 502 Bad Gateway » juste après le déploiement | Le service n'écoute pas sur `$PORT` : vérifier la commande de démarrage. |
+| « No more than 12 Serverless Functions » au déploiement Vercel | `api/` contient plus de 12 fichiers `.py`. Ne garder que `[...path].py` et `verifier-source.py` ; `python3 outils/generer-fonctions-api.py` retire les fonctions générées route par route. S'il signale un fichier inconnu, le retirer ou le déplacer d'abord. |
 | « 404 » sur toutes les routes, page d'accueil comprise | L'application est montée sous un préfixe (`SCRIPT_NAME`) non géré par le proxy. Servir à la racine. |
 | La page s'ouvre vide | Premier réveil de l'offre gratuite : attendre ~30 s et recharger. |
 | « Application failed to respond » au bout de 30 s | `--timeout` trop court au démarrage à froid ; le passer à 120 s. |

@@ -4,6 +4,31 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [Non publié]
+
+### Modifié — Une seule fonction Vercel pour les routes du moteur (`api/`)
+
+- `api/` ne contient plus une fonction par route (16 fichiers) : la fonction
+  attrape-tout `api/[...path].py` sert toutes les routes `/api/*` du moteur, via
+  `simulateur.pont_api.PontAPI`. `api/` compte désormais 2 fonctions, sous le
+  plafond de 12 de l'offre Hobby, dépassé par les 17 fichiers précédents.
+- `simulateur/pont_api.py` transmet la requête au routeur existant. Si Vercel
+  transmet la destination de la réécriture (`/api/[...path].py?...path=<route>`) au
+  lieu de l'URL demandée, le chemin `/api/<route>?…` est rétabli avant l'appel.
+- `outils/generer-fonctions-api.py` écrit `api/[...path].py` et supprime les anciennes
+  fonctions générées route par route. Il refuse d'agir, sans rien modifier, si `api/`
+  contient un fichier qu'il n'a pas généré. `--verifier` contrôle sans rien écrire.
+  `verifier-source` reste une fonction du site, jamais supprimée.
+- `/api/export` construit le CSV et le JSON en mémoire. L'ancienne version écrivait
+  un fichier dans le dossier courant, impossible sur un hébergeur à fonctions dont le
+  système de fichiers est en lecture seule (seul `/tmp` est inscriptible). Les réponses
+  (contenu, en-têtes, nom de fichier) sont inchangées.
+- `tests/test_vercel_runtime.py` : contrat de `api/`, routes servies par la fonction
+  unique, 404, destination de réécriture, HEAD, export sans écriture disque, et
+  générateur (suppression limitée aux fichiers générés, refus sur fichier inconnu).
+- README et `docs/HEBERGEMENT.md` documentent le déploiement Vercel. Aucune règle de
+  réécriture `vercel.json` n'est ajoutée. `index.html` est inchangé.
+
 ## [1.10.2] — 2026-10-08
 
 ### Ajout — Calibrage transparent des dépenses du foyer
