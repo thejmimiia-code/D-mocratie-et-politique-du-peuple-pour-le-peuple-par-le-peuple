@@ -97,7 +97,7 @@ class TestContratVercel(unittest.TestCase):
 
     def test_pont_retablit_la_destination_de_reecriture(self):
         instance = object.__new__(PontAPI)
-        instance.path = "/api/[...path]?...path=catalogue&x=1"
+        instance.path = "/api/[...path].py?...path=catalogue&x=1"
         with patch.object(DashboardHandler, "do_GET") as deleguer:
             instance.do_GET()
         self.assertEqual(instance.path, "/api/catalogue?x=1")
@@ -110,20 +110,34 @@ class TestCheminDemande(unittest.TestCase):
             # Vercel transmet l'URL demandée : elle est conservée telle quelle.
             "/api/catalogue": "/api/catalogue",
             "/api/scenarios?scenario=mandature": "/api/scenarios?scenario=mandature",
-            # Vercel transmet la destination de la réécriture : le chemin est rétabli.
-            "/api/[...path]?...path=catalogue&x=1": "/api/catalogue?x=1",
-            "/api/[...path]?...path=bulle&levier=abc": "/api/bulle?levier=abc",
-            "/api/[...path]?...path=simuler": "/api/simuler",
-            "/api/%5B...path%5D?...path=lexique&q=spread": "/api/lexique?q=spread",
-            "/api/[...path]?x=1&...path=export&format=csv": "/api/export?x=1&format=csv",
+            # Vercel transmet la destination de la règle de routage : le chemin est rétabli.
+            "/api/[...path].py?...path=catalogue&x=1": "/api/catalogue?x=1",
+            "/api/[...path].py?...path=bulle&levier=abc": "/api/bulle?levier=abc",
+            "/api/[...path].py?...path=simuler": "/api/simuler",
+            "/api/%5B...path%5D.py?...path=lexique&q=spread": "/api/lexique?q=spread",
+            "/api/[...path].py?x=1&...path=export&format=csv": "/api/export?x=1&format=csv",
+            "/api/[...path]?...path=scenarios": "/api/scenarios",
             # Sans segment capturé, ou hors de la destination : rien n'est réécrit.
-            "/api/[...path]?autre=1": "/api/[...path]?autre=1",
-            "/api/[...path]": "/api/[...path]",
+            "/api/[...path].py?autre=1": "/api/[...path].py?autre=1",
+            "/api/[...path].py": "/api/[...path].py",
             "/": "/",
         }
         for entree, attendu in cas.items():
             with self.subTest(entree=entree):
                 self.assertEqual(chemin_demande(entree), attendu)
+
+
+class TestDestinationVercel(unittest.TestCase):
+    """La règle de routage de Vercel invoque `api/[...path].py?...path=<route>`."""
+
+    def test_chaque_route_du_moteur_est_retrouvee_depuis_la_destination(self):
+        routes = charger_generateur().routes_du_moteur()
+        self.assertGreaterEqual(len(routes), 16)
+        for route in sorted(routes):
+            segment = route.removeprefix("/api/")
+            with self.subTest(route=route):
+                self.assertEqual(chemin_demande(f"/api/[...path].py?...path={segment}"), route)
+                self.assertEqual(chemin_demande(f"/api/%5B...path%5D.py?...path={segment}"), route)
 
 
 class TestFonctionsVercelHTTP(unittest.TestCase):
@@ -198,7 +212,7 @@ class TestFonctionsVercelHTTP(unittest.TestCase):
         handler = charger_fonction_unique()
 
         code, type_contenu, contenu = self.requete(
-            handler, "GET", "/api/[...path]?...path=scenarios"
+            handler, "GET", "/api/[...path].py?...path=scenarios"
         )
         self.assertEqual(code, 200, contenu[:500])
         self.assertIn("mandature", json.loads(contenu)["scenarios"])

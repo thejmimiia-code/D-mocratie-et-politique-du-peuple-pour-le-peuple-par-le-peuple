@@ -12,11 +12,11 @@ Une fonction par route (une par fichier de `api/`) dépassait le plafond de
 12 fonctions par déploiement de l'offre Hobby de Vercel ; c'est pourquoi les
 routes sont réunies ici.
 
-Chemin reçu : le moteur attend `/api/<route>?…`. La fonction attrape-tout reçoit
-ce chemin tel quel ; si Vercel lui transmettait à la place la destination de la
-réécriture (`/api/[...path]?...path=<route>&…`), `chemin_demande` rétablit le
-chemin demandé à partir des segments capturés. Ce repli n'agit que sur cette
-forme précise : toute autre cible de requête passe inchangée.
+Chemin reçu : le moteur attend `/api/<route>?…`. Vercel invoque la fonction par la
+destination de sa règle de routage, `/api/[...path].py?...path=<route>&…` (règle
+produite par `@vercel/fs-detectors`, la détection qu'utilise la CLI). `chemin_demande`
+rétablit alors `/api/<route>?…` à partir du segment capturé. Toute autre cible de
+requête passe inchangée.
 
 ⚠️ Ce fichier est un **ajout du dépôt du site M.R.S.C**, il ne vient pas du
 dépôt du simulateur : une mise à jour du moteur ne doit ni l'écraser ni le
@@ -37,10 +37,11 @@ os.environ.setdefault("SIMULATEUR_CACHE", "/tmp/simulateur_cache")
 
 from simulateur.dashboard import DashboardHandler  # noqa: E402
 
-#: Destination de la réécriture de la fonction attrape-tout, telle que Vercel
-#: peut la transmettre à la place de l'URL demandée.
-CHEMIN_DESTINATION = "/api/[...path]"
-#: Clé de requête où Vercel dépose les segments capturés par `[...path]`.
+#: Destinations de la règle de routage vers la fonction attrape-tout, telles que
+#: Vercel peut les transmettre à la place de l'URL demandée. La forme avec `.py`
+#: est celle de `@vercel/fs-detectors` ; la forme sans extension est tolérée.
+CHEMINS_DESTINATION = frozenset({"/api/[...path].py", "/api/[...path]"})
+#: Clé de requête où Vercel dépose le segment capturé par `[...path]`.
 CLE_SEGMENTS = "...path"
 
 
@@ -48,12 +49,12 @@ def chemin_demande(chemin_recu: str) -> str:
     """Rend à la cible de requête `chemin_recu` la forme `/api/<route>?…`.
 
     `chemin_recu` contient le chemin et la chaîne de requête. Elle est renvoyée
-    telle quelle, sauf si elle désigne la destination de la réécriture :
+    telle quelle, sauf si elle désigne la destination de la règle de routage :
 
-        /api/[...path]?...path=catalogue&x=1   ->   /api/catalogue?x=1
+        /api/[...path].py?...path=catalogue&x=1   ->   /api/catalogue?x=1
     """
     chemin, _, requete = chemin_recu.partition("?")
-    if unquote(chemin) != CHEMIN_DESTINATION:
+    if unquote(chemin) not in CHEMINS_DESTINATION:
         return chemin_recu
     segments: str | None = None
     restants: list[str] = []

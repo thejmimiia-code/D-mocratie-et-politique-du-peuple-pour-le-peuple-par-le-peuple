@@ -153,8 +153,9 @@ dans le projet :
   **Install Command : vide**.
 - Aucun `vercel.json` et aucune règle de réécriture globale.
 - `api/` ne contient que deux fonctions. `api/[...path].py` sert toutes les routes
-  `/api/*` du moteur, via `simulateur/pont_api.py`. `api/verifier-source.py` est une
-  fonction distincte, propre au site.
+  `/api/*` du moteur, via `simulateur/pont_api.py`. Vercel envoie `/api/<route>` vers
+  `api/[...path].py?...path=<route>` ; le pont rétablit alors le chemin demandé.
+  `api/verifier-source.py` est une fonction distincte, propre au site.
 
 Ce découpage est imposé par Vercel : chaque fichier `.py` de `api/` devient une
 fonction, et l'offre Hobby refuse un déploiement qui en compte plus de 12. Une

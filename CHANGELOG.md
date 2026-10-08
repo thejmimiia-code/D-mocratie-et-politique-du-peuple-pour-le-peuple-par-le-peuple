@@ -13,7 +13,7 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   `simulateur.pont_api.PontAPI`. `api/` compte désormais 2 fonctions, sous le
   plafond de 12 de l'offre Hobby, dépassé par les 17 fichiers précédents.
 - `simulateur/pont_api.py` transmet la requête au routeur existant. Si Vercel
-  transmet la destination de la réécriture (`/api/[...path]?...path=<route>`) au
+  transmet la destination de la réécriture (`/api/[...path].py?...path=<route>`) au
   lieu de l'URL demandée, le chemin `/api/<route>?…` est rétabli avant l'appel.
 - `outils/generer-fonctions-api.py` écrit `api/[...path].py` et supprime les anciennes
   fonctions générées route par route. Il refuse d'agir, sans rien modifier, si `api/`
