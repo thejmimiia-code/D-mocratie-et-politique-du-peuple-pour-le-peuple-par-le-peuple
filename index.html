@@ -153,6 +153,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .champ-profil{display:flex;flex-direction:column;gap:4px;font-size:.72rem;color:var(--texte-dim)}
 .champ-profil input,.champ-profil select{width:100%;padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--texte);font:inherit}
 .champ-profil input[type=checkbox]{width:18px;height:18px;accent-color:var(--accent)}
+.champ-profil input[readonly]{border-style:dashed;opacity:.86;cursor:default}
 .profil-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:9px 0}
 .range-bourse{width:120px;accent-color:var(--accent)}
 .saisie-euros{max-width:125px;padding:5px 7px;border:1px solid var(--border);border-radius:7px;background:#0d1526;color:var(--texte);font:inherit}
@@ -594,7 +595,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.10.0 (2026-10-08) — partagez vos réglages par lien, même routeur en local et en ligne; rechargez la page (F5).</span>
+    <span class="aide" id="version-interface">Interface v1.10.2 (2026-10-08) — calibration des dépenses du foyer par source publique ou données personnelles; données personnelles locales à la page.</span>
   </p>
 </div>
 
@@ -802,6 +803,9 @@ function renderContexte(){
 /* ── Vues par strate : trajectoire comparée et profil ménage local ─────── */
 const CLES_ONGLETS_STRATE = ['local','national','europe','mondial','geopolitique','menages','boursier'];
 let ANNEE_MENAGE = 0;
+// Le budget du foyer peut rester basé sur les saisies par poste ou sur une
+// répartition publique INSEE appliquée à un total personnel, sans écraser les saisies.
+let MODE_CALIBRAGE_MENAGE = 'personnel';
 function contenuOngletStrate(cle, donnees){
   switch (cle){
     case 'local': return afficherLocal(donnees);
@@ -851,11 +855,16 @@ function sourceObservatoire(info){
   const lien = url && String(url).startsWith('https://')
     ? ` · <a href="${echapperTexte(url)}" target="_blank" rel="noopener">consulter</a>` : '';
   const periode = info.periode ? ` · période observée : ${echapperTexte(info.periode)}` : '';
+  const publication = info.publication_le
+    ? ` · publié le ${echapperTexte(info.publication_le)}` : '';
   const collecte = info.collecte_le ? ` · collecté le ${echapperTexte(info.collecte_le)}` : '';
   const frequence = info.frequence ? ` · ${echapperTexte(info.frequence)}` : '';
-  const statut = info.statut ? ` · ${echapperTexte(info.statut)}` : '';
+  const statut = info.statut ? ` · statut : ${echapperTexte(info.statut)}` : '';
+  const qualite = info.qualite
+    ? ` · qualité : ${echapperTexte(info.qualite)}`
+    : (info.qualite_code ? ` · code qualité source : ${echapperTexte(info.qualite_code)}` : '');
   const note = info.note ? `<br>${echapperTexte(info.note)}` : '';
-  return `<div class="note-source"><b>${source}</b>${lien}${periode}${collecte}${frequence}${statut}${note}</div>`;
+  return `<div class="note-source"><b>${source}</b>${lien}${periode}${publication}${collecte}${frequence}${statut}${qualite}${note}</div>`;
 }
 function tableauComparatif(etapes, references, indicateurs){
   if (!Array.isArray(etapes) || !etapes.length) return '<p class="aide">Lancez une simulation pour afficher les trajectoires.</p>';
@@ -1025,11 +1034,58 @@ function afficherGeopolitique(donnees){
 }
 
 /* Profil fiscal/ménage — saisie éphémère locale, jamais envoyée à l'API. */
+function partsPanierNational(){
+  const panier = CONTEXTE?.observatoire?.menages?.panier_national_2025?.part_depense_finale_pct || [];
+  const parCle = Object.create(null);
+  panier.forEach(ligne => {
+    const cle = String(ligne?.cle || '');
+    const part = Number(ligne?.part);
+    if (CATEGORIES_MENAGE.some(item => item.cle === cle) && Number.isFinite(part) && part > 0){
+      parCle[cle] = part;
+    }
+  });
+  const somme = CATEGORIES_MENAGE.reduce((total, item) => total + (parCle[item.cle] || 0), 0);
+  return {parCle, somme};
+}
+function depenseBaseProfil(item){
+  const cle = typeof item === 'string' ? item : item?.cle;
+  if (!cle) return 0;
+  if (MODE_CALIBRAGE_MENAGE !== 'insee'){
+    const saisie = Number(PROFIL_MENAGE[`depense_${cle}`] ?? 0);
+    return Number.isFinite(saisie) ? Math.max(0, saisie) : 0;
+  }
+  const distribution = partsPanierNational();
+  const part = Number(distribution.parCle[cle] || 0);
+  const total = Number(PROFIL_MENAGE.depenses_panier_total_mensuel || 0);
+  if (!distribution.somme || !Number.isFinite(total) || total <= 0 || part <= 0) return 0;
+  return total * part / distribution.somme;
+}
+function partPanierNationalPct(item){
+  const cle = typeof item === 'string' ? item : item?.cle;
+  const distribution = partsPanierNational();
+  return distribution.somme > 0 ? Number(distribution.parCle[cle] || 0) / distribution.somme * 100 : null;
+}
+function categoriePanierProfil(cle){
+  return CATEGORIES_MENAGE.find(item => `depense_${item.cle}` === cle) || null;
+}
+function valeurChampProfil(cle){
+  if (cle === 'depenses_panier_total_mensuel' && MODE_CALIBRAGE_MENAGE === 'personnel'){
+    return totalPanierProfil();
+  }
+  const categorie = categoriePanierProfil(cle);
+  return categorie ? depenseBaseProfil(categorie) : (PROFIL_MENAGE[cle] ?? 0);
+}
 function champProfil(cle, libelle, unite, step, minimum){
-  const valeur = PROFIL_MENAGE[cle] ?? 0;
+  const valeur = valeurChampProfil(cle);
+  const lectureSeule = (cle === 'depenses_panier_total_mensuel' && MODE_CALIBRAGE_MENAGE === 'personnel')
+    || (categoriePanierProfil(cle) && MODE_CALIBRAGE_MENAGE === 'insee');
+  const nombre = Number(valeur);
+  const valeurAffichee = Number.isFinite(nombre)
+    ? (lectureSeule ? nombre.toFixed(2) : String(valeur)) : '0';
   return `<label class="champ-profil">${echapperTexte(libelle)}${unite ? ` (${echapperTexte(unite)})` : ''}
-    <input type="number" min="${minimum ?? 0}" step="${step ?? 1}" value="${echapperTexte(valeur)}"
-      data-profil="${echapperTexte(cle)}" oninput="modifierProfilMenage(this)"></label>`;
+    <input type="number" min="${minimum ?? 0}" step="${step ?? 1}" value="${echapperTexte(valeurAffichee)}"
+      ${lectureSeule ? 'readonly aria-readonly="true"' : ''}
+      data-profil="${echapperTexte(cle)}" onchange="modifierProfilMenage(this)"></label>`;
 }
 function caseProfil(cle, libelle){
   return `<label class="champ-profil"><span>${echapperTexte(libelle)}</span>
@@ -1037,28 +1093,35 @@ function caseProfil(cle, libelle){
       onchange="modifierProfilMenage(this)"></label>`;
 }
 function totalPanierProfil(){
-  return CATEGORIES_MENAGE.reduce((somme, item) => somme + Number(PROFIL_MENAGE[`depense_${item.cle}`] || 0), 0);
+  return CATEGORIES_MENAGE.reduce((somme, item) => {
+    const valeur = Number(PROFIL_MENAGE[`depense_${item.cle}`] || 0);
+    return somme + (Number.isFinite(valeur) ? Math.max(0, valeur) : 0);
+  }, 0);
+}
+function modifierModeCalibrageMenage(mode){
+  const choisi = mode === 'insee' && partsPanierNational().somme > 0 ? 'insee' : 'personnel';
+  MODE_CALIBRAGE_MENAGE = choisi;
+  const select = document.getElementById('mode-calibrage-menage');
+  if (select) select.value = choisi;
+  renderResultatsMenage(SORTIE);
 }
 function modifierProfilMenage(champ){
   const cle = champ?.dataset?.profil;
   if (!cle) return;
-  PROFIL_MENAGE[cle] = champ.type === 'checkbox' ? !!champ.checked : Math.max(0, Number(champ.value) || 0);
-  if (cle.startsWith('depense_')) PROFIL_MENAGE.depenses_panier_total_mensuel = totalPanierProfil();
+  const entreePanier = categoriePanierProfil(cle);
+  if ((cle === 'depenses_panier_total_mensuel' && MODE_CALIBRAGE_MENAGE === 'personnel')
+      || (entreePanier && MODE_CALIBRAGE_MENAGE === 'insee')) return;
+  if (champ.type === 'checkbox'){
+    PROFIL_MENAGE[cle] = !!champ.checked;
+  } else {
+    const valeur = Number(champ.value);
+    PROFIL_MENAGE[cle] = Number.isFinite(valeur) ? Math.max(0, valeur) : 0;
+  }
+  if (entreePanier) PROFIL_MENAGE.depenses_panier_total_mensuel = totalPanierProfil();
   renderResultatsMenage(SORTIE);
 }
-function repartirPanierNational(){
-  const panier = CONTEXTE?.observatoire?.menages?.panier_national_2025?.part_depense_finale_pct || [];
-  const total = Math.max(0, Number(PROFIL_MENAGE.depenses_panier_total_mensuel) || 0);
-  const disponibles = panier.filter(x => CATEGORIES_MENAGE.some(c => c.cle === x.cle) && Number(x.part) > 0);
-  const somme = disponibles.reduce((s, x) => s + Number(x.part), 0);
-  if (!somme) return;
-  disponibles.forEach(x => {
-    const cle = `depense_${x.cle}`;
-    PROFIL_MENAGE[cle] = total * Number(x.part) / somme;
-    const champ = document.querySelector(`[data-profil="${cle}"]`);
-    if (champ) champ.value = String(PROFIL_MENAGE[cle].toFixed(2));
-  });
-  renderResultatsMenage(SORTIE);
+function activerCalibrageINSEE(){
+  modifierModeCalibrageMenage('insee');
 }
 function impotSelonBareme(revenuAnnuel, parts, hausseTrancheSuperieure){
   const tranches = CONTEXTE?.observatoire?.menages?.bareme_ir_2026?.tranches || [];
@@ -1125,7 +1188,7 @@ function projectionMenage(donnees,index,reference){
   const etapeRef=donnees.etapes_reference?.[index]||{};
   const depenses=CATEGORIES_MENAGE.reduce((total,item)=>{
     const facteurs=facteurPrixCategorie(item,etape,etapeRef,index);
-    return total+Number(p[`depense_${item.cle}`]||0)*(reference?facteurs.reference:facteurs.scenario);
+    return total+depenseBaseProfil(item)*(reference?facteurs.reference:facteurs.scenario);
   },0);
   const depensesEnergie=Number(p.depense_energie_mensuelle||0);
   const economieTvaEnergie=!reference&&Number(params.tva_energie_5_5||0)>=0.5?depensesEnergie*(0.145/1.20):0;
@@ -1147,20 +1210,31 @@ function rendreResultatsMenage(donnees,index){
     ['Transferts et aides déclarés/imputés',reference.transferts,scenario.transferts],
     ['Économie TVA énergie imputable (si dépense saisie)',reference.economieTvaEnergie,scenario.economieTvaEnergie],
     ['Revenu disponible mensuel estimé',reference.revenuDisponible,scenario.revenuDisponible],
-    ['Panier de consommation — catégories INSEE',reference.depenses,scenario.depenses],['Reste après panier saisi',reference.reste,scenario.reste]
+    [MODE_CALIBRAGE_MENAGE === 'insee'
+      ? 'Panier calibré — parts INSEE 2025 appliquées au total saisi'
+      : 'Panier de consommation — données personnelles par poste',
+      reference.depenses,scenario.depenses],
+    ['Reste après panier calibré',reference.reste,scenario.reste]
   ];
   const tableBudget=`<div class="tableau-strate"><table><thead><tr><th>Poste mensuel</th><th>Référence (€)</th><th>Scénario (€)</th><th>Écart (€)</th></tr></thead><tbody>${rows.map(([label,ref,val])=>{const delta=val-ref,cls=delta>0.005?'delta-pos':(delta< -0.005?'delta-neg':'');return `<tr><td>${echapperTexte(label)}</td><td>${fmt(ref,2)} €</td><td>${fmt(val,2)} €</td><td class="${cls}">${fmt(delta,2)} €</td></tr>`;}).join('')}</tbody></table></div>`;
   const categories=CATEGORIES_MENAGE.map(item=>{
-    const base=Number(PROFIL_MENAGE[`depense_${item.cle}`]||0), facteursS=facteurPrixCategorie(item,scenario.etape,donnees.etapes_reference[i]||{},i);
+    const base=depenseBaseProfil(item), facteursS=facteurPrixCategorie(item,scenario.etape,donnees.etapes_reference[i]||{},i);
     const facteursR=facteurPrixCategorie(item,donnees.etapes_reference[i]||{},donnees.etapes_reference[i]||{},i);
     const montantS=base*facteursS.scenario,montantR=base*facteursR.reference,delta=montantS-montantR;
     const observation=CONTEXTE?.contexte?.series_complementaires?.[item.ipch];
     const valeurIpch=observation?`${fmt(observation.valeur,1)} % · ${observation.periode||'période inconnue'}${observation.qualite_code?` · ${observation.qualite||observation.qualite_code}`:''}`:`${fmt(CONTEXTE?.contexte?.inflation_pct,1)} % · inflation globale de repli`;
-    return `<tr><td>${echapperTexte(item.libelle)}</td><td>${echapperTexte(valeurIpch)}</td><td>${fmt(montantR,2)} €</td><td>${fmt(montantS,2)} €</td><td class="${delta>0?'delta-neg':(delta<0?'delta-pos':'')}">${fmt(delta,2)} €</td></tr>`;
+    const baseQualifiee=MODE_CALIBRAGE_MENAGE==='insee'
+      ? `${fmt(partPanierNationalPct(item),1)} % · parts INSEE renormalisées`
+      : 'montant personnel saisi';
+    return `<tr><td>${echapperTexte(item.libelle)}</td><td>${fmt(base,2)} €<br><small>${echapperTexte(baseQualifiee)}</small></td><td>${echapperTexte(valeurIpch)}</td><td>${fmt(montantR,2)} €</td><td>${fmt(montantS,2)} €</td><td class="${delta>0?'delta-neg':(delta<0?'delta-pos':'')}">${fmt(delta,2)} €</td></tr>`;
   }).join('');
   const dflow=(key)=>Number(scenario.flux[`levier:${key}`]||0)-Number(reference.flux[`levier:${key}`]||0);
   const stress=calculerStressMarche().stressPct, plusValue=Number(PROFIL_MENAGE.portefeuille_exposition_eur||0)*stress/100;
-  zone.innerHTML=`<p class="strate-intro">Profil saisi par vous dans ce navigateur. Il n'est jamais transmis à l'API. Résultats mensuels, nominaux et exploratoires; ils ne remplacent ni une fiche de paie, ni une liquidation d'impôt, ni une décision d'éligibilité.</p>
+  const noteCalibrage=MODE_CALIBRAGE_MENAGE==='insee'
+    ? '<div class="note-source"><b>Calibrage actif :</b> le total mensuel saisi par vous est réparti selon la structure de consommation INSEE 2025, normalisée sur les parts positives. Les montants par poste sont calculés pour cette simulation et ne remplacent pas vos saisies personnelles, conservées dans cette page.</div>'
+    : '<div class="note-source"><b>Calibrage actif :</b> les montants de consommation par poste viennent de vos saisies personnelles. Les repères publics qualifiés restent visibles pour comparaison et ne sont pas utilisés comme budget individuel.</div>';
+  zone.innerHTML=`<p class="strate-intro">Profil saisi par vous dans ce navigateur. Il n'est jamais transmis à l'API, inclus dans un lien de partage ou enregistré après rechargement. Résultats mensuels, nominaux et exploratoires; ils ne remplacent ni une fiche de paie, ni une liquidation d'impôt, ni une décision d'éligibilité.</p>
+    ${noteCalibrage}
     <h3 class="strate-sous-titre">Profil modifiable (valeurs déclarées, sans moyenne de ménage inventée)</h3>
     <div class="grille-profil">
       ${champProfil('salaire_brut_mensuel','Salaires bruts du foyer','€/mois',10)}${champProfil('salaire_expose_smic_mensuel','Part de salaire réellement exposée à une hausse du SMIC','€/mois',10)}
@@ -1170,13 +1244,13 @@ function rendreResultatsMenage(donnees,index){
       ${champProfil('parts_fiscales','Parts de quotient familial','parts',0.5,0.5)}${champProfil('impot_ir_actuel_mensuel','Impôt sur le revenu actuellement payé (si connu)','€/mois',10)}
       ${champProfil('transferts_actuels_mensuels','Aides/transferts actuellement reçus (si connus)','€/mois',10)}${champProfil('personnes_minima_sociaux','Personnes allocataires de minima dans le foyer','personnes',1)}
       ${caseProfil('beneficiaire_aide_logement','Je déclare percevoir une aide au logement')}${caseProfil('beneficiaire_cheque_energie','Je déclare être éligible au chèque énergie (repère 2023)')}
-      ${champProfil('depenses_panier_total_mensuel','Total mensuel à répartir dans le panier','€/mois',10)}${champProfil('depense_energie_mensuelle','Dépense d’énergie éligible à TVA réduite','€/mois',10)}
+      ${champProfil('depenses_panier_total_mensuel',MODE_CALIBRAGE_MENAGE==='insee'?'Total mensuel de dépenses personnelles à répartir':'Total des catégories personnelles (calculé)','€/mois',10)}${champProfil('depense_energie_mensuelle','Dépense d’énergie éligible à TVA réduite','€/mois',10)}
       ${champProfil('capital_restant_du','Capital immobilier restant dû','€',1000)}${champProfil('duree_credit_restante_ans','Durée restante du prêt','années',1,1)}
       ${champProfil('portefeuille_exposition_eur','Exposition boursière personnelle saisie','€',100)}
     </div>
-    <div class="profil-actions"><button type="button" onclick="repartirPanierNational()">Répartir le total selon la structure INSEE</button><span class="aide">Répartition au prorata des 12 postes positifs; correction tourisme −1,3 point exclue puis normalisation à 100 %.</span></div>
+    <div class="profil-actions"><button type="button" onclick="activerCalibrageINSEE()">Utiliser les parts INSEE sans écraser mes saisies</button><span class="aide">Répartition des parts positives, normalisée à 100 %; correction territoriale tourisme −1,3 point exclue. Revenus, aides, énergie et capital de prêt restent vos valeurs personnelles.</span></div>
     <h3 class="strate-sous-titre">Dépenses de consommation par catégorie</h3>
-    <div class="tableau-strate"><table><thead><tr><th>Poste</th><th>IPCH observé / repli</th><th>Référence projetée</th><th>Scénario projeté</th><th>Écart de prix simulé</th></tr></thead><tbody>${categories}</tbody></table></div>
+    <div class="tableau-strate"><table><thead><tr><th>Poste</th><th>Base du profil sélectionnée</th><th>IPCH observé / repli</th><th>Référence projetée</th><th>Scénario projeté</th><th>Écart de prix simulé</th></tr></thead><tbody>${categories}</tbody></table></div>
     <div class="grille-profil">${CATEGORIES_MENAGE.map(item=>champProfil(`depense_${item.cle}`,item.libelle,'€/mois',10)).join('')}</div>
     ${tableBudget}
     <div class="note-source"><b>Effets directs :</b> SMIC (${fmt(scenario.hausseSalaire-reference.hausseSalaire,2)} €/mois sur la part saisie); retraites; CSG/CRDS sur assiette/taux saisis; hausse du taux de la tranche supérieure de l'IR, appliquée au barème 2026; minima, aide logement et chèque énergie répartis à partir des flux annuels nationaux seulement si l'éligibilité est déclarée. Flux du moteur (minima / logement / chèque) : ${fmt(dflow('revalorisation_minima_sociaux'),3)} / ${fmt(dflow('aide_logement'),3)} / ${fmt(dflow('cheque_energie'),3)} Md€/an.</div>
@@ -1189,7 +1263,23 @@ function afficherMenages(donnees){
   const horizon=donnees.etapes?.length||5;
   ANNEE_MENAGE=Math.min(ANNEE_MENAGE,Math.max(0,horizon-1));
   const options=Array.from({length:horizon},(_,i)=>`<option value="${i}" ${i===ANNEE_MENAGE?'selected':''}>Année ${i+1}</option>`).join('');
-  return `<div class="profil-actions"><label class="select-horizon">Horizon du budget de profil <select id="annee-menage" onchange="ANNEE_MENAGE=Number(this.value);renderResultatsMenage(SORTIE)">${options}</select></label><span class="pastille">Simulation de profil, pas budget observé</span></div><div id="menage-resultats"></div>`;
+  const panier=CONTEXTE?.observatoire?.menages?.panier_national_2025;
+  const distribution=partsPanierNational();
+  if(!distribution.somme) MODE_CALIBRAGE_MENAGE='personnel';
+  const disponible=distribution.somme>0;
+  const statut=panier?.statut||'statut de la source non renseigné';
+  const sourcePanier=panier?sourceObservatoire(panier)
+    :'<div class="note-source">Repère INSEE 2025 indisponible; aucune valeur n’est substituée.</div>';
+  return `<div class="profil-actions"><label class="select-horizon">Horizon du budget de profil <select id="annee-menage" onchange="ANNEE_MENAGE=Number(this.value);renderResultatsMenage(SORTIE)">${options}</select></label><span class="pastille">Simulation de profil, pas budget observé</span></div>
+    <div class="grille-profil"><label class="champ-profil">Calibrage des dépenses du foyer
+      <select id="mode-calibrage-menage" aria-label="Calibrage des dépenses du foyer" onchange="modifierModeCalibrageMenage(this.value)">
+        <option value="personnel" ${MODE_CALIBRAGE_MENAGE==='personnel'?'selected':''}>Mes données personnelles saisies par poste</option>
+        <option value="insee" ${MODE_CALIBRAGE_MENAGE==='insee'?'selected':''} ${disponible?'':'disabled'}>Structure INSEE 2025 appliquée à mon total · ${echapperTexte(statut)}</option>
+      </select></label></div>
+    <p class="strate-intro">Les chiffres publics restent accompagnés de leur source, période et statut. Le mode INSEE applique uniquement la structure agrégée de consommation à votre total mensuel saisi; il ne fabrique ni revenu, ni droit individuel. Le mode personnel utilise vos montants par poste. Le calibrage ne change pas la simulation macro.</p>
+    <h3 class="strate-sous-titre">Repère public associé au calibrage</h3>${sourcePanier}
+    ${disponible?'':'<div class="alerte">Structure publique absente ou inutilisable : le mode INSEE est désactivé. Aucune part n’est inventée.</div>'}
+    <div id="menage-resultats"></div>`;
 }
 function renderResultatsMenage(donnees){rendreResultatsMenage(donnees,ANNEE_MENAGE);}
 

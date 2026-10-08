@@ -4,6 +4,22 @@ Toutes les modifications notables de ce projet sont documentées ici.
 Format basisé sur [Keep a Changelog](https://keepachangelog.com/),
 et ce projet suit [Semantic Versioning](https://semver.org/).
 
+## [1.10.2] — 2026-10-08
+
+### Ajout — Calibrage transparent des dépenses du foyer
+
+- Dans l’onglet **Ménages**, un sélecteur choisit entre la saisie personnelle
+  par poste et la structure de consommation INSEE 2025 appliquée à un total
+  mensuel déclaré. Le tableau expose la base sélectionnée et, en mode INSEE,
+  les parts normalisées par catégorie.
+- Source, période de publication/collecte et statut de la référence sont affichés
+  avec le choix. Le mode public n’écrase pas les montants personnels et ne
+  modifie que le panier de consommation; les autres champs restent personnels.
+- Les données du foyer restent dans la mémoire de la page : aucun envoi à l’API,
+  aucun ajout au lien de partage et aucune persistance au rechargement.
+- Tests statiques et parcours navigateur ajoutés pour le choix de calibrage, la
+  normalisation des parts et le retour aux valeurs saisies.
+
 ## [1.10.1] — 2026-10-08
 
 ### Corrigé — Le contrat Vercel rattrape le moteur (`api/`, `index.html`)

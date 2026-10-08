@@ -231,11 +231,13 @@ const programme = `
                        'ouvrirModale','fermerModale','ouvrirGuide','contenuGuide','guideDejaVu',
                        'reglagesModifies','lienReglages','reglagesDepuisLien','appliquerLien',
                        'partagerReglages','avisLien',
-                       'renderLecture','marquerSommaire','contenuOngletStrate','rendreOngletStrate']) {
+                       'renderLecture','marquerSommaire','contenuOngletStrate','rendreOngletStrate',
+                       'modifierProfilMenage','modifierModeCalibrageMenage','depenseBaseProfil']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
                         SORTIE: SORTIE, MARCHES: MARCHES, ONGLET_STRATE_ACTIF: ONGLET_STRATE_ACTIF,
+                        PROFIL_MENAGE: PROFIL_MENAGE, MODE_CALIBRAGE_MENAGE: MODE_CALIBRAGE_MENAGE,
                         LEXIQUE: LEXIQUE, LEXIQUE_PAR_CLE: LEXIQUE_PAR_CLE,
                         REGEX_TERMES: REGEX_TERMES });
     return api;
@@ -312,6 +314,40 @@ apiPage.afficherOngletStrate("local");
 noter("le profil ménage n'est pas présenté comme un budget observé",
       contenu("menage-resultats").includes("jamais transmis à l'API")
       && contenu("panneau-strate-menages").includes("pas budget observé"));
+const contexteCalibrage = apiPage.etat().CONTEXTE;
+const panierCalibrage = contexteCalibrage?.observatoire?.menages?.panier_national_2025;
+noter("le choix de calibrage expose la source, la période et le statut INSEE",
+      contenu("panneau-strate-menages").includes('id="mode-calibrage-menage"')
+      && contenu("panneau-strate-menages").includes(panierCalibrage?.statut || "statut non renseigné")
+      && contenu("panneau-strate-menages").includes(panierCalibrage?.publication_le || "date de publication"));
+apiPage.modifierProfilMenage({dataset:{profil:"depense_alimentation"},type:"number",value:"123.45"});
+apiPage.modifierModeCalibrageMenage("insee");
+apiPage.modifierProfilMenage({dataset:{profil:"depenses_panier_total_mensuel"},type:"number",value:"2000"});
+const profilCalibrage = apiPage.etat().PROFIL_MENAGE;
+const totalCalibrageAvantEnergie = profilCalibrage.depenses_panier_total_mensuel;
+apiPage.modifierProfilMenage({dataset:{profil:"depense_energie_mensuelle"},type:"number",value:"250"});
+noter("le champ énergie reste une donnée personnelle modifiable en mode INSEE",
+      Math.abs(profilCalibrage.depense_energie_mensuelle - 250) < 0.001
+      && Math.abs(profilCalibrage.depenses_panier_total_mensuel - totalCalibrageAvantEnergie) < 0.001);
+const partsPubliees = panierCalibrage?.part_depense_finale_pct || [];
+const clesProfilDepenses = new Set(Object.keys(profilCalibrage)
+  .filter(cle => cle.startsWith("depense_")).map(cle => cle.slice("depense_".length)));
+const sommePartsUtilisees = partsPubliees
+  .filter(ligne => clesProfilDepenses.has(ligne.cle) && Number(ligne.part) > 0)
+  .reduce((somme, ligne) => somme + Number(ligne.part), 0);
+const partAlimentation = partsPubliees.find(ligne => ligne.cle === "alimentation")?.part;
+const depenseCalibree = apiPage.depenseBaseProfil({cle:"alimentation"});
+const attendueCalibree = 2000 * Number(partAlimentation) / sommePartsUtilisees;
+noter("le calibrage INSEE relie les parts qualifiées au total personnel sans écraser les saisies",
+      apiPage.etat().MODE_CALIBRAGE_MENAGE === "insee"
+      && Number.isFinite(depenseCalibree)
+      && Math.abs(depenseCalibree - attendueCalibree) < 0.001
+      && Math.abs(profilCalibrage.depense_alimentation - 123.45) < 0.001,
+      `montant calibré ${depenseCalibree} €; attendu ${attendueCalibree} €`);
+apiPage.modifierModeCalibrageMenage("personnel");
+noter("le retour au mode personnel restaure les montants saisis",
+      apiPage.etat().MODE_CALIBRAGE_MENAGE === "personnel"
+      && Math.abs(apiPage.depenseBaseProfil({cle:"alimentation"}) - 123.45) < 0.001);
 noter("la vue boursière cite l'horodatage et les limites de son flux",
       contenu("panneau-strate-boursier").includes("Horodatage du cours")
       && contenu("panneau-strate-boursier").includes("possiblement différés")
