@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import http.client
-import importlib
+import importlib.util
 import json
 import os
 import subprocess
@@ -20,7 +20,7 @@ os.environ.setdefault("SIMULATEUR_HORS_LIGNE", "1")
 os.environ.setdefault("SIMULATEUR_CACHE", "/tmp/simulateur_cache")
 
 from simulateur.dashboard import DashboardHandler  # noqa: E402
-from simulateur.pont_api import FonctionAPI  # noqa: E402
+from simulateur.pont_api import PontAPI  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 ROUTES_MOTEUR = (
@@ -41,6 +41,16 @@ ROUTES_MOTEUR = (
     "scenarios",
     "simuler",
 )
+FONCTIONS_ATTENDUES = {"[...path].py", "verifier-source.py"}
+
+
+def charger_fonction_unique():
+    """Charge `api/[...path].py`, la fonction Vercel qui sert toutes les routes."""
+    chemin = ROOT / "api" / "[...path].py"
+    specification = importlib.util.spec_from_file_location("api_attrape_tout", chemin)
+    module = importlib.util.module_from_spec(specification)
+    specification.loader.exec_module(module)
+    return module.handler
 
 
 class TestContratVercel(unittest.TestCase):
@@ -60,7 +70,7 @@ class TestContratVercel(unittest.TestCase):
         self.assertNotIn("frame-ancestors", page.lower())
         self.assertNotIn("x-frame-options", page.lower())
 
-    def test_generateur_expose_toutes_les_routes_du_moteur(self):
+    def test_generateur_confirme_une_fonction_attrape_tout(self):
         commande = subprocess.run(
             [sys.executable, "outils/generer-fonctions-api.py", "--verifier"],
             cwd=ROOT,
@@ -70,24 +80,25 @@ class TestContratVercel(unittest.TestCase):
         )
         self.assertEqual(commande.returncode, 0, commande.stdout + commande.stderr)
         self.assertIn("16 routes du moteur", commande.stdout)
+        self.assertIn("2 fonction(s) dans api/, plafond 12", commande.stdout)
 
-        for nom in ROUTES_MOTEUR:
-            with self.subTest(route=nom):
-                module = importlib.import_module(f"api.{nom}")
-                fonction = module.handler
-                self.assertTrue(issubclass(fonction, BaseHTTPRequestHandler))
-                self.assertEqual(fonction.ROUTE, f"/api/{nom}")
+    def test_api_ne_contient_que_la_fonction_attrape_tout_et_le_site(self):
+        fichiers = {nom.name for nom in (ROOT / "api").glob("*.py")}
+        self.assertEqual(fichiers, FONCTIONS_ATTENDUES)
 
-    def test_pont_retablit_la_route_et_preserve_la_requete(self):
-        class RouteTest(FonctionAPI):
-            ROUTE = "/api/scenarios"
+    def test_fonction_attrape_tout_herite_du_pont(self):
+        handler = charger_fonction_unique()
+        self.assertTrue(issubclass(handler, PontAPI))
+        self.assertTrue(issubclass(PontAPI, DashboardHandler))
+        self.assertTrue(issubclass(handler, BaseHTTPRequestHandler))
 
-        instance = object.__new__(RouteTest)
-        instance.path = "/api/index.py?scenario=mandature"
+    def test_pont_conserve_la_requete_telle_quelle(self):
+        instance = object.__new__(PontAPI)
+        instance.path = "/api/scenarios?scenario=mandature"
         with patch.object(DashboardHandler, "do_GET") as deleguer:
-            instance._deleguer("GET")
+            instance.do_GET()
         self.assertEqual(instance.path, "/api/scenarios?scenario=mandature")
-        deleguer.assert_called_once_with(instance)
+        deleguer.assert_called_once_with()
 
 
 class TestFonctionsVercelHTTP(unittest.TestCase):
@@ -115,7 +126,7 @@ class TestFonctionsVercelHTTP(unittest.TestCase):
             thread.join(timeout=5)
 
     def test_api_scenarios_est_servie_par_la_fonction(self):
-        from api.scenarios import handler
+        handler = charger_fonction_unique()
 
         code, type_contenu, contenu = self.requete(handler, "GET", "/api/scenarios")
         donnees = json.loads(contenu)
@@ -123,8 +134,17 @@ class TestFonctionsVercelHTTP(unittest.TestCase):
         self.assertIn("application/json", type_contenu)
         self.assertIn("mandature", donnees["scenarios"])
 
+    def test_api_lexique_passe_par_la_fonction_unique(self):
+        handler = charger_fonction_unique()
+
+        code, type_contenu, contenu = self.requete(handler, "GET", "/api/lexique?q=spread")
+        donnees = json.loads(contenu)
+        self.assertEqual(code, 200)
+        self.assertIn("application/json", type_contenu)
+        self.assertGreater(donnees["total"], 0)
+
     def test_api_simuler_retourne_une_simulation_complete(self):
-        from api.simuler import handler
+        handler = charger_fonction_unique()
 
         code, type_contenu, contenu = self.requete(
             handler,
