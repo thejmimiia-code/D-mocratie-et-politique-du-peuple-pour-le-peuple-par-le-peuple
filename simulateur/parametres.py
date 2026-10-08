@@ -89,6 +89,9 @@ class Levier:
     source: str = ""
     tags: tuple[str, ...] = ()
     precision: int = 1
+    #: Identifiants d'articles du registre `reglements_lois.REGISTRE_LEGAL` qui
+    #: encadrent ce levier (liens croisés vérifiés par les tests).
+    articles: tuple[str, ...] = ()
 
     # — commodités d'affichage ————————————————————————————————————————————
     @property
@@ -120,6 +123,7 @@ class Levier:
             "source": self.source,
             "tags": list(self.tags),
             "precision": self.precision,
+            "articles": list(self.articles),
         }
 
 
@@ -346,6 +350,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="macf_carbone_frontiere",
+    articles=("REG_UE_2023_956_MACF", ),
     libelle="Mécanisme d'ajustement carbone aux frontières",
     famille="fiscalite_entreprises",
     description="Application du MACF aux importations à forte intensité carbone "
@@ -651,6 +656,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="effort_defense_pct_pib",
+    articles=("LPM_2023_703", "OTAN_ART_3", ),
     libelle="Effort de défense (% du PIB)",
     famille="regalien",
     description="Trajectoire de la loi de programmation militaire et cible OTAN de La Haye "
@@ -1061,6 +1067,7 @@ _lev(Levier(
 # période de dix ans » : cf. docs/RD_DOUBLE_MANDATURE.md.
 _lev(Levier(
     cle="verrouillage_irreversibilite",
+    articles=("CONST_ART_11", ),
     libelle="Verrou constitutionnel des réformes",
     famille="institutions_democratie",
     description="Ancrage constitutionnel des réformes adoptées en première mandature "
@@ -1076,6 +1083,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="clause_revoyure_evaluation",
+    articles=("CONST_ART_47_2", ),
     libelle="Clauses de revoyure & évaluation systématique",
     famille="etat_fonction_publique",
     description="Chaque réforme majeure est évaluée à date fixe (LOLF, Cour des comptes) "
@@ -1106,6 +1114,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="investissements_cycle_long",
+    articles=("LPM_2023_703", ),
     libelle="Investissements à cycle long (rendement différé)",
     famille="energie_climat",
     description="EPR2, lois de programmation militaire, France 2030, prévention santé, "
@@ -1156,6 +1165,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="montee_capacite_defense",
+    articles=("LPM_2023_703", ),
     libelle="Montée en capacité de défense (BITD)",
     famille="regalien",
     description="Investissement additionnel dans la base industrielle et "
@@ -1211,6 +1221,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="usage_49_3",
+    articles=("CONST_ART_49_3", ),
     libelle="Recours à l'article 49.3",
     famille="institutions_democratie",
     description="Nombre d'utilisations par an : accélère l'adoption des lois mais "
@@ -1433,6 +1444,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="clause_sauvegarde_defense",
+    articles=("REG_UE_2024_1263_CLAUSE", ),
     libelle="Clause de sauvegarde nationale (défense)",
     famille="exogene_monde",
     description="Activation de la dérogation « défense » du Pacte de stabilité : "

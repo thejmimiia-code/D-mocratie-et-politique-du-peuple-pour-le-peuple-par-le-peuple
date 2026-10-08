@@ -216,8 +216,40 @@ class TestRedondancesCorpusJuridique(unittest.TestCase):
         strates_presentes = {art.strate_impactee for art in corpus.values()}
         self.assertIn("Local", strates_presentes)
         self.assertIn("National", strates_presentes)
-        self.assertIn("Européen", strates_presentes)
+        self.assertIn("Europe", strates_presentes)
         self.assertIn("Mondial", strates_presentes)
+
+    def test_strates_du_registre_sont_dans_la_liste_fermee(self):
+        """Une seule graphie par échelon : pas de « Européen » à côté de « Europe »."""
+        from simulateur.reglements_lois import STRATES_VALIDES
+
+        corpus = get_corpus_lois()
+        hors_liste = {
+            art.identifiant: art.strate_impactee
+            for art in corpus.values()
+            if art.strate_impactee not in STRATES_VALIDES
+        }
+        self.assertEqual(hors_liste, {})
+
+    def test_liens_juridiques_des_leviers_pointent_vers_le_registre(self):
+        """Tout article cité par un levier doit exister dans le registre légal."""
+        from simulateur.parametres import LEVIERS
+        from simulateur.reglements_lois import REGISTRE_LEGAL
+
+        orphelins = {
+            levier.cle: [a for a in levier.articles if a not in REGISTRE_LEGAL]
+            for levier in LEVIERS.values()
+            if any(a not in REGISTRE_LEGAL for a in levier.articles)
+        }
+        self.assertEqual(orphelins, {})
+
+    def test_leviers_relies_a_leurs_textes_sources(self):
+        """Les leviers dont la source écrite cite un texte du registre sont reliés à lui."""
+        from simulateur.parametres import LEVIERS
+
+        self.assertIn("LPM_2023_703", LEVIERS["effort_defense_pct_pib"].articles)
+        self.assertIn("CONST_ART_49_3", LEVIERS["usage_49_3"].articles)
+        self.assertIn("REG_UE_2023_956_MACF", LEVIERS["macf_carbone_frontiere"].articles)
 
     def test_textes_fondateurs_presents(self):
         """Vérifie la présence nominative des articles fondamentaux."""

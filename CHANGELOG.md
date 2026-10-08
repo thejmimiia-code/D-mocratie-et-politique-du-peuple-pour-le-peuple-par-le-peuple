@@ -6,6 +6,14 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Corrigé — Registre juridique et liens croisés (`simulateur/`)
+
+- Strate `Européen` remplacée par `Europe` ; liste fermée des strates testée.
+- Trois intitulés corrigés d'après Légifrance et EUR-Lex (directive 2022/2523,
+  L. 711-1 du Code de commerce, directive 2022/542 article 1er point 22).
+- Nouveau champ `Levier.articles` : 9 leviers reliés à leurs articles du registre,
+  avec test d'intégrité.
+
 ### Modifié — Une seule fonction Vercel pour les routes du moteur (`api/`)
 
 - `api/` ne contient plus une fonction par route (16 fichiers) : la fonction

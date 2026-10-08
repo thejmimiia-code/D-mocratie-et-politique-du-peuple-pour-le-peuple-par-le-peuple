@@ -5,6 +5,9 @@ Permet d'interroger les articles de lois et leurs contraintes mathématiques dan
 
 from dataclasses import dataclass
 
+#: Échelons du modèle gigogne : seules valeurs admises pour `strate_impactee`.
+STRATES_VALIDES: tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
+
 
 @dataclass
 class ArticleDeLoi:
@@ -224,10 +227,10 @@ REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
     "DIR_TVA_2022_542": ArticleDeLoi(
         identifiant="DIR_TVA_2022_542",
         code_ou_traite="Union Européenne — Directive (UE) 2022/542 du Conseil",
-        article="Annexe III, Point 22",
+        article="Article 1er, point 22 (modifie le titre de l'annexe III de la directive 2006/112/CE)",
         titre="Taux réduit de TVA jusqu'à 5,5 % sur l'électricité et le gaz naturel",
         texte_integral="Autorise expressément chaque État membre de l'UE à appliquer un taux réduit de TVA jusqu'à 5,5 % sur la livraison d'électricité, de gaz naturel et de chaleur urbaine.",
-        strate_impactee="Européen",
+        strate_impactee="Europe",
         effet_simulation="Garantit la conformité européenne totale de la baisse de TVA de 20 % à 5,5 % (-9 Md€/an).",
     ),
     "TFUE_ART_126": ArticleDeLoi(
@@ -236,7 +239,7 @@ REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
         article="Article 126 & Protocole n° 12",
         titre="Procédure concernant les déficits excessifs (PDE)",
         texte_integral="Fixe le plafond de déficit public à 3,0 % du PIB et le ratio de dette à 60,0 % du PIB.",
-        strate_impactee="Européen",
+        strate_impactee="Europe",
         effet_simulation="Sous le pacte 2024, déclenche une astreinte semestrielle de 0,05 % du PIB si l'effort annuel < 0,5 pt.",
     ),
     "REG_EIDAS_910_2014": ArticleDeLoi(
@@ -250,7 +253,7 @@ REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
     ),
     "OCDE_PILIER_2_CGI_223_VJ": ArticleDeLoi(
         identifiant="OCDE_PILIER_2_CGI_223_VJ",
-        code_ou_traite="Code Général des Impôts & Directive (UE) 2022/2523",
+        code_ou_traite="Code général des impôts (transposition de la directive (UE) 2022/2523)",
         article="Art. 223 VJ et suiv. du CGI",
         titre="Imposition minimale mondiale des groupes multinationaux (Pilier 2 de l'OCDE)",
         texte_integral="Instaure un impôt complémentaire garantissant un niveau minimum effectif d'imposition de 15 % sur les bénéfices des groupes multinationaux et nationaux de grande envergure réalisant plus de 750 M€ de CA.",
@@ -469,7 +472,7 @@ REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
     ),
     "CART_L711_1": ArticleDeLoi(
         identifiant="CART_L711_1",
-        code_ou_traite="Code de l'artisanat & Code de commerce",
+        code_ou_traite="Code de commerce",
         article="Article L. 711-1",
         titre="Statut et missions des Chambres de Métiers et de l'Artisanat (CMA)",
         texte_integral="Les chambres de métiers et de l'artisanat sont des établissements publics administratifs représentant les intérêts généraux de l'artisanat, tenant le Registre national des entreprises et organisant l'apprentissage artisanal.",
