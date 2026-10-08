@@ -310,6 +310,19 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("licence", self.script)
         self.assertIn("series_complementaires", self.script)
 
+    def test_calibrage_menage_relie_sources_qualifiees_et_saisie_personnelle(self):
+        self.assertIn('id="mode-calibrage-menage"', self.script)
+        self.assertIn("Mes données personnelles saisies par poste", self.script)
+        self.assertIn("Structure INSEE 2025 appliquée à mon total", self.script)
+        self.assertIn("function partsPanierNational()", self.script)
+        self.assertIn("function depenseBaseProfil(item)", self.script)
+        self.assertIn("function modifierModeCalibrageMenage(mode)", self.script)
+        self.assertIn("statut :", self.script)
+        self.assertIn("publication_le", self.script)
+        self.assertIn("parts INSEE renormalisées", self.script)
+        self.assertIn("jamais transmis à l'API, inclus dans un lien de partage", self.script)
+        self.assertIn("Le calibrage ne change pas la simulation macro.", self.script)
+
     def test_bulles_explicatives_par_reglage(self):
         """Chaque réglage porte un bouton qui ouvre une bulle calculée.
 

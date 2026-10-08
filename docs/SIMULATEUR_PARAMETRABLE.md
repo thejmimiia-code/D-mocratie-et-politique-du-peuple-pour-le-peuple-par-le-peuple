@@ -608,6 +608,18 @@ L'impact des aides est une répartition de flux macro selon les effectifs
 nationaux publiés, seulement si l'utilisateur déclare son éligibilité; aucun
 droit individuel n'est attribué.
 
+Le sélecteur **Calibrage des dépenses du foyer** permet de choisir entre les
+montants saisis personnellement par poste et la structure de consommation INSEE
+2025 appliquée à un total mensuel renseigné par l'utilisateur. Les parts
+publiques, leur période, leur source et leur statut — notamment leur caractère
+provisoire — sont affichés à côté du choix. La structure INSEE est un agrégat,
+pas un budget individuel : elle ne remplace que la répartition du panier, jamais
+les revenus, les aides, l'énergie ou le capital de prêt saisis. La répartition
+INSEE ne modifie pas les postes personnels mémorisés dans la page; le retour au
+mode personnel les réaffiche. Les données personnelles restent en mémoire dans
+l'onglet courant, ne sont pas envoyées à l'API, ne figurent pas dans les liens de
+partage et ne sont pas enregistrées au rechargement.
+
 ### Cotations et stress-test
 
 `simulateur/marches.py` interroge à la demande Yahoo Finance pour 13 indices
