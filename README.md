@@ -174,8 +174,9 @@ python3 outils/generer-index-simulateur.py --verifier
 python3 outils/generer-fonctions-api.py --verifier
 ```
 
-`outils/generer-fonctions-api.py` ne génère plus de fichiers : il vérifie que
-`api/` ne contient que la fonction attrape-tout et les fonctions du site.
+`outils/generer-fonctions-api.py` écrit `api/[...path].py` et supprime les anciennes
+fonctions générées route par route. Il s'arrête sans rien modifier si `api/` contient
+un fichier qu'il n'a pas généré ; `--verifier` contrôle sans rien écrire.
 
 Dans Vercel : **Framework Preset: Other**, **Build Command: vide**,
 **Output Directory: `.`**, **Install Command: vide**. Ne pas ajouter de règle de

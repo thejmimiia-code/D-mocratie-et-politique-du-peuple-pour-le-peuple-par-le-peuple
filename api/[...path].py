@@ -1,11 +1,11 @@
 """Fonction Vercel unique — toutes les routes `/api/*` du simulateur.
 
-Un seul fichier sert les 16 routes du moteur (`/api/bulle`, `/api/simuler`, …) :
+Fichier généré par `outils/generer-fonctions-api.py` : ne pas modifier à la main.
+
+Un seul fichier sert les routes du moteur (`/api/bulle`, `/api/simuler`, …) :
 Vercel n'en compte qu'une, ce qui reste sous le plafond de 12 fonctions par
 déploiement de l'offre Hobby. Le moteur route lui-même sur le chemin reçu, voir
 `simulateur/pont_api.py`. `verifier-source.py` reste une fonction distincte.
-
-Vérifié par `outils/generer-fonctions-api.py --verifier`.
 """
 
 import pathlib

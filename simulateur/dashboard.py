@@ -32,13 +32,13 @@ from __future__ import annotations
 
 import argparse
 import csv as csv_mod
+import io
 import json
 import os
 import sys
 import traceback
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-from pathlib import Path
 from threading import Lock
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -333,11 +333,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if not self._tete_seulement:
             self.wfile.write(charge)
 
-    def _send_fichier(self, chemin: str, type_mime: str = "application/octet-stream") -> None:
-        donnees = Path(chemin).read_bytes()
+    def _send_telechargement(self, donnees: bytes, type_mime: str, nom_fichier: str) -> None:
+        """Envoie un fichier construit en mémoire, sans jamais passer par le disque."""
         self.send_response(200)
         self.send_header("Content-Type", type_mime)
-        self.send_header("Content-Disposition", f'attachment; filename="{Path(chemin).name}"')
+        self.send_header("Content-Disposition", f'attachment; filename="{nom_fichier}"')
         self.send_header("Content-Length", str(len(donnees)))
         self.end_headers()
         if not self._tete_seulement:
@@ -524,8 +524,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 if "error" in resultat:
                     self._send_json(resultat, status=400)
                     return
-                nom_fichier = f"{scenario}_simulateur.{fmt}"
-                chemin_fichier = os.path.join(os.getcwd(), nom_fichier)
+                # Export construit en mémoire : sur un hébergeur à fonctions, le
+                # dossier du projet est en lecture seule (seul /tmp est inscriptible).
                 if fmt == "json":
                     payload = {
                         "scenario": scenario,
@@ -533,25 +533,26 @@ class DashboardHandler(BaseHTTPRequestHandler):
                         "modele": "Gigogne 5 échelons",
                         "resultats": resultat["resultats"],
                     }
-                    with open(chemin_fichier, "w", encoding="utf-8") as fichier:
-                        json.dump(payload, fichier, ensure_ascii=False, indent=2)
+                    contenu = json.dumps(payload, ensure_ascii=False, indent=2)
+                    type_mime = "application/json"
                 elif fmt == "csv":
                     champs = list(resultat["resultats"][0].keys())
-                    with open(chemin_fichier, "w", newline="", encoding="utf-8") as fichier:
-                        ecrivain = csv_mod.DictWriter(fichier, fieldnames=champs,
-                                                      extrasaction="ignore")
-                        ecrivain.writeheader()
-                        for ligne in resultat["resultats"]:
-                            if isinstance(ligne.get("commentaires"), list):
-                                ligne["commentaires"] = "; ".join(ligne["commentaires"])
-                            ecrivain.writerow(ligne)
+                    tampon = io.StringIO()
+                    ecrivain = csv_mod.DictWriter(tampon, fieldnames=champs,
+                                                  extrasaction="ignore")
+                    ecrivain.writeheader()
+                    for ligne in resultat["resultats"]:
+                        if isinstance(ligne.get("commentaires"), list):
+                            ligne["commentaires"] = "; ".join(ligne["commentaires"])
+                        ecrivain.writerow(ligne)
+                    contenu = tampon.getvalue()
+                    type_mime = "text/csv"
                 else:
                     self._send_json({"error": "Format non supporté. Utilisez json ou csv."},
                                     status=400)
                     return
-                self._send_fichier(chemin_fichier,
-                                   "application/json" if fmt == "json" else "text/csv")
-                os.remove(chemin_fichier)
+                self._send_telechargement(contenu.encode("utf-8"), type_mime,
+                                          f"{scenario}_simulateur.{fmt}")
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
