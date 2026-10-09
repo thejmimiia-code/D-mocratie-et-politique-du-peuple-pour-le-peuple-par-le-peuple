@@ -6,6 +6,9 @@ Permet d'interroger les articles de lois et leurs contraintes mathématiques dan
 
 from dataclasses import dataclass
 
+#: Échelons du modèle gigogne : seules valeurs admises pour `strate_impactee`.
+STRATES_VALIDES: tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
+
 
 @dataclass
 class ArticleDeLoi:
@@ -174,9 +177,9 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
         code_ou_traite="Code général des impôts",
         article="Article 235 ter ZD",
         titre="Taxe sur les Transactions Financières (TTF)",
-        texte_integral="Taxe de 0,3 % sur les acquisitions de titres de sociétés françaises cotées de plus d'1 Md€ de capitalisation.",
+        texte_integral="Résumé vérifié sur Légifrance (version en vigueur au 01/01/2026, modifiée par la loi n° 2026-103 du 19 février 2026, art. 17) : taxe de 0,4 % (taux fixé au V) sur l'acquisition à titre onéreux de titres de capital admis à la négociation sur un marché réglementé, émis par une société dont le siège est en France et dont la capitalisation dépasse 1 Md€ au 1er décembre de l'année précédente.",
         strate_impactee="Mondial",
-        effet_simulation="Étendue au trading haute fréquence (>80% d'annulations) et prélevée au dépositaire Euroclear (+5 Md€/an).",
+        effet_simulation="Proposition modélisée, hors droit positif : extension au trading haute fréquence (>80 % d'annulations) et prélèvement au dépositaire Euroclear (+5 Md€/an, non vérifié).",
     ),
     "ENV_L229_25": ArticleDeLoi(
         identifiant="ENV_L229_25",
@@ -225,10 +228,10 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
     "DIR_TVA_2022_542": ArticleDeLoi(
         identifiant="DIR_TVA_2022_542",
         code_ou_traite="Union Européenne — Directive (UE) 2022/542 du Conseil",
-        article="Annexe III, Point 22",
+        article="Article 1er, point 22 (modifie le titre de l'annexe III de la directive 2006/112/CE)",
         titre="Taux réduit de TVA jusqu'à 5,5 % sur l'électricité et le gaz naturel",
         texte_integral="Autorise expressément chaque État membre de l'UE à appliquer un taux réduit de TVA jusqu'à 5,5 % sur la livraison d'électricité, de gaz naturel et de chaleur urbaine.",
-        strate_impactee="Européen",
+        strate_impactee="Europe",
         effet_simulation="Garantit la conformité européenne totale de la baisse de TVA de 20 % à 5,5 % (-9 Md€/an).",
     ),
     "TFUE_ART_126": ArticleDeLoi(
@@ -237,7 +240,7 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
         article="Article 126 & Protocole n° 12",
         titre="Procédure concernant les déficits excessifs (PDE)",
         texte_integral="Fixe le plafond de déficit public à 3,0 % du PIB et le ratio de dette à 60,0 % du PIB.",
-        strate_impactee="Européen",
+        strate_impactee="Europe",
         effet_simulation="Sous le pacte 2024, déclenche une astreinte semestrielle de 0,05 % du PIB si l'effort annuel < 0,5 pt.",
     ),
     "REG_EIDAS_910_2014": ArticleDeLoi(
@@ -251,7 +254,7 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
     ),
     "OCDE_PILIER_2_CGI_223_VJ": ArticleDeLoi(
         identifiant="OCDE_PILIER_2_CGI_223_VJ",
-        code_ou_traite="Code Général des Impôts & Directive (UE) 2022/2523",
+        code_ou_traite="Code général des impôts (transposition de la directive (UE) 2022/2523)",
         article="Art. 223 VJ et suiv. du CGI",
         titre="Imposition minimale mondiale des groupes multinationaux (Pilier 2 de l'OCDE)",
         texte_integral="Instaure un impôt complémentaire garantissant un niveau minimum effectif d'imposition de 15 % sur les bénéfices des groupes multinationaux et nationaux de grande envergure réalisant plus de 750 M€ de CA.",
@@ -470,7 +473,7 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
     ),
     "CART_L711_1": ArticleDeLoi(
         identifiant="CART_L711_1",
-        code_ou_traite="Code de l'artisanat & Code de commerce",
+        code_ou_traite="Code de commerce",
         article="Article L. 711-1",
         titre="Statut et missions des Chambres de Métiers et de l'Artisanat (CMA)",
         texte_integral="Les chambres de métiers et de l'artisanat sont des établissements publics administratifs représentant les intérêts généraux de l'artisanat, tenant le Registre national des entreprises et organisant l'apprentissage artisanal.",
@@ -1013,6 +1016,72 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
         texte_integral="Les projets de loi sont accompagnés d'une étude d'impact définissant les objectifs poursuivis, exposant les motifs du recours à une nouvelle législation et évaluant les conséquences économiques, financières, sociales et environnementales prévisibles.",
         strate_impactee="National",
         effet_simulation="Conditionne la recevabilité de tout projet de loi à un chiffrage rigoureux et vérifiable de ses impacts macroéconomiques.",
+    ),
+    # AJOUTS VÉRIFIÉS (audit du 8 octobre 2026) — résumé non textuel : le texte
+    # intégral fait foi sur la source indiquée dans `texte_integral`.
+    # -------------------------------------------------------------------------
+    "CGI_278_0_BIS_A": ArticleDeLoi(
+        identifiant="CGI_278_0_BIS_A",
+        code_ou_traite="Code général des impôts",
+        article="Article 278-0 bis A",
+        titre="Taux réduit de 5,5 % sur les travaux de rénovation énergétique",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Taux réduit de 5,5 % pour les prestations de rénovation énergétique des locaux d'habitation achevés depuis plus de deux ans. Source de doctrine : BOFiP BOI-TVA-LIQ-30-20-95 (version du 22/10/2025), consultée le 08/10/2026. Depuis le 1er mars 2025, les prestations comprenant une chaudière susceptible d'utiliser des combustibles fossiles sont exclues du taux réduit (III bis).",
+        strate_impactee="National",
+        effet_simulation="Encadre le taux réduit des travaux de rénovation énergétique des logements (loi de finances pour 2023, art. 65).",
+    ),
+    "CGI_278_0_BIS_B": ArticleDeLoi(
+        identifiant="CGI_278_0_BIS_B",
+        code_ou_traite="Code général des impôts",
+        article="Article 278-0 bis B (version antérieure au 1er août 2025)",
+        titre="Taux réduit de 5,5 % sur les abonnements d'électricité et de gaz (supprimé)",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Les abonnements d'électricité et de gaz étaient soumis au taux réduit de 5,5 %. Depuis le 1er août 2025, l'intégralité de la facture est au taux normal de 20 %, par suite de la loi de finances pour 2025 (art. 20, selon fournisseurs-electricite.com, consulté le 08/10/2026). Confirmé par dune-energie.fr (04/09/2026) et Ekwateur (20/01/2026).",
+        strate_impactee="National",
+        effet_simulation="Disposition supprimée au 1er août 2025 : le levier « TVA énergie » modélise un retour au taux réduit, non le régime actuel.",
+    ),
+    "REG_UE_2022_1854_SOLIDARITE": ArticleDeLoi(
+        identifiant="REG_UE_2022_1854_SOLIDARITE",
+        code_ou_traite="Règlement (UE) 2022/1854 du Conseil du 6 octobre 2022",
+        article="Articles 15 à 18",
+        titre="Contribution de solidarité temporaire sur les bénéfices excédentaires de l'énergie",
+        texte_integral="Résumé vérifié (texte intégral : https://eur-lex.europa.eu/eli/reg/2022/1854/oj?locale=fr, consulté le 08/10/2026). Contribution temporaire obligatoire sur les bénéfices excédentaires des secteurs du pétrole brut, du gaz naturel, du charbon et du raffinage ; bénéfices 2022 et/ou 2023 dépassant de plus de 20 % la moyenne des bénéfices imposables des quatre exercices commençant à partir du 1er janvier 2018 ; taux d'au moins 33 %. Nature temporaire (article 18).",
+        strate_impactee="Europe",
+        effet_simulation="Cadre de la contribution sur les superprofits énergétiques : limité aux exercices 2022 et 2023.",
+    ),
+    "ELAN_ART_140": ArticleDeLoi(
+        identifiant="ELAN_ART_140",
+        code_ou_traite="Loi n° 2018-1021 du 23 novembre 2018 (loi ELAN)",
+        article="Article 140",
+        titre="Expérimentation de l'encadrement des loyers dans les zones tendues",
+        texte_integral="Texte consulté sur https://www.legifrance.gouv.fr/eli/loi/2018/11/23/TERL1805474L/jo/article_140 (le 08/10/2026). Les établissements publics de coopération intercommunale compétents en matière d'habitat, la commune de Paris, les EPT de la métropole du Grand Paris, la métropole de Lyon et la métropole d'Aix-Marseille-Provence peuvent demander l'encadrement. Le préfet fixe chaque année le loyer de référence (médian), le loyer majoré (+20 %) et le loyer minoré (-30 %). Dispositif expérimental, appliqué à Paris, Lille, Plaine Commune et Est Ensemble (ecologie.gouv.fr, page du 28/10/2025).",
+        strate_impactee="Local",
+        effet_simulation="Activation de l'encadrement dans les territoires qui le demandent ; pas de généralisation prévue par le texte.",
+    ),
+    "LOI_APER_2023_175": ArticleDeLoi(
+        identifiant="LOI_APER_2023_175",
+        code_ou_traite="Loi n° 2023-175 du 10 mars 2023 (loi APER)",
+        article="Ensemble du texte ; zones d'accélération : article 15",
+        titre="Accélération de la production d'énergies renouvelables",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Simplifie les procédures d'énergies renouvelables, crée des zones d'accélération définies par les communes (article 15) et accélère le solaire et l'éolien en mer. Source secondaire consultée le 08/10/2026 : préfecture des Pyrénées-Orientales (page du 08/12/2025).",
+        strate_impactee="National",
+        effet_simulation="Cadre légal du déploiement des énergies renouvelables.",
+    ),
+    "LOI_JUSTICE_2023_1059": ArticleDeLoi(
+        identifiant="LOI_JUSTICE_2023_1059",
+        code_ou_traite="Loi n° 2023-1059 du 20 novembre 2023 (programmation de la justice)",
+        article="Article 1er et rapport annexé",
+        titre="Orientation et programmation du ministère de la justice 2023-2027",
+        texte_integral="Texte consulté sur https://www.legifrance.gouv.fr/jorf/id/JORFTEXT000048430512 (le 08/10/2026). L'article 1er approuve le rapport annexé, qui fixe les orientations et la programmation des moyens de la mission « Justice » pour 2023-2027.",
+        strate_impactee="National",
+        effet_simulation="Trajectoire budgétaire de la justice (levier budget_justice).",
+    ),
+    "CP_432_13": ArticleDeLoi(
+        identifiant="CP_432_13",
+        code_ou_traite="Code pénal",
+        article="Article 432-13",
+        titre="Pantouflage : délit de prise illégale d'intérêts après des fonctions publiques",
+        texte_integral="Résumé vérifié (texte intégral : https://www.legifrance.gouv.fr). Interdit, pendant trois ans après la cessation des fonctions, de prendre part à une entreprise privée que l'agent a contrôlée ou avec laquelle il a eu des relations de service. Peine : trois ans d'emprisonnement et 200 000 euros d'amende. Sources consultées le 08/10/2026 : AFA, guide sport opérateurs (2022) ; ANSM, fiche 3 (2020).",
+        strate_impactee="National",
+        effet_simulation="Encadre le levier de lutte contre le pantouflage et la transparence des reconversions.",
     ),
 }
 
