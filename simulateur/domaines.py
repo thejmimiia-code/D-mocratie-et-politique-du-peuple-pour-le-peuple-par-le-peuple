@@ -36,7 +36,7 @@ from __future__ import annotations
 import math
 from collections.abc import Iterable
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 from simulateur.donnees_live import ContexteInstant
 from simulateur.model import DecisionPolitique
@@ -55,7 +55,7 @@ class Domaine:
     priorite: int = 50
 
 
-DOMAINES: tuple[Domaine, ...] = (
+DOMAINES: Tuple[Domaine, ...] = (
     Domaine("economie", "Économie & croissance",
             "Activité, investissement, productivité, balance commerciale.", "#38bdf8", 90),
     Domaine("budget", "Budget, dette & marchés",
@@ -98,7 +98,7 @@ DOMAINES: tuple[Domaine, ...] = (
             "Capacité à encaisser les chocs : énergie, alimentation, santé, cyber.", "#94a3b8", 76),
 )
 
-DOMAINES_PAR_CLE: dict[str, Domaine] = {d.cle: d for d in DOMAINES}
+DOMAINES_PAR_CLE: Dict[str, Domaine] = {d.cle: d for d in DOMAINES}
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -114,24 +114,24 @@ class SpecIndicateur:
     libelle: str
     unite: str
     base: str | float
-    termes: tuple[tuple[str, float], ...] = ()
+    termes: Tuple[Tuple[str, float], ...] = ()
     sens: int = 1
     formule: str = ""
     source: str = ""
     precision: int = 1
-    plancher: float | None = None
-    plafond: float | None = None
+    plancher: Optional[float] = None
+    plafond: Optional[float] = None
 
-    def en_dict(self) -> dict[str, Any]:
+    def en_dict(self) -> Dict[str, Any]:
         charge = asdict(self)
         charge["termes"] = [list(t) for t in self.termes]
         return charge
 
 
 def _spec(cle: str, domaine: str, libelle: str, unite: str, base: str | float,
-          termes: Iterable[tuple[str, float]] = (), sens: int = 1,
+          termes: Iterable[Tuple[str, float]] = (), sens: int = 1,
           formule: str = "", source: str = "", precision: int = 1,
-          plancher: float | None = None, plafond: float | None = None) -> SpecIndicateur:
+          plancher: Optional[float] = None, plafond: Optional[float] = None) -> SpecIndicateur:
     return SpecIndicateur(cle, domaine, libelle, unite, base, tuple(termes), sens,
                           formule, source, precision, plancher, plafond)
 
@@ -140,7 +140,7 @@ def _spec(cle: str, domaine: str, libelle: str, unite: str, base: str | float,
 #   1 point de PIB ≈ 30 Md€ ; dépense Éducation ≈ 170 Md€ ; Santé ≈ 277 Md€ ;
 #   Régalien ≈ 75 Md€ ; Protection sociale ≈ 960 Md€ ; Population 68,6 M.
 
-SPECS: tuple[SpecIndicateur, ...] = (
+SPECS: Tuple[SpecIndicateur, ...] = (
     # ── Économie ───────────────────────────────────────────────────────────
     _spec("croissance_reelle", "economie", "Croissance réelle du PIB", "%/an", 0.9,
           (("depenses_nouvelles_mde", 0.030), ("recettes_nouvelles_mde", -0.025),
@@ -657,7 +657,7 @@ SPECS: tuple[SpecIndicateur, ...] = (
 # ────────────────────────────────────────────────────────────────────────────
 
 #: ligne du levier → (médiateur en Md€, préfixe « points » éventuel)
-LIGNES: dict[str, str] = {
+LIGNES: Dict[str, str] = {
     "education": "education", "recherche": "recherche", "formation": "formation",
     "ondam": "sante", "hopital": "sante", "deserts_medicaux": "deserts_medicaux",
     "prevention": "prevention", "medicaments": "medicaments", "dependance": "dependance",
@@ -685,7 +685,7 @@ LIGNES: dict[str, str] = {
 #: Leviers pilotés par un **champ** du moteur (`DecisionPolitique`) mais dont la
 #: valeur doit aussi être exposée en unité physique aux formules d'indicateurs.
 #: La clé est le levier, la valeur le nom du médiateur (`<nom>_pts`, `rec_<nom>_mde`).
-UNITES_CHAMPS: dict[str, str] = {
+UNITES_CHAMPS: Dict[str, str] = {
     "niches_fiscales": "niches",
 }
 
@@ -733,9 +733,9 @@ class MediateursAnnee:
     pouvoir_achat_index: float = 100.0
     disponibilite_semiconducteurs_pct: float = 100.0
     #: Médiateurs quantitatifs « en Md€ » ou « en points » produits par les leviers.
-    flux: dict[str, float] = field(default_factory=dict)
+    flux: Dict[str, float] = field(default_factory=dict)
     #: Écarts calculés vis-à-vis de la trajectoire de référence (tous leviers neutres).
-    ecarts: dict[str, float] = field(default_factory=dict)
+    ecarts: Dict[str, float] = field(default_factory=dict)
 
     def lire(self, nom: str) -> float:
         """Lecture unifiée : flux/écarts des leviers, puis attributs directs."""
@@ -770,7 +770,7 @@ def _montant_levier(levier, valeur: float, annee_index: int) -> float:
     return montant * profil
 
 
-def _poids_reformes_democratiques(parametres: dict[str, float]) -> float:
+def _poids_reformes_democratiques(parametres: Dict[str, float]) -> float:
     poids = 0.0
     for cle in LEVIERS_DEMOCRATIQUES:
         levier = LEVIERS[cle]
@@ -785,9 +785,9 @@ def _poids_reformes_democratiques(parametres: dict[str, float]) -> float:
     return round(poids, 3)
 
 
-def construire_flux(parametres: dict[str, float], annee_index: int) -> dict[str, float]:
+def construire_flux(parametres: Dict[str, float], annee_index: int) -> Dict[str, float]:
     """Convertit les leviers en flux budgétaires et médiateurs quantitatifs."""
-    flux: dict[str, float] = {}
+    flux: Dict[str, float] = {}
     for cle, levier in LEVIERS.items():
         valeur = parametres.get(cle, levier.defaut)
         montant = _montant_levier(levier, valeur, annee_index)
@@ -939,8 +939,8 @@ SENSIBILITE_SCORE = 16.0
 ECART_MAX_INDICATEUR = 0.15
 
 
-def _score_domaine(series: list[tuple[SpecIndicateur, list[float]]],
-                   references: dict[str, list[float]] | None = None) -> float:
+def _score_domaine(series: List[Tuple[SpecIndicateur, List[float]]],
+                   references: Optional[Dict[str, List[float]]] = None) -> float:
     """Score 0-100 : écart relatif moyen signé, borné par une tangente hyperbolique.
 
     * avec `references`, le score mesure l'**impact de la politique** : écart entre
@@ -954,7 +954,7 @@ def _score_domaine(series: list[tuple[SpecIndicateur, list[float]]],
     moyenne des indicateurs d'un domaine gagne environ 20 points de score, tandis
     qu'un effet marginal de 0,3 % reste visible (+2 points).
     """
-    ecarts: list[float] = []
+    ecarts: List[float] = []
     for spec, serie in series:
         if references and references.get(spec.cle):
             base, finale = references[spec.cle][-1], serie[-1]
@@ -976,29 +976,29 @@ class ResultatDomaine:
     description: str
     couleur: str
     score: float
-    indicateurs: list[dict[str, Any]]
+    indicateurs: List[Dict[str, Any]]
     #: Score de tendance de la trajectoire de référence (sans politique).
-    tendance_reference: float | None = None
+    tendance_reference: Optional[float] = None
 
-    def en_dict(self) -> dict[str, Any]:
+    def en_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
 
-def evaluer_domaines(mediateurs_par_annee: list[MediateursAnnee],
+def evaluer_domaines(mediateurs_par_annee: List[MediateursAnnee],
                      contexte: ContexteInstant,
-                     references: dict[str, list[float]] | None = None,
-                     tendances: dict[str, float] | None = None) -> list[ResultatDomaine]:
+                     references: Optional[Dict[str, List[float]]] = None,
+                     tendances: Optional[Dict[str, float]] = None) -> List[ResultatDomaine]:
     """Évalue les 20 domaines sur l'horizon simulé.
 
     `references` : séries d'indicateurs de la trajectoire de référence (leviers
     neutres). Fournies, elles transforment le score en **impact de la politique**
     (50 = aucune politique) et la tendance de référence est reportée à part.
     """
-    resultats: list[ResultatDomaine] = []
+    resultats: List[ResultatDomaine] = []
     for domaine in DOMAINES:
         specs = [s for s in SPECS if s.domaine == domaine.cle]
-        indicateurs: list[dict[str, Any]] = []
-        series_pour_score: list[tuple[SpecIndicateur, list[float]]] = []
+        indicateurs: List[Dict[str, Any]] = []
+        series_pour_score: List[Tuple[SpecIndicateur, List[float]]] = []
         for spec in specs:
             serie = [evaluer_indicateur(spec, m, contexte) for m in mediateurs_par_annee]
             series_pour_score.append((spec, serie))
@@ -1031,7 +1031,7 @@ def evaluer_domaines(mediateurs_par_annee: list[MediateursAnnee],
 # 5. API publiques
 # ────────────────────────────────────────────────────────────────────────────
 
-def catalogue_domaines() -> list[dict[str, Any]]:
+def catalogue_domaines() -> List[Dict[str, Any]]:
     """Description sérialisable des domaines et de leurs indicateurs."""
     return [
         {
@@ -1052,7 +1052,7 @@ def catalogue_domaines() -> list[dict[str, Any]]:
     ]
 
 
-def decisions_depuis_flux(flux: dict[str, float]) -> dict[str, float]:
+def decisions_depuis_flux(flux: Dict[str, float]) -> Dict[str, float]:
     """Agrégats affichés dans le bandeau d'impact."""
     recettes = flux.get("recettes_nouvelles_mde", 0.0)
     depenses = flux.get("depenses_nouvelles_mde", 0.0)
@@ -1064,7 +1064,7 @@ def decisions_depuis_flux(flux: dict[str, float]) -> dict[str, float]:
     }
 
 
-def decision_moteur(parametres: dict[str, float], annee: int, *, horizon: int = 5) -> DecisionPolitique:
+def decision_moteur(parametres: Dict[str, float], annee: int, *, horizon: int = 5) -> DecisionPolitique:
     """Construit la `DecisionPolitique` transmise au moteur pour une année.
 
     * les leviers rattachés à un champ du moteur y sont écrits directement ;
@@ -1107,5 +1107,5 @@ def decision_moteur(parametres: dict[str, float], annee: int, *, horizon: int = 
     return decision
 
 
-def mediateurs_en_dict(mediateurs: MediateursAnnee) -> dict[str, Any]:
+def mediateurs_en_dict(mediateurs: MediateursAnnee) -> Dict[str, Any]:
     return asdict(mediateurs)

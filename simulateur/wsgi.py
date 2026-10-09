@@ -64,7 +64,7 @@ import io
 import sys
 import traceback
 from collections.abc import Callable
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 from .dashboard import DashboardHandler
 
@@ -78,7 +78,7 @@ _ENTETES_HOP_BY_HOP = frozenset({"connection", "transfer-encoding", "server", "d
 _MESSAGE_ERREUR = b"Erreur interne du simulateur (voir logs)"
 
 
-def _requete_brute(environ: dict[str, Any]) -> bytes:
+def _requete_brute(environ: Dict[str, Any]) -> bytes:
     """Reconstruit la requête HTTP telle que ``rfile`` l'attend.
 
     WSGI livre la requête émiettée dans un dictionnaire (``REQUEST_METHOD``,
@@ -108,7 +108,7 @@ def _requete_brute(environ: dict[str, Any]) -> bytes:
     return entetes + b"\r\n\r\n" + _corps(environ)
 
 
-def _corps(environ: dict[str, Any]) -> bytes:
+def _corps(environ: Dict[str, Any]) -> bytes:
     """Lit le corps de la requête dans ``wsgi.input``, sans jamais bloquer."""
     brut = environ.get("CONTENT_LENGTH") or environ.get("HTTP_CONTENT_LENGTH") or "0"
     try:
@@ -131,7 +131,7 @@ class _RequeteWSGI(DashboardHandler):
     flux sont déjà prêts et il n'y a qu'une requête à traiter.
     """
 
-    def __init__(self, environ: dict[str, Any]) -> None:
+    def __init__(self, environ: Dict[str, Any]) -> None:
         self.environ = environ
         # Attributs que ``__init__`` d'origine aurait posés ou qui sont lus
         # avant ``parse_request`` : on les initialise pour qu'aucun chemin
@@ -143,7 +143,7 @@ class _RequeteWSGI(DashboardHandler):
         self.rfile = io.BytesIO(_requete_brute(environ))
         self.wfile = io.BytesIO()
         self._statut = "500 Internal Server Error"
-        self._entetes: list[tuple[str, str]] = []
+        self._entetes: List[Tuple[str, str]] = []
 
     # ── interception des en-têtes ──────────────────────────────────────────
     def flush_headers(self) -> None:
@@ -182,17 +182,17 @@ class _RequeteWSGI(DashboardHandler):
 
     # ── habillage minimal ──────────────────────────────────────────────────
     @property
-    def client_address(self) -> tuple[str, int]:
+    def client_address(self) -> Tuple[str, int]:
         return (str(self.environ.get("REMOTE_ADDR", "")), 0)
 
     def address_string(self) -> str:
         return str(self.environ.get("REMOTE_ADDR", "-"))
 
 
-def creer_application() -> Callable[[dict[str, Any], Any], list[bytes]]:
+def creer_application() -> Callable[[Dict[str, Any], Any], List[bytes]]:
     """Fabrique l'application WSGI (une seule instance suffit par processus)."""
 
-    def application(environ: dict[str, Any], start_response: Any) -> list[bytes]:
+    def application(environ: Dict[str, Any], start_response: Any) -> List[bytes]:
         requete = _RequeteWSGI(environ)
         try:
             requete.handle_one_request()

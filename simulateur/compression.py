@@ -36,6 +36,7 @@ Sécurité et limites
 """
 
 from __future__ import annotations
+from typing import Dict, List, Optional, Tuple
 
 import gzip
 import zlib
@@ -54,7 +55,7 @@ NIVEAU_GZIP = 6
 #: Ordre de préférence du serveur, du meilleur ratio au plus coûteux.
 PREFERENCE = ("br", "zstd", "gzip", "deflate")
 
-_COMPRESSEURS: dict[str, Callable[[bytes], bytes]] = {}
+_COMPRESSEURS: Dict[str, Callable[[bytes], bytes]] = {}
 
 
 def _gzip(charge: bytes) -> bytes:
@@ -88,18 +89,18 @@ def _enregistrer_defauts() -> None:
 _enregistrer_defauts()
 
 
-def encodages_disponibles() -> tuple[str, ...]:
+def encodages_disponibles() -> Tuple[str, ...]:
     """Encodages réellement utilisables sur cet interpréteur."""
     return tuple(encodage for encodage in PREFERENCE if encodage in _COMPRESSEURS)
 
 
-def _qualites(accepte: str) -> list[tuple[str, float]]:
+def _qualites(accepte: str) -> List[Tuple[str, float]]:
     """Analyse un en-tête ``Accept-Encoding`` en paires (encodage, qualité).
 
     Tolérant : un en-tête malformé ne doit jamais faire échouer une réponse —
     on retombe alors sur « aucune compression », qui est toujours correcte.
     """
-    propositions: list[tuple[str, float]] = []
+    propositions: List[Tuple[str, float]] = []
     for morceau in (accepte or "").split(","):
         partie = morceau.strip()
         if not partie:
@@ -120,7 +121,7 @@ def _qualites(accepte: str) -> list[tuple[str, float]]:
     return propositions
 
 
-def negocier(accepte: str | None) -> str | None:
+def negocier(accepte: str | None) -> Optional[str]:
     """Retourne l'encodage à utiliser, ou ``None`` si le client n'en veut aucun.
 
     Règles appliquées, dans l'ordre :
@@ -137,7 +138,7 @@ def negocier(accepte: str | None) -> str | None:
     if not propositions:
         return None
     disponibles = encodages_disponibles()
-    scores: dict[str, float] = {}
+    scores: Dict[str, float] = {}
     for nom, qualite in propositions:
         if qualite <= 0.0:
             continue
@@ -163,7 +164,7 @@ def negocier(accepte: str | None) -> str | None:
     return None
 
 
-def compresser(charge: bytes, encodage: str | None) -> tuple[bytes, str | None]:
+def compresser(charge: bytes, encodage: str | None) -> Tuple[bytes, str | None]:
     """Compresse ``charge`` ; renvoie ``(charge, encodage retenu ou None)``.
 
     La compression n'est appliquée que si elle est utile : en dessous du seuil,
@@ -184,7 +185,7 @@ def compresser(charge: bytes, encodage: str | None) -> tuple[bytes, str | None]:
     return compressee, encodage
 
 
-def repondre(accepte: str | None, charge: bytes) -> tuple[bytes, str | None]:
+def repondre(accepte: str | None, charge: bytes) -> Tuple[bytes, str | None]:
     """Raccourci : négocie puis compresse. ``(charge, encodage retenu)``."""
     return compresser(charge, negocier(accepte))
 

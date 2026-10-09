@@ -3,6 +3,7 @@
 Pas de téléchargement implicite, pas d'antidatage, pas de somme de victimes imputée.
 """
 
+from typing import List
 import argparse
 import csv
 import hashlib
@@ -40,7 +41,7 @@ class ContratImport:
     preuve_disponibilite: str
     debut: str
     fin: str
-    pays_ids: list[int]
+    pays_ids: List[int]
     couverture_exhaustive: bool = False
     preuve_exhaustivite: str = ''
 
@@ -120,7 +121,7 @@ def convertir(csv_path: Path, contrat: ContratImport) -> dict:
         io.BufferedReader(LecteurEmpreinte(source, empreinte)),
         encoding='utf-8-sig', newline='',
     ) as fichier:
-        lecteur = csv.DictReader(fichier, strict=True)
+        lecteur = csv.DictReader(fichier)
         colonnes = lecteur.fieldnames
         if not colonnes or len(set(colonnes)) != len(colonnes) or not CHAMPS <= set(colonnes):
             raise ValueError('En-tête CSV incomplet ou colonnes dupliquées')

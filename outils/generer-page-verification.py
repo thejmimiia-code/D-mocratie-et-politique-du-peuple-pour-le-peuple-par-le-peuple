@@ -10,6 +10,7 @@ Usage :
 """
 
 from __future__ import annotations
+from typing import List
 
 import argparse
 import sys
@@ -45,7 +46,7 @@ def date_fr(iso: str) -> str:
 
 
 def page() -> str:
-    lignes: list[str] = []
+    lignes: List[str] = []
     ecrire = lignes.append
 
     compte_leviers = Counter(verification_levier(c, levier.source).statut for c, levier in LEVIERS.items())

@@ -8,7 +8,7 @@ côté navigateur et ne sont pas transmis par l'API.
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, Dict
 
 DATE_COLLECTE = "2026-10-07"
 
@@ -34,7 +34,7 @@ _PAGE_DREES = "https://drees.solidarites-sante.gouv.fr/communique-de-presse/comm
 _URL_CHEQUE = "https://www.ecologie.gouv.fr/presse/debut-denvoi-cheques-energie-lannee-2023-aux-56-millions-menages-beneficiaires"
 _URL_COMPTES_INSEE = "https://www.insee.fr/fr/statistiques/8997691"
 
-_OBSERVATOIRE: dict[str, Any] = {
+_OBSERVATOIRE: Dict[str, Any] = {
     "collecte_le": DATE_COLLECTE,
     "finances_locales": {
         "libelle": "Finances des collectivités locales",
@@ -347,6 +347,6 @@ _OBSERVATOIRE: dict[str, Any] = {
 }
 
 
-def observatoire_public() -> dict[str, Any]:
+def observatoire_public() -> Dict[str, Any]:
     """Renvoie une copie JSON-sérialisable des références publiques datées."""
     return deepcopy(_OBSERVATOIRE)

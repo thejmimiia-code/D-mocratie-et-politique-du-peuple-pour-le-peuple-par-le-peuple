@@ -47,9 +47,10 @@ import urllib.parse
 import urllib.request
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+UTC = timezone.utc
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # ────────────────────────────────────────────────────────────────────────────
 # Réseau
@@ -60,7 +61,7 @@ CACHE_DIR = Path(os.environ.get("SIMULATEUR_CACHE", ".simulateur_cache"))
 CACHE_FICHIER = CACHE_DIR / "donnees_live.json"
 
 #: Fournisseurs écartés tant qu'une lecture a échoué récemment (anti-rafale).
-_BLACKLIST: dict[str, float] = {}
+_BLACKLIST: Dict[str, float] = {}
 DUREE_BLACKLIST_S = 300.0
 
 
@@ -68,7 +69,7 @@ class ErreurSource(RuntimeError):
     """Erreur de lecture d'une source de données publiques."""
 
 
-def _http_texte(url: str, timeout: float = 12.0, entetes: dict[str, str] | None = None) -> str:
+def _http_texte(url: str, timeout: float = 12.0, entetes: Optional[Dict[str, str]] = None) -> str:
     """Lecture HTTP brute (stdlib uniquement, aucun téléchargement implicite)."""
     requete = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(entetes or {})})
     try:
@@ -90,7 +91,7 @@ def _http_json(url: str, timeout: float = 12.0) -> Any:
 # (ex. le champ à extraire dans un enregistrement Opendatasoft) puis renvoie
 # un couple (valeur, période).
 
-def ad_eurostat(payload: Any, chemin: str | None = None) -> tuple[float | None, str | None]:
+def ad_eurostat(payload: Any, chemin: Optional[str] = None) -> Tuple[float | None, str | None]:
     """Eurostat dissemination API (JSON-stat 2.0)."""
     if isinstance(payload, dict) and "error" in payload:
         raise ErreurSource(str(payload["error"])[:200])
@@ -122,7 +123,7 @@ def ad_eurostat(payload: Any, chemin: str | None = None) -> tuple[float | None, 
     return float(valeur_observee), periode
 
 
-def qualite_eurostat(payload: Any, cle: str | None) -> str | None:
+def qualite_eurostat(payload: Any, cle: str | None) -> Optional[str]:
     """Renvoie le code de statut de l'observation JSON-stat, s'il existe.
 
     Eurostat stocke les marqueurs (e = estimé, p = provisoire, f = prévision,
@@ -166,7 +167,7 @@ def libelle_qualite(code: str | None) -> str:
     return f"{libelle} (code {code})" if libelle else f"marqueur source {code}"
 
 
-def ad_sdmx(payload: Any, chemin: str | None = None) -> tuple[float | None, str | None]:
+def ad_sdmx(payload: Any, chemin: Optional[str] = None) -> Tuple[float | None, str | None]:
     """BCE — SDMX-JSON (data-api.ecb.europa.eu)."""
     jeux = payload.get("dataSets") or []
     if not jeux:
@@ -192,7 +193,7 @@ def ad_sdmx(payload: Any, chemin: str | None = None) -> tuple[float | None, str 
     return (float(valeur) if valeur is not None else None), periode
 
 
-def ad_frankfurter(payload: Any, chemin: str | None = None) -> tuple[float | None, str | None]:
+def ad_frankfurter(payload: Any, chemin: Optional[str] = None) -> Tuple[float | None, str | None]:
     """Frankfurter (taux de change BCE). `chemin` = code devise (USD, CNY…)."""
     taux = payload.get("rates") or {}
     if not taux:
@@ -203,7 +204,7 @@ def ad_frankfurter(payload: Any, chemin: str | None = None) -> tuple[float | Non
     return float(taux[devise]), payload.get("date")
 
 
-def ad_opendatasoft(payload: Any, chemin: str | None = None) -> tuple[float | None, str | None]:
+def ad_opendatasoft(payload: Any, chemin: Optional[str] = None) -> Tuple[float | None, str | None]:
     """API Opendatasoft v2.1 (data.economie.gouv.fr, data.gouv.fr…)."""
     resultats = payload.get("results")
     if resultats is None and payload.get("total_count") == 0:
@@ -224,7 +225,7 @@ def ad_opendatasoft(payload: Any, chemin: str | None = None) -> tuple[float | No
     return float(brut), None
 
 
-def ad_worldbank(payload: Any, chemin: str | None = None) -> tuple[float | None, str | None]:
+def ad_worldbank(payload: Any, chemin: Optional[str] = None) -> Tuple[float | None, str | None]:
     """World Bank Indicators API v2 : [meta, [observations…]]."""
     if not isinstance(payload, list) or len(payload) < 2 or not payload[1]:
         raise ErreurSource("réponse World Bank vide")
@@ -234,7 +235,7 @@ def ad_worldbank(payload: Any, chemin: str | None = None) -> tuple[float | None,
     return float(observation["value"]), observation.get("date")
 
 
-def ad_yahoo(payload: Any, chemin: str | None = None) -> tuple[float | None, str | None]:
+def ad_yahoo(payload: Any, chemin: Optional[str] = None) -> Tuple[float | None, str | None]:
     """Yahoo Finance chart API (cours de clôture / dernier prix)."""
     resultats = ((payload.get("chart") or {}).get("result")) or []
     if not resultats:
@@ -252,7 +253,7 @@ def ad_yahoo(payload: Any, chemin: str | None = None) -> tuple[float | None, str
     return float(prix), periode
 
 
-def ad_stooq(texte: str, chemin: str | None = None) -> tuple[float | None, str | None]:
+def ad_stooq(texte: str, chemin: Optional[str] = None) -> Tuple[float | None, str | None]:
     """Stooq — CSV « Symbole,Date,Heure,Ouv.,Haut,Bas,Clôt.,Vol. »."""
     lignes = [ligne for ligne in texte.splitlines() if ligne.strip()]
     if len(lignes) < 2:
@@ -265,7 +266,7 @@ def ad_stooq(texte: str, chemin: str | None = None) -> tuple[float | None, str |
     raise ErreurSource("aucun cours exploitable dans le CSV Stooq")
 
 
-ADAPTATEURS_SERVEUR: dict[str, Callable[[Any, str | None], tuple[float | None, str | None]]] = {
+ADAPTATEURS_SERVEUR: Dict[str, Callable[[Any, str | None], Tuple[float | None, str | None]]] = {
     "eurostat": ad_eurostat,
     "sdmx": ad_sdmx,
     "frankfurter": ad_frankfurter,
@@ -288,7 +289,7 @@ class Source:
     fournisseur: str
     url: str
     adaptateur: str          # clé d'ADAPTATEURS_SERVEUR (également implémentée en JS)
-    chemin: str | None = None
+    chemin: Optional[str] = None
     licence: str = "Réutilisation libre avec attribution"
     url_page: str = ""
     navigateur: bool = True  # source utilisable en `fetch` direct depuis le navigateur
@@ -306,9 +307,9 @@ class Indicateur:
     unite: str
     categorie: str
     precision: int = 2
-    sources: tuple[Source, ...] = ()
+    sources: Tuple[Source, ...] = ()
     #: Valeur de repli embarquée : (valeur, période, fournisseur, date de vérification)
-    reference: tuple[float, str, str, str] | None = None
+    reference: Optional[Tuple[float, str, str, str]] = None
     note: str = ""
     #: Facteur appliqué aux valeurs lues et de référence (conversion d'unité,
     #: ex. l'API Eurostat publie des millions d'euros, le modèle raisonne en Md€).
@@ -316,10 +317,10 @@ class Indicateur:
     #: Cadence réelle de publication; ne signifie pas que la donnée est quotidienne.
     frequence: str = ""
     #: Marqueur éventuel attaché à une valeur de référence embarquée.
-    qualite_reference: str | None = None
+    qualite_reference: Optional[str] = None
 
     @property
-    def valeur_reference(self) -> float | None:
+    def valeur_reference(self) -> Optional[float]:
         return self.reference[0] if self.reference else None
 
 
@@ -334,12 +335,12 @@ class Lecture:
     url: str
     statut: str              # "live" | "reference" | "indisponible"
     detail: str = ""
-    qualite_code: str | None = None  # statut brut de l'observation (ex. Eurostat: e, p, f)
+    qualite_code: Optional[str] = None  # statut brut de l'observation (ex. Eurostat: e, p, f)
     horodatage: str = field(
         default_factory=lambda: datetime.now(UTC).isoformat(timespec="seconds")
     )
 
-    def en_dict(self) -> dict[str, Any]:
+    def en_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
 
@@ -430,7 +431,7 @@ DATE_VERIFICATION = "2026-10-07"
 #: Toute clé du registre peut alimenter la calibration du moteur
 #: (`moteur_parametrique.calibrer_contexte`) ou l'affichage du contexte.
 
-INDICATEURS: dict[str, Indicateur] = {}
+INDICATEURS: Dict[str, Indicateur] = {}
 
 _FREQUENCES_PAR_CLE = {
     "pib_nominal_mde": "Annuelle; comptes nationaux publiés avec révisions.",
@@ -967,7 +968,7 @@ def interroger(cle: str, timeout: float = 12.0) -> Lecture:
     if cle not in INDICATEURS:
         raise KeyError(f"indicateur inconnu : {cle}")
     indicateur = INDICATEURS[cle]
-    erreurs: list[str] = []
+    erreurs: List[str] = []
     for source in indicateur.sources:
         try:
             lecture = _lire_source(source, timeout=timeout)
@@ -998,7 +999,7 @@ def interroger(cle: str, timeout: float = 12.0) -> Lecture:
     )
 
 
-def collecter(cles: list[str] | None = None, timeout: float = 12.0) -> dict[str, Lecture]:
+def collecter(cles: Optional[List[str]] = None, timeout: float = 12.0) -> Dict[str, Lecture]:
     """Interroge un ensemble d'indicateurs (tous par défaut)."""
     return {cle: interroger(cle, timeout=timeout) for cle in (cles or list(INDICATEURS))}
 
@@ -1016,7 +1017,7 @@ def reseau_disponible(timeout: float = 2.5) -> bool:
 # Cache explicite (jamais écrit sans appel explicite)
 # ────────────────────────────────────────────────────────────────────────────
 
-def sauver_cache(lectures: dict[str, Lecture], chemin: Path | None = None) -> Path:
+def sauver_cache(lectures: Dict[str, Lecture], chemin: Optional[Path] = None) -> Path:
     """Écrit le dernier relevé dans un fichier JSON lisible et supprimable."""
     chemin = chemin or CACHE_FICHIER
     chemin.parent.mkdir(parents=True, exist_ok=True)
@@ -1028,7 +1029,7 @@ def sauver_cache(lectures: dict[str, Lecture], chemin: Path | None = None) -> Pa
     return chemin
 
 
-def charger_cache(chemin: Path | None = None) -> dict[str, Lecture]:
+def charger_cache(chemin: Optional[Path] = None) -> Dict[str, Lecture]:
     """Relit le cache s'il existe (sinon dictionnaire vide)."""
     chemin = chemin or CACHE_FICHIER
     if not chemin.exists():
@@ -1037,7 +1038,7 @@ def charger_cache(chemin: Path | None = None) -> dict[str, Lecture]:
         charge = json.loads(chemin.read_text(encoding="utf-8"))
     except (json.JSONDecodeError, OSError):
         return {}
-    lectures: dict[str, Lecture] = {}
+    lectures: Dict[str, Lecture] = {}
     for cle, brut in (charge.get("lectures") or {}).items():
         try:
             lectures[cle] = Lecture(**brut)
@@ -1056,7 +1057,7 @@ def _licence_indicateur(cle: str) -> str:
     return sources[0].licence if sources else ""
 
 
-def _valeur(lectures: dict[str, Lecture], cle: str) -> float | None:
+def _valeur(lectures: Dict[str, Lecture], cle: str) -> Optional[float]:
     lecture = lectures.get(cle)
     return lecture.valeur if lecture else None
 
@@ -1086,10 +1087,10 @@ class ContexteInstant:
     depenses_publiques_pct_pib: float
     prelevements_obligatoires_pct_pib: float
     depenses_defense_pct_pib: float
-    provenance: dict[str, dict[str, Any]] = field(default_factory=dict)
+    provenance: Dict[str, Dict[str, Any]] = field(default_factory=dict)
     #: Séries publiques collectées mais non consommées par le calibrage :
     #: elles restent affichées et traçables (aucune donnée n'est jetée).
-    series_complementaires: dict[str, dict[str, Any]] = field(default_factory=dict)
+    series_complementaires: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     @property
     def spread_oat_bund_bps(self) -> float:
@@ -1102,7 +1103,7 @@ class ContexteInstant:
         taux_moyen = (self.taux_oat_10ans + self.taux_bce_depot) / 2.0
         return round(encours * taux_moyen / 100.0 * 0.62, 1)  # 0,62 ≈ part à taux de marché
 
-    def en_dict(self) -> dict[str, Any]:
+    def en_dict(self) -> Dict[str, Any]:
         charge = asdict(self)
         charge["spread_oat_bund_bps"] = self.spread_oat_bund_bps
         charge["charge_dette_estimee_mde"] = self.charge_dette_estimee_mde
@@ -1196,12 +1197,12 @@ def hors_ligne_force() -> bool:
 
 
 def construire_contexte(
-    lectures: dict[str, Lecture] | None = None,
+    lectures: Optional[Dict[str, Lecture]] = None,
     *,
     rafraichir: bool = False,
     utiliser_cache: bool = True,
     timeout: float = 12.0,
-    hors_ligne: bool | None = None,
+    hors_ligne: Optional[bool] = None,
 ) -> ContexteInstant:
     """Assemble le contexte « instant T » à partir du live, du cache ou du snapshot.
 
@@ -1224,9 +1225,9 @@ def construire_contexte(
                 except OSError:  # disque non inscriptible : on continue sans cache
                     pass
 
-    valeurs: dict[str, float] = {}
-    provenance: dict[str, dict[str, Any]] = {}
-    statuts: set[str] = set()
+    valeurs: Dict[str, float] = {}
+    provenance: Dict[str, Dict[str, Any]] = {}
+    statuts: Set[str] = set()
     for champ, cle_indicateur in _CORRESPONDANCE.items():
         lecture = lectures.get(cle_indicateur)
         indicateur = INDICATEURS[cle_indicateur]
@@ -1275,7 +1276,7 @@ def construire_contexte(
 
     # Séries collectées qui ne calibrent pas le moteur (santé, CO2, emploi…)
     # : on les expose quand même, avec leur provenance, pour l'utilisateur.
-    complementaires: dict[str, dict[str, Any]] = {}
+    complementaires: Dict[str, Dict[str, Any]] = {}
     for cle_indicateur, indicateur in INDICATEURS.items():
         if cle_indicateur in _CORRESPONDANCE.values():
             continue
@@ -1337,14 +1338,14 @@ def construire_contexte(
 # Charge utile pour le navigateur
 # ────────────────────────────────────────────────────────────────────────────
 
-def browser_payload(cles: list[str] | None = None) -> dict[str, Any]:
+def browser_payload(cles: Optional[List[str]] = None) -> Dict[str, Any]:
     """Descriptif des sources que le **navigateur** peut interroger directement.
 
     Le front-end applique les mêmes adaptateurs (implémentés en JS) : si le
     serveur n'a pas accès au réseau, c'est le poste de l'utilisateur qui
     rafraîchit les séries « à l'instant T ».
     """
-    charge: dict[str, Any] = {}
+    charge: Dict[str, Any] = {}
     for cle in (cles or list(INDICATEURS)):
         indicateur = INDICATEURS[cle]
         sources = [
@@ -1388,7 +1389,7 @@ def browser_payload(cles: list[str] | None = None) -> dict[str, Any]:
     return charge
 
 
-def catalogue_public() -> list[dict[str, Any]]:
+def catalogue_public() -> List[Dict[str, Any]]:
     """Vue sérialisable du registre (pour l'API et la documentation)."""
     return [
         {

@@ -35,6 +35,7 @@ Calibrages sourcés :
 """
 
 from dataclasses import dataclass, field
+from typing import List, Optional
 
 AVERTISSEMENT_GEOPOLITIQUE = (
     "Modèle exploratoire : les scores d'escalade et de risque nucléaire sont des indices "
@@ -76,7 +77,7 @@ class PointDePassageStrategique:
         return self.taux_ouverture_pct < 95.0
 
 
-def chokepoints_par_defaut() -> list[PointDePassageStrategique]:
+def chokepoints_par_defaut() -> List[PointDePassageStrategique]:
     """Cartographie des 7 verrous mondiaux (cf. §4 de l'analyse de tension 2026)."""
     return [
         PointDePassageStrategique("Détroit d'Hormuz", 20.0, 1.00),
@@ -111,7 +112,7 @@ class EchelonGeopolitique:
     usage_nucleaire_constate: bool = False
 
     # --- Chaînes d'approvisionnement -----------------------------------------
-    chokepoints: list[PointDePassageStrategique] = field(default_factory=chokepoints_par_defaut)
+    chokepoints: List[PointDePassageStrategique] = field(default_factory=chokepoints_par_defaut)
     disponibilite_semiconducteurs_pct: float = 100.0
     capacite_souveraine_semiconducteurs_mde: float = 0.0   # Cumul des plans de relocalisation
     stocks_strategiques_petrole_jours: float = 98.0        # Obligation AIE : 90 jours minimum
@@ -153,7 +154,7 @@ class EchelonGeopolitique:
     def nombre_chokepoints_sous_tension(self) -> int:
         return sum(1 for c in self.chokepoints if c.sous_tension)
 
-    def get_chokepoint(self, nom_partiel: str) -> PointDePassageStrategique | None:
+    def get_chokepoint(self, nom_partiel: str) -> Optional[PointDePassageStrategique]:
         cible = nom_partiel.casefold()
         for c in self.chokepoints:
             if cible in c.nom.casefold():
@@ -177,7 +178,7 @@ class EffetsGeopolitiques:
     confiance_delta: float = 0.0              # Points de confiance démocratique
     derogation_pde_pct_pib: float = 0.0       # Déficit neutralisé au titre de la clause défense
     degradation_notation: bool = False
-    commentaires: list[str] = field(default_factory=list)
+    commentaires: List[str] = field(default_factory=list)
 
 
 def _clip(valeur: float, mini: float = 0.0, maxi: float = 100.0) -> float:

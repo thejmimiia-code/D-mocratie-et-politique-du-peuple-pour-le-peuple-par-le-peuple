@@ -36,7 +36,7 @@ Aucune dépendance externe : bibliothèque standard uniquement.
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Dict, List, Optional
 
 #: Seuil en dessous duquel un écart est considéré comme non significatif, pour
 #: ne pas annoncer « ça bouge » sur un arrondi. Exprimé dans l'unité de la
@@ -110,7 +110,7 @@ def _lire_solde_public(valeur: float | None) -> str:
     return f"un déficit de {nombre(valeur, 1)} % du PIB"
 
 
-def _phrase_budget(synthese: dict) -> dict[str, Any] | None:
+def _phrase_budget(synthese: dict) -> Optional[Dict[str, Any]]:
     recettes = synthese.get("recettes_nouvelles_mde")
     depenses = synthese.get("depenses_nouvelles_mde")
     solde = synthese.get("solde_mesures_mde")
@@ -149,7 +149,7 @@ def _phrase_budget(synthese: dict) -> dict[str, Any] | None:
     }
 
 
-def _phrase_deficit(synthese: dict, horizon: int) -> dict[str, Any] | None:
+def _phrase_deficit(synthese: dict, horizon: int) -> Optional[Dict[str, Any]]:
     final = synthese.get("deficit_final_pct")
     if final is None:
         return None
@@ -184,7 +184,7 @@ def _phrase_deficit(synthese: dict, horizon: int) -> dict[str, Any] | None:
     }
 
 
-def _phrase_dette(synthese: dict, horizon: int) -> dict[str, Any] | None:
+def _phrase_dette(synthese: dict, horizon: int) -> Optional[Dict[str, Any]]:
     ratio = synthese.get("dette_finale_pct")
     if ratio is None:
         return None
@@ -218,7 +218,7 @@ def _phrase_dette(synthese: dict, horizon: int) -> dict[str, Any] | None:
     }
 
 
-def _phrase_emprunt(synthese: dict, contexte: dict) -> dict[str, Any] | None:
+def _phrase_emprunt(synthese: dict, contexte: dict) -> Optional[Dict[str, Any]]:
     taux = synthese.get("taux_oat_final")
     if taux is None:
         return None
@@ -251,7 +251,7 @@ def _phrase_emprunt(synthese: dict, contexte: dict) -> dict[str, Any] | None:
     }
 
 
-def _phrase_menages(etapes: list[dict], references: list[dict], synthese: dict) -> dict[str, Any] | None:
+def _phrase_menages(etapes: List[dict], references: List[dict], synthese: dict) -> Optional[Dict[str, Any]]:
     if not etapes:
         return None
     dernier = etapes[-1]
@@ -285,7 +285,7 @@ def _phrase_menages(etapes: list[dict], references: list[dict], synthese: dict) 
     }
 
 
-def _phrase_domaines(charge: dict) -> dict[str, Any] | None:
+def _phrase_domaines(charge: dict) -> Optional[Dict[str, Any]]:
     domaines = charge.get("domaines") or []
     if not domaines:
         return None
@@ -335,7 +335,7 @@ def _phrase_domaines(charge: dict) -> dict[str, Any] | None:
     }
 
 
-def _phrase_social(synthese: dict) -> dict[str, Any] | None:
+def _phrase_social(synthese: dict) -> Optional[Dict[str, Any]]:
     tension = synthese.get("tension_finale")
     confiance = synthese.get("confiance_finale")
     if tension is None and confiance is None:
@@ -357,7 +357,7 @@ def _phrase_social(synthese: dict) -> dict[str, Any] | None:
     }
 
 
-def _phrase_europe(synthese: dict) -> dict[str, Any] | None:
+def _phrase_europe(synthese: dict) -> Optional[Dict[str, Any]]:
     statut = synthese.get("statut_pde")
     if statut is None or (isinstance(statut, str) and not statut.strip()):
         return None
@@ -386,7 +386,7 @@ def _phrase_europe(synthese: dict) -> dict[str, Any] | None:
     }
 
 
-def _phrase_garde_fous(charge: dict) -> dict[str, Any] | None:
+def _phrase_garde_fous(charge: dict) -> Optional[Dict[str, Any]]:
     diagnostic = charge.get("diagnostic") or {}
     strates = diagnostic.get("strates") or []
     niveau_global = diagnostic.get("niveau_global")
@@ -420,7 +420,7 @@ def _phrase_garde_fous(charge: dict) -> dict[str, Any] | None:
     }
 
 
-def _resume(lignes: list[dict[str, Any]], synthese: dict) -> str:
+def _resume(lignes: List[Dict[str, Any]], synthese: dict) -> str:
     """Une phrase de synthèse, construite à partir des lignes disponibles."""
     favorables = [ligne for ligne in lignes if ligne["niveau"] == "favorable"]
     defavorables = [ligne for ligne in lignes if ligne["niveau"] == "defavorable"]
@@ -450,7 +450,7 @@ def _resume(lignes: list[dict[str, Any]], synthese: dict) -> str:
             f"sens ({hausse}), {len(defavorables)} {nom_baisse} en sens inverse ({baisse}).")
 
 
-def lecture_claire(charge: dict[str, Any]) -> dict[str, Any]:
+def lecture_claire(charge: Dict[str, Any]) -> Dict[str, Any]:
     """Relit une sortie de simulation et la traduit en phrases ordinaires.
 
     Args:
@@ -469,7 +469,7 @@ def lecture_claire(charge: dict[str, Any]) -> dict[str, Any]:
     references = charge.get("etapes_reference") or []
     horizon = charge.get("horizon") or len(etapes) or 5
 
-    lignes: list[dict[str, Any]] = []
+    lignes: List[Dict[str, Any]] = []
     for construire in (
         lambda: _phrase_budget(synthese),
         lambda: _phrase_deficit(synthese, horizon),

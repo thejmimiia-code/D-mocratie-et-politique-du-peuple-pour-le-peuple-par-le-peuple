@@ -23,6 +23,7 @@ page, et le simulateur propose au citoyen de noter sa propre valeur sourcée.
 """
 
 from __future__ import annotations
+from typing import Dict
 
 from dataclasses import dataclass
 
@@ -41,7 +42,7 @@ FORMULAIRE_CONTRIBUTION = (
     "/issues/new?template=donnee-a-verifier.md"
 )
 
-STATUTS: dict[str, str] = {
+STATUTS: Dict[str, str] = {
     "verifie": "Vérifié",
     "partiel": "Partiellement vérifié",
     "date_decalee": "Chiffre daté",
@@ -67,7 +68,7 @@ INTERNE_DOSSIER = "Chiffrage interne au dossier de mandature : hypothèse, non v
 
 #: Leviers dont au moins une partie a été contrôlée sur une source officielle ou
 #: secondaire explicitement citée (voir `docs/PLAN_AUDIT_GLOBAL.md`, lots 2 et 3).
-VERIFICATIONS_LEVIERS: dict[str, Verification] = {
+VERIFICATIONS_LEVIERS: Dict[str, Verification] = {
     "tva_energie_5_5": Verification(
         "partiel", DATE_AUDIT,
         "https://bofip.impots.gouv.fr/bofip/14705-PGP.html/identifiant=BOI-RES-TVA-000209-20260826",
@@ -154,7 +155,7 @@ VERIFICATIONS_LEVIERS: dict[str, Verification] = {
 }
 
 #: Articles du registre dont le texte ou le numéro a été contrôlé (lots 1 à 3).
-VERIFICATIONS_ARTICLES: dict[str, Verification] = {
+VERIFICATIONS_ARTICLES: Dict[str, Verification] = {
     "CC_2017_752_DC": Verification(
         "verifie", DATE_AUDIT,
         "https://www.legifrance.gouv.fr/cons/id/CONSTEXT000035597362",
@@ -247,7 +248,7 @@ def verification_article(identifiant: str) -> Verification:
     )
 
 
-def en_dict(cle: str, source: str = "") -> dict[str, str]:
+def en_dict(cle: str, source: str = "") -> Dict[str, str]:
     """Forme sérialisable, consommée par l'interface et l'API."""
     v = verification_levier(cle, source)
     return {

@@ -36,12 +36,12 @@ Aucune dépendance externe : bibliothèque standard uniquement.
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 #: Catégories, dans l'ordre de lecture de la page. Chacune est introduite par
 #: une phrase qui dit de quoi il s'agit — lire une catégorie doit suffire à
 #: comprendre si l'on est au bon endroit.
-CATEGORIES: dict[str, dict[str, str]] = {
+CATEGORIES: Dict[str, Dict[str, str]] = {
     "budget": {
         "libelle": "Budget de l'État",
         "introduction": "Comment l'État gagne, dépense et emprunte. Ce sont les"
@@ -100,12 +100,12 @@ class Terme:
     categorie: str
     definition: str
     repere: str = ""
-    formes: tuple[str, ...] = ()
-    voir: tuple[str, ...] = field(default=())
+    formes: Tuple[str, ...] = ()
+    voir: Tuple[str, ...] = field(default=())
 
 
 #: Le lexique. Ordre : du plus concret au plus abstrait dans chaque catégorie.
-TERMES: tuple[Terme, ...] = (
+TERMES: Tuple[Terme, ...] = (
     # ── Budget de l'État ───────────────────────────────────────────────────
     Terme(
         cle="milliard",
@@ -1079,7 +1079,7 @@ def _normaliser(texte: str) -> str:
     return " ".join((texte or "").lower().split())
 
 
-def definir(cle: str) -> dict[str, Any] | None:
+def definir(cle: str) -> Optional[Dict[str, Any]]:
     """Retourne une entrée du lexique, ou ``None`` si elle n'existe pas."""
     terme = _PAR_CLE.get(cle)
     return asdict(terme) if terme else None
@@ -1092,12 +1092,12 @@ def _correspond(terme: Terme, recherche: str) -> bool:
     return any(recherche in _normaliser(champ) for champ in champs)
 
 
-def termes_formes(terme: Terme) -> tuple[str, ...]:
+def termes_formes(terme: Terme) -> Tuple[str, ...]:
     """Toutes les écritures reconnaissables d'un terme (la sienne + alias)."""
     return (terme.terme, *terme.formes)
 
 
-def rechercher(recherche: str) -> list[Terme]:
+def rechercher(recherche: str) -> List[Terme]:
     """Recherche plein texte dans le libellé, la définition et les alias."""
     motif = _normaliser(recherche or "")
     if not motif:
@@ -1105,7 +1105,7 @@ def rechercher(recherche: str) -> list[Terme]:
     return [terme for terme in TERMES if _correspond(terme, motif)]
 
 
-def lexique_public(recherche: str | None = None) -> dict[str, Any]:
+def lexique_public(recherche: Optional[str] = None) -> Dict[str, Any]:
     """Charge utile de ``GET /api/lexique``.
 
     Contient les catégories (avec leur phrase d'introduction), les termes
@@ -1114,7 +1114,7 @@ def lexique_public(recherche: str | None = None) -> dict[str, Any]:
     baliser un texte.
     """
     trouves = rechercher(recherche)
-    formes: list[dict[str, str]] = []
+    formes: List[Dict[str, str]] = []
     for terme in TERMES:
         for forme in dict.fromkeys(termes_formes(terme)):
             if len(forme) >= 2:
@@ -1137,12 +1137,12 @@ def lexique_public(recherche: str | None = None) -> dict[str, Any]:
     }
 
 
-def citer(texte: str) -> list[Terme]:
+def citer(texte: str) -> List[Terme]:
     """Termes du lexique présents dans un texte quelconque (pour l'interface)."""
     motif = _normaliser(texte or "")
     if not motif:
         return []
-    trouves: list[Terme] = []
+    trouves: List[Terme] = []
     for terme in TERMES:
         for forme in termes_formes(terme):
             if _normaliser(forme) in motif:

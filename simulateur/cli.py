@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 """
 simulateur/cli.py — Interface terminale pour le simulateur multi-strates (Local, National, Europe, Marchés).
 """
@@ -178,7 +178,7 @@ def afficher_detail_annee(r: ResultatEtapeSimulation) -> None:
 
 def executer_scenario(
     nom_scenario: str,
-    export_path: str | None = None,
+    export_path: Optional[str] = None,
 ) -> List[ResultatEtapeSimulation]:
     moteur = MoteurSimulationSystemique()
 

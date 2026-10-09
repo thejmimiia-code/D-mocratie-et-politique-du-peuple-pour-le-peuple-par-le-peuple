@@ -4,6 +4,7 @@ Les événements sont imposés, les conséquences sont calculées. Acteurs ficti
 Voir docs/RD_GEOPOLITIQUE.md pour les équations et limites.
 """
 
+from typing import Optional, Tuple
 import argparse
 import json
 import math
@@ -73,7 +74,7 @@ class Secteur:
     substitution: float = 0.25  # fraction des flux bloqués récupérable
     delai_substitution: int = 3  # mois de blocus consécutifs avant récupération
     poids_pib: float = 1.0
-    capacite_stock_mois: float | None = None  # None conserve la capacité historique
+    capacite_stock_mois: Optional[float] = None  # None conserve la capacité historique
     reconstitution_mensuelle: float = 0.0  # offre supplémentaire / demande, hors blocus
 
     def __post_init__(self) -> None:
@@ -92,8 +93,8 @@ class Secteur:
 @dataclass(frozen=True)
 class Evenement:
     mois: int
-    combats: tuple[tuple[str, str], ...] = ()  # (agresseur, cible), imposés ce mois
-    autorisations: tuple[str, ...] = ()  # autorisation politique d'intervenir ce mois
+    combats: Tuple[Tuple[str, str], ...] = ()  # (agresseur, cible), imposés ce mois
+    autorisations: Tuple[str, ...] = ()  # autorisation politique d'intervenir ce mois
     blocus: float = 0.0  # fraction fermée de la route exposée
     rupture_dialogue: bool = False
     mediation: bool = False
@@ -131,9 +132,9 @@ class Parametres:
         borne('recuperation_annuelle', self.recuperation_annuelle, 0, 1)
 
 
-def simuler(acteurs: tuple[Acteur, ...], alliances: tuple[Alliance, ...],
-            secteurs: tuple[Secteur, ...], evenements: tuple[Evenement, ...],
-            horizon: int = 36, parametres: Parametres | None = None,
+def simuler(acteurs: Tuple[Acteur, ...], alliances: Tuple[Alliance, ...],
+            secteurs: Tuple[Secteur, ...], evenements: Tuple[Evenement, ...],
+            horizon: int = 36, parametres: Optional[Parametres] = None,
             *, calendrier_complet: bool = False) -> dict:
     """Simulation mensuelle pure ; pas de mutation ni de propagation d'alliance récursive."""
     entier('horizon', horizon, 1, 120)
@@ -287,9 +288,9 @@ def coupler_macro(rapport: dict) -> dict:
 
 def cas_experimental(duree: int = 18, stock: float = 1.0, substitution: float = 0.25,
                      mediation: bool = False, autorisation: bool = True,
-                     emploi_mois: int | None = None,
-                     parametres: Parametres | None = None,
-                     rupture_dialogue: bool | None = None) -> dict:
+                     emploi_mois: Optional[int] = None,
+                     parametres: Optional[Parametres] = None,
+                     rupture_dialogue: Optional[bool] = None) -> dict:
     """Cas fictif transparent ; aucun acteur réel ni calendrier de guerre prédit."""
     entier('duree', duree, 0, 36)
     for nom, valeur in (('mediation', mediation), ('autorisation', autorisation)):

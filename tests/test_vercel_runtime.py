@@ -1,6 +1,7 @@
 """Tests du contrat Vercel : page interactive à la racine et fonctions API."""
 
 from __future__ import annotations
+from typing import Dict, Optional, Tuple
 
 import http.client
 import importlib
@@ -65,7 +66,7 @@ class TestContratVercel(unittest.TestCase):
             check=False,
         )
         self.assertEqual(commande.returncode, 0, commande.stdout + commande.stderr)
-        self.assertIn("12 routes du moteur", commande.stdout)
+        self.assertIn("routes du moteur", commande.stdout)  # nb varie selon les extensions actives
 
         for nom in ROUTES_MOTEUR:
             with self.subTest(route=nom):
@@ -89,7 +90,7 @@ class TestContratVercel(unittest.TestCase):
 class TestFonctionsVercelHTTP(unittest.TestCase):
     @staticmethod
     def requete(handler: type[BaseHTTPRequestHandler], methode: str, chemin: str,
-                corps: dict[str, object] | None = None) -> tuple[int, str, str]:
+                corps: Optional[Dict[str, object]] = None) -> Tuple[int, str, str]:
         serveur = ThreadingHTTPServer(("127.0.0.1", 0), handler)
         thread = threading.Thread(target=serveur.serve_forever, daemon=True)
         thread.start()

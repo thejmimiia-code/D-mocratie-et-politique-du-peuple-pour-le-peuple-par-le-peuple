@@ -7,7 +7,13 @@ import os
 import subprocess
 import sys
 import tempfile
-import tomllib
+try:
+    import tomllib
+except ImportError:
+    try:
+        import tomli as tomllib
+    except ImportError:
+        tomllib = None
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -20,6 +26,7 @@ FIXTURES = ROOT / 'tests' / 'fixtures'
 
 
 class TestAuditPR(unittest.TestCase):
+    @unittest.skipIf(tomllib is None, "tomllib non disponible en Python < 3.11")
     def test_metadata_setuptools(self):
         config = tomllib.loads((ROOT / 'pyproject.toml').read_text())
         self.assertEqual(config['tool']['setuptools']['py-modules'], ['main'])

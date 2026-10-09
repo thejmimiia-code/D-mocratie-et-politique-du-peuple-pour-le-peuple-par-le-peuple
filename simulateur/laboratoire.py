@@ -1,5 +1,6 @@
 """R&D exploratoire reproductible ; aucune probabilité empirique n'est estimée."""
 
+from typing import List
 import argparse
 import json
 import random
@@ -35,8 +36,8 @@ class Experience:
             raise ValueError('Expérience hors du domaine exploratoire documenté')
 
 
-def executer(decisions: list[DecisionPolitique], experience: Experience,
-             energie: bool = True, taux: bool = True) -> list[dict]:
+def executer(decisions: List[DecisionPolitique], experience: Experience,
+             energie: bool = True, taux: bool = True) -> List[dict]:
     """État neuf à chaque essai, décisions sources non modifiées."""
     moteur = MoteurSimulationSystemique()
     trajectoire = []

@@ -74,7 +74,7 @@ class TestAuditGeopolitique(unittest.TestCase):
         b = cas_experimental(mediation=True, rupture_dialogue=True)
         self.assertGreater(a['mois'][4]['indice_tension_conventionnel'],
                            b['mois'][4]['indice_tension_conventionnel'])
-        for x, y in zip(a['mois'], b['mois'], strict=True):
+        for x, y in zip(a['mois'], b['mois']):
             self.assertEqual(x['flux'], y['flux'])
             self.assertEqual(x['interventions_calculees'], y['interventions_calculees'])
             self.assertEqual(x['evenement_impose']['rupture_dialogue'],

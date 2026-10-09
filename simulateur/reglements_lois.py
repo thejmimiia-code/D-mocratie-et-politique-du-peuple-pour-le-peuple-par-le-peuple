@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Tuple
 """
 simulateur/reglements_lois.py — Registre programmatique intégral des textes de lois et règlements.
 Permet d'interroger les articles de lois et leurs contraintes mathématiques dans le simulateur.
@@ -7,7 +7,7 @@ Permet d'interroger les articles de lois et leurs contraintes mathématiques dan
 from dataclasses import dataclass
 
 #: Échelons du modèle gigogne : seules valeurs admises pour `strate_impactee`.
-STRATES_VALIDES: tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
+STRATES_VALIDES: Tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
 
 
 @dataclass

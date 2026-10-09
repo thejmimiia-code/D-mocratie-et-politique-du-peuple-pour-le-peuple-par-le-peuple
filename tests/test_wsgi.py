@@ -29,7 +29,7 @@ import unittest
 import urllib.error
 import urllib.request
 from contextlib import redirect_stderr
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 from unittest.mock import patch
 from wsgiref.simple_server import WSGIRequestHandler, make_server
 
@@ -48,10 +48,10 @@ def environ_wsgi(
     query: str = "",
     corps: bytes = b"",
     script: str = "",
-    entetes: dict[str, str] | None = None,
-) -> dict[str, Any]:
+    entetes: Optional[Dict[str, str]] = None,
+) -> Dict[str, Any]:
     """Fabrique un ``environ`` WSGI minimal mais réaliste."""
-    env: dict[str, Any] = {
+    env: Dict[str, Any] = {
         "REQUEST_METHOD": methode,
         "SCRIPT_NAME": script,
         "PATH_INFO": chemin,
@@ -68,11 +68,11 @@ def environ_wsgi(
     return env
 
 
-def appeler(environ: dict[str, Any]) -> tuple[str, dict[str, str], bytes]:
+def appeler(environ: Dict[str, Any]) -> Tuple[str, Dict[str, str], bytes]:
     """Joue une requête WSGI et rend (statut, en-têtes, corps)."""
-    capture: dict[str, Any] = {}
+    capture: Dict[str, Any] = {}
 
-    def demarrer(statut: str, entetes: list[tuple[str, str]]) -> None:
+    def demarrer(statut: str, entetes: List[Tuple[str, str]]) -> None:
         capture["statut"] = statut
         capture["entetes"] = entetes
 
@@ -219,7 +219,7 @@ class TestRobustesse(unittest.TestCase):
         application = creer_application()
         resultats = []
         for _ in range(3):
-            capture: dict[str, Any] = {}
+            capture: Dict[str, Any] = {}
 
             def demarrer(statut, entetes, destination=capture):
                 destination["statut"] = statut
@@ -255,7 +255,7 @@ class TestDerriereUnVraiServeurWSGI(unittest.TestCase):
     def _url(self, chemin: str) -> str:
         return f"http://127.0.0.1:{self.port}{chemin}"
 
-    def _get(self, chemin: str, entetes: dict[str, str] | None = None):
+    def _get(self, chemin: str, entetes: Optional[Dict[str, str]] = None):
         requete = urllib.request.Request(self._url(chemin), headers=entetes or {})
         try:
             with urllib.request.urlopen(requete, timeout=30) as reponse:

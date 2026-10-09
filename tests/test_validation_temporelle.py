@@ -26,7 +26,7 @@ def observation(**changements):
                 'source': 'synthetic://test', 'version_source': '1', 'licence': 'MIT',
                 'preuve_disponibilite': 'synthetic://preuve', 'publication': '2020-02-01',
                 'disponibilite': '2020-02-01', 'ingestion': '2020-02-01'}
-    return Observation(**(base | changements))
+    return Observation(**{**base, **changements})
 
 
 class TestValidationTemporelle(unittest.TestCase):
@@ -149,7 +149,7 @@ class TestValidationTemporelle(unittest.TestCase):
                 p.write_text(texte)
                 with self.assertRaisesRegex(ValueError, 'ligne 1'):
                     importer_jsonl(p)
-            donnees = asdict(observation()) | {'inconnu': 'non autorisé'}
+            donnees = {**asdict(observation()), **{'inconnu': 'non autorisé'}}
             p.write_text(json.dumps(donnees))
             with self.assertRaises(ValueError):
                 importer_jsonl(p)

@@ -16,6 +16,7 @@ Les fonctions propres au site (voir `FONCTIONS_DU_SITE`, par exemple
 """
 
 from __future__ import annotations
+from typing import Set, Tuple
 
 import argparse
 import re
@@ -26,10 +27,10 @@ RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
 
 #: Fonctions propres au site (pas des routes du moteur) : ni générées, ni signalées.
-FONCTIONS_DU_SITE: tuple[str, ...] = ("verifier-source",)
+FONCTIONS_DU_SITE: Tuple[str, ...] = ("verifier-source",)
 
 #: Routes du moteur à exposer (voir `simulateur/dashboard.py`, do_GET/do_POST).
-ROUTES: tuple[str, ...] = (
+ROUTES: Tuple[str, ...] = (
     "catalogue",
     "contexte",
     "donnees",
@@ -42,6 +43,9 @@ ROUTES: tuple[str, ...] = (
     "run",
     "scenarios",
     "export",
+    "conseil",
+    "lexique",
+    "marches",
 )
 
 GABARIT = '''"""Fonction Vercel — route {route} du simulateur.
@@ -65,7 +69,7 @@ class handler(FonctionAPI):
 '''
 
 
-def routes_du_moteur() -> set[str]:
+def routes_du_moteur() -> Set[str]:
     """Routes réellement servies, lues dans le source du moteur."""
     source = (RACINE / "simulateur" / "dashboard.py").read_text(encoding="utf-8")
     return set(re.findall(r'chemin == "(/api/[a-z]+)"', source))

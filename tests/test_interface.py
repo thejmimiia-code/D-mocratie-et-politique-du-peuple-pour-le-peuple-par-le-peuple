@@ -8,6 +8,7 @@ délimiteurs, absence de dépendance externe, et présence des contrôles promis
 (curseurs, interrupteurs, exports, provenance, rafraîchissement).
 """
 
+from typing import Set
 import re
 import unittest
 
@@ -19,7 +20,7 @@ def _script(page: str) -> str:
     return "\n".join(re.findall(r"<script>(.*?)</script>", page, re.S))
 
 
-def _identifiants_referencés(script: str) -> set[str]:
+def _identifiants_referencés(script: str) -> Set[str]:
     trouve = set(re.findall(r"getElementById\('([^']+)'\)", script))
     trouve |= set(re.findall(r"getElementById\(\"([^\"]+)\"\)", script))
     return trouve

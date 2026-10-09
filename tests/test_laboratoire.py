@@ -28,7 +28,7 @@ class TestLaboratoire(unittest.TestCase):
 
     def test_temoin_exposition_identique(self):
         r = comparer(Experience(0.3, 60, -0.2, 200, 1))
-        for a, b in zip(r['trajectoire_reformes'], r['trajectoire_temoin'], strict=True):
+        for a, b in zip(r['trajectoire_reformes'], r['trajectoire_temoin']):
             for cle in ('cours_petrole_usd', 'taux_change_eur_usd'):
                 self.assertEqual(a[cle], b[cle])
             for valeur in a.values():

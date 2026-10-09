@@ -14,7 +14,7 @@ import sys
 import time
 import tracemalloc
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict, List, Tuple
 
 # Ajout de la racine au PYTHONPATH
 RACINE = Path(__file__).resolve().parents[1]
@@ -34,7 +34,7 @@ from simulateur.scenarios import (  # noqa: E402
     get_scenario_statut_quo,
 )
 
-SCENARIOS: list[tuple[str, callable]] = [
+SCENARIOS: List[Tuple[str, callable]] = [
     ("mandature", get_scenario_mandature_5_ans),
     ("statut_quo", get_scenario_statut_quo),
     ("austerite", get_scenario_austerite_brutale),
@@ -47,7 +47,7 @@ SCENARIOS: list[tuple[str, callable]] = [
 ]
 
 
-def benchmark_scenario(nom: str, scenario_fn: callable) -> dict[str, Any]:
+def benchmark_scenario(nom: str, scenario_fn: callable) -> Dict[str, Any]:
     """Benchmark un scénario : latence, débit, mémoire."""
     gc.collect()
     tracemalloc.start()
@@ -74,7 +74,7 @@ def benchmark_scenario(nom: str, scenario_fn: callable) -> dict[str, Any]:
     }
 
 
-def benchmark_reproductibilite(nom: str, scenario_fn: callable, iterations: int = 10) -> dict[str, Any]:
+def benchmark_reproductibilite(nom: str, scenario_fn: callable, iterations: int = 10) -> Dict[str, Any]:
     """Vérifie que N exécutions produisent des résultats identiques (déterminisme)."""
     results = []
     for _ in range(iterations):
@@ -98,7 +98,7 @@ def main() -> None:
     print("   BENCHMARK : Simulateur Macro-Politique Systémique")
     print("=" * 70)
 
-    all_results: list[dict[str, Any]] = []
+    all_results: List[Dict[str, Any]] = []
 
     for nom, fn in SCENARIOS:
         r = benchmark_scenario(nom, fn)

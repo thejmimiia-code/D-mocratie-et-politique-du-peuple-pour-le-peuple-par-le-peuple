@@ -31,15 +31,15 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 # ────────────────────────────────────────────────────────────────────────────
 # Niveaux
 # ────────────────────────────────────────────────────────────────────────────
 
-NIVEAUX: tuple[str, ...] = ("favorable", "tolerable", "vigilance", "risque", "hors_sol")
+NIVEAUX: Tuple[str, ...] = ("favorable", "tolerable", "vigilance", "risque", "hors_sol")
 
-LIBELLES_NIVEAUX: dict[str, str] = {
+LIBELLES_NIVEAUX: Dict[str, str] = {
     "favorable": "favorable",
     "tolerable": "tolérable",
     "vigilance": "vigilance",
@@ -51,7 +51,7 @@ LIBELLES_NIVEAUX: dict[str, str] = {
 #: Seuil à partir duquel on considère que la population est exposée.
 NIVEAU_ALERTE = "vigilance"
 
-LIBELLES_STRATES: dict[int, str] = {
+LIBELLES_STRATES: Dict[int, str] = {
     1: "Échelon local",
     2: "Échelon national",
     3: "Échelon européen",
@@ -60,14 +60,14 @@ LIBELLES_STRATES: dict[int, str] = {
 }
 
 #: Notes souveraines → rang (1 = meilleure). Toute note absente retombe sur 12.
-RANG_NOTES: dict[str, int] = {
+RANG_NOTES: Dict[str, int] = {
     "AAA": 1, "AA+": 2, "AA": 3, "AA-": 4, "A+": 5, "A": 6, "A-": 7,
     "BBB+": 8, "BBB": 9, "BBB-": 10, "BB+": 11, "BB": 12, "BB-": 13,
     "B+": 14, "B": 15, "B-": 16, "CCC": 17, "CC": 18, "C": 19, "D": 20,
 }
 
 #: Domaines qui composent le risque population (strate 1 et 2).
-DOMAINES_POPULATION: tuple[str, ...] = (
+DOMAINES_POPULATION: Tuple[str, ...] = (
     "pouvoir_achat", "pauvrete", "sante", "education", "emploi",
     "logement", "social", "securite",
 )
@@ -99,18 +99,18 @@ class GardeFou:
     libelle: str
     strate: int
     sens: str  # "max" (au-dessus = pire), "min" (en-dessous = pire), "note", "booleen"
-    bornes: tuple[Borne, ...]
+    bornes: Tuple[Borne, ...]
     unite: str = ""
     precision: int = 1
     source: str = ""
     ou: str = "etape"  # "etape" = dernier exercice, "synthese" = synthèse
     famille: str = "general"
-    cible: tuple[float, str] | None = None  # seuil souhaitable non encore atteint
+    cible: Optional[Tuple[float, str]] = None  # seuil souhaitable non encore atteint
 
 
-def _g(*, cle: str, libelle: str, strate: int, sens: str, bornes: list[tuple[float, str, str]],
+def _g(*, cle: str, libelle: str, strate: int, sens: str, bornes: List[Tuple[float, str, str]],
        unite: str = "", precision: int = 1, source: str = "", ou: str = "etape",
-       famille: str = "general", cible: tuple[float, str] | None = None) -> GardeFou:
+       famille: str = "general", cible: Optional[Tuple[float, str]] = None) -> GardeFou:
     return GardeFou(
         cle=cle, libelle=libelle, strate=strate, sens=sens,
         bornes=tuple(Borne(seuil, niveau, message) for seuil, niveau, message in bornes),
@@ -122,7 +122,7 @@ def _g(*, cle: str, libelle: str, strate: int, sens: str, bornes: list[tuple[flo
 # Garde-fous absolus : la situation projetée face aux seuils institutionnels
 # ────────────────────────────────────────────────────────────────────────────
 
-GARDE_FOUS: tuple[GardeFou, ...] = (
+GARDE_FOUS: Tuple[GardeFou, ...] = (
     # ── Strate 2 : budget, dette, marchés ──────────────────────────────────
     _g(cle="deficit_final_pct", libelle="Déficit public (% du PIB)", strate=2, sens="max",
        unite="% du PIB", famille="budget", ou="synthese",
@@ -490,7 +490,7 @@ GARDE_FOUS: tuple[GardeFou, ...] = (
 # Garde-fous « écart » : ce que vos mesures ajoutent à la trajectoire de référence
 # ────────────────────────────────────────────────────────────────────────────
 
-GARDE_FOUS_ECART: tuple[GardeFou, ...] = (
+GARDE_FOUS_ECART: Tuple[GardeFou, ...] = (
     _g(cle="deficit_ecart_pts", libelle="Déficit : écart à la référence (pt)", strate=2, sens="max",
        unite="pt", precision=2, famille="budget", ou="synthese",
        source="Différence entre la trajectoire choisie et la trajectoire sans aucune politique",
@@ -568,7 +568,7 @@ def _niveau_du_pire(*niveaux: str) -> str:
     return max(meilleurs, key=NIVEAUX.index)
 
 
-def _valeur_numerique(garde_fou: GardeFou, valeur: Any) -> float | None:
+def _valeur_numerique(garde_fou: GardeFou, valeur: Any) -> Optional[float]:
     if isinstance(valeur, bool):
         return 1.0 if valeur else 0.0
     if isinstance(valeur, (int, float)):
@@ -578,7 +578,7 @@ def _valeur_numerique(garde_fou: GardeFou, valeur: Any) -> float | None:
     return None
 
 
-def _lire(donnees: dict[str, Any], garde_fou: GardeFou) -> Any:
+def _lire(donnees: Dict[str, Any], garde_fou: GardeFou) -> Any:
     if garde_fou.ou == "synthese":
         if garde_fou.cle == "charge_dette_pib":
             charge = donnees.get("synthese", {}).get("charge_dette_finale_mde")
@@ -609,7 +609,7 @@ def _formater(valeur: float | str, garde_fou: GardeFou) -> str:
     return texte.replace(",", " ").replace(".", ",")
 
 
-def evaluer_garde_fou(garde_fou: GardeFou, valeur_brute: Any) -> dict[str, Any] | None:
+def evaluer_garde_fou(garde_fou: GardeFou, valeur_brute: Any) -> Optional[Dict[str, Any]]:
     """Applique un garde-fou à une valeur et retourne son diagnostic.
 
     Retourne `None` si la grandeur n'est pas mesurable (donnée absente).
@@ -627,7 +627,7 @@ def evaluer_garde_fou(garde_fou: GardeFou, valeur_brute: Any) -> dict[str, Any] 
             return valeur <= borne.seuil
         return valeur >= borne.seuil
 
-    index_actif: int | None = None
+    index_actif: Optional[int] = None
     for index, borne in enumerate(garde_fou.bornes):
         if _correspond(borne):
             index_actif = index
@@ -640,8 +640,8 @@ def evaluer_garde_fou(garde_fou: GardeFou, valeur_brute: Any) -> dict[str, Any] 
     # `{marge}` : distance au prochain seuil plus grave ; si l'on est déjà dans
     # le dernier palier (hors-sol), distance à franchir **en sens inverse**
     # pour revenir sous le seuil d'entrée du hors-sol.
-    marge: float | None = None
-    seuil_reference: float | None = None
+    marge: Optional[float] = None
+    seuil_reference: Optional[float] = None
     if prochaine is not None and math.isfinite(prochaine.seuil):
         # Le prochain palier est chiffré : marge avant de le franchir.
         seuil_reference = prochaine.seuil
@@ -699,13 +699,13 @@ def evaluer_garde_fou(garde_fou: GardeFou, valeur_brute: Any) -> dict[str, Any] 
     }
 
 
-def evaluer_sortie(donnees: dict[str, Any]) -> dict[str, Any]:
+def evaluer_sortie(donnees: Dict[str, Any]) -> Dict[str, Any]:
     """Diagnostic complet d'une simulation : strates, alertes, marges, population.
 
     `donnees` est la charge utile sérialisée d'une `SortieSimulation`
     (`moteur_parametrique.SortieSimulation.en_dict()`).
     """
-    evaluations: list[dict[str, Any]] = []
+    evaluations: List[Dict[str, Any]] = []
     for garde_fou in GARDE_FOUS + GARDE_FOUS_ECART:
         resultat = evaluer_garde_fou(garde_fou, _lire(donnees, garde_fou))
         if resultat is not None:
@@ -745,7 +745,7 @@ def evaluer_sortie(donnees: dict[str, Any]) -> dict[str, Any]:
     }
 
     # ── Regroupement par strate ───────────────────────────────────────────
-    strates: dict[int, dict[str, Any]] = {}
+    strates: Dict[int, Dict[str, Any]] = {}
     for strate, libelle in LIBELLES_STRATES.items():
         membres = [e for e in evaluations if e["strate"] == strate]
         if not membres:
@@ -766,8 +766,8 @@ def evaluer_sortie(donnees: dict[str, Any]) -> dict[str, Any]:
         key=lambda e: (-NIVEAUX.index(e["niveau"]), e["strate"], e["libelle"]),
     )
     # Déduplication des garde-fous symétriques (inflation trop haute / trop basse).
-    vues: set[str] = set()
-    alertes_uniques: list[dict[str, Any]] = []
+    vues: Set[str] = set()
+    alertes_uniques: List[Dict[str, Any]] = []
     for alerte in alertes:
         marqueur = f"{alerte['cle']}"
         if marqueur in vues:
@@ -795,7 +795,7 @@ def evaluer_sortie(donnees: dict[str, Any]) -> dict[str, Any]:
                 "prochain_niveau": e["prochain_niveau"],
             })
     marges.sort(key=lambda m: m["marge"])
-    progres = [e["progression"] | {"cle": e["cle"], "libelle": e["libelle"], "strate": e["strate"]}
+    progres = [{**e["progression"], **{"cle": e["cle"], "libelle": e["libelle"], "strate": e["strate"]}}
                for e in evaluations if e["progression"] and e["niveau"] != "hors_sol"]
     progres.sort(key=lambda p: p["ecart"])
 
@@ -835,20 +835,20 @@ def evaluer_sortie(donnees: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def bareme_public() -> dict[str, Any]:
+def bareme_public() -> Dict[str, Any]:
     """Barème complet des garde-fous, pour la section « audit et traçabilité ».
 
     Chaque entrée livre la grandeur surveillée, sa strate, ses bornes
     (seuil → niveau → message) et la source institutionnelle : la veille
     n'est pas une boîte noire, tout seuil est vérifiable à la source.
     """
-    def borne(b: Borne) -> dict[str, Any]:
+    def borne(b: Borne) -> Dict[str, Any]:
         # Une borne infinie (ex. « au-delà de… ») devient nulle : JSON ne
         # connaît pas Infinity et le navigateur doit pouvoir tout relire.
         seuil = b.seuil if math.isfinite(b.seuil) else None
         return {"seuil": seuil, "niveau": b.niveau, "message": b.message}
 
-    def entree(garde_fou: GardeFou, en_ecart: bool) -> dict[str, Any]:
+    def entree(garde_fou: GardeFou, en_ecart: bool) -> Dict[str, Any]:
         return {
             "cle": garde_fou.cle,
             "libelle": garde_fou.libelle,
@@ -872,7 +872,7 @@ def bareme_public() -> dict[str, Any]:
     }
 
 
-def resume_court(diagnostic: dict[str, Any]) -> dict[str, Any]:
+def resume_court(diagnostic: Dict[str, Any]) -> Dict[str, Any]:
     """Version condensée (comparateur de préréglages, tableau de bord)."""
     verdict = diagnostic.get("verdict", {})
     population = diagnostic.get("population", {})

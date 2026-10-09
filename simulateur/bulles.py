@@ -42,7 +42,7 @@ Conventions de mesure
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Any
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from simulateur.domaines import (
     DOMAINES_PAR_CLE,
@@ -79,13 +79,13 @@ __all__ = [
 SEUIL_MOUVEMENT = 0.2
 
 #: Ordre de gravité des niveaux de garde-fou (pour détecter une aggravation).
-_RANG_NIVEAUX: dict[str, int] = {niveau: rang for rang, niveau in enumerate(NIVEAUX)}
+_RANG_NIVEAUX: Dict[str, int] = {niveau: rang for rang, niveau in enumerate(NIVEAUX)}
 
 #: Thèmes déclarés dans `Levier.effets_directs` → domaines notés qu'ils nourrissent.
 #: Un thème peut alimenter plusieurs domaines (les inégalités pèsent à la fois sur
 #: la pauvreté et sur le pouvoir d'achat) ; certains thèmes sont transverses et
 #: n'ont pas de domaine dédié (l'inflation, les marchés, le climat…).
-THEMES_DOMAINES: dict[str, tuple[str, ...]] = {
+THEMES_DOMAINES: Dict[str, Tuple[str, ...]] = {
     # Thèmes portant le nom d'un domaine.
     "pauvrete": ("pauvrete",),
     "emploi": ("emploi",),
@@ -136,7 +136,7 @@ THEMES_DOMAINES: dict[str, tuple[str, ...]] = {
 
 #: Thèmes → échelons (1 local … 5 géopolitique) que le thème traverse.
 #: Sert à situer chaque interaction dans la cascade des 5 strates.
-THEMES_STRATES: dict[str, tuple[int, ...]] = {
+THEMES_STRATES: Dict[str, Tuple[int, ...]] = {
     "territoires": (1, 2),
     "services_publics": (1, 2),
     "logement": (1, 2),
@@ -162,7 +162,7 @@ THEMES_STRATES: dict[str, tuple[int, ...]] = {
 }
 
 #: Suffixes d'unité utilisés par les médiateurs de `domaines.py`.
-_SUFFIXES: tuple[tuple[str, str], ...] = (
+_SUFFIXES: Tuple[Tuple[str, str], ...] = (
     ("_milliers", "milliers"),
     ("_mde", "Md€"),
     ("_pts", "points"),
@@ -173,7 +173,7 @@ _SUFFIXES: tuple[tuple[str, str], ...] = (
 )
 
 
-def strates_theme(theme: str) -> tuple[int, ...]:
+def strates_theme(theme: str) -> Tuple[int, ...]:
     """Échelons traversés par un thème déclaré (défaut : échelon national)."""
     return THEMES_STRATES.get(theme, (2,))
 
@@ -197,15 +197,15 @@ def _base_mediateur(nom: str) -> str:
 # 1. Chaîne technique : que consomme chaque médiateur ?
 # ────────────────────────────────────────────────────────────────────────────
 
-_INDEX_CONSOMMATEURS: dict[str, list[dict[str, Any]]] | None = None
+_INDEX_CONSOMMATEURS: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
 
-def _index_consommateurs() -> dict[str, list[dict[str, Any]]]:
+def _index_consommateurs() -> Dict[str, List[Dict[str, Any]]]:
     """Index (mémoïsé) médiateur → indicateurs qui le lisent, lu dans les SPECS."""
     global _INDEX_CONSOMMATEURS
     if _INDEX_CONSOMMATEURS is not None:
         return _INDEX_CONSOMMATEURS
-    index: dict[str, list[dict[str, Any]]] = {}
+    index: Dict[str, List[Dict[str, Any]]] = {}
     for spec in SPECS:
         domaine = DOMAINES_PAR_CLE.get(spec.domaine)
         for terme, coefficient in spec.termes:
@@ -220,7 +220,7 @@ def _index_consommateurs() -> dict[str, list[dict[str, Any]]]:
     return index
 
 
-def consommateurs(mediateur: str) -> list[dict[str, Any]]:
+def consommateurs(mediateur: str) -> List[Dict[str, Any]]:
     """Indicateurs qui lisent un médiateur (correspondance exacte puis par base).
 
     Les flux sont libellés avec leur unité (`_mde`, `_pts`, `_milliers`) tandis
@@ -231,8 +231,8 @@ def consommateurs(mediateur: str) -> list[dict[str, Any]]:
     trouves = index.get(mediateur)
     if trouves is None:
         trouves = index.get(_base_mediateur(mediateur), [])
-    vus: set[str] = set()
-    uniques: list[dict[str, Any]] = []
+    vus: Set[str] = set()
+    uniques: List[Dict[str, Any]] = []
     for consommateur in trouves:
         if consommateur["indicateur"] in vus:
             continue
@@ -241,8 +241,8 @@ def consommateurs(mediateur: str) -> list[dict[str, Any]]:
     return uniques
 
 
-def _domaines_consommes(mediateur: str) -> list[str]:
-    domaines: list[str] = []
+def _domaines_consommes(mediateur: str) -> List[str]:
+    domaines: List[str] = []
     for consommateur in consommateurs(mediateur):
         if consommateur["domaine"] not in domaines:
             domaines.append(consommateur["domaine"])
@@ -251,7 +251,7 @@ def _domaines_consommes(mediateur: str) -> list[str]:
 
 #: Médiateurs agrégés reconstruits par `construire_flux` : utiles à afficher,
 #: mais dérivés — on les distingue des émissions directes du levier.
-AGREGATS_DERIVES: tuple[str, ...] = (
+AGREGATS_DERIVES: Tuple[str, ...] = (
     "recettes_nouvelles_mde", "depenses_nouvelles_mde", "solde_budgetaire_mde",
     "investissement_public_mde", "transferts_menages_mde", "transferts_sociaux_mde",
     "regalien_mde", "souverainete_mde", "baisse_prelevements_menages_mde",
@@ -259,10 +259,10 @@ AGREGATS_DERIVES: tuple[str, ...] = (
 )
 
 #: Médias internes au harnais : jamais présentés comme des interactions.
-_IGNORES: tuple[str, ...] = ("effort_defense_ecart_pts", "choc_semi", "cyberattaque_pts", "mobilisation_pts")
+_IGNORES: Tuple[str, ...] = ("effort_defense_ecart_pts", "choc_semi", "cyberattaque_pts", "mobilisation_pts")
 
 
-def emissions_levier(cle: str, valeur: float, annee_index: int = 4) -> list[dict[str, Any]]:
+def emissions_levier(cle: str, valeur: float, annee_index: int = 4) -> List[Dict[str, Any]]:
     """Médiateurs réellement émis par un levier à une valeur donnée.
 
     La liste est obtenue en comparant deux constructions de flux (levier neutre
@@ -278,7 +278,7 @@ def emissions_levier(cle: str, valeur: float, annee_index: int = 4) -> list[dict
     elif cle in UNITES_CHAMPS:
         direct = UNITES_CHAMPS[cle]
 
-    emissions: list[dict[str, Any]] = []
+    emissions: List[Dict[str, Any]] = []
     for nom, montant in regle.items():
         if nom.startswith("levier:") or nom in _IGNORES:
             continue
@@ -334,7 +334,7 @@ def emissions_levier(cle: str, valeur: float, annee_index: int = 4) -> list[dict
     return emissions
 
 
-def champ_moteur(cle: str) -> dict[str, Any] | None:
+def champ_moteur(cle: str) -> Optional[Dict[str, Any]]:
     """Champ de `DecisionPolitique` alimenté par le levier, s'il existe.
 
     L'effet correspondant vit dans l'état interne du moteur (strates 1 à 5) et
@@ -353,7 +353,7 @@ def champ_moteur(cle: str) -> dict[str, Any] | None:
     }
 
 
-def maillons_non_relayes(emissions: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+def maillons_non_relayes(emissions: Iterable[Dict[str, Any]]) -> List[Dict[str, Any]]:
     """Médiateurs émis qui n'atteignent les indicateurs par aucun chemin connu."""
     return [{
         "mediateur": emission["mediateur"],
@@ -371,7 +371,7 @@ def maillons_non_relayes(emissions: Iterable[dict[str, Any]]) -> list[dict[str, 
 # 2. Mesure : ce que le réglage change réellement, borne par borne
 # ────────────────────────────────────────────────────────────────────────────
 
-def _valeurs_de_mesure(levier) -> list[dict[str, Any]]:
+def _valeurs_de_mesure(levier) -> List[Dict[str, Any]]:
     """Valeurs testées : les bornes du réglage, plus un pas au-delà du défaut."""
     if levier.type == TYPE_INTERRUPTEUR:
         return [
@@ -396,8 +396,8 @@ def _valeurs_de_mesure(levier) -> list[dict[str, Any]]:
                 "borne": "pas",
             })
     # Dédoublonnage (une cible peut avoir un défaut égal à une borne).
-    vus: set[float] = set()
-    uniques: list[dict[str, Any]] = []
+    vus: Set[float] = set()
+    uniques: List[Dict[str, Any]] = []
     for entree in valeurs:
         marqueur = round(entree["valeur"], 6)
         if marqueur in vus:
@@ -407,8 +407,8 @@ def _valeurs_de_mesure(levier) -> list[dict[str, Any]]:
     return uniques
 
 
-def _index_reference(reference: SortieSimulation) -> dict[str, Any]:
-    indicateurs: dict[tuple[str, str], float] = {}
+def _index_reference(reference: SortieSimulation) -> Dict[str, Any]:
+    indicateurs: Dict[Tuple[str, str], float] = {}
     for domaine in reference.domaines:
         for indicateur in domaine["indicateurs"]:
             indicateurs[(domaine["cle"], indicateur["cle"])] = indicateur["valeur_finale"]
@@ -421,14 +421,14 @@ def _index_reference(reference: SortieSimulation) -> dict[str, Any]:
     }
 
 
-def _seuils(sortie: SortieSimulation, reference: dict[str, Any]) -> dict[str, Any]:
+def _seuils(sortie: SortieSimulation, reference: Dict[str, Any]) -> Dict[str, Any]:
     """Lecture du barème : niveau global, risque population, strates, alertes."""
     diagnostic = sortie.diagnostic or {}
     ref_diagnostic = reference.get("diagnostic") or {}
     population = diagnostic.get("population") or {}
     ref_population = ref_diagnostic.get("population") or {}
 
-    alertes: list[dict[str, Any]] = []
+    alertes: List[Dict[str, Any]] = []
     ref_niveaux = reference.get("niveaux") or {}
     for indicateur in diagnostic.get("indicateurs", []):
         niveau = indicateur.get("niveau")
@@ -451,7 +451,7 @@ def _seuils(sortie: SortieSimulation, reference: dict[str, Any]) -> dict[str, An
         })
     alertes.sort(key=lambda alerte: -_RANG_NIVEAUX.get(alerte["niveau"], -1))
 
-    strates: list[dict[str, Any]] = []
+    strates: List[Dict[str, Any]] = []
     ref_strates = {strate.get("strate"): strate for strate in ref_diagnostic.get("strates", [])}
     for strate in diagnostic.get("strates", []):
         numero = strate.get("strate")
@@ -482,10 +482,10 @@ def _seuils(sortie: SortieSimulation, reference: dict[str, Any]) -> dict[str, An
     }
 
 
-def _journal_nouveau(sortie: SortieSimulation, reference: dict[str, Any]) -> list[dict[str, Any]]:
+def _journal_nouveau(sortie: SortieSimulation, reference: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Lignes de journal apparues par rapport à la trajectoire de référence."""
-    vues: set[str] = set()
-    lignes: list[dict[str, Any]] = []
+    vues: Set[str] = set()
+    lignes: List[Dict[str, Any]] = []
     for ligne in sortie.journal:
         if ligne in reference["journal"] or ligne in vues:
             continue
@@ -499,8 +499,8 @@ def _journal_nouveau(sortie: SortieSimulation, reference: dict[str, Any]) -> lis
     return lignes
 
 
-def _mesure(cle: str, entree: dict[str, Any], contexte, reference: SortieSimulation,
-            index_reference: dict[str, Any]) -> dict[str, Any]:
+def _mesure(cle: str, entree: Dict[str, Any], contexte, reference: SortieSimulation,
+            index_reference: Dict[str, Any]) -> Dict[str, Any]:
     """Une simulation réelle pour une valeur du levier, comparée à la référence."""
     sortie = simuler({cle: entree["valeur"]}, contexte, avec_impacts=False)
     domaines = sorted(
@@ -512,7 +512,7 @@ def _mesure(cle: str, entree: dict[str, Any], contexte, reference: SortieSimulat
         } for domaine in sortie.domaines],
         key=lambda domaine: -abs(domaine["delta"]),
     )
-    indicateurs: list[dict[str, Any]] = []
+    indicateurs: List[Dict[str, Any]] = []
     for domaine in sortie.domaines:
         for indicateur in domaine["indicateurs"]:
             final = indicateur["valeur_finale"]
@@ -556,9 +556,9 @@ def _mesure(cle: str, entree: dict[str, Any], contexte, reference: SortieSimulat
 # 3. Lecture guidée : opportunités, désagréments, surveillance, compensations
 # ────────────────────────────────────────────────────────────────────────────
 
-def _index_compensateurs() -> dict[str, list[dict[str, Any]]]:
+def _index_compensateurs() -> Dict[str, List[Dict[str, Any]]]:
     """Domaines → leviers dont les effets déclarés vont dans le bon sens."""
-    index: dict[str, list[dict[str, Any]]] = {}
+    index: Dict[str, List[Dict[str, Any]]] = {}
     for cle, levier in LEVIERS.items():
         for theme, coefficient in levier.effets_directs.items():
             if coefficient <= 0:
@@ -577,14 +577,14 @@ def _index_compensateurs() -> dict[str, list[dict[str, Any]]]:
     return index
 
 
-_INDEX_COMPENSATEURS: dict[str, list[dict[str, Any]]] | None = None
+_INDEX_COMPENSATEURS: Optional[Dict[str, List[Dict[str, Any]]]] = None
 
 
-def _compensations(cle: str, domaines_degrades: Iterable[str]) -> list[dict[str, Any]]:
+def _compensations(cle: str, domaines_degrades: Iterable[str]) -> List[Dict[str, Any]]:
     global _INDEX_COMPENSATEURS
     if _INDEX_COMPENSATEURS is None:
         _INDEX_COMPENSATEURS = _index_compensateurs()
-    pistes: list[dict[str, Any]] = []
+    pistes: List[Dict[str, Any]] = []
     for domaine in domaines_degrades:
         candidats = [entree for entree in _INDEX_COMPENSATEURS.get(domaine, [])
                      if entree["cle"] != cle][:3]
@@ -597,10 +597,10 @@ def _compensations(cle: str, domaines_degrades: Iterable[str]) -> list[dict[str,
     return pistes
 
 
-def _effets_declares(levier) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+def _effets_declares(levier) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
     """Effets déclarés au catalogue, séparés domaines notés / thèmes transverses."""
-    dans_domaines: list[dict[str, Any]] = []
-    hors_domaines: list[dict[str, Any]] = []
+    dans_domaines: List[Dict[str, Any]] = []
+    hors_domaines: List[Dict[str, Any]] = []
     for theme, coefficient in sorted(levier.effets_directs.items(), key=lambda item: -abs(item[1])):
         domaines = THEMES_DOMAINES.get(theme, ())
         entree = {
@@ -627,21 +627,21 @@ def _libelle_domaine(cle: str) -> str:
     return domaine.libelle if domaine else cle
 
 
-def _lecture(bulle: dict[str, Any]) -> dict[str, Any]:
+def _lecture(bulle: Dict[str, Any]) -> Dict[str, Any]:
     """Transforme les mesures en opportunités, désagréments et points de veille."""
-    meilleurs: dict[str, dict[str, Any]] = {}
-    pires: dict[str, dict[str, Any]] = {}
+    meilleurs: Dict[str, Dict[str, Any]] = {}
+    pires: Dict[str, Dict[str, Any]] = {}
     for mesure in bulle["mesures"]:
         for domaine in mesure["domaines"]:
             cle = domaine["cle"]
             if domaine["delta"] > 0:
                 if cle not in meilleurs or domaine["delta"] > meilleurs[cle]["delta"]:
-                    meilleurs[cle] = dict(domaine) | {"mesure": mesure["nom"], "valeur": mesure["valeur"]}
+                    meilleurs[cle] = {**dict(domaine), **{"mesure": mesure["nom"], "valeur": mesure["valeur"]}}
             elif domaine["delta"] < 0:
                 if cle not in pires or domaine["delta"] < pires[cle]["delta"]:
-                    pires[cle] = dict(domaine) | {"mesure": mesure["nom"], "valeur": mesure["valeur"]}
+                    pires[cle] = {**dict(domaine), **{"mesure": mesure["nom"], "valeur": mesure["valeur"]}}
 
-    relais: dict[str, set[str]] = {}
+    relais: Dict[str, Set[str]] = {}
     for emission in bulle["emissions"]:
         for domaine in emission["domaines"]:
             relais.setdefault(domaine, set()).add(
@@ -650,7 +650,7 @@ def _lecture(bulle: dict[str, Any]) -> dict[str, Any]:
                 )
             )
 
-    opportunites: list[dict[str, Any]] = []
+    opportunites: List[Dict[str, Any]] = []
     for cle, domaine in sorted(meilleurs.items(), key=lambda item: -item[1]["delta"]):
         if domaine["delta"] < SEUIL_MOUVEMENT:
             continue
@@ -662,7 +662,7 @@ def _lecture(bulle: dict[str, Any]) -> dict[str, Any]:
             "valeur": domaine["valeur"],
             "relais": sorted(relais.get(cle, set()))[:2],
         })
-    desagrements: list[dict[str, Any]] = []
+    desagrements: List[Dict[str, Any]] = []
     for cle, domaine in sorted(pires.items(), key=lambda item: item[1]["delta"]):
         if abs(domaine["delta"]) < SEUIL_MOUVEMENT:
             continue
@@ -675,7 +675,7 @@ def _lecture(bulle: dict[str, Any]) -> dict[str, Any]:
             "relais": sorted(relais.get(cle, set()))[:2],
         })
 
-    a_surveiller: list[dict[str, Any]] = []
+    a_surveiller: List[Dict[str, Any]] = []
     for mesure in bulle["mesures"]:
         seuils = mesure["seuils"]
         reference_population = seuils["population"].get("reference")
@@ -705,7 +705,7 @@ def _lecture(bulle: dict[str, Any]) -> dict[str, Any]:
                 "message": alerte["message"],
             })
 
-    strates: list[dict[str, Any]] = []
+    strates: List[Dict[str, Any]] = []
     for mesure in bulle["mesures"]:
         for ligne in mesure["journal"]:
             strates.append({"mesure": mesure["nom"], "strate": ligne["strate"], "texte": ligne["texte"]})
@@ -722,10 +722,10 @@ def _lecture(bulle: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def phrase_lecture(bulle: dict[str, Any]) -> str:
+def phrase_lecture(bulle: Dict[str, Any]) -> str:
     """Phrase de synthèse « opportunités / désagréments » d'une bulle."""
     lecture = bulle["lecture"]
-    morceaux: list[str] = []
+    morceaux: List[str] = []
     if bulle.get("sans_effet_mesure"):
         morceaux.append(
             "Aucun des 20 domaines notés ne bouge aux bornes de ce réglage : "
@@ -760,9 +760,9 @@ def phrase_lecture(bulle: dict[str, Any]) -> str:
     return " · ".join(morceaux)
 
 
-def _bilan_domaines(bulle: dict[str, Any]) -> list[dict[str, Any]]:
+def _bilan_domaines(bulle: Dict[str, Any]) -> List[Dict[str, Any]]:
     """Amplitude de mouvement de chaque domaine, toutes mesures confondues."""
-    bilan: dict[str, dict[str, Any]] = {}
+    bilan: Dict[str, Dict[str, Any]] = {}
     for mesure in bulle["mesures"]:
         for domaine in mesure["domaines"]:
             entree = bilan.setdefault(domaine["cle"], {
@@ -786,10 +786,10 @@ def _bilan_domaines(bulle: dict[str, Any]) -> list[dict[str, Any]]:
 # 4. Assemblage
 # ────────────────────────────────────────────────────────────────────────────
 
-_CACHE: dict[tuple, dict[str, Any]] = {}
+_CACHE: Dict[tuple, Dict[str, Any]] = {}
 
 
-def _reference_pour(contexte) -> tuple[SortieSimulation, dict[str, Any]]:
+def _reference_pour(contexte) -> Tuple[SortieSimulation, Dict[str, Any]]:
     cle = (contexte.horodatage, contexte.mode)
     memo = _CACHE.get(("reference", cle))
     if memo is None:
@@ -799,7 +799,7 @@ def _reference_pour(contexte) -> tuple[SortieSimulation, dict[str, Any]]:
     return memo["sortie"], memo["index"]
 
 
-def mesures_levier(cle: str, contexte=None) -> list[dict[str, Any]]:
+def mesures_levier(cle: str, contexte=None) -> List[Dict[str, Any]]:
     """Mesures borne par borne d'un levier (réglage isolé, autres leviers neutres)."""
     if cle not in LEVIERS:
         raise ValueError(f"levier inconnu : {cle}")
@@ -813,11 +813,11 @@ def mesures_levier(cle: str, contexte=None) -> list[dict[str, Any]]:
 
 #: Détails disponibles pour une bulle : « complet » (tout) ou « resume »
 #: (sans le détail indicateur par indicateur ni le journal, pour l'aperçu global).
-DETAILS: tuple[str, ...] = ("complet", "resume")
+DETAILS: Tuple[str, ...] = ("complet", "resume")
 
 
 def bulle_levier(cle: str, contexte=None, avec_mesure: bool = True,
-                 detail: str = "complet") -> dict[str, Any]:
+                 detail: str = "complet") -> Dict[str, Any]:
     """Bulle explicative complète d'un levier (voir le module pour la structure)."""
     if cle not in LEVIERS:
         raise ValueError(f"levier inconnu : {cle}")
@@ -831,8 +831,8 @@ def bulle_levier(cle: str, contexte=None, avec_mesure: bool = True,
     levier = LEVIERS[cle]
     famille = FAMILLES.get(levier.famille, {})
     mesures = mesures_levier(cle, contexte) if avec_mesure else []
-    emissions: list[dict[str, Any]] = []
-    vus: set[str] = set()
+    emissions: List[Dict[str, Any]] = []
+    vus: Set[str] = set()
     for entree in _valeurs_de_mesure(levier):
         for emission in emissions_levier(cle, entree["valeur"]):
             if emission["mediateur"] in vus:
@@ -841,7 +841,7 @@ def bulle_levier(cle: str, contexte=None, avec_mesure: bool = True,
             emissions.append(emission)
     effets_domaines, effets_hors_domaines = _effets_declares(levier)
 
-    bulle: dict[str, Any] = {
+    bulle: Dict[str, Any] = {
         "cle": cle,
         "libelle": levier.libelle,
         "famille": levier.famille,
@@ -894,12 +894,12 @@ def bulle_levier(cle: str, contexte=None, avec_mesure: bool = True,
     return bulle
 
 
-def bulles_catalogue(contexte=None, cles: Iterable[str] | None = None, avec_mesure: bool = True,
-                     progression=None, detail: str = "complet") -> dict[str, Any]:
+def bulles_catalogue(contexte=None, cles: Optional[Iterable[str]] = None, avec_mesure: bool = True,
+                     progression=None, detail: str = "complet") -> Dict[str, Any]:
     """Bulles de tout le catalogue (ou d'une sélection de clés)."""
     contexte = contexte or construire_contexte()
     selection = list(cles) if cles is not None else list(LEVIERS)
-    bulles: dict[str, Any] = {}
+    bulles: Dict[str, Any] = {}
     for rang, cle in enumerate(selection, start=1):
         bulles[cle] = bulle_levier(cle, contexte, avec_mesure=avec_mesure, detail=detail)
         if progression is not None:

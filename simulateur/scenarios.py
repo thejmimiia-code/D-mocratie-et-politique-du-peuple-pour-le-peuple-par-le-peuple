@@ -6,10 +6,11 @@ Scénarios quinquennaux (une mandature) et scénarios décennaux
 """
 
 
+from typing import List
 from simulateur.model import DecisionPolitique
 
 
-def get_scenario_mandature_5_ans() -> list[DecisionPolitique]:
+def get_scenario_mandature_5_ans() -> List[DecisionPolitique]:
     """
     Le scénario du Dossier de Mandature Globale (+60 Md€ en Année 5).
     Répartition graduelle et réaliste sur 5 exercices.
@@ -115,7 +116,7 @@ _REGIME_CROISIERE = {
 }
 
 
-def get_scenario_double_mandature() -> list[DecisionPolitique]:
+def get_scenario_double_mandature() -> List[DecisionPolitique]:
     """
     Scénario « deux mandatures consécutives » (2027-2037, dix exercices).
 
@@ -215,7 +216,7 @@ def get_scenario_double_mandature() -> list[DecisionPolitique]:
     return trajectoire
 
 
-def get_scenario_alternance_2032() -> list[DecisionPolitique]:
+def get_scenario_alternance_2032() -> List[DecisionPolitique]:
     """
     Stress-test « alternance 2032 » : deux mandatures sans verrou.
 
@@ -268,7 +269,7 @@ def get_scenario_alternance_2032() -> list[DecisionPolitique]:
     return trajectoire
 
 
-def get_scenario_statut_quo() -> list[DecisionPolitique]:
+def get_scenario_statut_quo() -> List[DecisionPolitique]:
     """Scénario du Statut Quo : aucune réforme d'envergure, immobilisme."""
     return [
         DecisionPolitique(annee=i, description=f"Année {i} : Statut Quo (Immobilisme politique)")
@@ -276,7 +277,7 @@ def get_scenario_statut_quo() -> list[DecisionPolitique]:
     ]
 
 
-def get_scenario_austerite_brutale() -> list[DecisionPolitique]:
+def get_scenario_austerite_brutale() -> List[DecisionPolitique]:
     """Scénario d'austérité aveugle : coupes dans la DGF et dégradation des services."""
     return [
         DecisionPolitique(
@@ -290,7 +291,7 @@ def get_scenario_austerite_brutale() -> list[DecisionPolitique]:
     ]
 
 
-def get_scenario_choc_mondial_stagflation() -> list[DecisionPolitique]:
+def get_scenario_choc_mondial_stagflation() -> List[DecisionPolitique]:
     """
     Scénario de crise et de stress-test mondial :
     Choc pétrolier exogène (+30 $/bbl), dépréciation de l'euro (-0.08) et resserrement Fed (+75 bps).
@@ -347,7 +348,7 @@ def get_scenario_choc_mondial_stagflation() -> list[DecisionPolitique]:
 # =============================================================================
 
 
-def get_scenario_crise_taiwan() -> list[DecisionPolitique]:
+def get_scenario_crise_taiwan() -> List[DecisionPolitique]:
     """
     Scénario A — Cascade Taïwan (2027-2028), probabilité 15-25 %.
 
@@ -434,7 +435,7 @@ def get_scenario_crise_taiwan() -> list[DecisionPolitique]:
     ]
 
 
-def get_scenario_fermeture_hormuz() -> list[DecisionPolitique]:
+def get_scenario_fermeture_hormuz() -> List[DecisionPolitique]:
     """
     Scénario C — Guerre régionale Iran-Israël-US et fermeture du détroit d'Hormuz.
 
@@ -512,7 +513,7 @@ def get_scenario_fermeture_hormuz() -> list[DecisionPolitique]:
     ]
 
 
-def get_scenario_escalade_nucleaire_tactique() -> list[DecisionPolitique]:
+def get_scenario_escalade_nucleaire_tactique() -> List[DecisionPolitique]:
     """
     Scénario B — Escalade Ukraine-Russie vers l'OTAN et usage d'une arme
     nucléaire tactique en Europe de l'Est (probabilité 10-20 % d'ici fin 2026).
@@ -598,7 +599,7 @@ def get_scenario_escalade_nucleaire_tactique() -> list[DecisionPolitique]:
     ]
 
 
-def get_scenario_convergence_ww3() -> list[DecisionPolitique]:
+def get_scenario_convergence_ww3() -> List[DecisionPolitique]:
     """
     Scénario D — Convergence Chine-Russie-Iran (probabilité 5-10 %, impact maximal).
 
@@ -707,7 +708,7 @@ def get_scenario_convergence_ww3() -> list[DecisionPolitique]:
     ]
 
 
-def get_scenario_resilience_republicaine() -> list[DecisionPolitique]:
+def get_scenario_resilience_republicaine() -> List[DecisionPolitique]:
     """
     Scénario de synthèse — « Résilience républicaine » : le Plan de Mandature
     (+60 Md€/an) AUGMENTÉ de la trajectoire OTAN de La Haye (2,10 % -> 3,50 % du

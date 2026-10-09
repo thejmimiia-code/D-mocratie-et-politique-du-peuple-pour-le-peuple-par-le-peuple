@@ -25,7 +25,7 @@ from __future__ import annotations
 import hashlib
 import json
 from dataclasses import asdict, dataclass, field
-from typing import Any
+from typing import Any, Dict, List, Optional, Tuple
 
 from simulateur.domaines import (
     DOMAINES,
@@ -56,7 +56,7 @@ from simulateur.seuils import evaluer_sortie, resume_court
 PASSES_MEDIATEURS = 4
 
 #: Cache mémoire des analyses de sensibilité (clé = empreinte des paramètres).
-_CACHE_IMPACTS: dict[str, list[dict[str, Any]]] = {}
+_CACHE_IMPACTS: Dict[str, List[Dict[str, Any]]] = {}
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -135,11 +135,11 @@ def moteur_calibre(contexte: ContexteInstant) -> MoteurSimulationSystemique:
 # 2. Exécution d'une série annuelle
 # ────────────────────────────────────────────────────────────────────────────
 
-def _executer_serie(parametres: dict[str, float], contexte: ContexteInstant,
-                    horizon: int) -> tuple[MoteurSimulationSystemique, list[dict[str, float]]]:
+def _executer_serie(parametres: Dict[str, float], contexte: ContexteInstant,
+                    horizon: int) -> Tuple[MoteurSimulationSystemique, List[Dict[str, float]]]:
     """Déroule les `horizon` années et retourne (moteur, flux annuels)."""
     moteur = moteur_calibre(contexte)
-    flux_par_annee: list[dict[str, float]] = []
+    flux_par_annee: List[Dict[str, float]] = []
     for annee in range(1, horizon + 1):
         decision = decision_moteur(parametres, annee, horizon=horizon)
         moteur.appliquer_etape(decision)
@@ -153,7 +153,7 @@ def _ecart_relatif(valeur: float, reference: float) -> float:
     return (valeur - reference) / abs(reference)
 
 
-def _mediteurs_annee(resultat: ResultatEtapeSimulation, flux: dict[str, float],
+def _mediteurs_annee(resultat: ResultatEtapeSimulation, flux: Dict[str, float],
                      contexte: ContexteInstant, annee_index: int,
                      cumul_solde_mde: float,
                      reference: MediateursAnnee | None) -> MediateursAnnee:
@@ -322,8 +322,8 @@ def _mediteurs_annee(resultat: ResultatEtapeSimulation, flux: dict[str, float],
 # 3. Boucle de convergence des médiateurs
 # ────────────────────────────────────────────────────────────────────────────
 
-def _valeurs_indicateurs(mediateurs: list[MediateursAnnee],
-                         contexte: ContexteInstant) -> dict[str, list[float]]:
+def _valeurs_indicateurs(mediateurs: List[MediateursAnnee],
+                         contexte: ContexteInstant) -> Dict[str, List[float]]:
     return {
         spec.cle: [evaluer_indicateur(spec, m, contexte) for m in mediateurs]
         for spec in SPECS
@@ -334,7 +334,7 @@ def _valeurs_indicateurs(mediateurs: list[MediateursAnnee],
 #: La colonne de droite donne le médiateur alimenté et le **facteur d'échelle**
 #: appliqué, pour que chaque coefficient garde un sens physique (un point
 #: d'indice, un million de tonnes, dix points de sentiment de sécurité…).
-_REACTIONS: dict[str, tuple[str, float]] = {
+_REACTIONS: Dict[str, Tuple[str, float]] = {
     "chomage": ("chomage_ecart_pts", 1.0),              # points de taux de chômage
     "pauvrete": ("pauvrete_ecart_pts", 1.0),            # points de taux de pauvreté
     "gini": ("inegalites_ecart_pts", 1.0),              # points de Gini
@@ -343,10 +343,10 @@ _REACTIONS: dict[str, tuple[str, float]] = {
 }
 
 
-def _boucle_mediateurs(mediateurs: list[MediateursAnnee], valeurs_reference: dict[str, list[float]],
+def _boucle_mediateurs(mediateurs: List[MediateursAnnee], valeurs_reference: Dict[str, List[float]],
                        contexte: ContexteInstant,
-                       passes: int = PASSES_MEDIATEURS) -> tuple[list[MediateursAnnee],
-                                                                 dict[str, list[float]]]:
+                       passes: int = PASSES_MEDIATEURS) -> Tuple[List[MediateursAnnee],
+                                                                 Dict[str, List[float]]]:
     """Itère : les écarts d'un domaine nourrissent les formules des suivants."""
     valeurs = _valeurs_indicateurs(mediateurs, contexte)
     for _ in range(passes):
@@ -384,30 +384,30 @@ class SortieSimulation:
     """Charge utile complète renvoyée à l'interface ou à un test."""
 
     horodatage: str
-    contexte: dict[str, Any]
-    parametres: dict[str, float]
-    etapes: list[dict[str, Any]]
-    domaines: list[dict[str, Any]]
-    synthese: dict[str, Any]
-    impact_bandeau: dict[str, float]
-    journal: list[str]
-    avertissements: list[str] = field(default_factory=list)
-    impacts: list[dict[str, Any]] = field(default_factory=list)
-    diagnostic: dict[str, Any] = field(default_factory=dict)
+    contexte: Dict[str, Any]
+    parametres: Dict[str, float]
+    etapes: List[Dict[str, Any]]
+    domaines: List[Dict[str, Any]]
+    synthese: Dict[str, Any]
+    impact_bandeau: Dict[str, float]
+    journal: List[str]
+    avertissements: List[str] = field(default_factory=list)
+    impacts: List[Dict[str, Any]] = field(default_factory=list)
+    diagnostic: Dict[str, Any] = field(default_factory=dict)
     horizon: int = 5
     #: Trajectoire sans levier, mêmes années et mêmes données de départ.
-    etapes_reference: list[dict[str, Any]] = field(default_factory=list)
+    etapes_reference: List[Dict[str, Any]] = field(default_factory=list)
     #: Flux annuels du scénario et de la référence, dont les clés `levier:*`.
-    flux_annuels: list[dict[str, Any]] = field(default_factory=list)
-    flux_reference: list[dict[str, Any]] = field(default_factory=list)
-    domaines_reference: list[dict[str, Any]] = field(default_factory=list)
+    flux_annuels: List[Dict[str, Any]] = field(default_factory=list)
+    flux_reference: List[Dict[str, Any]] = field(default_factory=list)
+    domaines_reference: List[Dict[str, Any]] = field(default_factory=list)
 
-    def en_dict(self) -> dict[str, Any]:
+    def en_dict(self) -> Dict[str, Any]:
         return asdict(self)
 
 
-def simuler(parametres: dict[str, float] | None = None,
-            contexte: ContexteInstant | None = None,
+def simuler(parametres: Optional[Dict[str, float]] = None,
+            contexte: Optional[ContexteInstant] = None,
             *,
             horizon: int = 5,
             avec_impacts: bool = True,
@@ -417,7 +417,7 @@ def simuler(parametres: dict[str, float] | None = None,
         raise ValueError("L'horizon de simulation doit être compris entre 1 et 10 ans.")
     parametres_normalises = normaliser(parametres)
     contexte = contexte or construire_contexte()
-    avertissements: list[str] = []
+    avertissements: List[str] = []
     if contexte.mode != "live":
         avertissements.append(
             "Données de contexte non entièrement rafraîchies (mode "
@@ -442,7 +442,7 @@ def simuler(parametres: dict[str, float] | None = None,
 
     # 2) Trajectoire choisie
     moteur, flux_annee = _executer_serie(parametres_normalises, contexte, horizon)
-    mediateurs: list[MediateursAnnee] = []
+    mediateurs: List[MediateursAnnee] = []
     cumul = 0.0
     for i, resultat in enumerate(moteur.historique_etapes):
         flux = flux_annee[i]
@@ -462,7 +462,7 @@ def simuler(parametres: dict[str, float] | None = None,
     scores_base = {d.cle: d.score for d in domaines}
 
     # 4) Impacts croisés levier → domaines
-    impacts: list[dict[str, Any]] = []
+    impacts: List[Dict[str, Any]] = []
     if avec_impacts:
         impacts = _impacts_par_levier(parametres_normalises, contexte, horizon,
                                       scores_base, max_leviers_impacts,
@@ -536,7 +536,7 @@ def simuler(parametres: dict[str, float] | None = None,
         },
     }
 
-    journal: list[str] = []
+    journal: List[str] = []
     for resultat in moteur.historique_etapes:
         journal.extend(resultat.commentaires)
 
@@ -548,7 +548,7 @@ def simuler(parametres: dict[str, float] | None = None,
         contexte=contexte.en_dict(),
         parametres=parametres_normalises,
         etapes=[asdict(r) for r in moteur.historique_etapes],
-        domaines=[d.en_dict() | {"score_reference": scores_ref.get(d.cle, 50.0)}
+        domaines=[{**d.en_dict(), **{"score_reference": scores_ref.get(d.cle, 50.0)}}
                   for d in domaines],
         synthese=synthese,
         impact_bandeau={
@@ -578,9 +578,9 @@ def simuler(parametres: dict[str, float] | None = None,
 # 5. Impacts croisés levier × domaine
 # ────────────────────────────────────────────────────────────────────────────
 
-def _scores_domaines(parametres: dict[str, float], contexte: ContexteInstant,
+def _scores_domaines(parametres: Dict[str, float], contexte: ContexteInstant,
                      horizon: int,
-                     references: dict[str, list[float]] | None = None) -> dict[str, float]:
+                     references: Optional[Dict[str, List[float]]] = None) -> Dict[str, float]:
     """Scores de domaine d'un jeu de paramètres, mesurés par écart à la référence."""
     moteur, flux = _executer_serie(parametres, contexte, horizon)
     mediateurs = [
@@ -592,14 +592,14 @@ def _scores_domaines(parametres: dict[str, float], contexte: ContexteInstant,
     return {d.cle: d.score for d in domaines}
 
 
-def evaluer_domaine_depuis_mediateurs(mediateurs: list[MediateursAnnee],
+def evaluer_domaine_depuis_mediateurs(mediateurs: List[MediateursAnnee],
                                       contexte: ContexteInstant,
-                                      references: dict[str, list[float]] | None = None):
+                                      references: Optional[Dict[str, List[float]]] = None):
     """Évaluation légère des domaines, avec ou sans trajectoire de référence."""
     return evaluer_domaines(mediateurs, contexte, references=references)
 
 
-def _empreinte(parametres: dict[str, float], contexte: ContexteInstant, horizon: int) -> str:
+def _empreinte(parametres: Dict[str, float], contexte: ContexteInstant, horizon: int) -> str:
     charge = json.dumps(
         {"p": parametres, "h": horizon, "c": contexte.horodatage, "m": contexte.mode},
         sort_keys=True, default=str,
@@ -607,10 +607,10 @@ def _empreinte(parametres: dict[str, float], contexte: ContexteInstant, horizon:
     return hashlib.sha256(charge.encode("utf-8")).hexdigest()[:24]
 
 
-def _impacts_par_levier(parametres: dict[str, float], contexte: ContexteInstant,
-                        horizon: int, scores_base: dict[str, float],
+def _impacts_par_levier(parametres: Dict[str, float], contexte: ContexteInstant,
+                        horizon: int, scores_base: Dict[str, float],
                         maximum: int,
-                        references: dict[str, list[float]] | None = None) -> list[dict[str, Any]]:
+                        references: Optional[Dict[str, List[float]]] = None) -> List[Dict[str, Any]]:
     """Matrice des effets marginaux : chaque levier actif, domaine par domaine.
 
     L'effet est calculé par **différence finie sur le modèle** : on rejoue la
@@ -635,7 +635,7 @@ def _impacts_par_levier(parametres: dict[str, float], contexte: ContexteInstant,
     if empreinte in _CACHE_IMPACTS:
         return _CACHE_IMPACTS[empreinte]
 
-    impacts: list[dict[str, Any]] = []
+    impacts: List[Dict[str, Any]] = []
     for cle in actifs:
         sans = dict(parametres)
         sans[cle] = LEVIERS[cle].defaut
@@ -663,7 +663,7 @@ def _impacts_par_levier(parametres: dict[str, float], contexte: ContexteInstant,
     return impacts
 
 
-def tableau_croise(impacts: list[dict[str, Any]]) -> dict[str, Any]:
+def tableau_croise(impacts: List[Dict[str, Any]]) -> Dict[str, Any]:
     """Met la matrice d'impacts en forme pour un affichage croisé."""
     domaines = [d.cle for d in DOMAINES]
     lignes = []
@@ -682,9 +682,9 @@ def tableau_croise(impacts: list[dict[str, Any]]) -> dict[str, Any]:
 # 6. Comparaison de scénarios et API
 # ────────────────────────────────────────────────────────────────────────────
 
-def comparer(scenarios: dict[str, dict[str, float]] | None = None,
-             contexte: ContexteInstant | None = None,
-             horizon: int = 5) -> dict[str, Any]:
+def comparer(scenarios: Optional[Dict[str, Dict[str, float]]] = None,
+             contexte: Optional[ContexteInstant] = None,
+             horizon: int = 5) -> Dict[str, Any]:
     """Compare plusieurs jeux de paramètres (préréglages par défaut)."""
     contexte = contexte or construire_contexte()
     if scenarios is None:
@@ -705,7 +705,7 @@ def comparer(scenarios: dict[str, dict[str, float]] | None = None,
             "comparaison": resultats}
 
 
-def catalogue_complet() -> dict[str, Any]:
+def catalogue_complet() -> Dict[str, Any]:
     """Catalogue complet (leviers, familles, domaines) pour l'interface."""
     return {
         "parametres": catalogue_parametres(),
@@ -724,7 +724,7 @@ if __name__ == "__main__":  # pragma: no cover - outil de ligne de commande
     analyseur.add_argument("--json", action="store_true")
     arguments = analyseur.parse_args()
 
-    jeu: dict[str, float] = {}
+    jeu: Dict[str, float] = {}
     if arguments.preset:
         jeu.update(PRESETS[arguments.preset]["parametres"])
     for brut in arguments.levier:

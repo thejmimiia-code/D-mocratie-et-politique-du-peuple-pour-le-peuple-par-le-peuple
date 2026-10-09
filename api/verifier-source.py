@@ -22,6 +22,7 @@ Environnement :
 """
 
 from __future__ import annotations
+from typing import Dict, Tuple
 
 import json
 import os
@@ -43,7 +44,7 @@ MARQUEURS_PAGE = ("console-pilotage", "Simulateur Macro-Politique", "leviers")
 #: Routes interrogées et clés attendues dans la réponse JSON du moteur.
 ROUTES_API = (("/api/scenarios", ("scenarios",)), ("/api/catalogue", ("parametres", "domaines")))
 
-_cache: dict[str, tuple[float, dict[str, object]]] = {}
+_cache: Dict[str, Tuple[float, Dict[str, object]]] = {}
 
 
 def adresse_configurée() -> str:
@@ -59,7 +60,7 @@ def adresse_configurée() -> str:
     return trouve.group(1).strip() if trouve else ""
 
 
-def _lire(url: str) -> tuple[int, bytes]:
+def _lire(url: str) -> Tuple[int, bytes]:
     requete = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
     try:
         with urllib.request.urlopen(requete, timeout=DELAI) as reponse:
@@ -75,7 +76,7 @@ def _indice_page(contenu: bytes) -> bool:
     return sum(marqueur in texte for marqueur in MARQUEURS_PAGE) >= 2
 
 
-def _indice_api(contenu: bytes, cles: tuple[str, ...]) -> bool:
+def _indice_api(contenu: bytes, cles: Tuple[str, ...]) -> bool:
     try:
         charge = json.loads(contenu.decode("utf-8", "replace"))
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -83,9 +84,9 @@ def _indice_api(contenu: bytes, cles: tuple[str, ...]) -> bool:
     return isinstance(charge, dict) and any(cle in charge for cle in cles)
 
 
-def verifier(source: str) -> dict[str, object]:
+def verifier(source: str) -> Dict[str, object]:
     """Interroge la source : page d'abord, API ensuite."""
-    resultat: dict[str, object] = {
+    resultat: Dict[str, object] = {
         "source": source,
         "disponible": False,
         "page": {"statut": 0, "indice_simulateur": False},
@@ -129,7 +130,7 @@ def verifier(source: str) -> dict[str, object]:
     return resultat
 
 
-def etat(rafraichir: bool = False) -> dict[str, object]:
+def etat(rafraichir: bool = False) -> Dict[str, object]:
     source = adresse_configurée()
     maintenant = time.monotonic()
     entree = _cache.get(source)

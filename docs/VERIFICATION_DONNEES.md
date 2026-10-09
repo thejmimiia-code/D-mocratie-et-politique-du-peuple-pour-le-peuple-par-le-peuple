@@ -23,7 +23,7 @@ Une donnée non vérifiée n'est jamais masquée. Le simulateur affiche la valeu
 | Vérifié | 1 | 9 |
 | Partiellement vérifié | 9 | 3 |
 | Chiffre daté | 5 | 0 |
-| Non vérifié | 86 | 44 |
+| Non vérifié | 86 | 102 |
 | Source inaccessible | 0 | 0 |
 
 ## Contribuer : une donnée, une source, une date
@@ -256,6 +256,64 @@ Vous connaissez une valeur officielle plus récente, une source plus fiable, ou 
 | <a id="TNP_ART_6"></a>Article VI `TNP_ART_6` | Traité sur la non-prolifération des armes nucléaires (1968) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
 | <a id="CART_L711_1"></a>Article L. 711-1 `CART_L711_1` | Code de commerce | **Vérifié** | Article L. 711-1 du Code de commerce consulté sur Légifrance : chambres de commerce et d'industrie. (consulté le 08/10/2026) [lien officiel](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000038610758) |
 | <a id="CRURAL_L510_1"></a>Article L. 510-1 `CRURAL_L510_1` | Code rural et de la pêche maritime | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_39"></a>Article 39 `CONST_ART_39` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_45"></a>Article 45 `CONST_ART_45` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_48"></a>Article 48 `CONST_ART_48` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_51_2"></a>Article 51-2 `CONST_ART_51_2` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_70"></a>Article 70 `CONST_ART_70` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_71"></a>Article 71 `CONST_ART_71` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_72"></a>Article 72 `CONST_ART_72` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_72_1"></a>Article 72-1 `CONST_ART_72_1` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_72_2"></a>Article 72-2 `CONST_ART_72_2` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_89"></a>Article 89 `CONST_ART_89` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L2121_1"></a>Article L. 2121-1 `CGCT_L2121_1` | Code général des collectivités territoriales | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L3121_1"></a>Article L. 3121-1 `CGCT_L3121_1` | Code général des collectivités territoriales | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L4131_1"></a>Article L. 4131-1 `CGCT_L4131_1` | Code général des collectivités territoriales | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L5211_1"></a>Article L. 5211-1 `CGCT_L5211_1` | Code général des collectivités territoriales | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="TUE_ART_14"></a>Article 14 `TUE_ART_14` | Traité sur l'Union Européenne (TUE) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="TUE_ART_16"></a>Article 16 `TUE_ART_16` | Traité sur l'Union Européenne (TUE) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_1"></a>Article 1er `CONST_ART_1` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_72_3"></a>Article 72-3 `CONST_ART_72_3` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_73"></a>Article 73 `CONST_ART_73` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_74"></a>Article 74 `CONST_ART_74` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_TITRE_XIII"></a>Articles 76 et 77 `CONST_TITRE_XIII` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CODE_ELEC_L16"></a>Article L. 16 `CODE_ELEC_L16` | Code électoral | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CODE_ELEC_L123"></a>Article L. 123 `CODE_ELEC_L123` | Code électoral | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CODE_ELEC_L260"></a>Article L. 260 `CODE_ELEC_L260` | Code électoral | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L2411_1"></a>Article L. 2411-1 `CGCT_L2411_1` | Code général des collectivités territoriales (CGCT) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CODE_TRANSP_L1803_1"></a>Article L. 1803-1 `CODE_TRANSP_L1803_1` | Code des transports | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="DDHC_ART_1"></a>Article 1er `DDHC_ART_1` | Déclaration des Droits de l'Homme et du Citoyen de 1789 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="DDHC_ART_3"></a>Article 3 `DDHC_ART_3` | Déclaration des Droits de l'Homme et du Citoyen de 1789 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="DDHC_ART_13"></a>Article 13 `DDHC_ART_13` | Déclaration des Droits de l'Homme et du Citoyen de 1789 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="DDHC_ART_16"></a>Article 16 `DDHC_ART_16` | Déclaration des Droits de l'Homme et du Citoyen de 1789 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="PREAMBULE_1946_AL3"></a>Alinéa 3 `PREAMBULE_1946_AL3` | Préambule de la Constitution de 1946 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="PREAMBULE_1946_AL9"></a>Alinéa 9 `PREAMBULE_1946_AL9` | Préambule de la Constitution de 1946 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="PREAMBULE_1946_AL11"></a>Alinéa 11 `PREAMBULE_1946_AL11` | Préambule de la Constitution de 1946 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CHARTE_ENV_ART_4"></a>Article 4 `CHARTE_ENV_ART_4` | Charte de l'environnement de 2004 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CHARTE_ENV_ART_5"></a>Article 5 `CHARTE_ENV_ART_5` | Charte de l'environnement de 2004 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_4"></a>Article 4 `CONST_ART_4` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_5"></a>Article 5 `CONST_ART_5` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_6"></a>Article 6 `CONST_ART_6` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_12"></a>Article 12 `CONST_ART_12` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_34"></a>Article 34 `CONST_ART_34` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_37"></a>Article 37 `CONST_ART_37` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_40"></a>Article 40 `CONST_ART_40` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_47"></a>Article 47 `CONST_ART_47` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_72_4"></a>Article 72-4 `CONST_ART_72_4` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_88_1"></a>Article 88-1 `CONST_ART_88_1` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CODE_ELEC_L1"></a>Article L. 1 `CODE_ELEC_L1` | Code électoral | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CODE_ELEC_L52_4"></a>Article L. 52-4 `CODE_ELEC_L52_4` | Code électoral | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CODE_ELEC_L71"></a>Article L. 71 `CODE_ELEC_L71` | Code électoral | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L1111_1"></a>Article L. 1111-1 `CGCT_L1111_1` | Code général des collectivités territoriales (CGCT) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L2143_1"></a>Article L. 2143-1 `CGCT_L2143_1` | Code général des collectivités territoriales (CGCT) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CGCT_L5217_1"></a>Article L. 5217-1 `CGCT_L5217_1` | Code général des collectivités territoriales (CGCT) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CNUDM_ART_56_ZEE"></a>Article 56 `CNUDM_ART_56_ZEE` | Convention des Nations Unies sur le droit de la mer (Montego Bay) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="LOI_55_1052_TAAF"></a>Article 1er `LOI_55_1052_TAAF` | Loi n° 55-1052 du 6 août 1955 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="CONST_ART_61"></a>Article 61, alinéa 2 `CONST_ART_61` | Constitution du 4 octobre 1958 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="LOLF_ART_34"></a>Article 34 `LOLF_ART_34` | Loi organique n° 2001-692 du 1er août 2001 (LOLF) | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="DIRECTIVE_UE_2022_542"></a>Article 98 et Annexe III (points 22 et 23) `DIRECTIVE_UE_2022_542` | Directive (UE) 2022/542 du Conseil du 5 avril 2022 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="REGLEMENT_UE_2023_956"></a>Articles 1er et 22 `REGLEMENT_UE_2023_956` | Règlement (UE) 2023/956 du Parlement européen et du Conseil | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
+| <a id="LOI_ORG_2009_403"></a>Article 8 `LOI_ORG_2009_403` | Loi organique n° 2009-403 du 15 avril 2009 | **Non vérifié** | Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit. |
 | <a id="CGI_278_0_BIS_A"></a>Article 278-0 bis A `CGI_278_0_BIS_A` | Code général des impôts | **Vérifié** | BOFiP BOI-TVA-LIQ-30-20-95, version du 22/10/2025 consultée. (consulté le 08/10/2026) [lien officiel](https://bofip.impots.gouv.fr/bofip/9417-PGP.html/identifiant=BOI-TVA-LIQ-30-20-95-20251022) |
 | <a id="CGI_278_0_BIS_B"></a>Article 278-0 bis B (version antérieure au 1er août 2025) `CGI_278_0_BIS_B` | Code général des impôts | **Vérifié** | Suppression du taux réduit de 5,5 % sur les abonnements (électricité ≤ 36 kVA et gaz) pour les périodes débutant à compter du 1er août 2025 : BOFiP BOI-RES-TVA-000209 (version du 26/08/2026), citant l'article 20 de la loi n° 2025-127. Texte intégral non relu sur Légifrance. (consulté le 08/10/2026) [lien officiel](https://bofip.impots.gouv.fr/bofip/14705-PGP.html/identifiant=BOI-RES-TVA-000209-20260826) |
 | <a id="REG_UE_2022_1854_SOLIDARITE"></a>Articles 15 à 18 `REG_UE_2022_1854_SOLIDARITE` | Règlement (UE) 2022/1854 du Conseil du 6 octobre 2022 | **Partiellement vérifié** | Articles 15 à 18 consultés sur EUR-Lex (mention « No longer in force ») ; chapitre III applicable jusqu'au 31/12/2023 (clause finale ; rapport COM(2023) 768 du 30/11/2023). (consulté le 08/10/2026) [lien officiel](https://eur-lex.europa.eu/eli/reg/2022/1854/oj?locale=fr) |
