@@ -379,6 +379,10 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
   .levier.compact{grid-template-columns:1fr 70px auto}}
 </style>
+<script>
+  window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
+</script>
+<script defer src="/_vercel/insights/script.js"></script>
 </head>
 <body>
 <div class="conteneur">
