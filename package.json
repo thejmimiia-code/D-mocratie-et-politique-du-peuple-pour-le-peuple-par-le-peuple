@@ -1,0 +1,21 @@
+{
+  "name": "simulateur-macro-politique",
+  "version": "1.0.0",
+  "description": "Simulateur macro-politique systémique — Démocratie et politique du peuple",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "analytics": "echo 'Vercel Analytics installed'"
+  },
+  "dependencies": {
+    "@vercel/analytics": "^1.3.1"
+  },
+  "keywords": [
+    "simulation",
+    "politique",
+    "économie",
+    "démocratie"
+  ],
+  "author": "Thejmimiia <thejmimiia@gmail.com>",
+  "license": "MIT"
+}
