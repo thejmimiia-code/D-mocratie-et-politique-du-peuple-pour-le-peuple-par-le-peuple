@@ -1,81 +1,83 @@
-# Contributing
+# Guide de contribution
 
-Merci de votre intérêt pour le **Simulateur Macro-Politique Systémique** !
+Merci de votre intérêt pour le **Simulateur Macro-Politique & Démocratique** !
+Ce projet est un outil d'aide à la décision publique, auditable et transparent.
+Toute contribution constructive est la bienvenue.
 
-## Philosophie du projet
+## Comment contribuer
 
-Ce simulateur modélise l'intégration dynamique de **5 échelons** de contrainte :
-Local → National → Europe → Mondial → **Géopolitique**. Chaque décision politique
-a des répercussions systémiques mesurables et chiffrables, domaine par domaine.
+### Signaler un problème (Issue)
 
-**Principe directeur** : toute modification doit être **vérifiable par preuve réelle**
-(finish_reason=stop, tests passants, résultats reproductibles).
+Utilisez les modèles d'issue fournis :
+- **Bug** : pour signaler un dysfonctionnement technique
+- **Amélioration** : pour proposer une nouvelle fonctionnalité ou une correction de données
 
-## Environnement de travail
+### Proposer une modification (Pull Request)
 
-```bash
-# 1. Créer un venv dédié
-python3 -m venv .venv
+1. **Forkez** le dépôt
+2. **Créez une branche** dédiée : `git checkout -b feature/votre-modification`
+3. **Conventions de code** :
+   - Python 3.10+, typage explicite, docstrings complètes
+   - Toute donnée chiffrée doit être sourcée (INSEE, DGFIP, AFT, BCE, etc.)
+   - 100% des tests doivent passer avant soumission
+4. **Tests** : ajoutez des tests pour toute nouvelle fonctionnalité dans `tests/`
+5. **Documentation** : mettez à jour le README et les fichiers `docs/` si nécessaire
+6. **Soumettez** votre PR avec une description claire des changements
 
-# 2. Activer
-source .venv/bin/activate      # Linux/macOS
-.venv/Scripts/activate         # Windows
+### Conventions de données
 
-# 3. (Optionnel) Installer les dépendances dev
-pip install -e ".[dev]"
+Toute donnée intégrée au simulateur **doit** :
+- Être adossée à une source officielle vérifiable (INSEE, DGFIP, Banque de France, Eurostat, etc.)
+- Inclure l'URL d'accès direct à la source
+- Préciser la méthodologie de collecte (SEC 2010, ERFS, etc.)
+- Être accompagnée de l'intervalle de confiance si disponible
 
-# 4. Lancer les tests
-python -m unittest discover -s tests -p "test_*.py" -v
+### Structure du projet
 
-# 5. Lancer le simulateur
-python3 main.py mandature          # scénario en ligne de commande
-python3 -m simulateur.cli          # menu interactif
-python3 -m simulateur.dashboard --port 8080   # simulateur interactif : 101 leviers,
-                                              # 20 domaines, console de veille
+```
+simulateur/
+├── model.py              # Dataclasses des 4 échelons
+├── moteur.py             # Moteur de calcul SFC
+├── scenarios.py          # 4 scénarios prédéfinis
+├── reglements_lois.py    # 95 articles de loi
+├── sources_officielles.py# 25+ sources certifiées
+├── think_tanks.py        # 23 think tanks audités
+├── histoire_france.py    # 12 périodes (1792→2026)
+├── societe_domaines.py   # 18 domaines sociétaux
+├── cli.py                # Interface terminale
+└── web_server.py         # Serveur HTTP et API REST
+tests/
+└── test_*.py             # 166 tests (unittest)
+docs/
+└── *.md                  # 14 volumes de référence
 ```
 
-Les seuls scripts qui demandent une dépendance externe (Pillow) sont ceux du
-dossier `outils/` : ils ne servent qu'à l'aperçu social et aux réglages du
-dépôt. Le simulateur lui-même reste en bibliothèque standard.
-
-## Standards de code
-
-- **Zéro dépendance externe** : le simulateur s'appuie uniquement sur la
-  bibliothèque standard Python. Ne pas introduire de dépendance sans justification.
-- **Précision des données** : toutes les valeurs calées sur des sources officielles
-  (INSEE, Eurostat, Ministère des Finances, BCE). Vérifier chaque chiffre.
-- **Tests obligatoires** : toute modification de logique de simulation nécessite
-  un test correspondant dans `tests/`.
-- **Type hints** : toutes les fonctions doivent être typées (mypy strict).
-- **Lint** : `ruff check .` doit passer sans erreur.
-
-## Pull requests
-
-1. Fork du dépôt
-2. Branche depuis `main` : `git checkout -b feat/nom-functionnalite`
-3. Commits avec `git-cz` ou messages clairs
-4. Tests + lint passent
-5. PR avec description claire du changement et justification économique/politique
-
-## Scénarios disponibles
-
-| Scénario             | Description                                      |
-|----------------------|--------------------------------------------------|
-| `mandature`          | Plan de mandature quinquennal (+60 Md€/an en Y5) |
-| `statut_quo`         | Immobilisme politique et dérive financière       |
-| `austerite`          | Coupes territoriales et fronde fiscale           |
-| `choc_mondial`       | Stagflation, pétrole >110$, resserrement Fed      |
-
-## Export
+### Lancer les tests
 
 ```bash
-# Export JSON
-python3 main.py mandature --export mandature.json
-
-# Export CSV
-python3 main.py choc_mondial --export choc_mondial.csv
+python3 -m unittest discover tests
 ```
 
-## Aide
+### Lancer le serveur web
 
-Besoin d'aide ? Ouvrez une issue avec le label `question`.
+```bash
+python3 main.py web 8000
+```
+
+## Normes éthiques
+
+Ce projet a pour vocation d'être un **outil d'aide à la décision publique**
+et non un instrument partisan. Les contributions doivent :
+- Respecter la neutralité politique du projet
+- Présenter les données de manière objective et sourcée
+- Anticiper et documenter les objections légitimes
+- Ne jamais déformer des données officielles
+
+## Licence
+
+Ce projet est sous licence **GNU General Public License v3.0** (GPLv3).
+En contribuant, vous acceptez que vos contributions soient publiées sous cette licence.
+
+## Contact
+
+Pour toute question, ouvrez une issue sur le dépôt GitHub.
