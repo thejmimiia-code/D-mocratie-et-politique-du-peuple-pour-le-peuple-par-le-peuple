@@ -2,31 +2,21 @@
 simulateur/pont_api.py — Pont HTTP du moteur vers les hébergeurs sans serveur.
 
 Le moteur du simulateur (`simulateur.dashboard.DashboardHandler`) route sur
-`self.path` et sert toutes les routes `/api/*` depuis un seul processus. Sur un
-hébergeur à fonctions (Vercel), le dépôt n'expose donc qu'**une seule** fonction
-d'API, `api/[...path].py`, qui reçoit les URL `/api/...` et les transmet au moteur.
+`self.path` et sert toutes les routes depuis un seul processus. Sur un
+hébergeur à fonctions (Vercel), chaque fichier de `api/` devient une route
+distincte et reçoit l'URL complète de la requête : il faut donc réécrire le
+chemin reçu sur la route déclarée, en conservant la chaîne de requête.
 
-    api/[...path].py  ->  class handler(PontAPI): ...
-
-Une fonction par route (une par fichier de `api/`) dépassait le plafond de
-12 fonctions par déploiement de l'offre Hobby de Vercel ; c'est pourquoi les
-routes sont réunies ici.
-
-Chemin reçu : le moteur attend `/api/<route>?…`. Vercel invoque la fonction par la
-destination de sa règle de routage, `/api/[...path].py?...path=<route>&…` (règle
-produite par `@vercel/fs-detectors`, la détection qu'utilise la CLI). `chemin_demande`
-rétablit alors `/api/<route>?…` à partir du segment capturé. Toute autre cible de
-requête passe inchangée.
+    api/catalogue.py  ->  class handler(FonctionAPI): ROUTE = "/api/catalogue"
 
 ⚠️ Ce fichier est un **ajout du dépôt du site M.R.S.C**, il ne vient pas du
-dépôt du simulateur : une mise à jour du moteur ne doit ni l'écraser ni le
-supprimer.
+dépôt du simulateur : `outils/mettre-a-jour-simulateur.py` ne doit ni
+l'écraser ni le supprimer lors d'une mise à jour du moteur.
 """
 
 from __future__ import annotations
 
 import os
-from urllib.parse import quote, unquote
 
 # Sur un hébergeur à fonctions, le dossier du projet est en lecture seule :
 # le cache des données publiques part dans /tmp (éphémère, une instance à la
@@ -37,45 +27,12 @@ os.environ.setdefault("SIMULATEUR_CACHE", "/tmp/simulateur_cache")
 
 from simulateur.dashboard import DashboardHandler  # noqa: E402
 
-#: Destinations de la règle de routage vers la fonction attrape-tout, telles que
-#: Vercel peut les transmettre à la place de l'URL demandée. La forme avec `.py`
-#: est celle de `@vercel/fs-detectors` ; la forme sans extension est tolérée.
-CHEMINS_DESTINATION = frozenset({"/api/[...path].py", "/api/[...path]"})
-#: Clé de requête où Vercel dépose le segment capturé par `[...path]`.
-CLE_SEGMENTS = "...path"
 
+class FonctionAPI(DashboardHandler):
+    """Sert une route unique du moteur, quel que soit le chemin reçu."""
 
-def chemin_demande(chemin_recu: str) -> str:
-    """Rend à la cible de requête `chemin_recu` la forme `/api/<route>?…`.
-
-    `chemin_recu` contient le chemin et la chaîne de requête. Elle est renvoyée
-    telle quelle, sauf si elle désigne la destination de la règle de routage :
-
-        /api/[...path].py?...path=catalogue&x=1   ->   /api/catalogue?x=1
-    """
-    chemin, _, requete = chemin_recu.partition("?")
-    if unquote(chemin) not in CHEMINS_DESTINATION:
-        return chemin_recu
-    segments: str | None = None
-    restants: list[str] = []
-    for morceau in filter(None, requete.split("&")):
-        cle, _, valeur = morceau.partition("=")
-        if segments is None and unquote(cle) == CLE_SEGMENTS:
-            segments = unquote(valeur)
-        else:
-            restants.append(morceau)
-    if segments is None:
-        return chemin_recu
-    route = "/api/" + quote(segments.strip("/"), safe="/")
-    return route + ("?" + "&".join(restants) if restants else "")
-
-
-class PontAPI(DashboardHandler):
-    """Sert l'ensemble des routes `/api/*` du moteur.
-
-    La cible de requête est ramenée à `/api/<route>?…` par `chemin_demande`,
-    puis `do_GET`, `do_POST` et `do_HEAD` sont ceux du moteur.
-    """
+    #: Route servie, par exemple « /api/catalogue » (défini par la sous-classe).
+    ROUTE = ""
 
     def do_GET(self) -> None:  # noqa: N802 - API stdlib
         self._deleguer("GET")
@@ -87,8 +44,11 @@ class PontAPI(DashboardHandler):
         self._deleguer("HEAD")
 
     def _deleguer(self, methode: str) -> None:
+        if not self.ROUTE:
+            raise RuntimeError("La sous-classe doit définir ROUTE (ex. « /api/catalogue »).")
+        requete = self.path.split("?", 1)
         # Idempotent : do_HEAD rappelle self.do_GET(), qui repasse ici.
-        self.path = chemin_demande(self.path)
+        self.path = self.ROUTE + (("?" + requete[1]) if len(requete) > 1 else "")
         if methode == "GET":
             DashboardHandler.do_GET(self)
         elif methode == "POST":
