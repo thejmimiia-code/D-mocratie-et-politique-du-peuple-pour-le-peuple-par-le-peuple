@@ -61,9 +61,16 @@ gh api repos/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-pa
   --jq '.statuses[] | "\(.context) → \(.state)"'
 ```
 
+Le projet de production, lui, n'échoue pas systématiquement : il est vert sur `df092fe`
+(l'état de `main`) et sur un commit de cette branche, puis rouge sur le suivant — où seuls des
+documents et le journal ont bougé. Sans accès aux journaux Vercel, la cause est indiagnosticable
+d'ici : elle est donc écrite comme telle, plutôt que devinée.
+
 *État : non corrigé, et hors de portée du dépôt.* Le remède n'est pas dans le code : il faut
-débrancher ou réparer ce second projet dans Vercel (P1‑4). Tant qu'il échoue, la conclusion
-« la CI est rouge » reste vraie pour qui regarde la page du commit plutôt que ses jobs.
+débrancher ou réparer ces projets dans Vercel (P1‑4). Tant qu'ils échouent, la conclusion
+« la CI est rouge » reste vraie pour qui regarde la page du commit plutôt que ses jobs — et une
+croix rouge qu'on ne peut pas réparer dans le dépôt apprend la même chose qu'une CI rouge :
+à l'ignorer.
 
 ### 2.2 Le dépôt annonçait des compteurs périmés
 
