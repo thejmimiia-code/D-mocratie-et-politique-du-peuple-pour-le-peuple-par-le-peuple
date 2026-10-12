@@ -298,6 +298,37 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   white-space:nowrap}
 #section-verrous .puce-reglage{display:inline-block;margin:0 3px;padding:1px 6px;border-radius:999px;
   border:1px solid #2b3d5c;font-size:.7rem;font-style:normal}
+#section-contradiction .objection{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;
+  margin:8px 0;padding:8px 10px}
+#section-contradiction .objection summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;
+  align-items:baseline;font-size:.84rem}
+#section-contradiction .objection[open] summary{margin-bottom:6px}
+#section-contradiction .objection h4{margin:8px 0 3px;font-size:.74rem;text-transform:uppercase;
+  letter-spacing:.4px;color:#7b8aa5;font-weight:600}
+#section-contradiction .objection p{margin:0;font-size:.8rem;line-height:1.45;color:#dbe6f7}
+#section-contradiction .objection .attaque{color:#9fb0cc;font-size:.76rem}
+#section-contradiction .numero{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  color:#7b8aa5}
+#section-contradiction .badge-statut{display:inline-block;padding:1px 8px;border-radius:999px;
+  border:1px solid #2b3d5c;font-size:.7rem}
+#section-contradiction .badge-statut.ok{color:#7ee0a3;border-color:#2f8f5b}
+#section-contradiction .badge-statut.partiel{color:#f3c98b;border-color:#8f6b2f}
+#section-contradiction .badge-statut.concede{color:#bae6fd;border-color:#2b6c8f}
+#section-contradiction .badge-statut.encours{color:#e6d18b;border-color:#7f6b1d}
+#section-contradiction .badge-statut.ouverte{color:#c3cbdb;border-color:#40506e}
+#section-contradiction .famille,#section-contradiction .suivi{font-size:.72rem;color:#7b8aa5}
+#section-contradiction .meta{margin-top:6px;display:flex;flex-wrap:wrap;gap:10px;
+  font-size:.74rem;color:#9fb0cc}
+#section-contradiction .puce-portee{border:1px dashed #2b3d5c;border-radius:8px;padding:1px 7px}
+#section-contradiction ul.sources{list-style:none;margin:4px 0 0;padding:0;font-size:.74rem;
+  color:#9fb0cc}
+#section-contradiction ul.sources li{margin:2px 0}
+#section-contradiction .contre-modele{background:#131c2f;border:1px solid #2b3d5c;
+  border-radius:8px;margin:8px 0;padding:8px 10px;font-size:.8rem;line-height:1.45}
+#section-contradiction .contre-modele h4{margin:6px 0 3px;font-size:.78rem;color:#bae6fd}
+#section-contradiction .contre-modele .porte-par{color:#7b8aa5;font-size:.74rem;font-style:italic}
+#section-contradiction .garde-fous{border:1px solid #7f1d1d;background:#2a1214;border-radius:8px;
+  padding:6px 9px;margin:8px 0;font-size:.76rem;color:#f3a0a0}
 .levier.modifie{border-left:3px solid var(--accent);padding-left:8px;background:rgba(56,189,248,.06);
   border-radius:0 8px 8px 0}
 .levier.modifie .nom{font-weight:700}
@@ -492,6 +523,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <a href="#section-strates" class="discret" data-aide="<b>Vues par strate</b>Local, national, Europe, monde, géopolitique, ménages, bourse.">Strates</a>
     <a href="#section-domaines" class="discret" data-aide="<b>Domaines</b>Les 20 secteurs de l'action publique, notés par écart à la référence.">Domaines</a>
     <a href="#section-matrice" class="discret" data-aide="<b>Matrice</b>L'effet de chaque levier sur chaque domaine, mesuré par différences finies.">Matrice</a>
+    <a href="#section-contradiction" class="discret" data-aide="<b>Objections</b>Le registre de la contradiction : la meilleure version de chaque critique, ce que le dépôt concède, ce qu'il maintient, ce qui le ferait changer d'avis — et les quatre contre-modèles auxquels il se mesure.">Objections</a>
   </nav>
 
   <div class="ruban-veille" id="ruban-veille">
@@ -635,6 +667,21 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div id="verrous-corps"><div class="carte">Chargement de l'état des verrous…</div></div>
     <h3 style="margin:14px 0 6px">Réglages déplacés et ce qu'ils touchent</h3>
     <div id="reglages-corps" class="reglages-touches"></div>
+  </section>
+
+  <section class="bloc" id="section-contradiction">
+    <h2>Objections, concessions et réponses <span class="aide">le registre de la contradiction (<code>simulateur/contradiction.py</code>) : pour chaque mesure et pour chaque hypothèse du modèle, la meilleure version de la critique, ce que le dépôt concède, ce qu'il maintient, le fait qui le ferait changer d'avis, ses sources et son statut. La portée des leviers est déduite du catalogue (<code>simulateur/parametres.py</code>), jamais saisie. Rien n'est rédigé ici : tout vient de <code>GET /api/objections</code>.</span></h2>
+    <div class="nuances-intro" id="contradiction-resume">Chargement du registre…</div>
+    <p class="nuances-intro">
+      <button type="button" class="bouton" onclick="chargerObjections('')">Tout le registre</button>
+      <button type="button" class="bouton" onclick="chargerObjections('?famille=mesure')">Objections sur les mesures</button>
+      <button type="button" class="bouton" onclick="chargerObjections('?famille=modele')">Objections sur le modèle</button>
+      <button type="button" class="bouton" onclick="chargerObjections('?statut=partiellement_concedee')">Ce qui est concédé</button>
+      <span class="aide">Les quatre boutons interrogent le même registre avec un filtre ; la page ne trie ni ne résume rien elle-même.</span>
+    </p>
+    <div id="objections-corps"><div class="carte">Chargement des objections…</div></div>
+    <h3 style="margin:16px 0 6px">Les contre-modèles, et ce que le simulateur en dit</h3>
+    <div id="contre-modeles-corps"></div>
   </section>
 
   <section class="bloc" id="section-resultats">
@@ -3669,6 +3716,115 @@ async function chargerAudit(){
   }
 }
 
+/* Bloc « objections » : le registre de la contradiction, servi par
+   `GET /api/objections`. La page ne rédige aucune objection, ne classe aucun
+   statut et ne calcule aucun écart : elle met en forme ce que le registre de
+   `simulateur/contradiction.py` déclare, marges de portée comprises (le serveur
+   les déduit du catalogue, la page ne fait que les écrire). Les objections
+   vivent dans des `<details>` : vingt-quatre textes dépliés d'un coup
+   décourageraient la lecture, et le lecteur qui veut le détail l'ouvre. */
+const CLASSE_STATUT = {refutee: 'ok', partiellement_concedee: 'partiel',
+                       concedee: 'concede', en_cours: 'encours', ouverte: 'ouverte'};
+function ligneSourceObjection(source){
+  if (source.nature === 'interne'){
+    return '<li><b>Interne</b> : <code>' + echapperTexte(source.chemin) + '</code>'
+      + (source.reference ? ' — ' + echapperTexte(source.reference) : '') + '</li>';
+  }
+  return '<li><b>Externe</b> : ' + echapperTexte(source.reference)
+    + ' <i>(' + echapperTexte(source.date) + ')</i>'
+    + (source.origine ? ' — portée par ' + echapperTexte(source.origine) : '') + '</li>';
+}
+function pucePorteeObjection(o){
+  if (o.portee_mde === null || o.portee_mde === undefined){
+    return o.levier ? '<span class="puce-portee">levier <code>' + echapperTexte(o.levier)
+      + '</code> · réforme sans montant au catalogue</span>' : '';
+  }
+  let texte = '<span class="puce-portee">levier <code>' + echapperTexte(o.levier)
+    + '</code> · portée <b>' + fmt(o.portee_mde, 0) + ' Md€/an</b>';
+  if (o.gage_mde_an !== null && o.gage_mde_an !== undefined){
+    texte += ' · gage du dossier <b>' + fmt(o.gage_mde_an, 0) + ' Md€/an</b> · marge <b>'
+      + fmt(o.marge_de_portee_mde, 0) + ' Md€/an</b> non comptée';
+  }
+  return texte + '</span>';
+}
+function carteObjection(o){
+  const classe = CLASSE_STATUT[o.statut] || 'ouverte';
+  const sources = (o.sources || []).map(ligneSourceObjection).join('');
+  return '<details class="objection" data-statut="' + echapperTexte(o.statut)
+    + '" data-famille="' + echapperTexte(o.famille) + '">'
+    + '<summary><span class="numero">n° ' + o.numero + '</span>'
+    + '<b>' + echapperTexte(o.titre) + '</b>'
+    + '<span class="badge-statut ' + classe + '">' + echapperTexte(o.statut) + '</span>'
+    + '<span class="famille">' + echapperTexte(o.famille)
+    + (o.fiche ? ' · fiche ' + o.fiche : '') + '</span>'
+    + (o.suivi ? '<span class="suivi">' + echapperTexte(o.suivi) + '</span>' : '')
+    + '</summary>'
+    + '<h4>La meilleure version de l\'objection</h4><p>' + echapperTexte(o.objection_forte) + '</p>'
+    + (o.attaque_faible ? '<p class="attaque">Attaque d\'origine, conservée pour mémoire : '
+        + echapperTexte(o.attaque_faible) + '</p>' : '')
+    + '<h4>Ce que nous concédons</h4><p>' + echapperTexte(o.concession) + '</p>'
+    + '<h4>Ce que nous maintenons, et pourquoi</h4><p>' + echapperTexte(o.maintien) + '</p>'
+    + '<h4>Ce qui nous ferait changer d\'avis</h4><p>' + echapperTexte(o.falsification) + '</p>'
+    + '<h4>Statut et suites</h4><p>' + echapperTexte(o.statut_libelle)
+    + (o.changements ? ' — ' + echapperTexte(o.changements) : '') + '</p>'
+    + '<div class="meta">' + pucePorteeObjection(o) + '</div>'
+    + (sources ? '<h4>Sources</h4><ul class="sources">' + sources + '</ul>' : '')
+    + '</details>';
+}
+function carteContreModele(modele){
+  const scenarios = (modele.scenarios || []).map(cle =>
+    '<code>' + echapperTexte(cle) + '</code>').join(', ');
+  return '<div class="contre-modele"><b>' + echapperTexte(modele.titre) + '</b> '
+    + '<span class="porte-par">' + echapperTexte(modele.porte_par) + '</span>'
+    + '<h4>La thèse</h4><p>' + echapperTexte(modele.these) + '</p>'
+    + '<h4>Ce que le simulateur en dit</h4><p>'
+    + echapperTexte(modele.ce_que_le_simulateur_en_dit) + '</p>'
+    + (scenarios ? '<p class="famille">Scénarios comparables : ' + scenarios + '</p>' : '')
+    + '<h4>Ce que nous lui concédons</h4><p>' + echapperTexte(modele.concession) + '</p>'
+    + '<h4>Où nous ne le suivons pas</h4><p>' + echapperTexte(modele.divergence) + '</p>'
+    + (modele.ouverts ? '<h4>Ce qui reste ouvert</h4><p>' + echapperTexte(modele.ouverts) + '</p>' : '')
+    + '</div>';
+}
+function renderObjections(donnees){
+  const zone = document.getElementById('objections-corps');
+  const intro = document.getElementById('contradiction-resume');
+  const zoneModeles = document.getElementById('contre-modeles-corps');
+  if (!zone) return;
+  const lignes = donnees.objections || [];
+  if (intro){
+    const comptes = (donnees.comptes && donnees.comptes.par_statut) || {};
+    const statuts = Object.keys(comptes).filter(cle => comptes[cle])
+      .map(cle => '<b>' + comptes[cle] + '</b> ' + echapperTexte(cle)).join(' · ');
+    const fous = donnees.garde_fous ? Object.keys(donnees.garde_fous) : [];
+    intro.innerHTML = lignes.length + ' objection(s) affichée(s) sur le registre'
+      + (statuts ? ' — ' + statuts : '')
+      + '. Une objection « réfutée » est une objection à laquelle la réponse tient sous sa '
+      + 'forme forte ; une objection « concédée » a changé le texte, le chiffre ou la mesure.'
+      + (fous.length ? ' <span class="hors">Garde-fous en défaut : '
+          + echapperTexte(fous.join(', ')) + '</span>' : '');
+  }
+  zone.innerHTML = lignes.map(carteObjection).join('')
+    || '<div class="carte">Aucune objection ne correspond à ce filtre.</div>';
+  if (zoneModeles && donnees.contre_modeles){
+    zoneModeles.innerHTML = donnees.contre_modeles.map(carteContreModele).join('');
+  }
+}
+async function chargerObjections(filtre){
+  const zone = document.getElementById('objections-corps');
+  if (!zone) return;
+  zone.innerHTML = '<div class="carte">Chargement des objections…</div>';
+  try {
+    const reponse = await fetch('/api/objections' + (filtre || ''));
+    const donnees = await reponse.json();
+    if (donnees.error) throw new Error(donnees.error);
+    renderObjections(donnees);
+  } catch (erreur){
+    zone.innerHTML = '<div class="carte">Le registre des objections n\'a pas répondu : '
+      + echapperTexte(erreur.message) + '. La page affiche cette absence plutôt que de '
+      + 'rédiger les objections elle-même.</div>';
+  }
+}
+
 (async function demarrer(){
   await chargerCatalogue();
   initialiserInfobulles();
@@ -3676,6 +3832,9 @@ async function chargerAudit(){
   renderScenarios();
   await chargerContexte(false);
   chargerAudit();
+  // Le registre des objections se charge comme l'audit : une requête, aucun
+  // calcul, et la page reste lisible si le serveur ne répond pas.
+  chargerObjections('');
   // Le lexique se charge en tâche de fond : les termes soulignés apparaissent
   // dès la première simulation, sans rien retarder.
   chargerLexique();

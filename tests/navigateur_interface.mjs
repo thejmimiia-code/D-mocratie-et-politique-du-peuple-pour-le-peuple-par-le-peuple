@@ -319,6 +319,39 @@ noter("la liste des réglages déplacés rappelle ce que chacun atteint",
       && contenu("reglages-corps").includes("reglage_censure_assiette")
       && contenu("reglages-corps").includes("valeur retenue"),
       contenu("reglages-corps").slice(0, 240));
+/* Le registre de la contradiction : la page ne rédige rien, elle met en forme
+   `GET /api/objections`. On vérifie qu'une objection complète est rendue — la
+   meilleure version, la concession, le maintien, la falsification —, que la
+   marge de portée vient bien du serveur, et que les contre-modèles suivent. */
+const corpsObjections = contenu("objections-corps");
+noter("rend le registre des objections",
+      corpsObjections.includes("La meilleure version de l'objection")
+      && corpsObjections.includes("Ce que nous concédons")
+      && corpsObjections.includes("Ce que nous maintenons")
+      && corpsObjections.includes("Ce qui nous ferait changer d'avis"),
+      `${corpsObjections.length} caractères`);
+noter("chaque objection affiche son statut et son numéro",
+      (corpsObjections.match(/class="badge-statut /g) || []).length === 24
+      && corpsObjections.includes("n° 4"),
+      `${(corpsObjections.match(/class="badge-statut /g) || []).length} badges`);
+noter("la portée du levier et la marge du dossier viennent du serveur",
+      corpsObjections.includes("gage du dossier")
+      && corpsObjections.includes("Md€/an")
+      && corpsObjections.includes("lutte_fraude_fiscale_ia"),
+      corpsObjections.slice(0, 200));
+noter("une objection cite ses sources internes et externes",
+      corpsObjections.includes("docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md")
+      && corpsObjections.includes("Externe"),
+      "sources absentes du rendu");
+noter("les quatre contre-modèles sont rendus avec l'avis du simulateur",
+      contenu("contre-modeles-corps").includes("La thèse")
+      && contenu("contre-modeles-corps").includes("Ce que le simulateur en dit")
+      && (contenu("contre-modeles-corps").match(/class="contre-modele"/g) || []).length === 4,
+      `${(contenu("contre-modeles-corps").match(/class="contre-modele"/g) || []).length} contre-modèles`);
+noter("le résumé du registre annonce les statuts",
+      contenu("contradiction-resume").includes("objection(s) affichée(s)")
+      && contenu("contradiction-resume").includes("réfutée"),
+      contenu("contradiction-resume").slice(0, 160));
 noter("affiche les 11 scénarios", (elements.get("scenario-grid")?.children.length || 0) === 11,
       `${elements.get("scenario-grid")?.children.length} cartes`);
 noter("affiche les métriques du contexte instant T", contenu("grid-metrics").includes("PIB nominal"));

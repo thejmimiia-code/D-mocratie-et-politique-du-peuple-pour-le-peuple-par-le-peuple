@@ -32,6 +32,10 @@ Deux niveaux de service cohabitent :
                                  `?coherence=1`, sinon synthèse) ;
       - `GET  /api/catalogue`    : familles, leviers, préréglages et valeurs par défaut ;
       - `GET  /api/presets`      : les préréglages doctrinaux ;
+      - `GET  /api/objections`   : le registre de la contradiction (`?famille=mesure`,
+                                 `?statut=en_cours`, `?levier=…`, `?chercher=…`) : objections
+                                 fortes, concessions, ce qui ferait changer d'avis, et les
+                                 contre-modèles ;
       - `GET  /api/lexique`      : le lexique pédagogique (`?terme=…`, `?chercher=…`) ;
       - `GET  /api/marches`      : fiches marchés publics ;
       - `GET  /api/garde_fous`   : les garde-fous et leurs seuils ;
@@ -762,6 +766,48 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         elif chemin == "/api/nuances":
             self._repondre_nuances(query)
+
+        elif chemin == "/api/objections":
+            # Le registre de la contradiction : objections fortes, concessions, ce qui
+            # ferait changer d'avis, et les quatre contre-modèles. Les filtres ne
+            # recalculent rien : ils trient le registre, et les comptes suivent.
+            from . import contradiction as desaccords
+
+            famille = query.get("famille", [""])[0]
+            statut = query.get("statut", [""])[0]
+            levier = query.get("levier", [""])[0]
+            recherche = query.get("chercher", [""])[0]
+            if famille and famille not in desaccords.FAMILLES:
+                self._send_json({"error": f"famille inconnue : {famille}",
+                                 "familles": desaccords.FAMILLES}, status=404)
+                return
+            if statut and statut not in desaccords.STATUTS:
+                self._send_json({"error": f"statut inconnu : {statut}",
+                                 "statuts": desaccords.STATUTS}, status=404)
+                return
+            if not any((famille, statut, levier, recherche)):
+                self._send_json(desaccords.synthese_pour_api())
+                return
+            try:
+                lignes = desaccords.filtrer(famille=famille or None, statut=statut or None,
+                                            levier=levier or None, chercher=recherche or None)
+                self._send_json({
+                    "filtres": {"famille": famille, "statut": statut, "levier": levier,
+                                "chercher": recherche},
+                    "total": len(lignes),
+                    "objections": [desaccords.ligne_pour_api(o) for o in lignes],
+                    "statuts": desaccords.STATUTS,
+                    "familles": desaccords.FAMILLES,
+                    "comptes": {
+                        "par_statut": {cle: sum(1 for o in lignes if o.statut == cle)
+                                       for cle in desaccords.STATUTS},
+                        "par_famille": {cle: sum(1 for o in lignes if o.famille == cle)
+                                        for cle in desaccords.FAMILLES},
+                    },
+                })
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
         elif chemin == "/api/presets":
             self._send_json({"presets": PRESETS})
 

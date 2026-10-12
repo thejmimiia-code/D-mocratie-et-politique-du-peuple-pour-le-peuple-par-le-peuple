@@ -51,6 +51,7 @@ ROUTES: Tuple[str, ...] = (
     "contrepouvoirs",
     "instances",
     "dynamiques",
+    "objections",
     "nuances",
 )
 

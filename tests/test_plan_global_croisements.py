@@ -319,7 +319,8 @@ class TestFraicheurDesDocuments(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.scripts = ["outils/generer-doc-nuances.py", "outils/generer-page-verification.py",
-                       "outils/generer-index-simulateur.py", "outils/generer-fonctions-api.py"]
+                       "outils/generer-index-simulateur.py", "outils/generer-fonctions-api.py",
+                       "outils/generer-objections.py", "outils/generer-registre-engagements.py"]
 
     def test_les_generateurs_ne_prennent_pas_de_retard(self):
         for script in self.scripts:

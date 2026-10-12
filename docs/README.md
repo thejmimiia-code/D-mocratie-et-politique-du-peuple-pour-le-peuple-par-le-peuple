@@ -66,6 +66,9 @@ le vérifie à chaque exécution de la suite).
 | [`RD_VALIDATION_TEMPORELLE.md`](RD_VALIDATION_TEMPORELLE.md) | R&D v3 : registre versionné d'observations et évaluation chronologique (le modèle rejoué sur l'historique). |
 | [`CONFLITS_RISQUES_SYSTEMIQUES_2026.md`](CONFLITS_RISQUES_SYSTEMIQUES_2026.md) | Conflits actifs, interdépendances et risque de guerre systémique : la matière première des strates 4 et 5. |
 | [`18_PLAN_GLOBAL_BRAINSTORMING_ET_SANS_TROU.md`](18_PLAN_GLOBAL_BRAINSTORMING_ET_SANS_TROU.md) | **Plan global, brainstorming de chaque possibilité et garantie « zéro trou »** : la méthode, la liste des croisements couverts, les invariants verrouillés par tests et les failles encore ouvertes. |
+| [`20_CONTRE_MODELES.md`](20_CONTRE_MODELES.md) | **Contre-modèles** : les quatre thèses alternatives cohérentes (État minimal et revenu universel, mur de la réalité, réalisme d'adoption, orthodoxie budgétaire) auxquelles le plan se mesure — ce que le simulateur en dit, ce qui leur est concédé, ce qui reste ouvert. |
+| [`21_OBJECTIONS_OUVERTES.md`](21_OBJECTIONS_OUVERTES.md) | **Registre des objections** : les 24 objections reçues (mesures et modèle) avec numéro, statut, concession, maintien, fait de réfutation et suivi — et la façon d'en déposer une. |
+| [`22_REGISTRE_ENGAGEMENTS.md`](22_REGISTRE_ENGAGEMENTS.md) | **Registre des engagements** : la trajectoire simulée année par année, l'indicateur qui sera regardé, la source extérieure qui le vérifiera, le seuil de réussite et le seuil d'échec — plus la réserve de portée des leviers. |
 
 ---
 
