@@ -15,9 +15,9 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   les mécanismes du moteur et les leviers réels du catalogue. `couverture()` garantit
   l'exhaustivité, `article()` accepte « art. 49 », « 49 al. 3 » et « 49.3 ».
 - La fabrique filtre les leviers sur `parametres.LEVIERS` et bascule tout nom inconnu dans
-  un champ `pistes` : une fiche ne peut plus promettre un levier qui n'existe pas (77 pistes
+  un champ `pistes` : une fiche ne peut plus promettre un levier qui n'existe pas (101 occurrences de pistes distinctes
   aujourd'hui, aucune d'entre elles chiffrée dans le simulateur).
-- `simulateur/gouvernance_contrepouvoir.py` : 31 manœuvres et 39 verrous — signatures,
+- `simulateur/gouvernance_contrepouvoir.py` : 31 manœuvres et 38 verrous chiffrés — signatures,
   majorités, délais, plafonds — avec `ETAT_ASSEMBLEES` daté du 12 octobre 2026
   (574 sièges pourvus à l'Assemblée, 289 pour la majorité absolue, 175 au Sénat, 555 au
   Congrès sur 925 suffrages exprimés). `coherence_avec_les_fiches()` refuse qu'un mécanisme

@@ -2,7 +2,7 @@
 
 Deux modules ajoutent au simulateur la couche de droit constitutionnel qui lui
 manquait : `simulateur/constitution_analysee.py` (les 109 articles en vigueur) et
-`simulateur/gouvernance_contrepouvoir.py` (les 31 manoeuvres et leurs 39 seuils).
+`simulateur/gouvernance_contrepouvoir.py` (31 manœuvres et 38 seuils chiffrés).
 
 ## 1. Ce qui a ete construit
 
@@ -11,7 +11,7 @@ manquait : `simulateur/constitution_analysee.py` (les 109 articles en vigueur) e
 | `ARTICLES` | 109 fiches, une par article en vigueur du texte officiel (Titres I → XVI, « bis » et numérotations arabes comprises) |
 | `ABROGES` | 10 entrées (78 à 86, 90) avec l'article qui les abroge et une note — conservées pour l'histoire, jamais pour la simulation |
 | `couverture()` | contrôle d'exhaustivité : `complet` est `True` seulement si chaque numéro attendu a sa fiche et aucune fiche ne porte un numéro inattendu |
-| `MECANISMES` / `VERROUS` | 31 manœuvres (censure, 49.3, RIP, vote conforme, 44 al. 3, 47 al. 3, Congrès, Haute Cour, 16, 12, 88-6…) et 39 verrous chiffrés |
+| `MECANISMES` / `VERROUS` | 31 manœuvres (censure, 49.3, RIP, vote conforme, 44 al. 3, 47 al. 3, Congrès, Haute Cour, 16, 12, 88-6…) et 38 verrous chiffrés |
 | `REGISTRE_LEGAL` | porté à 189 identifiants : les 37 entrées constitutionnelles préexistantes sont **inchangées**, 112 `CONST_*` ont été greffées |
 
 Chaque fiche porte : `regles` (les seuils et délais), `opportunites`, `contraintes`,
@@ -67,7 +67,8 @@ documentation.
 ## 4. Ou sont les nombres, et pourquoi ils ne sont pas des leviers
 
 `parametres.LEVIERS` compte 101 leviers et 14 familles, et ce compte est tenu par les
-tests : aucun levier n'a été ajouté. Les 77 « pistes » des fiches sont la liste noire
+tests : aucun levier n'a été ajouté. Les 77 noms de « pistes » (101 occurrences, réparties
+sur 80 fiches) des fiches sont la liste noire
 du modèle — des objets de réforme que la Constitution permet mais que le simulateur ne
 chiffre pas encore. Les promouvoir suppose d'ajouter la dépense, le rendement ou le
 paramètre manquant, puis de recalibrer les comptes 101/14.
