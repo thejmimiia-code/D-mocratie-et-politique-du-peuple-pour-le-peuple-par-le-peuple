@@ -190,18 +190,26 @@ globalThis.fetch = async (url, options = {}) => {
 };
 
 /* ── Extraction et exécution du script de la page ───────────────────────── */
-const extrait = page.match(/<script>([\s\S]*?)<\/script>/);
-if (!extrait) {
+// La page porte plusieurs blocs <script> (un micro-séquenceur de mesure
+// d'audience, puis le noyau de l'application) : viser le bloc qui démarre
+// l'application, pas le premier venu — sinon le harnais n'exécute que trois
+// lignes et accuse la page d'être vide.
+const blocs = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
+const brut =
+  blocs.find((b) => b.includes("async function demarrer(")) ??
+  blocs[blocs.length - 1] ??
+  null;
+if (brut === null) {
   console.error("aucun <script> trouvé dans la page");
   process.exit(2);
 }
 // La fonction de démarrage est déclarée dans une IIFE anonyme : on capte sa
 // promesse pour attendre la fin du chargement initial avant d'agir.
-const source = extrait[1].replace(
+const source = brut.replace(
   /\(async function demarrer\(\)\{/,
   "globalThis.__demarrage = (async function demarrer(){"
 );
-if (source === extrait[1]) {
+if (source === brut) {
   console.error("fonction demarrer() introuvable : la page n'est pas exécutable");
   process.exit(2);
 }
