@@ -108,7 +108,11 @@ jobs:
             curl -sf http://127.0.0.1:8000/api/societe > /dev/null && break
             sleep 1
           done
-          SIMULATEUR_BASE_URL=http://127.0.0.1:8000 python3 -m unittest tests.test_societe tests.test_histoire -v
+          SIMULATEUR_BASE_URL=http://127.0.0.1:8000 python3 -m unittest tests.test_societe tests.test_histoire -v 2>&1 | tee /tmp/api-http.log
+          # Un saut voudrait dire que le serveur n'a pas répondu : ces onze cas ne se sautent
+          # plus, et un serveur muet doit faire échouer l'étape plutôt que la rendre indifférente.
+          ! grep -q "skipped" /tmp/api-http.log
+          grep -q "^OK" /tmp/api-http.log
           pkill -f simulateur.web_server || true
 
       - name: Verify R&D import and chronological validation
