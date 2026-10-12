@@ -23,7 +23,6 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 DEPOT = "thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple"
-DEPOT_COURT = "thejmimiia-code/D-mocratie-et-politique-du-peuple"
 
 #: Description du dépôt (limite GitHub : 350 caractères).
 DESCRIPTION = (

@@ -43,7 +43,9 @@ jobs:
           python-version: "3.14"
 
       - name: Install ruff
-        run: pip install ruff
+        # Version épinglée : une nouvelle règle de ruff ne doit pas transformer une
+        # poussée en échec de CI sans qu'un humain l'ait décidé.
+        run: pip install ruff==0.17.0
 
       - name: Lint with ruff
         run: ruff check .
@@ -98,6 +100,16 @@ jobs:
           serveur.shutdown()
           print("Point d'entrée WSGI OK")
           PY
+
+      - name: Verify the console endpoints (11 tests that skip without a server)
+        run: |
+          python3 -m simulateur.web_server 8000 > /tmp/console.log 2>&1 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:8000/api/societe > /dev/null && break
+            sleep 1
+          done
+          SIMULATEUR_BASE_URL=http://127.0.0.1:8000 python3 -m unittest tests.test_societe tests.test_histoire -v
+          pkill -f simulateur.web_server || true
 
       - name: Verify R&D import and chronological validation
         run: |

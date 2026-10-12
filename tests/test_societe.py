@@ -5,6 +5,7 @@ Vérifie la structure, les séries, les comparaisons et les endpoints HTTP.
 """
 
 import json
+import os
 import unittest
 import urllib.request
 
@@ -169,7 +170,8 @@ class TestDomainesSpecifiques(unittest.TestCase):
 class TestHttpSociete(unittest.TestCase):
     """Tests d'intégration des endpoints HTTP."""
 
-    BASE = "http://127.0.0.1:8000"
+    #: Le serveur à interroger : celui du poste, ou celui que la CI démarre.
+    BASE = os.environ.get("SIMULATEUR_BASE_URL", "http://127.0.0.1:8000")
 
     def _get_json(self, path: str):
         try:

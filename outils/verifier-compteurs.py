@@ -189,6 +189,14 @@ FICHIERS_DE_GARDE: dict[str, str] = {
                                        "question des compteurs, et cite les anciens pour mémoire",
 }
 
+#: Constats d'audit : ils citent les compteurs périmés comme pièces à conviction — c'est
+#: leur travail, et les vérifier reviendrait à leur interdire de dire ce qu'ils ont trouvé.
+CONSTATS_D_AUDIT: dict[str, str] = {
+    "19_PLAN_DE_RENFORCEMENT_ET_LACUNES.md": "constat d'audit daté du 12 octobre 2026 : il cite les "
+                                             "compteurs périmés pour montrer ce qui a été corrigé, "
+                                             "et les chiffres du jour lui servent de colonne « réel »",
+}
+
 #: Documents datés : ils gardent les chiffres de leur époque, et la raison est écrite.
 #: Le contrôle refuse une exemption sans raison assez longue pour être une raison.
 DOCUMENTS_DATES: dict[str, str] = {
@@ -227,7 +235,7 @@ def reference() -> dict[str, int]:
 
 def _exempte(nom: str) -> bool:
     """Le fichier est-il un document daté, ou un garde-fou, de la liste d'exemptions ?"""
-    for motif in (*DOCUMENTS_DATES, *FICHIERS_DE_GARDE):
+    for motif in (*DOCUMENTS_DATES, *FICHIERS_DE_GARDE, *CONSTATS_D_AUDIT):
         if motif.endswith("*"):
             if nom.startswith(motif[:-1]):
                 return True
@@ -284,7 +292,7 @@ def verifier(racine: Path | str = RACINE) -> list[str]:
 
 def _raisons_des_exemptions() -> list[str]:
     """Un garde-fou sur les exemptions : pas de raison courte, pas d'exemption creuse."""
-    exemptions = {**DOCUMENTS_DATES, **FICHIERS_DE_GARDE}
+    exemptions = {**DOCUMENTS_DATES, **FICHIERS_DE_GARDE, **CONSTATS_D_AUDIT}
     noms_presents = {chemin.name for chemin in RACINE.rglob("*") if chemin.is_file()}
     soucis = [f"{nom} : exemption sans raison écrite" for nom, raison in exemptions.items()
               if len(raison) < 40]
@@ -315,6 +323,9 @@ def main() -> int:
             print(f"  {interdit.gabarit:34s} {interdit.raison}")
         print("\nFichiers de garde-fou, exemptés avec leur raison :")
         for nom, raison in FICHIERS_DE_GARDE.items():
+            print(f"  {nom} — {raison}")
+        print("\nConstats d'audit, exemptés avec leur raison :")
+        for nom, raison in CONSTATS_D_AUDIT.items():
             print(f"  {nom} — {raison}")
         print("\nDocuments datés, exemptés avec leur raison :")
         for nom, raison in DOCUMENTS_DATES.items():

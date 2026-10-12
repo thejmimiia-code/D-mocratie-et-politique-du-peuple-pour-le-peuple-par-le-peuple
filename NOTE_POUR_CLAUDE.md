@@ -11,7 +11,8 @@
 
 ```bash
 # 1. Es-tu administrateur de ce dépôt ? (sans « admin: true », passe au § 4)
-gh api repos/thejmimiia-code/D-mocratie-et-politique-du-peuple \
+#    Le nom complet est en trois morceaux ; le raccourci en deux morceaux n'existe pas.
+gh api repos/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple \
   --jq '.permissions'
 
 # 2. Lecture de l'état actuel + bloc à copier
@@ -21,9 +22,15 @@ python3 outils/details_depot.py
 python3 outils/details_depot.py --appliquer
 
 # 4. Vérification
-gh api repos/thejmimiia-code/D-mocratie-et-politique-du-peuple \
+gh api repos/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple \
   --jq '{description, homepage, topics}'
 ```
+
+> **Mesuré le 12 octobre 2026.** `.permissions` peut répondre `"admin": true` et l'API
+> refuser quand même la mise à jour (403 `Resource not accessible by integration`) :
+> c'est le jeton d'intégration qui bride, pas tes droits. Dans ce cas, la seule voie est
+> le § 4 ci-dessous — coller le bloc dans *Settings → General*. L'outil est fait pour ça :
+> il affiche le bloc **et** l'erreur, il ne fait pas semblant d'avoir réussi.
 
 Puis **une seule action manuelle**, impossible par API : téléverser
 `docs/apercu_social.png` dans *Social preview* — à faire faire par l'utilisateur
@@ -161,6 +168,9 @@ un fichier (comme au § 2), jamais à se connecter.
 - [ ] `ruff check .` reste vert
 - [ ] la section « Réglages du dépôt » de `docs/REPOSITORY_DETAILS.md` est à jour,
       et cette note peut être supprimée ou marquée comme faite
+- [ ] pour le reste de l'état du dépôt (CI, compteurs, tests jamais exécutés, chantiers
+      ouverts), voir `docs/19_PLAN_DE_RENFORCEMENT_ET_LACUNES.md` : l'audit du
+      12 octobre 2026 y est rejouable commande par commande
 
 ---
 
