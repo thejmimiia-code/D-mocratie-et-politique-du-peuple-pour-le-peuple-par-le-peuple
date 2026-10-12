@@ -28,11 +28,17 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 - `simulateur/verification.py` n'importe plus le module constitutionnel au chargement
   (cycle d'imports évité) et résout les statuts à la demande, en donnant la priorité aux
   entrées manuelles.
-- Deux fichiers de tests (45 cas) recalculent les seuils à la main : suite complète à
-  828 tests, `OK (skipped=11)`. Les 7 échecs du harnais navigateur ont été corrigés au
+- Deux fichiers de tests (45 cas) recalculent les seuils à la main, 8 cas testent les routes :
+  suite complète à 836 tests, `OK (skipped=11)`. Les 7 échecs du harnais navigateur ont été corrigés au
   passage (`tests/navigateur_interface.mjs` extrayait le mauvais bloc `<script>`).
+- Deux routes JSON : `GET /api/constitution` (`?article=`, `?bloc=`, `?fonction=`,
+  `?chercher=`) et `GET /api/contrepouvoirs` (`?mecanisme=`, `?assemblee=`, `?chercher=`),
+  avec 404 explicites et liste des noms connus. `outils/generer-fonctions-api.py` a été
+  relancé (18 fonctions dans `api/`) et accepte maintenant les noms de route avec
+  underscore : `/api/garde_fous`, déclaré par le moteur mais jamais exposé, l'est du
+  même coup. Aucune section d'interface ajoutée.
 - `docs/15_CONSTITUTION_FICHEE_ET_CONTRE_POUVOIRS.md` : ce qui est couvert, ce qui ne
-  l'est pas, et comment le vérifier. Aucune route HTTP ni page d'interface ajoutée.
+  l'est pas, et comment le vérifier.
 
 ### Modifié — Une seule fonction Vercel pour les routes du moteur (`api/`)
 

@@ -46,6 +46,9 @@ ROUTES: Tuple[str, ...] = (
     "conseil",
     "lexique",
     "marches",
+    "garde_fous",
+    "constitution",
+    "contrepouvoirs",
 )
 
 GABARIT = '''"""Fonction Vercel — route {route} du simulateur.
@@ -72,7 +75,7 @@ class handler(FonctionAPI):
 def routes_du_moteur() -> Set[str]:
     """Routes réellement servies, lues dans le source du moteur."""
     source = (RACINE / "simulateur" / "dashboard.py").read_text(encoding="utf-8")
-    return set(re.findall(r'chemin == "(/api/[a-z]+)"', source))
+    return set(re.findall(r'chemin == "(/api/[a-z_]+)"', source))
 
 
 def main() -> int:

@@ -80,7 +80,7 @@ peut donc plus promettre un levier qui n'existe pas.
 ## 5. Verification
 
 ```bash
-python3 -m unittest discover -s tests -p "test_*.py"   # 828 tests, OK (skipped=11)
+python3 -m unittest discover -s tests -p "test_*.py"   # 836 tests, OK (skipped=11)
 python3 -c "from simulateur import constitution_analysee as ca; print(ca.resume_console())"
 python3 -c "from simulateur import gouvernance_contrepouvoir as gc; print(gc.resume_console())"
 python3 outils/generer-page-verification.py             # regenere docs/VERIFICATION_DONNEES.md
@@ -91,12 +91,25 @@ recalculent à la main les seuils (58 signatures, 289 voix, 555 au Congrès, 385
 pour la Haute Cour, 40/15/70 jours budgétaires, 15 jours + majorité absolue pour le
 vote conforme) et refusent toute fiche ou tout mécanisme décoratif.
 
-## 6. Limites assumees
+## 6. Exposition HTTP
 
-- **Ni route HTTP ni page d'interface** : les deux modules sont importables et testés,
-  l'exposition publique reste à faire (`dashboard.py`, `pont_api.py`, puis
-  `outils/generer-fonctions-api.py` et `outils/generer-index-simulateur.py --verifier`,
-  qui sont obligatoires dès qu'une route ou une section est ajoutée).
+Deux routes JSON du moteur servent ces modules, et donc `api/` après régénération :
+
+    GET /api/constitution          ?article=49 · ?bloc=XV · ?fonction=… · ?chercher=…
+    GET /api/contrepouvoirs        ?mecanisme=motion_censure · ?assemblee=assemblee_nationale
+                                   · ?chercher=… ; sans paramètre, la synthèse complète
+
+Un article sans fiche répond 404 avec la liste des numéros connus ; un mécanisme
+inconnu répond 404 avec la liste des manœuvres déclarées. La régénération
+(`python3 outils/generer-fonctions-api.py`) a été relancée — `--verifier` sort 0. Le
+générateur accepte désormais les noms de routes avec underscore, ce qui a exposé
+`/api/garde_fous`, déclaré par le moteur mais jamais servi sur Vercel.
+
+## 7. Limites assumees
+
+- **Pas de section d'interface** : les routes et les modules font foi, la page
+  `simulateur/interface.py` reste à équiper (avec
+  `outils/generer-index-simulateur.py --verifier` à relancer après coup).
 - **Aucune composition d'assemblée dans un module `partis_et_chambres`** : elle vit dans
   `ETAT_ASSEMBLEES` et `arithmetique_assemblee`, pour que la date d'observation soit
   impossible à oublier.

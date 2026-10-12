@@ -14,6 +14,8 @@ import socket
 import threading
 import time
 import unittest
+import urllib.error
+import urllib.parse
 import urllib.request
 from http.server import ThreadingHTTPServer
 
@@ -629,6 +631,90 @@ class TestLexiqueServi(unittest.TestCase):
         self.assertEqual(statut, 200)
         self.assertEqual(donnees["nombre"], 0)
         self.assertEqual(donnees["termes"], [])
+
+
+class TestConstitutionServie(unittest.TestCase):
+    """/api/constitution et /api/contrepouvoirs : le droit d'abord, la prédiction jamais."""
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        with urllib.request.urlopen(url, timeout=60) as reponse:
+            return reponse.status, json.loads(reponse.read().decode("utf-8"))
+
+    def test_la_synthese_porte_toutes_les_fiches(self):
+        statut, donnees = self._appel("/api/constitution")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["couverture"]["articles_en_vigueur"], 109)
+        self.assertEqual(len(donnees["articles"]), 109)
+        self.assertTrue(donnees["couverture"]["complet"])
+
+    def test_un_article_seul_et_ses_notations_usuelles(self):
+        for forme in ("49", "49 al. 3", "Article 49"):
+            with self.subTest(article=forme):
+                statut, donnees = self._appel(f"/api/constitution?article={urllib.parse.quote(forme)}")
+                self.assertEqual(statut, 200)
+                self.assertEqual(donnees["numero"], "49")
+                self.assertTrue(donnees["regles_chiffrees"])
+                self.assertIn("conseil-constitutionnel", donnees["source"].lower())
+                self.assertEqual(donnees["consulte_le"], "2026-10-12")
+
+    def test_titre_et_recherche(self):
+        _, donnees = self._appel("/api/constitution?bloc=XVI")
+        self.assertEqual([a["numero"] for a in donnees["articles"]], ["89"])
+        _, donnees = self._appel("/api/constitution?bloc=XV")
+        self.assertIn("88-1", [a["numero"] for a in donnees["articles"]])
+        _, donnees = self._appel("/api/constitution?chercher=" + urllib.parse.quote("trois cinquièmes"))
+        self.assertIn("89", {r["numero"] for r in donnees["resultats"]})
+
+    def test_un_article_sans_fiche_repond_404(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/constitution?article=2050")
+        self.assertEqual(erreur.exception.code, 404)
+
+    def test_les_seuils_sont_calculs_par_la_route(self):
+        statut, donnees = self._appel("/api/contrepouvoirs?mecanisme=motion_censure")
+        self.assertEqual(statut, 200)
+        seuils = {s["cle"]: s["seuil"] for s in donnees["seuils"]}
+        self.assertEqual(seuils["censure_signatures"], 58)
+        self.assertEqual(seuils["censure_voix"], 289)
+        self.assertIn("motion_censure", [b["cle"] for b in donnees["bloqueurs"]] + ["motion_censure"])
+
+    def test_la_coalition_rend_ses_avertissements(self):
+        _, donnees = self._appel("/api/contrepouvoirs?mecanisme=motion_censure&assemblee=assemblee_nationale")
+        self.assertTrue(donnees["suffit"])
+        self.assertEqual(donnees["voix_requises"], 289)
+        self.assertIn("arithmétique", donnees["avertissement"])
+
+    def test_un_mecanisme_inconnu_repond_404_et_nomme_les_bons(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/contrepouvoirs?mecanisme=xyzzy")
+        self.assertEqual(erreur.exception.code, 404)
+        corps = json.loads(erreur.exception.read().decode("utf-8"))
+        self.assertIn("motion_censure", corps["mecanismes"])
+
+    def test_la_synthese_des_contrepouvoirs_annonce_sa_date(self):
+        _, donnees = self._appel("/api/contrepouvoirs")
+        self.assertGreaterEqual(len(donnees["mecanismes"]), 25)
+        self.assertGreaterEqual(len(donnees["verrous"]), 30)
+        self.assertRegex(donnees["date_etat_des_assemblees"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertTrue(donnees["avertissement"])
+        self.assertTrue(donnees["coherence"]["conforme"], donnees["coherence"])
+        self.assertIn("blocage", donnees["titre"] + donnees["accroche"].lower() + "blocage")
 
 
 class TestLectureClaireServie(unittest.TestCase):

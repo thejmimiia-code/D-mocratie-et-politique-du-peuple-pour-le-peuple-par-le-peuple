@@ -17,6 +17,10 @@ Deux niveaux de service cohabitent :
                                  d'interaction, répercussions mesurées, lecture
                                  opportunités / désagréments) ;
       - `GET  /api/bulle`      : bulle d'un seul levier (`?levier=…`).
+      - `GET  /api/constitution` : Constitution ficheée article par article (`?article=49`,
+                                 `?bloc=XV`, `?fonction=…`, `?chercher=…`, sinon synthèse) ;
+      - `GET  /api/contrepouvoirs` : seuils, majorités et blocages (`?mecanisme=…`,
+                                 `?assemblee=…`, `?chercher=…`, sinon synthèse).
 
   * **Scénarios historiques** du dépôt, conservés à l'identique pour la
     compatibilité (scripts, CI, utilisateurs) :
@@ -480,6 +484,75 @@ class DashboardHandler(BaseHTTPRequestHandler):
             # employé par la page, défini en français ordinaire, cherchable.
             recherche = query.get("q", [""])[0]
             self._send_json(lexique_public(recherche or None))
+
+        elif chemin == "/api/constitution":
+            # Constitution ficheée : l'article demandé, un titre, une fonction, une
+            # recherche en texte intégral — ou la synthèse complète. Les seuils viennent
+            # du texte officiel, jamais d'un souvenir : la source voyage avec la fiche.
+            from . import constitution_analysee as constitution
+
+            voulu = query.get("article", [""])[0]
+            titre = query.get("bloc", [""])[0]
+            fonction = query.get("fonction", [""])[0]
+            recherche = query.get("chercher", [""])[0]
+            try:
+                if voulu:
+                    fiche = constitution.article(voulu)
+                    if fiche is None:
+                        self._send_json({
+                            "error": f"aucune fiche pour l'article {voulu}",
+                            "articles_connus": list(constitution.ORDRE_ARTICLES),
+                        }, status=404)
+                        return
+                    self._send_json(fiche.en_dict())
+                elif titre:
+                    self._send_json({"titre": titre,
+                                     "articles": [a.en_dict() for a in constitution.par_bloc(titre)]})
+                elif fonction:
+                    self._send_json({"fonction": fonction,
+                                     "articles": [a.en_dict() for a in constitution.par_fonction(fonction)]})
+                elif recherche:
+                    self._send_json({"recherche": recherche,
+                                     "resultats": constitution.rechercher(recherche)})
+                else:
+                    self._send_json(constitution.synthese_pour_api())
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/contrepouvoirs":
+            # Arithmétique des contre-pouvoirs : combien de voix, en combien de jours,
+            # et qui peut bloquer quoi. Les effectifs constatés voyagent avec la réponse.
+            from . import gouvernance_contrepouvoir as contre_pouvoirs
+
+            mecanisme = query.get("mecanisme", [""])[0]
+            assemblee = query.get("assemblee", [""])[0]
+            recherche = query.get("chercher", [""])[0]
+            try:
+                if mecanisme and assemblee:
+                    self._send_json(contre_pouvoirs.coalition_necessaire(mecanisme, assemblee))
+                elif mecanisme:
+                    if mecanisme not in contre_pouvoirs.MECANISMES:
+                        self._send_json({
+                            "error": f"mécanisme inconnu : {mecanisme}",
+                            "mecanismes": sorted(contre_pouvoirs.MECANISMES),
+                        }, status=404)
+                        return
+                    self._send_json({
+                        "mecanisme": mecanisme,
+                        "fiche": contre_pouvoirs.MECANISMES[mecanisme].en_dict(),
+                        "seuils": contre_pouvoirs.seuils_pour(mecanisme),
+                        "bloqueurs": contre_pouvoirs.blocages_possibles(mecanisme),
+                        "reactions": contre_pouvoirs.chaine_de_reaction(mecanisme),
+                    })
+                elif assemblee:
+                    self._send_json(contre_pouvoirs.arithmetique_assemblee(assemblee))
+                elif recherche:
+                    self._send_json({"recherche": recherche,
+                                     "resultats": contre_pouvoirs.rechercher(recherche)})
+                else:
+                    self._send_json(contre_pouvoirs.synthese_pour_api())
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
 
         elif chemin == "/api/presets":
             self._send_json({"presets": PRESETS})
