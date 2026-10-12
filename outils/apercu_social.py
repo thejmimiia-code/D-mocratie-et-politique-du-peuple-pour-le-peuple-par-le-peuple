@@ -18,11 +18,14 @@ from __future__ import annotations
 from typing import Optional, Tuple
 
 import argparse
+import sys
 from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageFont
 
 RACINE = Path(__file__).resolve().parent.parent
+if str(RACINE) not in sys.path:      # le script se lance depuis n'importe où
+    sys.path.insert(0, str(RACINE))
 LARGEUR, HAUTEUR = 1280, 640
 
 # ── Palette du simulateur (identique à `simulateur/interface.py`) ───────────
@@ -107,10 +110,15 @@ def construire() -> Image.Image:
     centrer(dessin, "Démocratie et politique : du peuple, pour le peuple, par le peuple",
             136, police_sous_titre, TEXTE_DIM)
 
-    # Les quatre chiffres clés, en cartes.
+    # Les quatre chiffres clés, en cartes. Ils sont lus dans le catalogue : une
+    # vignette qui annonce un nombre faux est une promesse non tenue, et le
+    # catalogue bouge à chaque nappe de leviers ajoutée.
+    from simulateur.domaines import DOMAINES
+    from simulateur.parametres import LEVIERS
+
     chiffres = [
-        ("101", "leviers croisables", ACCENT),
-        ("20", "domaines notés 0-100", VERT),
+        (str(len(LEVIERS)), "leviers croisables", ACCENT),
+        (str(len(DOMAINES)), "domaines notés 0-100", VERT),
         ("38", "indicateurs publics", AMBRE),
         ("5", "échelons en cascade", VIOLET),
     ]

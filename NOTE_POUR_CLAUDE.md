@@ -46,7 +46,7 @@ faut le rendre fidèle à ce que le dépôt fait aujourd'hui.
 
 Pourquoi c'est important : la description annonce **4 échelons** alors que le
 moteur en compte **5** (la strate géopolitique a été ajoutée), et elle ne dit
-rien des 101 leviers, des 20 domaines d'impact, des données publiques en direct
+rien des 156 leviers, des 20 domaines d'impact, des données publiques en direct
 ni de la console de veille — c'est-à-dire de tout ce qui fait la valeur du
 dépôt. Aucun sujet n'étant défini, le dépôt n'apparaît dans aucune recherche
 thématique, et l'aperçu social est vide au partage d'un lien.
@@ -58,7 +58,7 @@ thématique, et l'aperçu social est vide au partage d'un lien.
 ### Description — 270 / 350 caractères
 
 ```
-Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 101 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
+Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 156 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
 ```
 
 ### Website
@@ -171,13 +171,13 @@ remplacé par un **simulateur paramétrable**.
 
 | Brique | Contenu |
 |---|---|
-| `simulateur/parametres.py` | 101 leviers en 14 familles, 14 préréglages doctrinaux, `normaliser()` |
+| `simulateur/parametres.py` | 156 leviers en 14 familles (dont 55 réglages institutionnels `reglage_*`), 16 préréglages doctrinaux, `normaliser()` |
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs (formule + source), médiateurs annuels |
 | `simulateur/moteur_parametrique.py` | références, convergence, scores 0-100, matrice d'impacts croisés, horizon 1-10 ans et ledger P21 |
 | `simulateur/donnees_live.py` | 38 indicateurs publics (Eurostat, BCE, Frankfurter, Banque mondiale, Opendatasoft, Yahoo, Stooq) |
 | `simulateur/seuils.py` | 31 garde-fous (26 absolus + 5 en écart) par strate : tolérable → vigilance → risqué → hors-sol ; `bareme_public()` pour l'audit |
 | `simulateur/conseil.py` | conseiller temps réel (« effet papillon ») : chaque mouvement rejoué avant/après, directs + ricochets, garde-fous, compensations |
-| `simulateur/interface.py` | page unique : ruban de veille, 101 leviers, 20 domaines, exports |
+| `simulateur/interface.py` | page unique : ruban de veille, 156 leviers, 20 domaines, exports |
 | `simulateur/dashboard.py` | API JSON : `/api/catalogue`, `/contexte`, `/simuler`, `/comparer`, `/conseil`, `/garde_fous`, `/presets`, `/proxy`, `/donnees` |
 | `simulateur/wsgi.py` | pont WSGI : branche le handler ci-dessus sur une requête d'hébergeur, sans dupliquer le routeur |
 | `Procfile`, `requirements.txt`, `runtime.txt`, `render.yaml`, `Dockerfile` | publication en ligne : hébergeur Python, bouton Render, image Docker (GHCR) |

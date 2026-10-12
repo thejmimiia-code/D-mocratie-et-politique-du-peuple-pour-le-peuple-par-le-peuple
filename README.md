@@ -131,13 +131,14 @@ simulateur-mpol-dashboard
 
 La page servie est un **simulateur paramétrable complet**, et non un jeu de cartes figées :
 
-- **101 leviers** pilotables (fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux), avec recherche et 14 préréglages doctrinaux ;
+- **156 leviers** pilotables (fiscalité, dépenses, réformes, énergie, institutions, chocs mondiaux), avec recherche et 16 préréglages doctrinaux ;
 - **20 domaines d'action publique** — 74 indicateurs concrets, chacun avec sa formule et sa source — notés de 0 à 100 par rapport à la trajectoire de référence (50 = aucune politique) ;
 - **cascade des 5 échelons** (locale → nationale → européenne → mondiale → géopolitique) et journal causal, année par année ;
 - **console de veille permanente**, résumée en un ruban collant (verdict, 5 strates, risque population) : messages de seuil (tolérable → vigilance → risqué → hors-sol), marges de manœuvre restantes, effet différé de **chaque** modification et **puces d'impact sous chaque levier réglé** ;
 - **conseiller temps réel « effet papillon »** : chaque mouvement de réglage (curseur ou interrupteur, sans exception) est rejoué par le moteur, position avant vs position à l'instant T, et la console affiche en direct effets directs, ricochets, garde-fous basculés et pistes de compensation ;
-- **les 101 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
+- **les 156 paramètres visibles et actionnables** : vue confort (cartes documentées) ou vue compacte (une ligne par levier), recherche, compte des leviers affichés et modifiés — chaque geste se répercute en direct ;
 - **matrice d'impacts croisés** levier × domaine, calculée par le modèle par différences finies (aucun coefficient saisi à la main) ;
+- **55 réglages institutionnels qui recalculent le droit** : seuils de censure, de Congrès, de saisine, délais budgétaires, fenêtre législative utile, solidité des fentes non écrites et huit indices institutionnels — `reglage_*` dans le catalogue, `/api/nuances` côté API ([`docs/17`](docs/17_NUANCES_INSTITUTIONNELLES_ET_REGLAGES.md)) ;
 - **données publiques « à l'instant T »** : le serveur interroge les API (Eurostat, BCE, Frankfurter, Banque mondiale) et, s'il n'a pas de réseau, le bouton « Rafraîchir les données » les interroge **depuis votre navigateur** puis transmet les valeurs au simulateur — provenance, période et licence affichées pour chaque chiffre ;
 - **exports JSON et CSV** de la simulation complète ;
 - **compréhensible pour tous** : un **lexique de 83 termes** définit chaque mot
@@ -149,7 +150,7 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
 - **un réglage se partage par une adresse** : le bouton « 🔗 Partager mes
   réglages » copie un lien qui rouvre le simulateur exactement sur les leviers
   affichés — de quoi soumettre un budget au débat au lieu de le décrire. Seuls
-  les leviers réellement déplacés voyagent (jamais les 101 paramètres), et une
+  les leviers réellement déplacés voyagent (jamais les 156 paramètres), et une
   adresse reçue n'est jamais crue : seules les clés connues du catalogue et les
   valeurs numériques sont reprises ;
 - **fluidité mesurée** : réponses compressées à la demande (**une simulation

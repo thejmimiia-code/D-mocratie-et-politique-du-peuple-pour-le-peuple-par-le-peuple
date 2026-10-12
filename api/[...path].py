@@ -1,9 +1,10 @@
-"""Fonction Vercel unique — toutes les routes `/api/*` du simulateur.
+"""Fonction Vercel unique — 21 routes `/api/*` du simulateur.
 
-Un seul fichier sert les 16 routes du moteur (`/api/bulle`, `/api/simuler`, …) :
-Vercel n'en compte qu'une, ce qui reste sous le plafond de 12 fonctions par
-déploiement de l'offre Hobby. Le moteur route lui-même sur le chemin reçu, voir
-`simulateur/pont_api.py`. `verifier-source.py` reste une fonction distincte.
+Fichier généré par `outils/generer-fonctions-api.py` : ne pas modifier à la main. Une
+seule fonction sert 21 routes (`/api/catalogue, /api/contexte, /api/donnees, /api/simuler, /api/comparer`, …) : Vercel n'en compte qu'une, ce qui
+reste sous le plafond de douze fonctions par déploiement de l'offre Hobby. Le moteur
+route lui-même sur le chemin reçu, voir `simulateur/pont_api.py`.
+`verifier-source.py` reste une fonction distincte, propre au site.
 
 Vérifié par `outils/generer-fonctions-api.py --verifier`.
 """
@@ -16,6 +17,9 @@ if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
 from simulateur.pont_api import PontAPI  # noqa: E402
+
+#: Routes que cette fonction s'engage à servir — relue par les tests.
+ROUTES = ("catalogue", "contexte", "donnees", "simuler", "comparer", "presets", "bulles", "bulle", "proxy", "run", "scenarios", "export", "conseil", "lexique", "marches", "garde_fous", "constitution", "contrepouvoirs", "instances", "dynamiques", "nuances",)
 
 
 class handler(PontAPI):  # noqa: N801 - nom attendu par Vercel

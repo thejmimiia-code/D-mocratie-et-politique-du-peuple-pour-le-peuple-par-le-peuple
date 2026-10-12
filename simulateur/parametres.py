@@ -1248,6 +1248,787 @@ _lev(Levier(
 
 
 # ────────────────────────────────────────────────────────────────────────────
+# 11 bis. NUANCES INSTITUTIONNELLES, PAR NIVEAU
+#
+# Règle de famille : un curseur à 0 = statu quo strict. Les bornes hautes ne sont
+# jamais « plus de démocratie par construction », elles décrivent un réglage
+# chiffrable dont l'effet est documenté à part (voir `simulateur/
+# nuances_institutionnelles.py`, qui recalcule seuils, délais et fentes à partir
+# de ces valeurs). Les identifiants `articles=` pointent vers le registre légal.
+# ────────────────────────────────────────────────────────────────────────────
+
+# — Étage constitutionnel : qui compte quoi, et qui juge —
+
+_lev(Levier(
+    cle="reglage_censure_assiette",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Assiette de la motion de censure",
+    famille="institutions_democratie",
+    description="Le seuil de censure est calculé sur les membres composant l'Assemblée "
+                "(statu quo : 289 voix, l'abstention protège le Gouvernement), sur les "
+                "suffrages exprimés (l'abstention devient neutre), ou avec un quorum de "
+                "présence à trois cinquièmes.",
+    unite="choix", type=TYPE_CHOIX, defaut=0.0,
+    minimum=0.0, maximum=2.0, pas=1.0, precision=0,
+    modalites=(
+        ("Membres composant (289 voix, abstention favorable au Gouvernement)", 0.0),
+        ("Majorité des suffrages exprimés", 1.0),
+        ("Majorité des exprimés + quorum de présence des trois cinquièmes", 2.0),
+    ),
+    effets_directs={"democratie": 0.7, "stabilite_gouvernementale": -0.6, "confiance": 0.3},
+    source="Constitution, art. 49 al. 3 ; assiette discutée depuis 1958, jamais modifiée.",
+    articles=("CONST_ART_49",),
+))
+_lev(Levier(
+    cle="reglage_congres_quorum",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Quorum ajouté au Congrès",
+    famille="institutions_democratie",
+    description="Part des membres du Congrès qui doivent voter pour que la révision soit "
+                "valablement adoptée (0 = aucun quorum, ce que la Constitution ne prévoit "
+                "pas) : le seuil de 555 voix cesse alors de dépendre du nombre de votants.",
+    unite="%", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=60.0, pas=5.0,
+    precision=0,
+    effets_directs={"democratie": 0.6, "stabilite_gouvernementale": -0.5, "confiance": 0.4},
+    source="Constitution, art. 89 al. 4 ; calcul sur les suffrages exprimés.",
+    articles=("CONST_ART_89",),
+))
+_lev(Levier(
+    cle="reglage_congres_assiette_membres",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Compter les trois cinquièmes sur les membres au Congrès",
+    famille="institutions_democratie",
+    description="Bascule l'assiette du Congrès des suffrages exprimés aux membres "
+                "composant (617 voix sur 925 au lieu de 555) : supprime l'avantage "
+                "arithmétique de l'abstention.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.6, "stabilite_gouvernementale": -0.7},
+    source="Constitution, art. 89 al. 4 ; comparaison avec l'art. 49 al. 3.",
+    articles=("CONST_ART_89", "CONST_ART_49"),
+))
+_lev(Levier(
+    cle="reglage_controle_loi_referendaire",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Contrôle de constitutionnalité des lois référendaires",
+    famille="institutions_democratie",
+    description="Ouvre la loi adoptée par référendum au contrôle du Conseil "
+                "constitutionnel, alors que la décision du 6 novembre 1962 s'en est "
+                "reconnue incompétente et que la révision de 2008 a écarté la proposition.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.5, "confiance": 0.5, "stabilite_gouvernementale": -0.8},
+    source="Conseil constitutionnel, 6 novembre 1962 ; art. 11 et 61.",
+    articles=("CONST_ART_11", "CONST_ART_61"),
+))
+_lev(Levier(
+    cle="reglage_49_3_interdiction",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Interdiction du 49.3 hors loi de finances",
+    famille="institutions_democratie",
+    description="La Constitution ne permet qu'un usage par session pour un texte ordinaire, "
+                "hors projets de finances et de financement de la sécurité sociale. Ce "
+                "réglage supprime même cet usage : tout texte doit être voté.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.9, "stabilite_gouvernementale": -1.0, "confiance": 0.5,
+                    "tension_sociale": 0.2},
+    source="Constitution, art. 49 al. 3 ; registre des verrous « usages autorisés par session ».",
+    articles=("CONST_ART_49",),
+))
+_lev(Levier(
+    cle="reglage_delai_motion_49_3",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Heures ajoutées au délai de motion contre un 49.3",
+    famille="institutions_democratie",
+    description="La motion de censure doit être déposée dans les vingt-quatre heures qui "
+                "suivent l'engagement de responsabilité. Chaque heure ajoutée est du temps de "
+                "réunion de signatures, et du temps de crise en plus.",
+    unite="heures", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=72.0, pas=6.0,
+    precision=0,
+    effets_directs={"democratie": 0.6, "stabilite_gouvernementale": -0.6, "confiance": 0.3,
+                    "tension_sociale": 0.2},
+    source="Constitution, art. 49 al. 3 in fine.",
+    articles=("CONST_ART_49",),
+))
+_lev(Levier(
+    cle="reglage_delai_motion_censure",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Jours ajoutés au délai avant le vote de censure",
+    famille="institutions_democratie",
+    description="Le délai constitutionnel est de deux jours francs. Chaque jour ajouté "
+                "laisse le temps de la négociation — et du retrait des signataires.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=15.0, pas=1.0,
+    precision=0,
+    effets_directs={"stabilite_gouvernementale": 0.6, "democratie": -0.3, "tension_sociale": -0.3},
+    source="Constitution, art. 49 al. 4.",
+    articles=("CONST_ART_49",),
+))
+_lev(Levier(
+    cle="reglage_seuil_saisine_conseil",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Seuil de saisine du Conseil constitutionnel",
+    famille="institutions_democratie",
+    description="Soixante députés ou soixante sénateurs aujourd'hui. Abaisser le seuil "
+                "ouvre le contrôle a priori à l'opposition minoritaire ; le supprimer en "
+                "fait un contrôle systématique.",
+    unite="choix", type=TYPE_CHOIX, defaut=0.0,
+    minimum=0.0, maximum=3.0, pas=1.0, precision=0,
+    modalites=(
+        ("Soixante signatures (statu quo)", 0.0),
+        ("Quarante signatures", 1.0),
+        ("Un groupe parlementaire constitué", 2.0),
+        ("Saisine systématique de toute loi", 3.0),
+    ),
+    effets_directs={"democratie": 0.6, "confiance": 0.4, "stabilite_gouvernementale": -0.5,
+                    "budget": -0.2},
+    source="Constitution, art. 61 al. 1 (révision du 29 octobre 1974).",
+    articles=("CONST_ART_61", "LOI_ORG_2009_403"),
+))
+_lev(Levier(
+    cle="reglage_recours_irrecevabilite",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Recours collectif contre une irrecevabilité",
+    famille="institutions_democratie",
+    description="Aujourd'hui, seul le président de l'assemblée peut déférer au Conseil "
+                "constitutionnel l'irrecevabilité qu'il a lui-même prononcée. Ouvrir ce "
+                "recours à soixante membres ferme un droit sans juge.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.7, "confiance": 0.4, "stabilite_gouvernementale": -0.4},
+    source="Constitution, art. 44 al. 4 et art. 40.",
+    articles=("CONST_ART_44", "CONST_ART_40"),
+))
+_lev(Levier(
+    cle="reglage_droit_amendement",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Droit d'amendement garanti, irrecevabilité 40 bornée",
+    famille="institutions_democratie",
+    description="Le juge (ou la conférence) contrôle la qualification financière au lieu "
+                "du président de séance ; l'amendement de repli devient recevable de droit.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.8, "confiance": 0.3, "budget": -0.3, "tension_sociale": -0.4},
+    source="Constitution, art. 40 et 44 ; jurisprudence du Conseil constitutionnel sur les "
+            "cavaliers.",
+    articles=("CONST_ART_40", "CONST_ART_44"),
+))
+_lev(Levier(
+    cle="reglage_ordre_du_jour_partage",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Part de l'ordre du jour laissée au Parlement",
+    famille="institutions_democratie",
+    description="La Constitution réserve une semaine sur quatre au contrôle et un jour par "
+                "mois à l'opposition. Ce curseur étend la part parlementaire, au prix de la "
+                "capacité du Gouvernement à tenir son calendrier.",
+    unite="%", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=50.0, pas=5.0,
+    precision=0,
+    effets_directs={"democratie": 0.7, "stabilite_gouvernementale": -0.6, "confiance": 0.3},
+    source="Constitution, art. 48 al. 3 et 4.",
+    articles=("CONST_ART_48",),
+))
+_lev(Levier(
+    cle="reglage_seuil_groupes",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Baisse du seuil de constitution des groupes",
+    famille="institutions_democratie",
+    description="Quinze députés, dix sénateurs aujourd'hui. Chaque point retiré ouvre les "
+                "droits de groupe (niche, commission d'enquête, temps de parole) à des "
+                "representations plus petites.",
+    unite="sièges", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=10.0, pas=1.0,
+    precision=0,
+    effets_directs={"democratie": 0.6, "cohesion": -0.3, "stabilite_gouvernementale": -0.4,
+                    "participation": 0.3},
+    source="Règlements des assemblées, issus de la révision du 23 juillet 2008 (art. 51).",
+    articles=("CONST_ART_51",),
+))
+_lev(Levier(
+    cle="reglage_vote_nominal_obligatoire",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Scrutin public nominal obligatoire sur tout texte structurant",
+    famille="institutions_democratie",
+    description="Chaque vote est publié nominativement, sans délégation de vote : "
+                "l'abstention devient aussi coûteuse à cacher qu'un vote contraire.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.7, "democratie": 0.5, "tension_sociale": 0.3,
+                    "stabilite_gouvernementale": -0.3},
+    source="Constitution, art. 27 et 33 ; règlements sur le scrutin public.",
+    articles=("CONST_ART_27", "CONST_ART_33"),
+))
+
+# — Étage budgétaire : le calendrier comme arme —
+
+_lev(Levier(
+    cle="reglage_delai_budget_retraite",
+    tags=("nuance_institutionnelle", "Budgétaire"),
+    libelle="Jours retirés au délai de l'Assemblée sur le budget",
+    famille="institutions_democratie",
+    description="L'article 47 donne quarante jours à l'Assemblée nationale. Les réduire "
+                "accélère la loi de finances et comprime d'autant l'examen des recettes.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=20.0, pas=1.0,
+    precision=0,
+    effets_directs={"budget": 0.4, "democratie": -0.6, "confiance": -0.3},
+    source="Constitution, art. 47 al. 1.",
+    articles=("CONST_ART_47",),
+))
+_lev(Levier(
+    cle="reglage_delai_senat_budget",
+    tags=("nuance_institutionnelle", "Budgétaire"),
+    libelle="Jours ajoutés au délai du Sénat sur le budget",
+    famille="institutions_democratie",
+    description="Le Sénat dispose de quinze jours. Les porter à trente lui rend un pouvoir "
+                "d'amendement utile sur les recettes, sans toucher au dernier mot de "
+                "l'Assemblée.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=15.0, pas=1.0,
+    precision=0,
+    effets_directs={"territoires": 0.5, "democratie": 0.4, "budget": -0.2},
+    source="Constitution, art. 47 al. 2.",
+    articles=("CONST_ART_47",),
+))
+_lev(Levier(
+    cle="reglage_vote_par_programme",
+    tags=("nuance_institutionnelle", "Budgétaire"),
+    libelle="Vote par programme et fongibilité assumée",
+    famille="institutions_democratie",
+    description="Vote de la mission avant le programme, amendement de majoration de "
+                "recette autorisé hors plafond : le Parlement retrouve la main sur "
+                "l'allocation sans casser la règle d'équilibre.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"budget": 0.4, "services_publics": 0.5, "democratie": 0.3},
+    source="LOLF, art. 34 ; loi de programmation des finances publiques (LPF, art. L. 111-7 "
+            "pour l'encadrement des amendements).",
+    articles=("LOLF_ART_34", "LPF_L81"),
+))
+_lev(Levier(
+    cle="reglage_or_du_deficit",
+    tags=("nuance_institutionnelle", "Budgétaire"),
+    libelle="Marge de déficit inscrite dans la Constitution",
+    famille="institutions_democratie",
+    description="Plafond de déficit structurel constitutionnalisé, avec clause de sortie "
+                "automatique en récession : verrouille la trajectoire mais retire au "
+                "Parlement le droit de décider de l'effort.",
+    unite="% PIB", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=3.0, pas=0.1,
+    precision=1,
+    effets_directs={"dette": -0.7, "confiance": 0.4, "investissement": -0.6, "croissance": -0.3,
+                    "solidarite": -0.3},
+    source="Traité sur la stabilité, la coordination et la gouvernance ; art. 34 et TFUE 126.",
+    articles=("TFUE_ART_126", "CONST_ART_34"),
+))
+_lev(Levier(
+    cle="reglage_audit_obligatoire_prealable",
+    tags=("nuance_institutionnelle", "Budgétaire"),
+    libelle="Audit obligatoire avant toute réforme structurelle",
+    famille="etat_fonction_publique",
+    description="Aucun projet de réforme des institutions ou de la fiscalité n'est déposé "
+                "sans un avis public de la Cour des comptes, rendu avant la navette.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.6, "budget": 0.3, "democratie": 0.3, "croissance": -0.1},
+    source="Constitution, art. 47-2 ; code des juridictions financières.",
+    articles=("CONST_ART_47_2",),
+))
+
+# — Étage judiciaire et instances —
+
+_lev(Levier(
+    cle="reglage_appel_qpc",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Appel possible du filtre de non-renvoi d'une QPC",
+    famille="regalien",
+    description="Le filtre de la juridiction du fond devient contrôlable par une formation "
+                "dédiée : la QPC cesse d'être un droit mort-né au premier étage.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.7, "confiance": 0.4, "democratie": 0.3, "budget": -0.2},
+    source="Constitution, art. 61-1 ; loi organique du 10 décembre 2009.",
+    articles=("CONST_ART_61_1", "LOI_ORG_2009_403"),
+))
+_lev(Levier(
+    cle="reglage_parquet_independant",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Parquet nommé sur avis conforme du CSM",
+    famille="regalien",
+    description="Aligne le parquet sur le siège : l'avis devient conforme, donc une "
+                "nomination sans lui est illégale plutôt que simplement contestable.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.9, "confiance": 0.6, "securite": -0.2, "democratie": 0.4},
+    source="Constitution, art. 64 et 65 ; réforme constitutionnelle rejetée en 2013.",
+    articles=("CONST_ART_64", "CONST_ART_65"),
+))
+_lev(Levier(
+    cle="reglage_mandat_unique_instances",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Mandat unique non renouvelable pour les autorités indépendantes",
+    famille="etat_fonction_publique",
+    description="Coupe le lien de dépendance né d'une perspective de renouvellement ; "
+                "réduit aussi l'influence des autorités, faute de carrière commune.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.7, "democratie": 0.4, "services_publics": -0.2},
+    source="Constitution, art. 13 al. 5 et 65 ; pratiques des autorités indépendantes.",
+    articles=("CONST_ART_13", "CONST_ART_65"),
+))
+_lev(Levier(
+    cle="reglage_publication_avis_ce",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Publication des avis du Conseil d'État sur les projets de loi",
+    famille="etat_fonction_publique",
+    description="L'avis, aujourd'hui confidentiel, devient public : les arbitrages du "
+                "gouvernement sur un texte sont lisibles avant le vote.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.7, "democratie": 0.5, "budget": -0.1},
+    source="Constitution, art. 39 ; ordonnance du 31 juillet 1945.",
+    articles=("CONST_ART_39",),
+))
+_lev(Levier(
+    cle="reglage_execution_cedh",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Délai contraignant d'exécution des arrêts CEDH",
+    famille="regalien",
+    description="Le juge interne peut assortir d'une astreinte le refus d'exécuter un arrêt "
+                "définitif, et rouvrir le procès sur simple demande.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=720.0, pas=30.0,
+    precision=0,
+    effets_directs={"justice": 0.6, "confiance": 0.5, "international": 0.4, "budget": -0.3},
+    source="Art. 46 de la Convention européenne des droits de l'homme ; loi du 9 décembre 2023 "
+            "portant diverses dispositions d'adaptation au droit de l'Union européenne.",
+    articles=("DDHC_ART_16",),
+))
+_lev(Levier(
+    cle="reglage_action_de_groupe_administratif",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Action de groupe devant le juge administratif",
+    famille="regalien",
+    description="Élargit aux juridictions administratives l'action de groupe : le référé-"
+                "liberté devient utilisable par une collectivité ou une association pour un "
+                "groupe de situations individuelles.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.6, "confiance": 0.4, "democratie": 0.4, "budget": -0.2},
+    source="Code de justice administrative ; loi ESSOC pour le droit à l'erreur.",
+    articles=("CRPA_L123_1",),
+))
+_lev(Levier(
+    cle="reglage_controle_juge_exception",
+    tags=("nuance_institutionnelle", "Exception"),
+    libelle="Contrôle juridictionnel intégral en régime d'exception",
+    famille="regalien",
+    description="Lever l'immunité de fait des mesures de police prises pendant l'état "
+                "d'urgence : le juge statue en quarante-huit heures, sans sursis possible.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.7, "confiance": 0.5, "securite": -0.4, "cohesion": 0.3},
+    source="Constitution, art. 16 et 36 ; loi du 3 avril 1955.",
+    articles=("CONST_ART_16", "CONST_ART_36"),
+))
+_lev(Levier(
+    cle="reglage_plafond_etat_urgence",
+    tags=("nuance_institutionnelle", "Exception"),
+    libelle="Durée maximale totale d'un état d'urgence",
+    famille="regalien",
+    description="Au-delà du plafond, l'état d'urgence cesse de plein droit sans nouvelle "
+                "loi : la fin devient automatique au lieu d'être politique.",
+    unite="mois", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=24.0, pas=1.0,
+    precision=0,
+    effets_directs={"cohesion": 0.4, "confiance": 0.3, "securite": -0.3},
+    source="Constitution, art. 36 ; loi du 3 avril 1955 prorogée par le Parlement.",
+    articles=("CONST_ART_36",),
+))
+
+# — Étage territorial —
+
+_lev(Levier(
+    cle="reglage_petition_locale_seuil",
+    tags=("nuance_institutionnelle", "Territorial"),
+    libelle="Seuil de la pétition locale, en pourcentage des inscrits",
+    famille="logement_territoires",
+    description="Fixe nationalement le seuil qui, faute de loi organique, est laissé au "
+                "règlement local : 0 = chaque assemblée garde la main, un chiffre élevé "
+                "rend le droit théorique.",
+    unite="%", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=20.0, pas=1.0,
+    precision=0,
+    effets_directs={"democratie": 0.7, "territoires": 0.4, "confiance": 0.3,
+                    "stabilite_gouvernementale": -0.2},
+    source="Constitution, art. 72-1 (loi organique jamais parue) ; CGCT, art. L. 2121-1.",
+    articles=("CONST_ART_72_1", "CGCT_L2121_1"),
+))
+_lev(Levier(
+    cle="reglage_referendum_local_automatique",
+    tags=("nuance_institutionnelle", "Territorial"),
+    libelle="Référendum local automatique au-delà d'un seuil de pétition",
+    famille="logement_territoires",
+    description="La consultation a lieu de plein droit quand le seuil est atteint, sans "
+                "délibération d'opportunité de l'assemblée : le droit de vote ne dépend "
+                "plus de ceux qui le convoquent.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.8, "participation": 0.5, "territoires": 0.3,
+                    "stabilite_gouvernementale": -0.3},
+    source="Constitution, art. 72-1 et 73 ; CGCT pour les consultations locales.",
+    articles=("CONST_ART_72_1",),
+))
+_lev(Levier(
+    cle="reglage_senat_suffrage_direct",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Sénat élu au suffrage universel direct",
+    famille="institutions_democratie",
+    description="Remplace le corps électoral restreint : le Sénat cesse d'être la chambre "
+                "des collectivités pour devenir une seconde chambre de légitimité "
+                "populaire, avec un veto éventuel à redéfinir.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.7, "territoires": -0.5, "stabilite_gouvernementale": -0.6,
+                    "cohesion": 0.2},
+    source="Constitution, art. 24 (suffrage indirect) ; rapports sur la réforme du Sénat.",
+    articles=("CONST_ART_24",),
+))
+_lev(Levier(
+    cle="reglage_autonomie_financiere_garantie",
+    tags=("nuance_institutionnelle", "Territorial"),
+    libelle="Plancher constitutionnel de dotation locale",
+    famille="logement_territoires",
+    description="Garantit en pourcentage la part des ressources locales dans le produit "
+                "fiscal national : protège l'investissement local du ciseau budgétaire.",
+    unite="%", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=30.0, pas=1.0,
+    precision=0,
+    effets_directs={"territoires": 0.8, "services_publics": 0.5, "investissement": 0.5,
+                    "budget": -0.6},
+    source="Constitution, art. 72-2 (autonomie financière) ; CGCT, art. L. 1612-4.",
+    articles=("CONST_ART_72_2", "CGCT_L1612_4"),
+))
+_lev(Levier(
+    cle="reglage_epci_suffrage_direct",
+    tags=("nuance_institutionnelle", "Territorial"),
+    libelle="Élection au suffrage direct des intercommunalités",
+    famille="logement_territoires",
+    description="Les conseillers métropolitains et communautaires sont élus directement : "
+                "l'intercommunalité cesse d'être une chambre d'enregistrement des communes.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"territoires": 0.6, "democratie": 0.5, "confiance": 0.3, "cohesion": 0.2},
+    source="CGCT, art. L. 5211-1 et L. 5217-1 ; débat récurrent depuis 2010.",
+    articles=("CGCT_L5211_1", "CGCT_L5217_1"),
+))
+_lev(Levier(
+    cle="reglage_differentiation_pilotes",
+    tags=("nuance_institutionnelle", "Territorial"),
+    libelle="Collectivités autorisées à déroger à titre expérimental",
+    famille="logement_territoires",
+    description="Nombre de collectivités entrant dans le régime d'expérimentation "
+                "territoriale : multiplie les laboratoires et la complexité lisible du droit "
+                "applicable.",
+    unite="collectivités", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=30.0, pas=1.0,
+    precision=0,
+    effets_directs={"territoires": 0.6, "innovation": 0.4, "confiance": 0.2, "cohesion": -0.5},
+    source="Constitution, art. 72 al. 4 et 5 ; loi 3DS.",
+    articles=("CONST_ART_72",),
+))
+
+# — Étage outre-mer —
+
+_lev(Levier(
+    cle="reglage_outre_mer_competences",
+    tags=("nuance_institutionnelle", "Outre-mer"),
+    libelle="Matières transférées aux collectivités d'outre-mer",
+    famille="logement_territoires",
+    description="Étend la liste des matières dont une collectivité peut fixer elle-même les "
+                "règles : chaque point est un déplacement de compétence, pas une "
+                "expérimentation temporaire.",
+    unite="matières", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=20.0, pas=1.0,
+    precision=0,
+    effets_directs={"territoires": 0.8, "confiance": 0.4, "solidarite": -0.3, "budget": -0.3},
+    source="Constitution, art. 73 et 74 ; loi organique d'habilitation.",
+    articles=("CONST_ART_73", "CONST_ART_74"),
+))
+_lev(Levier(
+    cle="reglage_outre_mer_congres_permament",
+    tags=("nuance_institutionnelle", "Outre-mer"),
+    libelle="Congrès des outre-mer permanent, avec droit d'initiative",
+    famille="institutions_democratie",
+    description="Instance de proposition permanente : ses textes doivent être inscrits à "
+                "l'ordre du jour, ce qui transforme une consultation en procédure.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"territoires": 0.6, "confiance": 0.4, "democratie": 0.3,
+                    "stabilite_gouvernementale": -0.2},
+    source="Constitution, art. 72-3 et 73 ; CGCT pour le conseil consultatif.",
+    articles=("CONST_ART_73", "CONST_ART_74"),
+))
+
+# — Étage européen et international —
+
+_lev(Levier(
+    cle="reglage_subsidiarite_recours",
+    tags=("nuance_institutionnelle", "Européen"),
+    libelle="Recours automatique devant la CJUE sur avis de subsidiarité",
+    famille="institutions_democratie",
+    description="Rends le recours de droit dès qu'une assemblée nationale motive un avis, au "
+                "lieu de le subordonner à soixante signatures : le carton jaune devient "
+                "justiciable.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"europe": 0.6, "democratie": 0.5, "souverainete": 0.3,
+                    "stabilite_gouvernementale": -0.3},
+    source="Constitution, art. 88-6 ; protocole n° 2 sur la subsidiarité.",
+    articles=("CONST_ART_88_6",),
+))
+_lev(Levier(
+    cle="reglage_vote_prealable_actes_ue",
+    tags=("nuance_institutionnelle", "Européen"),
+    libelle="Vote préalable du Parlement sur un acte délégué européen",
+    famille="institutions_democratie",
+    description="Aucune position française en Conseil n'est engagée sur un acte délégué sans "
+                "résolution préalable : retarde, mais rend la négociation contrôlable.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"europe": 0.4, "democratie": 0.5, "stabilite_gouvernementale": -0.4,
+                    "croissance": -0.2},
+    source="Constitution, art. 88-4 ; résolution européenne type AN.",
+    articles=("CONST_ART_88_4",),
+))
+_lev(Levier(
+    cle="reglage_ancre_ue_reforms",
+    tags=("nuance_institutionnelle", "Européen"),
+    libelle="Ancrer une réforme dans le droit dérivé de l'Union",
+    famille="industrie_souverainete",
+    description="Écrire la réforme comme une transposition large (sur-transposition) : la "
+                "règle échappe alors à l'abrogation unilatérale, parce que la défaire "
+                "devient une infraction.",
+    unite="% du champ concerné", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=100.0,
+    pas=5.0, precision=0,
+    effets_directs={"souverainete": -0.6, "investissement": 0.4, "confiance": 0.2,
+                    "europe": 0.5, "industrie": 0.3},
+    source="Constitution, art. 88-1 et 55 ; droit dérivé de l'Union (règlements et directives "
+            "en vigueur au registre).",
+    articles=("CONST_ART_88_1", "CONST_ART_55", "REGLEMENT_UE_2023_956"),
+))
+
+# — Étage participation, transparence, numérique —
+
+_lev(Levier(
+    cle="reglage_registre_amendements",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Registre public nominatif des amendements",
+    famille="institutions_democratie",
+    description="Chaque amendement est publié avec son porteur, son financeur éventuel et sa "
+                "sort : la fabrique du texte devient vérifiable pendant la navette, pas "
+                "six mois après.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.8, "democratie": 0.5, "services_publics": 0.3},
+    source="Constitution, art. 33 (publicité des séances) ; loi pour la confiance dans la vie "
+            "politique.",
+    articles=("CONST_ART_33",),
+))
+_lev(Levier(
+    cle="reglage_comptes_temps_reel",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Comptes de campagne publiés en temps réel",
+    famille="institutions_democratie",
+    description="Les recettes et dépenses sont déclarées hebdomadairement pendant la "
+                "campagne et publiées par la CNCCFP, au lieu du dépôt après le scrutin.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.8, "democratie": 0.4, "tension_sociale": -0.2},
+    source="Constitution, art. 3 (sincérité des comptes) ; loi du 11 mars 1988.",
+    articles=("CONST_ART_3",),
+))
+_lev(Levier(
+    cle="reglage_chambre_tiree_au_sort",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Chambre de la durée, membres tirés au sort",
+    famille="institutions_democratie",
+    description="Nombre de membres d'une troisième chambre tirée au sort, à veto suspensif "
+                "sur les textes engageant les générations futures : zéro = pas de chambre.",
+    unite="membres", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=200.0, pas=10.0,
+    precision=0,
+    effets_directs={"democratie": 0.9, "confiance": 0.6, "stabilite_gouvernementale": -0.6,
+                    "cohesion": 0.3},
+    source="Constitution, art. 24 (une seule assemblée peut en dispenser : révision requise) ; "
+            "Convention citoyenne pour le climat.",
+    articles=("CONST_ART_24",),
+))
+_lev(Levier(
+    cle="reglage_convention_veto_suspensif",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Veto suspensif d'une convention citoyenne",
+    famille="institutions_democratie",
+    description="Une convention tirée au sort peut renvoyer une fois un texte au "
+                "Parlement ; la seconde lecture obligatoire à main levée nommée met fin au "
+                "blocage.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.7, "stabilite_gouvernementale": -0.5, "confiance": 0.4,
+                    "tension_sociale": -0.2},
+    source="Constitution, art. 3 et 11 ; Convention citoyenne (2019-2020).",
+    articles=("CONST_ART_3", "CONST_ART_11"),
+))
+_lev(Levier(
+    cle="reglage_revocation_elue",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Référendum révocatoire local et national",
+    famille="institutions_democratie",
+    description="Une pétition atteignant le seuil déclenche la révocation de l'élu ou de "
+                "l'assemblée : rend la redevabilité continue, déstabilise la majorité de "
+                "seuil.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"democratie": 0.8, "tension_sociale": 0.5, "stabilite_gouvernementale": -0.9,
+                    "confiance": 0.2},
+    source="Constitution, art. 3 (souveraineté) et 72-1 ; exemples suisses et californiens.",
+    articles=("CONST_ART_3", "CONST_ART_72_1"),
+))
+_lev(Levier(
+    cle="reglage_algorithmes_transparents",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Audit public des algorithmes à fort impact",
+    famille="industrie_souverainete",
+    description="Ouvre le code, les données d'entraînement et les critères des algorithmes "
+                "utilisés par une autorité publique ou une plateforme de rang légal.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.6, "numerique": 0.5, "justice": 0.4, "attractivite": -0.2},
+    source="Règlement (UE) DSA 2022/2065 et règlement IA 2024/1689 ; droit de communication "
+            "des éléments individuels (CRPA).",
+    articles=("CRPA_L123_1", "REG_EIDAS_910_2014"),
+))
+
+# — Étage sécurité juridique : ce qui rend une chose actée —
+
+_lev(Levier(
+    cle="reglage_non_retroactivite_in_minus",
+    tags=("nuance_institutionnelle", "Exception"),
+    libelle="Interdiction constitutionnelle de la rétroactivité in minus",
+    famille="regalien",
+    description="Inscrit à l'article 34 la règle dégagée par le juge : nulle loi nouvelle "
+                "ne peut aggraver la répression d'actes commis avant son entrée en vigueur.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.6, "confiance": 0.5, "investissement": 0.3, "democratie": 0.2},
+    source="DDHC, art. 6 (antériorité de la loi pénale) ; jurisprudence constitutionnelle et "
+            "CE, Assemblée, 2019.",
+    articles=("DDHC_ART_6",),
+))
+_lev(Levier(
+    cle="reglage_stabilite_normative_annees",
+    tags=("nuance_institutionnelle", "Exception"),
+    libelle="Années de stabilité garantie d'une règle structurante",
+    famille="etat_fonction_publique",
+    description="Pendant la durée fixée, une règle fiscale ou normative ne peut être "
+                "modifiée que par une loi de même nature, avec étude d'impact chiffrée : "
+                "achète de la visibilité en échange de la liberté de demain.",
+    unite="années", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=10.0, pas=1.0,
+    precision=0,
+    effets_directs={"investissement": 0.7, "attractivite": 0.5, "croissance": 0.3,
+                    "democratie": -0.4, "budget": -0.2},
+    source="Objectif de valeur constitutionnelle de lisibilité ; art. 34 et 39.",
+    articles=("CONST_ART_34", "CONST_ART_39"),
+))
+_lev(Levier(
+    cle="reglage_verrou_par_loi_organique",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Verrouiller une réforme par une loi organique",
+    famille="institutions_democratie",
+    description="Fait passer le texte du statut de loi ordinaire à celui de loi organique : "
+                "saisine obligatoire du Conseil constitutionnel et abrogation seulement par "
+                "le même étage.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.4, "democratie": 0.3, "stabilite_gouvernementale": 0.5,
+                    "budget": -0.1},
+    source="Constitution, art. 46 et 61 al. 1 ; art. 34 pour les matières organiques.",
+    articles=("CONST_ART_46", "CONST_ART_61", "CONST_ART_34"),
+))
+_lev(Levier(
+    cle="reglage_verrou_par_revision",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Verrouiller une réforme par une révision constitutionnelle",
+    famille="institutions_democratie",
+    description="Inscrit la réforme dans la Constitution : elle survit à l'alternance "
+                "législative, mais exige trois cinquièmes des suffrages exprimés au Congrès "
+                "— ou une voie référendaire.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.5, "democratie": 0.4, "stabilite_gouvernementale": 0.6,
+                    "tension_sociale": -0.3},
+    source="Constitution, art. 89 ; art. 11 pour la voie référendaire.",
+    articles=("CONST_ART_89", "CONST_ART_11"),
+))
+_lev(Levier(
+    cle="reglage_verrou_par_engagement_international",
+    tags=("nuance_institutionnelle", "Européen"),
+    libelle="Verrouiller une réforme par un engagement international",
+    famille="institutions_democratie",
+    description="Ancre la règle dans un traité ou un accord : la défaire devient une "
+                "violation internationale, contrôlable par un juge qui n'est pas français.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.3, "souverainete": -0.8, "investissement": 0.4,
+                    "international": 0.6, "democratie": -0.3},
+    source="Constitution, art. 53, 54 et 55 ; TFUE et CEDH au registre.",
+    articles=("CONST_ART_53", "CONST_ART_54", "CONST_ART_55"),
+))
+
+# — Étage institutionnel : les derniers croisements fermés —
+
+_lev(Levier(
+    cle="reglage_procedure_acceleree_encadree",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Délai plancher avant délibération en procédure accélérée",
+    famille="institutions_democratie",
+    description="La procédure accélérée abaisse de six à quatre semaines le délai entre le dépôt et la discussion. Chaque jour ajouté au plancher rend le texte discutable, et retarde d'autant la navette.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=45.0, pas=5.0,
+    precision=0,
+    effets_directs={"democratie": 0.7, "stabilite_gouvernementale": -0.5, "confiance": 0.3,
+                    "croissance": -0.1},
+    source="Constitution, art. 42 alinéa 3 et 45 alinéa 3.",
+    articles=("CONST_ART_42", "CONST_ART_45"),
+))
+_lev(Levier(
+    cle="reglage_nouvelle_deliberation_supprimee",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Supprimer le droit de nouvelle délibération",
+    famille="institutions_democratie",
+    description="Le Président peut demander une nouvelle délibération de la loi votée, sans que cette demande puisse être refusée. La supprimer accélère la promulgation et retire au chef de l'État son seul arbitrage sur un texte déjà voté.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"stabilite_gouvernementale": 0.5, "democratie": -0.5, "confiance": -0.2},
+    source="Constitution, art. 10 alinéa 2 (et art. 11 alinéa 5 pour la loi référendaire).",
+    articles=("CONST_ART_10",),
+))
+_lev(Levier(
+    cle="reglage_commission_enquete_droit_de_bloc",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Deux commissions d'enquête garanties par groupe et par session",
+    famille="institutions_democratie",
+    description="Le règlement garantit déjà une commission d'enquête par groupe et par session. En garantir deux, c'est désarmer la négociation politique qui éteint la moitié des demandes avant leur dépôt.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.6, "democratie": 0.7, "stabilite_gouvernementale": -0.6, "budget": -0.2},
+    source="Constitution, art. 51-2 ; résolutions des deux assemblées applicables aux commissions d'enquête.",
+    articles=("CONST_ART_51_1", "CONST_ART_51_2"),
+))
+_lev(Levier(
+    cle="reglage_haute_cour_non_parlementaire",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Haute Cour composée de juges non parlementaires",
+    famille="regalien",
+    description="La Haute Cour est aujourd'hui une assemblée de parlementaires qui juge ses propres membres, à la majorité des deux tiers des deux chambres. La confier à un collège de juges fait disparaître le vote politique préalable.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.7, "confiance": 0.4, "stabilite_gouvernementale": -0.5},
+    source="Constitution, art. 67, 68 et 68-1 (révision constitutionnelle du 23 février 2007).",
+    articles=("CONST_ART_67", "CONST_ART_68", "CONST_ART_68_1", "CONST_ART_26"),
+))
+_lev(Levier(
+    cle="reglage_cee_consultation_prealable",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Consultation préalable obligatoire du CESE sur les programmations",
+    famille="institutions_democratie",
+    description="Le CESE est consulté pour avis sur les projets de loi de programme et de programmation, mais son avis n'oblige personne. Rendre la consultation préalable au dépôt et la réponse motivée obligatoire, c'est transformer un ornement en procédure.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=30.0, pas=5.0,
+    precision=0,
+    effets_directs={"participation": 0.8, "confiance": 0.4, "croissance": -0.1, "budget": -0.1},
+    source="Constitution, art. 69 et 70 ; ordonnance du 28 mai 1982 modifiée.",
+    articles=("CONST_ART_69", "CONST_ART_70", "CONST_ART_71"),
+))
+_lev(Levier(
+    cle="reglage_defenseur_saisine_directe",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Saisine directe du Défenseur des droits",
+    famille="regalien",
+    description="Le Défenseur des droits peut être saisi directement par la personne concernée, ou par un intermédiaire. Ouvrir la saisine sans condition de filtre, c'est multiplier les dossiers — et rendre l'autorité réellement comptable de ses recommandations.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.5, "confiance": 0.5, "budget": -0.2},
+    source="Constitution, art. 71-1 ; loi organique du 29 mars 2011.",
+    articles=("CONST_ART_71_1",),
+))
+_lev(Levier(
+    cle="reglage_declassification_legislative",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Délai de décision sur une irrecevabilité de compétence",
+    famille="institutions_democratie",
+    description="Le gouvernement peut opposer l'article 41, et le Premier ministre demander au Conseil de déclassifier un article : les huit jours laissés au Conseil sont le seuil qui sépare le domaine de la loi de celui du règlement. Les allonger prolonge l'incertitude sur le texte.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=30.0, pas=2.0,
+    precision=0,
+    effets_directs={"democratie": 0.4, "stabilite_gouvernementale": -0.3, "justice": 0.3},
+    source="Constitution, art. 37 alinéa 2 et 41 ; ordonnance du 7 novembre 1958, art. 44 et 45.",
+    articles=("CONST_ART_37", "CONST_ART_41"),
+))
+
+# ────────────────────────────────────────────────────────────────────────────
 # 12. EUROPE, INTERNATIONAL, MIGRATION
 # ────────────────────────────────────────────────────────────────────────────
 
@@ -1721,8 +2502,86 @@ PRESETS: Dict[str, Dict[str, Any]] = {
             "convention_citoyenne": 1.0,
             "lutte_contre_la_corruption": 2.0,
             "service_public_numerique": 3.0,
+            # nuances institutionnelles : le preset agit aussi sur la géométrie du droit
+            "reglage_vote_nominal_obligatoire": 1.0,
+            "reglage_registre_amendements": 1.0,
+            "reglage_recours_irrecevabilite": 1.0,
+            "reglage_controle_loi_referendaire": 1.0,
+            "reglage_petition_locale_seuil": 8.0,
+            "reglage_seuil_saisine_conseil": 1.0,
         },
         "couleur": "#eab308",
+    },
+    "assemblees_souveraines": {
+        "libelle": "Assemblées souveraines (nuances institutionnelles ouvertes)",
+        "description": "Le contre-pouvoir comme réglage, sans toucher aux comptes publics : "
+                       "censure comptée sur les suffrages exprimés, 49.3 interdit hors budget, "
+                       "saisine du Conseil à quarante signatures, ordre du jour partagé, pétition "
+                       "locale à 8 %, amendement garanti, vote nominal publié, chambre de la durée "
+                       "tirée au sort, parquet indépendant, fin automatique de l'état d'urgence. "
+                       "Chaque curseur est documenté, aucun n'est gratuit : le module "
+                       "`nuances_institutionnelles` en recalcule les seuils et les délais.",
+        "parametres": {
+            "reglage_censure_assiette": 1.0,
+            "reglage_congres_assiette_membres": 1.0,
+            "reglage_controle_loi_referendaire": 1.0,
+            "reglage_49_3_interdiction": 1.0,
+            "reglage_delai_motion_49_3": 48.0,
+            "reglage_seuil_saisine_conseil": 1.0,
+            "reglage_recours_irrecevabilite": 1.0,
+            "reglage_droit_amendement": 1.0,
+            "reglage_ordre_du_jour_partage": 30.0,
+            "reglage_seuil_groupes": 5.0,
+            "reglage_vote_nominal_obligatoire": 1.0,
+            "reglage_audit_obligatoire_prealable": 1.0,
+            "reglage_appel_qpc": 1.0,
+            "reglage_parquet_independant": 1.0,
+            "reglage_mandat_unique_instances": 1.0,
+            "reglage_publication_avis_ce": 1.0,
+            "reglage_execution_cedh": 180.0,
+            "reglage_action_de_groupe_administratif": 1.0,
+            "reglage_petition_locale_seuil": 8.0,
+            "reglage_referendum_local_automatique": 1.0,
+            "reglage_epci_suffrage_direct": 1.0,
+            "reglage_autonomie_financiere_garantie": 10.0,
+            "reglage_differentiation_pilotes": 8.0,
+            "reglage_outre_mer_competences": 6.0,
+            "reglage_outre_mer_congres_permament": 1.0,
+            "reglage_senat_suffrage_direct": 1.0,
+            "reglage_subsidiarite_recours": 1.0,
+            "reglage_vote_prealable_actes_ue": 1.0,
+            "reglage_registre_amendements": 1.0,
+            "reglage_comptes_temps_reel": 1.0,
+            "reglage_chambre_tiree_au_sort": 140.0,
+            "reglage_convention_veto_suspensif": 1.0,
+            "reglage_revocation_elue": 1.0,
+            "reglage_algorithmes_transparents": 1.0,
+            "reglage_non_retroactivite_in_minus": 1.0,
+            "reglage_controle_juge_exception": 1.0,
+            "reglage_plafond_etat_urgence": 12.0,
+        },
+        "couleur": "#22d3ee",
+    },
+    "verrouillage_par_le_haut": {
+        "libelle": "Verrouillage par le haut (ce qui est acté ne se défait plus)",
+        "description": "L'autre bout du même curseur : réforme inscrite dans la Constitution puis "
+                       "dans un engagement international, ancrée dans le droit dérivé de l'Union, "
+                       "règle d'or du déficit, stabilité normative de cinq ans, délai de censure "
+                       "allongé. La crédibilité gagnée se paie en liberté pour la majorité suivante "
+                       "— le modèle affiche les deux côtés, et les fentes que cela ferme.",
+        "parametres": {
+            "reglage_verrou_par_revision": 1.0,
+            "reglage_verrou_par_loi_organique": 1.0,
+            "reglage_verrou_par_engagement_international": 1.0,
+            "reglage_ancre_ue_reforms": 70.0,
+            "reglage_or_du_deficit": 1.5,
+            "reglage_stabilite_normative_annees": 5.0,
+            "reglage_delai_motion_censure": 10.0,
+            "reglage_seuil_saisine_conseil": 0.0,
+            "reglage_censure_assiette": 0.0,
+            "reglage_controle_juge_exception": 0.0,
+        },
+        "couleur": "#7c3aed",
     },
 }
 
@@ -1773,6 +2632,8 @@ def normaliser(parametres: Dict[str, Any] | None) -> Dict[str, float]:
     * clés inconnues → erreur explicite (aucune politique silencieuse) ;
     * valeurs hors bornes → écrêtées aux bornes ;
     * interrupteurs → 0/1 ;
+    * choix → écrêtés aux bornes **puis** validés dans la liste des modalités : une
+      valeur hors liste qui reste dans l'intervalle est une erreur, pas une approximation ;
     * champs absents ou `None` → valeur par défaut du levier.
     """
     resultat: Dict[str, float] = {}
@@ -1786,6 +2647,8 @@ def normaliser(parametres: Dict[str, Any] | None) -> Dict[str, float]:
         elif levier.type == TYPE_CHOIX:
             autorisees = [valeur for _, valeur in levier.modalites]
             valeur = _en_nombre(brut, cle, levier.defaut)
+            mini, maxi = levier.bornes
+            valeur = min(maxi, max(mini, valeur))   # hors bornes : écrêtage, comme partout
             if valeur not in autorisees:
                 raise ValueError(
                     f"modalité invalide pour {cle} : {brut} (attendu : {autorisees})"

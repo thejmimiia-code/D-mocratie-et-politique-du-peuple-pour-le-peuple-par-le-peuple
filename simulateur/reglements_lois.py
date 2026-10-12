@@ -1091,6 +1091,25 @@ def get_corpus_lois() -> Dict[str, ArticleDeLoi]:
     return REGISTRE_LEGAL
 
 
+def _greffer_constitution() -> None:
+    """Ajoute au registre les articles de la Constitution non encore consignés.
+
+    `simulateur/constitution_analysee.py` fiche un à un les cent neuf articles en
+    vigueur de la Constitution (opportunités, contraintes, contre-pouvoirs, seuils).
+    Ses fiches rejoignent ici le registre juridique, mais **sans jamais écraser une
+    entrée existante** : les trente-sept `CONST_ART_*` déjà vérifiés, qui portent
+    leur propre citation, restent maîtres chez eux. L'import est local pour éviter
+    tout cycle au chargement du paquet.
+    """
+    from .constitution_analysee import vers_registre_legal
+
+    for identifiant, donnees in vers_registre_legal(REGISTRE_LEGAL).items():
+        REGISTRE_LEGAL[identifiant] = ArticleDeLoi(**donnees)
+
+
+_greffer_constitution()
+
+
 # Export direct des instances clés pour import immédiat
 CONST_ART_1 = REGISTRE_LEGAL["CONST_ART_1"]
 CONST_ART_4 = REGISTRE_LEGAL["CONST_ART_4"]

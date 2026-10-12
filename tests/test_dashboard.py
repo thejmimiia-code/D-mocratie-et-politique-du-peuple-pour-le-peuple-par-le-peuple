@@ -5,7 +5,6 @@ Vérifie que le serveur HTTP, les endpoints API et le rendu HTML
 fonctionnent correctement.
 """
 
-from typing import Optional, Tuple
 import http.client
 import json
 import os
@@ -14,8 +13,11 @@ import socket
 import threading
 import time
 import unittest
+import urllib.error
+import urllib.parse
 import urllib.request
 from http.server import ThreadingHTTPServer
+from typing import Optional, Tuple
 
 from simulateur.dashboard import (
     SCENARIOS,
@@ -351,7 +353,9 @@ class TestAPIparametrique(unittest.TestCase):
         familles = donnees["parametres"]["familles"]
         leviers = [levier for famille in familles for levier in famille["leviers"]]
         self.assertGreaterEqual(len(leviers), 90)
-        self.assertEqual(len(donnees["parametres"]["presets"]), 14)
+        # Le catalogue sert les seize préréglages ; ce nombre est le fil à couper :
+        # tout préréglage ajouté doit être annoncé dans docs/SIMULATEUR_PARAMETRABLE.md.
+        self.assertEqual(len(donnees["parametres"]["presets"]), 16)
 
     def test_catalogue_boursier_sans_collecte_expose_les_marches_sans_faux_cours(self):
         statut, donnees = self._appel("/api/marches")
@@ -533,7 +537,7 @@ class TestAPIparametrique(unittest.TestCase):
     def test_comparer_les_presets(self):
         statut, donnees = self._appel("/api/comparer")
         self.assertEqual(statut, 200)
-        self.assertEqual(len(donnees["comparaison"]), 14)
+        self.assertEqual(len(donnees["comparaison"]), 16)
         for entree in donnees["comparaison"]:
             self.assertEqual(len(entree["scores"]), 20)
 
@@ -629,6 +633,171 @@ class TestLexiqueServi(unittest.TestCase):
         self.assertEqual(statut, 200)
         self.assertEqual(donnees["nombre"], 0)
         self.assertEqual(donnees["termes"], [])
+
+
+class TestConstitutionServie(unittest.TestCase):
+    """/api/constitution et /api/contrepouvoirs : le droit d'abord, la prédiction jamais."""
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        with urllib.request.urlopen(url, timeout=60) as reponse:
+            return reponse.status, json.loads(reponse.read().decode("utf-8"))
+
+    def test_la_synthese_porte_toutes_les_fiches(self):
+        statut, donnees = self._appel("/api/constitution")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["couverture"]["articles_en_vigueur"], 109)
+        self.assertEqual(len(donnees["articles"]), 109)
+        self.assertTrue(donnees["couverture"]["complet"])
+
+    def test_un_article_seul_et_ses_notations_usuelles(self):
+        for forme in ("49", "49 al. 3", "Article 49"):
+            with self.subTest(article=forme):
+                statut, donnees = self._appel(f"/api/constitution?article={urllib.parse.quote(forme)}")
+                self.assertEqual(statut, 200)
+                self.assertEqual(donnees["numero"], "49")
+                self.assertTrue(donnees["regles_chiffrees"])
+                self.assertIn("conseil-constitutionnel", donnees["source"].lower())
+                self.assertEqual(donnees["consulte_le"], "2026-10-12")
+
+    def test_titre_et_recherche(self):
+        _, donnees = self._appel("/api/constitution?bloc=XVI")
+        self.assertEqual([a["numero"] for a in donnees["articles"]], ["89"])
+        _, donnees = self._appel("/api/constitution?bloc=XV")
+        self.assertIn("88-1", [a["numero"] for a in donnees["articles"]])
+        _, donnees = self._appel("/api/constitution?chercher=" + urllib.parse.quote("trois cinquièmes"))
+        self.assertIn("89", {r["numero"] for r in donnees["resultats"]})
+
+    def test_un_article_sans_fiche_repond_404(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/constitution?article=2050")
+        self.assertEqual(erreur.exception.code, 404)
+
+    def test_les_seuils_sont_calculs_par_la_route(self):
+        statut, donnees = self._appel("/api/contrepouvoirs?mecanisme=motion_censure")
+        self.assertEqual(statut, 200)
+        seuils = {s["cle"]: s["seuil"] for s in donnees["seuils"]}
+        self.assertEqual(seuils["censure_signatures"], 58)
+        self.assertEqual(seuils["censure_voix"], 289)
+        self.assertIn("motion_censure", [b["cle"] for b in donnees["bloqueurs"]] + ["motion_censure"])
+
+    def test_la_coalition_rend_ses_avertissements(self):
+        _, donnees = self._appel("/api/contrepouvoirs?mecanisme=motion_censure&assemblee=assemblee_nationale")
+        self.assertTrue(donnees["suffit"])
+        self.assertEqual(donnees["voix_requises"], 289)
+        self.assertIn("arithmétique", donnees["avertissement"])
+
+    def test_un_mecanisme_inconnu_repond_404_et_nomme_les_bons(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/contrepouvoirs?mecanisme=xyzzy")
+        self.assertEqual(erreur.exception.code, 404)
+        corps = json.loads(erreur.exception.read().decode("utf-8"))
+        self.assertIn("motion_censure", corps["mecanismes"])
+
+    def test_la_synthese_des_contrepouvoirs_annonce_sa_date(self):
+        _, donnees = self._appel("/api/contrepouvoirs")
+        self.assertGreaterEqual(len(donnees["mecanismes"]), 25)
+        self.assertGreaterEqual(len(donnees["verrous"]), 30)
+        self.assertRegex(donnees["date_etat_des_assemblees"], r"^\d{4}-\d{2}-\d{2}$")
+        self.assertTrue(donnees["avertissement"])
+        self.assertTrue(donnees["coherence"]["conforme"], donnees["coherence"])
+        self.assertIn("blocage", donnees["titre"] + donnees["accroche"].lower() + "blocage")
+
+
+class TestInstancesServies(unittest.TestCase):
+    """/api/instances et /api/dynamiques : les autorités, le yoyo, et les fentes."""
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        with urllib.request.urlopen(url, timeout=60) as reponse:
+            return reponse.status, json.loads(reponse.read().decode("utf-8"))
+
+    def test_une_instance_porte_sa_chaine_de_controle(self):
+        statut, donnees = self._appel("/api/instances?instance=conseil_etat")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["instance"]["cle"], "conseil_etat")
+        self.assertTrue(donnees["instance"]["fondement_resolu"]["articles"])
+        for maillon in donnees["controles"]["chaine"]:
+            self.assertTrue(maillon["controle_par"])
+
+    def test_qui_gravite_autour_d_un_article(self):
+        _, donnees = self._appel("/api/instances?article=49")
+        cles = {i["cle"] for i in donnees["instances"]}
+        self.assertIn("assemblee_nationale", cles)
+        self.assertIn("gouvernement", cles)
+
+    def test_le_registre_complet_est_cohérent(self):
+        _, donnees = self._appel("/api/instances")
+        self.assertTrue(donnees["coherence"]["conforme"], donnees["coherence"])
+        self.assertGreaterEqual(len(donnees["instances"]), 25)
+        self.assertIn("pas un droit", donnees["avertissement"])
+        referendaire = [b for b in donnees["boucles_de_controle"] if b["cle"] == "loi_referendaire"]
+        self.assertTrue(referendaire[0]["sans_controle"], "la fente de 1962 doit rester visible")
+
+    def test_une_instance_inconnue_repond_404(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/instances?instance=conseil_des_epices")
+        self.assertEqual(erreur.exception.code, 404)
+
+    def test_le_yoyo_se_calcule_a_partir_d_un_numero_d_article(self):
+        statut, donnees = self._appel("/api/dynamiques?trajet=47")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["cle"], "budget")
+        self.assertEqual(donnees["jours_de_rigueur"], sum(e["jours"] for e in donnees["etapes"]))
+        self.assertIn("constat", donnees["fenetre_residuelle"]["note"])
+        self.assertTrue(all(e["fondement"].startswith("Article") for e in donnees["etapes"] if e["fondement"]))
+
+    def test_la_fente_du_congres_rend_son_calcul(self):
+        _, donnees = self._appel("/api/dynamiques?fente=congres_par_exprimes")
+        self.assertEqual(donnees["type"], "fente")
+        self.assertIsNone(donnees["robustesse"]["irrefutabilite"])
+        calculs = {c["suffrages_exprimes"]: c["voix_requises"] for c in donnees["effet_chiffre"]["calcul"]}
+        self.assertEqual(calculs[925], 555)
+        self.assertEqual(calculs[300], 180)
+        for premise in donnees["premisses"]:
+            self.assertTrue(premise["resolu"]["resolu"], premise)
+
+    def test_les_strategies_se_filtrent_par_famille(self):
+        _, donnees = self._appel("/api/dynamiques?famille=armer")
+        self.assertTrue(donnees["strategies"])
+        self.assertEqual({s["famille"] for s in donnees["strategies"]}, {"armer"})
+
+    def test_une_fente_inventee_repond_404(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/dynamiques?fente=le_trou_de_la_raquette")
+        self.assertEqual(erreur.exception.code, 404)
+        corps = json.loads(erreur.exception.read().decode("utf-8"))
+        self.assertIn("congres_par_exprimes", corps["fentes"])
 
 
 class TestLectureClaireServie(unittest.TestCase):
@@ -802,3 +971,160 @@ class TestCacheDesBulles(unittest.TestCase):
         _, complet = self._duree("/api/bulles?detail=resume")
         self.assertGreater(len(complet.get("bulles", {})), 50)
         self.assertEqual(sorted(bulles), ["tva_taux_normal"])
+
+
+class TestNuancesServies(unittest.TestCase):
+    """/api/nuances : les réglages institutionnels recalculés, en HTTP."""
+
+    from simulateur.nuances_institutionnelles import INDICES, reglages_catalogue
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        try:
+            with urllib.request.urlopen(url, timeout=60) as reponse:
+                return reponse.status, json.loads(reponse.read().decode("utf-8"))
+        except urllib.error.HTTPError as erreur:
+            return erreur.code, json.loads(erreur.read().decode("utf-8"))
+
+    def test_la_synthese_porte_tous_les_etages(self):
+        statut, donnees = self._appel("/api/nuances")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["objet"], "nuances_institutionnelles")
+        self.assertEqual(donnees["resume"]["reglages_disponibles"], len(TestNuancesServies.reglages_catalogue()))
+        self.assertEqual(set(donnees["indices"]), set(TestNuancesServies.INDICES))
+        self.assertTrue(all(i["valeur"] == 50.0 for i in donnees["indices"].values()))
+        self.assertEqual(donnees["coherence"]["cibles_inconnues"], [])
+        self.assertTrue(donnees["limites"])
+
+    def test_reglage_unique_renseigne_sa_fiche(self):
+        statut, donnees = self._appel("/api/nuances?reglage=reglage_censure_assiette")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["cle"], "reglage_censure_assiette")
+        self.assertEqual(donnees["touchant"][0]["verrou"], "censure_voix")
+        self.assertTrue(donnees["fentes_affectees"])
+        statut, erreur = self._appel("/api/nuances?reglage=pas_un_reglage")
+        self.assertEqual(statut, 404)
+        self.assertIn("reglage_censure_assiette", erreur["reglages"])
+
+    def test_parametres_recalcules_en_http(self):
+        encoded = urllib.parse.quote(json.dumps({"reglage_delai_budget_retraite": 20.0}))
+        statut, donnees = self._appel(f"/api/nuances?parametres={encoded}")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["seuils"]["budget_an_delai"]["regle"], 20)
+        statut, erreur = self._appel("/api/nuances?parametres=%7Bpas%20du%20json")
+        self.assertEqual(statut, 400)
+
+    def test_article_niveau_et_index(self):
+        _, donnees = self._appel("/api/nuances?article=CONST_ART_49")
+        self.assertIn("reglage_49_3_interdiction", donnees["reglages"])
+        self.assertIn("reglage_49_3_interdiction", {fiche["reglage"] for fiche in donnees["fiches"]})
+        # Le croisement ne s'arrête pas aux réglages : il dresse tout l'article.
+        self.assertIn("censure_voix", donnees["verrous"])
+        self.assertIn("censure_par_membres", donnees["fentes"])
+        self.assertTrue(donnees["instances"] and donnees["mecanismes"] and donnees["trajets"])
+        self.assertEqual(donnees["compte"]["reglages"], len(donnees["reglages"]))
+        # Toutes les notations du même article retombent sur le même numéro.
+        for notation in ("49", "article 49", "CONST_ART_49", "art. 49.3"):
+            with self.subTest(article=notation):
+                meme = self._appel(f"/api/nuances?article={urllib.parse.quote(notation)}")[1]
+                self.assertEqual(meme["article"], "49")
+                self.assertEqual(meme["reglages"], donnees["reglages"])
+        self.assertEqual(self._appel("/api/nuances?article=zzz")[1].get("reglages"), [])
+        _, niveau = self._appel("/api/nuances?niveau=Territorial")
+        self.assertEqual(niveau["tableau"]["niveau"], "Territorial")
+        self.assertTrue(niveau["tableau"]["reglages"])
+        self.assertEqual(self._appel("/api/nuances?niveau=Mars")[0], 404)
+        _, indice = self._appel("/api/nuances?index=vitesse_legislative")
+        self.assertEqual(indice["cle"], "vitesse_legislative")
+        self.assertEqual(self._appel("/api/nuances?index=bidon")[0], 404)
+
+    def test_strates_et_garde_fous_de_la_couche(self):
+        _, strate = self._appel("/api/nuances?strate=2")
+        self.assertEqual(strate["strate"], 2)
+        self.assertEqual(len(strate["tableau"]["reglages"]), len(TestNuancesServies.reglages_catalogue()))
+        self.assertEqual(strate["tableau"]["reglages_actifs"], [])
+        self.assertEqual(strate["tableau"]["fentes_verrouillees"], [])
+        # Une strate ne se lit pas toute seule : le vecteur doit voyager avec la requête.
+        encoded = urllib.parse.quote(json.dumps({"reglage_censure_assiette": 1.0}))
+        _, remuee = self._appel(f"/api/nuances?strate=2&parametres={encoded}")
+        self.assertIn("censure_voix", remuee["tableau"]["verrous_touches"])
+        self.assertEqual(remuee["tableau"]["reglages_actifs"], ["reglage_censure_assiette"])
+        self.assertEqual(len(remuee["tableau"]["fentes_verrouillees"]), 0)
+        self.assertEqual(self._appel("/api/nuances?strate=9")[0], 404)
+        statut, garde_fous = self._appel("/api/nuances?coherence=1")
+        self.assertEqual(statut, 200)
+        for cle in ("verrous_non_expliques", "reglages_sans_cible_chiffree", "exemptions_perimees",
+                    "trajets_sans_reglage", "fentes_inaccessibles_d_un_reglage", "fentes_non_ciblees",
+                    "reglages_sans_strate", "reglages_sans_article", "reglages_sans_regle",
+                    "apports_sans_reglage", "cibles_inconnues", "articles_hors_registre",
+                    "indices_anormaux", "verrous_doublement_classes", "verrous_inventes"):
+            with self.subTest(garde_fou=cle):
+                self.assertEqual(garde_fous[cle], [], f"{cle} : {garde_fous[cle]}")
+        self.assertEqual(garde_fous["strates_couvertes"], [1, 2, 3, 4, 5])
+        self.assertEqual(garde_fous["reglages_sans_strate"], [])
+        # La strate nationale porte tous les réglages (une loi nationale touche tout le
+        # monde) ; les autres strates n'en portent qu'une partie. C'est ce que mesure la
+        # liste `reglages_sans_strate`, qui doit rester vide.
+        self.assertEqual(max(garde_fous["reglages_par_strate"].values()),
+                         len(TestNuancesServies.reglages_catalogue()))
+        self.assertEqual(sorted(garde_fous["reglages_par_strate"]), ["1", "2", "3", "4", "5"])
+        # Au statu quo, aucun verrou n'a bougé ; et les 38 verrous se partagent
+        # exactement entre « réglables » et « expliqués hors réglage ».
+        self.assertEqual(garde_fous["verrous_regles"], [])
+        from simulateur.gouvernance_contrepouvoir import VERROUS
+        self.assertEqual(
+            sorted(garde_fous["verrous_reglables"] + garde_fous["verrous_expliques_hors_reglage"]),
+            sorted(VERROUS))
+        self.assertFalse(set(garde_fous["verrous_reglables"])
+                         & set(garde_fous["verrous_expliques_hors_reglage"]))
+
+    def test_post_accepte_le_vecteur_complet(self):
+        url = f"http://127.0.0.1:{self.__class__.port}/api/nuances"
+        corps = json.dumps({"parametres": {
+            "reglage_censure_assiette": 1.0, "reglage_delai_motion_49_3": 48.0}}).encode("utf-8")
+        requete = urllib.request.Request(url, data=corps, method="POST",
+                                         headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(requete, timeout=60) as reponse:
+            donnees = json.loads(reponse.read().decode("utf-8"))
+        self.assertEqual(donnees["seuils"]["censure_voix"]["regle"], 231)
+        self.assertEqual(donnees["seuils"]["49_3_delai_motion"]["regle"], 72)
+        # un corps vide doit répondre aussi : le statu quo reste un état légitime
+        requete = urllib.request.Request(url, data=b"{}", method="POST",
+                                         headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(requete, timeout=60) as reponse:
+            vierge = json.loads(reponse.read().decode("utf-8"))
+        self.assertEqual(vierge["resume"]["reglages_deplaces"], 0)
+        self.assertTrue(all(ligne["ecart"] == 0 for ligne in vierge["seuils"].values()))
+        self.assertTrue(all(not ligne["reglages_appliques"] for ligne in vierge["seuils"].values()))
+
+    def test_les_autres_registres_rappellent_leurs_reglages(self):
+        _, constitution = self._appel("/api/constitution?article=49")
+        self.assertIn("reglage_49_3_interdiction", constitution["reglages"])
+        self.assertGreaterEqual(constitution["croisements"]["verrous"], 1)
+        _, instance = self._appel("/api/instances?instance=conseil_superieur_de_la_magistrature")
+        self.assertIn("reglage_parquet_independant", instance["reglages"])
+        _, mecanisme = self._appel("/api/contrepouvoirs?mecanisme=motion_censure")
+        self.assertIn("reglage_censure_assiette", mecanisme["reglages"])
+
+    def test_recherche_sur_les_reglages(self):
+        _, donnees = self._appel("/api/nuances?chercher=quorum")
+        cles = {ligne["cle"] for ligne in donnees["reglages"]}
+        self.assertIn("reglage_congres_quorum", cles)
+        self.assertTrue(all(ligne["niveau"] for ligne in donnees["reglages"]))
+        self.assertEqual(donnees["nombre"], len(donnees["reglages"]))
+        self.assertEqual(self._appel("/api/nuances?chercher=zzz")[1]["reglages"], [])

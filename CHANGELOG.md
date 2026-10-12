@@ -6,6 +6,188 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Corrigé — Nettoyage de lint sur les fichiers de la passe, et mort-de-code retiré
+
+- `simulateur/nuances_institutionnelles.py` : trois variables calculées et jamais lues dans
+  `coherence_nuances()` (`chiffrees`, `index_cibles`, `liees`) supprimées — leurs contrôles sont
+  produits ailleurs, en direct (`cibles_inconnues`, `apports_sans_reglage`, `reglages_sans_article`) ;
+  une boucle `for … : pass` sans effet dans `reglages_touchant()` retirée ; import `Iterable` inutile,
+  ligne blanche avec espaces, variables `l` renommées.
+- `outils/generer-doc-nuances.py` : import inutilisé, parenthèses superflues, variables `l` renommées ;
+  sa sortie est restée octet pour octet identique (contrôlée par `--verifier`).
+- `simulateur/constitution_analysee.py`, `simulateur/instances_et_dynamiques.py`,
+  `tests/test_constitution_analysee.py`, `tests/test_dashboard.py`,
+  `tests/test_gouvernance_contrepouvoir.py` : imports inutilisés et variables `l` repris.
+- La dette de style préexistante du dépôt (`typing.List`/`Dict` au lieu de `list`/`dict`, 1 196
+  avertissements `UP006`/`UP035`/`UP045` déjà sur `main`) n'est **pas** reprise ici : une bascule
+  mécanique de 1 400 sites dans cette branche noierait le diff. Elle mérite son propre commit,
+  `ruff check . --fix`, sans changement de comportement.
+- Vérifications : 956 tests OK, sept scénarios `main.py` rejoués, export JSON contrôlé, quatre
+  générateurs `--verifier` à zéro. Le déploiement Vercel du projet de production, rouge sur `main`
+  (l'`ImportError` du pont), est vert sur la branche.
+
+### Ajouté — Sept réglages neufs, un plan « sans trou », et le contrat Vercel réellement tenu
+
+- `simulateur/nuances_institutionnelles.py` : **7 réglages de plus** (55 au total, catalogue à
+  **156 leviers**) — `reglage_procedure_acceleree_encadree` (0 à 45 jours),
+  `reglage_nouvelle_deliberation_supprimee`, `reglage_commission_enquete_droit_de_bloc`,
+  `reglage_haute_cour_non_parlementaire` (collège de 120 non parlementaires),
+  `reglage_cee_consultation_prealable` (0 à 30 jours), `reglage_defenseur_saisine_directe`,
+  `reglage_declassification_legislative` (0 à 30 jours). Chacun déclare ses cibles chiffrées, ses
+  articles et ses apports d'indices ; aucun n'est adossé à un préréglage, et le document
+  `docs/SIMULATEUR_PARAMETRABLE.md` le dit (16 préréglages recensés).
+- `etat_des_verrous()` : le registre des 38 verrous est partagé en **touchés / intacts / hors
+  réglage** (20 + 18, la somme est contrôlée sur trois vecteurs), avec avertissements pour les règles
+  privées de leur objet par un réglage. La clé `verrous` voyage dans `contexte_institutionnel` et
+  donc dans `POST /api/nuances`.
+- Interface : nouvelle section `#section-verrous` (trois colonnes + neutralisations) et liste des
+  réglages déplacés avec badges par catégorie de connaissance ; les citations de la Constitution
+  deviennent le lien `/api/constitution?article=N` déjà utilisé pour les leviers (`articlesHtml`),
+  les autres sources restent du texte. un test délègue à `outils/generer-index-simulateur.py --verifier` pour
+  refuser un `index.html` qui ne serait pas la page courante, et le harnais Node contrôle le rendu du bloc.
+- `docs/18_PLAN_GLOBAL_BRAINSTORMING_ET_SANS_TROU.md` : la clause « sans trou » définition par
+  définition, la carte du dépôt, 32 possibilités examinées dont 6 ouvertes assumées, la table des 7
+  réglages neufs, le protocole de relance et les limites.
+- **Deux trous structureux corrigés.** D'une part `api/` comptait 23 fonctions générées — et le pont
+  `api/[...path].py`, seul appelé par Vercel, importait une classe `PontAPI` que
+  `simulateur/pont_api.py` ne définissait pas : toute l'API en production renvoyait une erreur
+  d'import pendant que la suite restait verte. `simulateur/pont_api.py` définit désormais
+  `chemin_de_pont()` et `PontAPI` ; `outils/generer-fonctions-api.py` n'écrit que le parapluie et
+  supprime les fichiers par route ; `tests/test_vercel_runtime.py` charge la fonction unique par son
+  chemin et sert deux routes par HTTP réel. D'autre part les compteurs de la documentation
+  (« 149 leviers », « 48 réglages ») sont passés aux valeurs courantes dans les 10 fichiers d'état
+  et `simulateur/lexique.py`, et `outils/generer-doc-nuances.py` régénère désormais les sept tableaux
+  de `docs/17` avec un mode `--verifier` qui échoue si la page a pris du retard.
+- `tests/test_plan_global_croisements.py` : 30 tests sur les croisements de la passe (invariants de
+  registres, accessibilité des connaissances, plafonds de jours, cohérence des compteurs, contrat de
+  `api/`, limites de `docs/17`).
+
+### Ajouté — Toutes les nuances institutionnelles deviennent des réglages simulables
+
+- `simulateur/parametres.py` : **48 nouveaux leviers** préfixés `reglage_`, qui portent le
+  catalogue de 101 à **149 leviers** en 14 familles. Ils couvrent neuf niveaux —
+  constitutionnel (assiette de la censure, quorum du Congrès, assiette des trois
+  cinquièmes, contrôle des lois référendaires, interdiction du 49.3, verrou par loi
+  organique, par révision, par engagement international), parlementaire (délais de motion,
+  seuil de saisine, recours contre une irrecevabilité, droit d'amendement, part de l'ordre
+  du jour, seuil de groupes, scrutin nominal), budgétaire (délais de l'article 47 à l'envers
+  et à l'endroit, vote par programme, règle d'or du déficit, audit préalable), judiciaire
+  (appel du filtre QPC, parquet, mandats non renouvelables, avis du Conseil d'État,
+  exécution des arrêts, action de groupe), territorial et outre-mer (seuil de pétition,
+  référendum local automatique, plancher de dotation, suffrage direct des EPCI et du Sénat,
+  différenciation, matières transférées), européen (recours de subsidiarité, vote préalable
+  sur les actes délégués, ancrage dans le droit dérivé), participation (registre des
+  amendements, comptes en temps réel, chambre tirée au sort, veto suspensif de convention,
+  révocation, algorithmes) et exception (contrôle du juge, durée maximale de l'état
+  d'urgence, non-rétroactivité, stabilité normative).
+- Ces leviers sont des objets `Levier` **ordinaires** : description, unité, bornes, profil
+  quinquennal, `effets_directs` sur les thèmes du moteur, `source` citée et `articles=`
+  pointant vers les identifiants du registre légal. Ils héritent donc de tout ce qui existe
+  déjà — curseur dans l'interface, bulle d'interaction, ligne de la page de vérification,
+  case des préréglages — et **0 vaut partout statu quo** : aucun curseur ne prétend que
+  plus c'est haut, mieux c'est.
+- `simulateur/nuances_institutionnelles.py`, nouvelle couche de recalcul : le réglage n'est
+  pas un commentaire, il change les chiffres. **Seuils** — censure 289 → 231 voix selon
+  l'assiette (avec 347 votants de quorum à la troisième modalité), Congrès 555 voix fixes
+  contre 555/480/420/371 selon les votants, saisine du Conseil 60 → 40 → 15 → 0, délai
+  d'examen du budget 40 → 20 jours, seuil de groupes 15 → 5, état d'urgence borné à 24 mois.
+  **Calendriers** — chaque battement réglable voit ses jours de rigueur bouger (une chambre
+  tirée au sort et un veto de convention ajoutent 140 jours à la navette ordinaire), et la
+  fenêtre législative utile se recalcule sur la part d'ordre du jour laissée au Parlement
+  (150 → 75 jours), la tenabilité de chaque trajet étant rejugée à chaque fois.
+  **Fentes** — le score de défendabilité baisse quand un réglage la verrouille (censure sur
+  effectif 72 → 0, référendum sans juge 79 → 0), `irrefutabilite` reste vide : un réglage
+  ferme une porte, il ne rend rien inattaquable. **Huit indices** à base 50 = l'état du
+  droit, avec leurs composantes affichées et la saturation visible (`borne_appliquee`).
+- `GET /api/nuances` : synthèse, `?reglage=`, `?article=CONST_ART_49`, `?niveau=`,
+  `?index=`, `?chercher=`, et `?parametres={…}` pour rejouer un vecteur ; `api/nuances.py`
+  ajouté par le générateur (21 fonctions).
+- Le préréglage « refondation démocratique » déplace désormais 6 de ces réglages, et la
+  couche lui rend ce que le droit lui refuse : deux fentes verrouillées, redevabilité à 74,
+  contrôle juridictionnel à 75.
+- `parametres.normaliser()` : une valeur de type `choix` hors bornes est écrêtée **puis**
+  validée dans la liste des modalités — l'écrêtage aux bornes s'appliquait à tout le monde
+  sauf aux choix, ce qui faisait échouer le balayage de bornes du moteur.
+- `docs/17_NUANCES_INSTITUTIONNELLES_ET_REGLAGES.md`, générée en relisant le module (tableau
+  des 48 réglages, seuils, calendrier, fentes, indices, quatre expériences chiffrées) ;
+  lignes 15, 16 et 17 ajoutées à l'index de `docs/README.md` ; compteurs « 101 leviers »
+  repris en « 149 » dans README, `docs/SIMULATEUR_PARAMETRABLE.md`, `docs/REPOSITORY_DETAILS.md`,
+  `docs/PLAN_AUDIT_GLOBAL.md`, `docs/HEBERGEMENT.md`, `docs/15`, `NOTE_POUR_CLAUDE.md`,
+  `outils/details_depot.py` et le lexique ; `index.html` régénéré.
+- 46 tests nouveaux (41 dans `tests/test_nuances_institutionnelles.py`, 5 HTTP dans
+  `tests/test_dashboard.py`) dont la neutralité stricte : vecteur par défaut = chiffres des
+  modules de droit, au jour et à la voix près. Suite : **919 tests**, 11 sauts.
+
+### Ajouté — Instances qui gravitent à tous les étages, yoyo des chambres, fentes non écrites
+
+- `simulateur/instances_et_dynamiques.py` : **26 instances** (constitutionnelles, administratives,
+  judiciaires, financières, indépendantes, parlementaires, territoriales, européennes,
+  internationales, plus le Président, le Gouvernement et le corps électoral), chacune décrite par
+  sa saisine, ses effets et surtout **qui la contrôle** — le champ `juge_par` est obligatoire, une
+  instance qui ne répond devant personne doit le dire au lieu de le taire.
+- **8 trajets** en battements chiffrés (navette ordinaire, budget, révision par Congrès, révision
+  par référendum, renversement, QPC, contentieux local, RIP) : chaque battement cite l'article qui
+  l'autorise et un nombre de **jours de rigueur**. `oscillation()` confronte le total à la fenêtre
+  législative résiduelle — 150 jours au 12 octobre 2026, constat daté et non un texte : la navette
+  ordinaire (160 jours, 10 battements) n'y tient pas.
+- `asymetrie_des_chambres()` mesure ce que le Sénat peut seulement retarder (jamais sur une loi
+  ordinaire ni sur le budget) et où il tient un veto réel (l'article 89, sans CMP ni dernier mot).
+- **15 stratégies** déjà servies (49.3, censure, abstention de la majorité, vote bloqué, article
+  40, gage, motions de procédure, niche, commission d'enquête, soixante saisines, défossilisation,
+  nouvelle délibération, référendum de l'article 11, procédure accélérée, référé-liberté) et
+  **12 fentes et portes** : conséquences non écrites dont chaque prémisse se résout dans le dépôt,
+  avec raison du silence, verrou de retour et point de vigilance.
+- Deux résultats chiffrés, calculés et non commentés : le Congrès compte les suffrages exprimés
+  (180 voix si 300 parlementaires votent, contre 555 sur 925 sièges) alors que la censure compte
+  les membres (289, quel que soit le nombre de votants) — la même abstention, deux effets
+  contraires, et aucun texte pour la dénoncer.
+- `robustesse()` note la défendabilité sur un barème public et laisse `irrefutabilite` à `None` :
+  le Conseil d'État contrôle la compétence, la procédure et la motivation, jamais la logique d'une
+  démonstration. Un test interdit les formules qui présenteraient une fente comme gagnée.
+- `coherence_avec_le_droit()` refuse toute référence orpheline (article, identifiant du registre,
+  verrou, mécanisme, instance) et toute fente annoncée chiffrée sans calcul ; la normalisation
+  bascule les leviers inventés dans `pistes`, comme pour les fiches constitutionnelles.
+- Deux routes, `GET /api/instances` et `GET /api/dynamiques`, fonctions Vercel régénérées
+  (20 routes dans `api/`), 29 tests de module et 8 tests HTTP — suite complète à 873 tests,
+  `OK (skipped=11)`.
+- `docs/16_INSTANCES_YOYO_ET_FENTES.md` : la méthode des trois conditions, le tableau des fentes
+  et de leurs scores, et ce que le module refuse d'affirmer.
+
+
+### Ajouté — La Constitution ficheée article par article et l'arithmétique des contre-pouvoirs
+
+- `simulateur/constitution_analysee.py` : 109 fiches, une par article en vigueur du texte
+  officiel (Titres I → XVI), plus 10 entrées pour les articles abrogés (78 à 86, 90).
+  Chaque fiche porte ses règles chiffrées, ses opportunités, ses contraintes, les
+  contre-pouvoirs qui l'encadrent, les articles à lire avec, les strates qui encaissent,
+  les mécanismes du moteur et les leviers réels du catalogue. `couverture()` garantit
+  l'exhaustivité, `article()` accepte « art. 49 », « 49 al. 3 » et « 49.3 ».
+- La fabrique filtre les leviers sur `parametres.LEVIERS` et bascule tout nom inconnu dans
+  un champ `pistes` : une fiche ne peut plus promettre un levier qui n'existe pas (101 occurrences de pistes distinctes
+  aujourd'hui, aucune d'entre elles chiffrée dans le simulateur).
+- `simulateur/gouvernance_contrepouvoir.py` : 31 manœuvres et 38 verrous chiffrés — signatures,
+  majorités, délais, plafonds — avec `ETAT_ASSEMBLEES` daté du 12 octobre 2026
+  (574 sièges pourvus à l'Assemblée, 289 pour la majorité absolue, 175 au Sénat, 555 au
+  Congrès sur 925 suffrages exprimés). `coherence_avec_les_fiches()` refuse qu'un mécanisme
+  ne soit relié à aucune fiche.
+- Passerelle `vers_registre_legal()` : `REGISTRE_LEGAL` passe de 37 à 189 identifiants sans
+  que les 37 entrées constitutionnelles préexistantes soient touchées, et chaque entrée
+  greffée est marquée « synthèse de travail » avec la source et sa date.
+- `simulateur/verification.py` n'importe plus le module constitutionnel au chargement
+  (cycle d'imports évité) et résout les statuts à la demande, en donnant la priorité aux
+  entrées manuelles.
+- Deux fichiers de tests (45 cas) recalculent les seuils à la main, 8 cas testent les routes :
+  suite complète à 836 tests, `OK (skipped=11)`. Les 7 échecs du harnais navigateur ont été corrigés au
+  passage (`tests/navigateur_interface.mjs` extrayait le mauvais bloc `<script>`).
+- Deux routes JSON : `GET /api/constitution` (`?article=`, `?bloc=`, `?fonction=`,
+  `?chercher=`) et `GET /api/contrepouvoirs` (`?mecanisme=`, `?assemblee=`, `?chercher=`),
+  avec 404 explicites et liste des noms connus. `outils/generer-fonctions-api.py` a été
+  relancé (18 fonctions dans `api/`) et accepte maintenant les noms de route avec
+  underscore : `/api/garde_fous`, déclaré par le moteur mais jamais exposé, l'est du
+  même coup. Aucune section d'interface ajoutée.
+- `docs/15_CONSTITUTION_FICHEE_ET_CONTRE_POUVOIRS.md` : ce qui est couvert, ce qui ne
+  l'est pas, et comment le vérifier.
+
 ### Modifié — Une seule fonction Vercel pour les routes du moteur (`api/`)
 
 - `api/` ne contient plus une fonction par route (16 fichiers) : la fonction
@@ -27,7 +209,9 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   unique, 404, destination de réécriture, HEAD, export sans écriture disque, et
   générateur (suppression limitée aux fichiers générés, refus sur fichier inconnu).
 - README et `docs/HEBERGEMENT.md` documentent le déploiement Vercel. Aucune règle de
-  réécriture `vercel.json` n'est ajoutée. `index.html` est inchangé.
+  réécriture `vercel.json` n'est ajoutée. (Écrit à une passe où le générateur produisait encore un
+  fichier par route : la page était donc vraie sur le papier, fausse sur le terrain. La passe
+  suivante l'a rendue exacte, tests à l'appui.)
 
 ## [1.10.2] — 2026-10-08
 

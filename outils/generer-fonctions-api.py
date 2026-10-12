@@ -16,12 +16,12 @@ Les fonctions propres au site (voir `FONCTIONS_DU_SITE`, par exemple
 """
 
 from __future__ import annotations
-from typing import Set, Tuple
 
 import argparse
 import re
 import sys
 from pathlib import Path
+from typing import Set, Tuple
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
@@ -46,12 +46,27 @@ ROUTES: Tuple[str, ...] = (
     "conseil",
     "lexique",
     "marches",
+    "garde_fous",
+    "constitution",
+    "contrepouvoirs",
+    "instances",
+    "dynamiques",
+    "nuances",
 )
 
-GABARIT = '''"""Fonction Vercel — route {route} du simulateur.
+#: La fonction unique servie par Vercel : un seul fichier `.py` dans `api/`, parce que
+#: chaque fichier de ce dossier devient une Serverless Function à lui seul et que l'offre
+#: Hobby plafonne à douze fonctions par déploiement. Le pont rétablit le chemin demandé
+#: (`/api/<route>?...path=<route>` → `/api/<route>`), voir `simulateur/pont_api.py`.
+GABARIT_PONT = '''"""Fonction Vercel unique — {total} routes `/api/*` du simulateur.
 
-Fichier généré par `outils/generer-fonctions-api.py` : ne pas modifier à la
-main. Toute la logique vient du moteur, voir `simulateur/pont_api.py`.
+Fichier généré par `outils/generer-fonctions-api.py` : ne pas modifier à la main. Une
+seule fonction sert {total} routes (`{liste}`, …) : Vercel n'en compte qu'une, ce qui
+reste sous le plafond de douze fonctions par déploiement de l'offre Hobby. Le moteur
+route lui-même sur le chemin reçu, voir `simulateur/pont_api.py`.
+`verifier-source.py` reste une fonction distincte, propre au site.
+
+Vérifié par `outils/generer-fonctions-api.py --verifier`.
 """
 
 import pathlib
@@ -61,18 +76,21 @@ RACINE = pathlib.Path(__file__).resolve().parent.parent
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
-from simulateur.pont_api import FonctionAPI  # noqa: E402
+from simulateur.pont_api import PontAPI  # noqa: E402
+
+#: Routes que cette fonction s'engage à servir — relue par les tests.
+ROUTES = ({routes},)
 
 
-class handler(FonctionAPI):
-    ROUTE = "/api/{route}"
+class handler(PontAPI):  # noqa: N801 - nom attendu par Vercel
+    """Point d'entrée Vercel : hérite du moteur, sans rien redéfinir."""
 '''
 
 
 def routes_du_moteur() -> Set[str]:
     """Routes réellement servies, lues dans le source du moteur."""
     source = (RACINE / "simulateur" / "dashboard.py").read_text(encoding="utf-8")
-    return set(re.findall(r'chemin == "(/api/[a-z]+)"', source))
+    return set(re.findall(r'chemin == "(/api/[a-z_]+)"', source))
 
 
 def main() -> int:
@@ -93,30 +111,44 @@ def main() -> int:
         return 1
 
     dossier = RACINE / "api"
-    for nom in sorted(dossier.glob("*.py")):
-        if nom.stem not in ROUTES and nom.stem not in FONCTIONS_DU_SITE:
-            print(f"  fichier inattendu dans api/ : {nom.name}")
+    pont = dossier / "[...path].py"
+    contenu = GABARIT_PONT.format(
+        total=len(ROUTES),
+        liste=", ".join(f"/api/{route}" for route in ROUTES[:5]),
+        routes=", ".join(f'"{route}"' for route in ROUTES),
+    )
+    a_retirer = sorted(
+        nom for nom in dossier.glob("*.py")
+        if nom.stem not in (*ROUTES, *FONCTIONS_DU_SITE, "[...path]")
+        or (nom.stem in ROUTES and nom.name != "[...path].py")
+    )
 
     if options.verifier:
-        absents = [
-            nom for nom in (*ROUTES, *FONCTIONS_DU_SITE) if not (dossier / f"{nom}.py").is_file()
-        ]
-        if absents:
-            print(f"Fonctions manquantes dans api/ : {', '.join(absents)}")
+        absentes = [nom for nom in FONCTIONS_DU_SITE if not (dossier / f"{nom}.py").is_file()]
+        if absentes:
+            print(f"Fonctions du site manquantes dans api/ : {', '.join(absentes)}")
             return 1
-        print(
-            f"{len(ROUTES)} routes du moteur et {len(FONCTIONS_DU_SITE)} fonction(s) du site "
-            f"présentes dans api/."
-        )
+        if not pont.is_file() or pont.read_text(encoding="utf-8") != contenu:
+            print("La fonction Vercel unique est absente ou obsolète : relancer "
+                  "`python3 outils/generer-fonctions-api.py`.")
+            return 1
+        if a_retirer:
+            print("Fonctions par route encore présentes (une seule suffit, plafond Vercel) : "
+                  + ", ".join(nom.name for nom in a_retirer))
+            return 1
+        print(f"{len(ROUTES)} routes du moteur servies par la fonction unique api/[...path].py, "
+              f"{len(FONCTIONS_DU_SITE)} fonction(s) du site en plus.")
         return 0
 
-    dossier.mkdir(exist_ok=True)
     for nom in FONCTIONS_DU_SITE:  # jamais écrasées : elles n'existent pas côté moteur
         if (dossier / f"{nom}.py").is_file():
             print(f"Fonction du site conservée : api/{nom}.py")
-    for route in ROUTES:
-        (dossier / f"{route}.py").write_text(GABARIT.format(route=route), encoding="utf-8")
-    print(f"{len(ROUTES)} fonctions écrites dans api/ : {', '.join(ROUTES)}")
+    dossier.mkdir(exist_ok=True)
+    pont.write_text(contenu, encoding="utf-8")
+    for nom in a_retirer:
+        nom.unlink()
+        print(f"Fonction par route retirée : api/{nom.name}")
+    print(f"Fonction Vercel unique écrite : api/[...path].py — {len(ROUTES)} routes du moteur.")
     return 0
 
 

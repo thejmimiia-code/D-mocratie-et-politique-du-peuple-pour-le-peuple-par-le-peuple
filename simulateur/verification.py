@@ -66,6 +66,43 @@ class Verification:
 NON_VERIFIE_DEFAUT = "Source citée non consultée à la date de l'audit : valeur à vérifier."
 INTERNE_DOSSIER = "Chiffrage interne au dossier de mandature : hypothèse, non vérifiée."
 
+#: Statuts construits à la volée pour les cent neuf articles de la Constitution
+#: fusionnés dans le registre (voir `_statuts_constitution`).
+_STATUTS_CONSTITUTION: Dict[str, Verification] = {}
+
+#: Lettre affichée sur une fiche constitutionnelle : ce n'est pas un avis
+#: juridique, c'est une lecture de travail adossée au texte officiel.
+NOTE_CONSTITUTION = (
+    "Article {numero} de la Constitution : le texte, les seuils et les délais sont "
+    "vérifiés sur le site du Conseil constitutionnel (consulté le {date}). La "
+    "synthèse, les croisements entre articles, les mécanismes et l'effet attendu "
+    "dans le simulateur sont une lecture de travail : ce module alimente un modèle, "
+    "il ne remplace ni le Conseil constitutionnel ni un juriste."
+)
+
+
+def _statuts_constitution() -> Dict[str, Verification]:
+    """Statuts des articles de la Constitution, fabriqués à la première demande.
+
+    L'import est différé : `simulateur.constitution_analysee` s'appuie sur
+    `parametres`, qui lit le présent module — résoudre la table au chargement
+    créerait un cycle. Les articles déjà consignés à la main dans
+    `VERIFICATIONS_ARTICLES` (avec leur citation contrôlée texte par texte) ont
+    toujours la priorité : cette table ne sert que de relais.
+    """
+    if _STATUTS_CONSTITUTION:
+        return _STATUTS_CONSTITUTION
+    from .constitution_analysee import ARTICLES, DATE_CONSULTATION, SOURCE_CC
+
+    for numero in ARTICLES:
+        _STATUTS_CONSTITUTION[f"CONST_ART_{numero.replace('-', '_')}"] = Verification(
+            "partiel",
+            DATE_CONSULTATION,
+            SOURCE_CC,
+            NOTE_CONSTITUTION.format(numero=numero, date=DATE_CONSULTATION),
+        )
+    return _STATUTS_CONSTITUTION
+
 #: Leviers dont au moins une partie a été contrôlée sur une source officielle ou
 #: secondaire explicitement citée (voir `docs/PLAN_AUDIT_GLOBAL.md`, lots 2 et 3).
 VERIFICATIONS_LEVIERS: Dict[str, Verification] = {
@@ -239,9 +276,17 @@ def verification_levier(cle: str, source: str = "") -> Verification:
 
 
 def verification_article(identifiant: str) -> Verification:
-    """Statut d'un article du registre juridique."""
+    """Statut d'un article du registre juridique.
+
+    Ordre de priorité : l'entrée consignée à la main (texte recontrôlé sur
+    Légifrance, EUR-Lex ou le site officiel), puis le statut des fiches
+    constitutionnelles, puis le renvoi « non vérifié ».
+    """
     if identifiant in VERIFICATIONS_ARTICLES:
         return VERIFICATIONS_ARTICLES[identifiant]
+    constitution = _statuts_constitution().get(identifiant)
+    if constitution is not None:
+        return constitution
     return Verification(
         "non_verifie", "", "",
         "Texte cité non recontrôlé sur Légifrance, EUR-Lex ou le site officiel à la date de l'audit.",

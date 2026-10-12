@@ -18,7 +18,7 @@ Trois voies, du plus court au plus autonome :
 ## Pourquoi pas GitHub Pages ?
 
 GitHub Pages ne sert que des **fichiers statiques** : du HTML, du CSS, du
-JavaScript. Le simulateur, lui, **calcule** : 101 leviers croisés, moteur
+JavaScript. Le simulateur, lui, **calcule** : 156 leviers croisés, moteur
 gigogne à cinq échelons, contexte économique « à l'instant T ». Ce calcul se
 fait en Python, côté serveur. Une page statique ne peut pas l'exécuter.
 

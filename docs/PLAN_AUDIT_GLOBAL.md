@@ -9,7 +9,7 @@ avec l'état des lieux **mesuré** au moment de la rédaction.
 | Élément | Mesure |
 |---|---|
 | Code Python du simulateur (`simulateur/`) | ≈ 18 300 lignes |
-| Leviers de politique publique (`simulateur/parametres.py`) | 101 leviers, 14 familles, 14 presets |
+| Leviers de politique publique (`simulateur/parametres.py`) | 156 leviers, 14 familles, 16 presets |
 | Lignes budgétaires suivies (`simulateur/domaines.py`) | `LIGNES`, `DOMAINES`, `SPECS` (voir le module) |
 | Articles du registre juridique (`simulateur/reglements_lois.py`) | **49 articles**, 25 codes ou textes distincts |
 | Documents Markdown du dépôt | 34 (dont 29 dans `docs/`) |
