@@ -6,6 +6,42 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Ajouté — Instances qui gravitent à tous les étages, yoyo des chambres, fentes non écrites
+
+- `simulateur/instances_et_dynamiques.py` : **26 instances** (constitutionnelles, administratives,
+  judiciaires, financières, indépendantes, parlementaires, territoriales, européennes,
+  internationales, plus le Président, le Gouvernement et le corps électoral), chacune décrite par
+  sa saisine, ses effets et surtout **qui la contrôle** — le champ `juge_par` est obligatoire, une
+  instance qui ne répond devant personne doit le dire au lieu de le taire.
+- **8 trajets** en battements chiffrés (navette ordinaire, budget, révision par Congrès, révision
+  par référendum, renversement, QPC, contentieux local, RIP) : chaque battement cite l'article qui
+  l'autorise et un nombre de **jours de rigueur**. `oscillation()` confronte le total à la fenêtre
+  législative résiduelle — 150 jours au 12 octobre 2026, constat daté et non un texte : la navette
+  ordinaire (160 jours, 10 battements) n'y tient pas.
+- `asymetrie_des_chambres()` mesure ce que le Sénat peut seulement retarder (jamais sur une loi
+  ordinaire ni sur le budget) et où il tient un veto réel (l'article 89, sans CMP ni dernier mot).
+- **15 stratégies** déjà servies (49.3, censure, abstention de la majorité, vote bloqué, article
+  40, gage, motions de procédure, niche, commission d'enquête, soixante saisines, défossilisation,
+  nouvelle délibération, référendum de l'article 11, procédure accélérée, référé-liberté) et
+  **12 fentes et portes** : conséquences non écrites dont chaque prémisse se résout dans le dépôt,
+  avec raison du silence, verrou de retour et point de vigilance.
+- Deux résultats chiffrés, calculés et non commentés : le Congrès compte les suffrages exprimés
+  (180 voix si 300 parlementaires votent, contre 555 sur 925 sièges) alors que la censure compte
+  les membres (289, quel que soit le nombre de votants) — la même abstention, deux effets
+  contraires, et aucun texte pour la dénoncer.
+- `robustesse()` note la défendabilité sur un barème public et laisse `irrefutabilite` à `None` :
+  le Conseil d'État contrôle la compétence, la procédure et la motivation, jamais la logique d'une
+  démonstration. Un test interdit les formules qui présenteraient une fente comme gagnée.
+- `coherence_avec_le_droit()` refuse toute référence orpheline (article, identifiant du registre,
+  verrou, mécanisme, instance) et toute fente annoncée chiffrée sans calcul ; la normalisation
+  bascule les leviers inventés dans `pistes`, comme pour les fiches constitutionnelles.
+- Deux routes, `GET /api/instances` et `GET /api/dynamiques`, fonctions Vercel régénérées
+  (20 routes dans `api/`), 29 tests de module et 8 tests HTTP — suite complète à 873 tests,
+  `OK (skipped=11)`.
+- `docs/16_INSTANCES_YOYO_ET_FENTES.md` : la méthode des trois conditions, le tableau des fentes
+  et de leurs scores, et ce que le module refuse d'affirmer.
+
+
 ### Ajouté — La Constitution ficheée article par article et l'arithmétique des contre-pouvoirs
 
 - `simulateur/constitution_analysee.py` : 109 fiches, une par article en vigueur du texte

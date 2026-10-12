@@ -20,7 +20,11 @@ Deux niveaux de service cohabitent :
       - `GET  /api/constitution` : Constitution ficheée article par article (`?article=49`,
                                  `?bloc=XV`, `?fonction=…`, `?chercher=…`, sinon synthèse) ;
       - `GET  /api/contrepouvoirs` : seuils, majorités et blocages (`?mecanisme=…`,
-                                 `?assemblee=…`, `?chercher=…`, sinon synthèse).
+                                 `?assemblee=…`, `?chercher=…`, sinon synthèse) ;
+      - `GET  /api/instances`    : les autorités qui gravitent à chaque étage (`?instance=…`,
+                                 `?article=49`, `?saisine=soixante`, `?chercher=…`) ;
+      - `GET  /api/dynamiques`   : yoyo parlementaire et fentes non écrites (`?trajet=47`,
+                                 `?fente=…`, `?strategie=…`, `?famille=…`, `?boucles=1`).
 
   * **Scénarios historiques** du dépôt, conservés à l'identique pour la
     compatibilité (scripts, CI, utilisateurs) :
@@ -551,6 +555,92 @@ class DashboardHandler(BaseHTTPRequestHandler):
                                      "resultats": contre_pouvoirs.rechercher(recherche)})
                 else:
                     self._send_json(contre_pouvoirs.synthese_pour_api())
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/instances":
+            # Qui peut saisir quoi, et qui contrôle l'instance : le registre des autorités.
+            from . import instances_et_dynamiques as autorites
+
+            cle = query.get("instance", [""])[0]
+            numero = query.get("article", [""])[0]
+            acteur = query.get("saisine", [""])[0]
+            recherche = query.get("chercher", [""])[0]
+            try:
+                if cle:
+                    valeur = autorites.instance(cle)
+                    if valeur is None:
+                        self._send_json({
+                            "error": f"instance inconnue : {cle}",
+                            "instances": sorted(autorites.INSTANCES),
+                        }, status=404)
+                        return
+                    self._send_json({
+                        "instance": valeur.en_dict(),
+                        "controles": autorites.qui_juge(valeur.cle),
+                        "strategies": autorites.strategies_pour(instance_cle=valeur.cle),
+                    })
+                elif numero:
+                    self._send_json({"article": numero,
+                                     "instances": autorites.instances_pour_article(numero)})
+                elif acteur:
+                    self._send_json({"acteur": acteur,
+                                     "saisines": autorites.saisines_pour(acteur)})
+                elif recherche:
+                    self._send_json({"recherche": recherche,
+                                     "resultats": [r for r in autorites.rechercher(recherche)
+                                                   if r["type"] == "instance"]})
+                else:
+                    synthese = autorites.synthese_pour_api()
+                    self._send_json({k: synthese[k] for k in (
+                        "titre", "accroche", "avertissement", "date_observation", "niveaux",
+                        "effets", "instances", "boucles_de_controle", "coherence",
+                    )})
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/dynamiques":
+            # Le yoyo : battements, asymétrie des chambres, stratégies et fentes.
+            from . import instances_et_dynamiques as autorites
+
+            trajet = query.get("trajet", [""])[0]
+            fente = query.get("fente", [""])[0]
+            strategie = query.get("strategie", [""])[0]
+            famille = query.get("famille", [""])[0]
+            try:
+                if trajet:
+                    value = autorites.trajet(trajet)
+                    if value is None:
+                        self._send_json({
+                            "error": f"trajet inconnu : {trajet}",
+                            "trajets": sorted(autorites.TRAJETS),
+                        }, status=404)
+                        return
+                    self._send_json(autorites.oscillation(value.cle))
+                elif fente:
+                    if fente not in autorites.FENTES:
+                        self._send_json({
+                            "error": f"fente inconnue : {fente}",
+                            "fentes": sorted(autorites.FENTES),
+                        }, status=404)
+                        return
+                    self._send_json(autorites.FENTES[fente].en_dict())
+                elif strategie:
+                    if strategie not in autorites.STRATEGIES:
+                        self._send_json({
+                            "error": f"stratégie inconnue : {strategie}",
+                            "strategies": sorted(autorites.STRATEGIES),
+                        }, status=404)
+                        return
+                    self._send_json(autorites.STRATEGIES[strategie].en_dict())
+                elif famille:
+                    self._send_json({"famille": famille,
+                                     "strategies": autorites.strategies_pour(famille=famille)})
+                elif query.get("boucles", [""])[0] in ("1", "true", "oui"):
+                    self._send_json({"boucles": autorites.boucle_de_controles(),
+                                     "asymetrie": autorites.asymetrie_des_chambres()})
+                else:
+                    self._send_json(autorites.synthese_pour_api())
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 

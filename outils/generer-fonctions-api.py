@@ -49,6 +49,8 @@ ROUTES: Tuple[str, ...] = (
     "garde_fous",
     "constitution",
     "contrepouvoirs",
+    "instances",
+    "dynamiques",
 )
 
 GABARIT = '''"""Fonction Vercel — route {route} du simulateur.

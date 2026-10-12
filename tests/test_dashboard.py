@@ -717,6 +717,87 @@ class TestConstitutionServie(unittest.TestCase):
         self.assertIn("blocage", donnees["titre"] + donnees["accroche"].lower() + "blocage")
 
 
+class TestInstancesServies(unittest.TestCase):
+    """/api/instances et /api/dynamiques : les autorités, le yoyo, et les fentes."""
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        with urllib.request.urlopen(url, timeout=60) as reponse:
+            return reponse.status, json.loads(reponse.read().decode("utf-8"))
+
+    def test_une_instance_porte_sa_chaine_de_controle(self):
+        statut, donnees = self._appel("/api/instances?instance=conseil_etat")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["instance"]["cle"], "conseil_etat")
+        self.assertTrue(donnees["instance"]["fondement_resolu"]["articles"])
+        for maillon in donnees["controles"]["chaine"]:
+            self.assertTrue(maillon["controle_par"])
+
+    def test_qui_gravite_autour_d_un_article(self):
+        _, donnees = self._appel("/api/instances?article=49")
+        cles = {i["cle"] for i in donnees["instances"]}
+        self.assertIn("assemblee_nationale", cles)
+        self.assertIn("gouvernement", cles)
+
+    def test_le_registre_complet_est_cohérent(self):
+        _, donnees = self._appel("/api/instances")
+        self.assertTrue(donnees["coherence"]["conforme"], donnees["coherence"])
+        self.assertGreaterEqual(len(donnees["instances"]), 25)
+        self.assertIn("pas un droit", donnees["avertissement"])
+        referendaire = [b for b in donnees["boucles_de_controle"] if b["cle"] == "loi_referendaire"]
+        self.assertTrue(referendaire[0]["sans_controle"], "la fente de 1962 doit rester visible")
+
+    def test_une_instance_inconnue_repond_404(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/instances?instance=conseil_des_epices")
+        self.assertEqual(erreur.exception.code, 404)
+
+    def test_le_yoyo_se_calcule_a_partir_d_un_numero_d_article(self):
+        statut, donnees = self._appel("/api/dynamiques?trajet=47")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["cle"], "budget")
+        self.assertEqual(donnees["jours_de_rigueur"], sum(e["jours"] for e in donnees["etapes"]))
+        self.assertIn("constat", donnees["fenetre_residuelle"]["note"])
+        self.assertTrue(all(e["fondement"].startswith("Article") for e in donnees["etapes"] if e["fondement"]))
+
+    def test_la_fente_du_congres_rend_son_calcul(self):
+        _, donnees = self._appel("/api/dynamiques?fente=congres_par_exprimes")
+        self.assertEqual(donnees["type"], "fente")
+        self.assertIsNone(donnees["robustesse"]["irrefutabilite"])
+        calculs = {c["suffrages_exprimes"]: c["voix_requises"] for c in donnees["effet_chiffre"]["calcul"]}
+        self.assertEqual(calculs[925], 555)
+        self.assertEqual(calculs[300], 180)
+        for premise in donnees["premisses"]:
+            self.assertTrue(premise["resolu"]["resolu"], premise)
+
+    def test_les_strategies_se_filtrent_par_famille(self):
+        _, donnees = self._appel("/api/dynamiques?famille=armer")
+        self.assertTrue(donnees["strategies"])
+        self.assertEqual({s["famille"] for s in donnees["strategies"]}, {"armer"})
+
+    def test_une_fente_inventee_repond_404(self):
+        with self.assertRaises(urllib.error.HTTPError) as erreur:
+            self._appel("/api/dynamiques?fente=le_trou_de_la_raquette")
+        self.assertEqual(erreur.exception.code, 404)
+        corps = json.loads(erreur.exception.read().decode("utf-8"))
+        self.assertIn("congres_par_exprimes", corps["fentes"])
+
+
 class TestLectureClaireServie(unittest.TestCase):
     """La simulation servie porte sa lecture en phrases ordinaires."""
 
