@@ -50,6 +50,21 @@ Deux vrais défauts sont sortis de ce nettoyage — aucun n'était visible avant
    « rurales » (définition INSEE du rural) et le découpage en classes du modèle. L'écart est
    maintenant borné et nommé, et il reste à résorber (chantier P1-1).
 
+### 2.1 bis Une deuxième croix rouge, sur le même commit
+
+Le même commit porte deux contrôles Vercel : le projet de production est **vert**, et un
+second projet (`…-aazf`, un ancien nom de projet resté branché) **échoue à chaque poussée** —
+sur `main` comme sur les branches :
+
+```bash
+gh api repos/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/commits/df092fe/status \
+  --jq '.statuses[] | "\(.context) → \(.state)"'
+```
+
+*État : non corrigé, et hors de portée du dépôt.* Le remède n'est pas dans le code : il faut
+débrancher ou réparer ce second projet dans Vercel (P1‑4). Tant qu'il échoue, la conclusion
+« la CI est rouge » reste vraie pour qui regarde la page du commit plutôt que ses jobs.
+
 ### 2.2 Le dépôt annonçait des compteurs périmés
 
 Relevé le 12 octobre 2026 :
@@ -143,6 +158,7 @@ Chaque chantier porte sa preuve de fin : ce qu'il faudra montrer pour dire « c'
 |---|---|---|---|
 | P1‑1 | **Résorber le recouvrement de 21 communes** entre la strate rurale et les classes du modèle (`simulateur/model.py`) | une somme de strates qui dépasse son propre total est une incohérence de données, pas un détail d'arrondi | le test de `tests/test_territoires_elections.py` passe sans l'écart documenté |
 | P1‑2 | **Figer la date des données Banque mondiale** : l'URL de `simulateur/donnees_live.py` porte `date=2024` en dur, donc l'« instant T » peut rester figé sur 2024 sans que rien ne le signale | une donnée en direct qui n'avance plus sans le dire viole la promesse affichée | un indicateur daté dans le ruban, et un test qui refuse une période de plus d'un an |
+| P1‑4 | **Débrancher ou réparer le projet Vercel fantôme** (`…-aazf`) qui échoue sur `main` comme sur les branches | une croix rouge qu'on ne peut pas réparer dans le dépôt apprend la même chose qu'une CI rouge : à l'ignorer | le statut du dernier commit ne porte plus de contrôle en échec |
 | P1‑3 | **Étendre le garde-fou aux taux et aux parts** annoncés (« 30 % aux PME », « 3 % du PIB », « 5,5 % de TVA ») : aujourd'hui seuls les comptages du code sont couverts | ce sont les chiffres les plus cités dans les débats publics, donc les plus coûteux à voir vieillir | `outils/verifier-compteurs.py` couvre une famille « taux », avec contre-épreuve |
 
 ### P2 — Chantiers de fond, à décider avant de coder
