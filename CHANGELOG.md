@@ -30,8 +30,9 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   lieu de 52 dans trois documents ; « 33 garde-fous » au lieu de 31 dans deux fichiers ;
   « 16 routes du moteur » et « 20 routes exposées » au lieu de 22 ; « modèle gigogne à
   4 échelons » dans `simulateur/web_server.py` ; « 18 domaines d'impact » au lieu de 20 ; et
-  **dix-neuf comptes de tests recopiés** dans huit documents vivants. Les documents datés
-  gardent les leurs. `README.md` et `docs/METHODOLOGIE.md` annonçaient Python 3.9+ alors que
+  **douze comptes de tests recopiés** dans huit documents vivants (README, CONTRIBUTING,
+  NOTE_POUR_CLAUDE, docs/15, docs/16, docs/18, docs/METHODOLOGIE, docs/README). Les documents
+  datés gardent les leurs. `README.md` et `docs/METHODOLOGIE.md` annonçaient Python 3.9+ alors que
   `pyproject.toml` exige 3.11 : les deux documents sont alignés sur le `requires-python`.
 - La page compte désormais ses préréglages et ses scénarios comme ses leviers : lus dans les
   données servies, jamais écrits dans la phrase qui les annonce.
@@ -40,9 +41,10 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 - La dette annoncée dans l'entrée précédente a eu son commit dédié : 1 522 corrections
   automatiques (annotations `typing.List`/`Optional` au goût du jour, imports triés et
-  purgés, f-strings sans trou, lignes vides nettoyées) et 33 corrections décidées une à une
-  (`B007` : itérer sur `.values()` ; `B905` : `strict=False` écrit noir sur blanc ; `E402` :
-  `noqa` motivé pour les imports qui suivent l'aménagement de `sys.path`).
+  purgés, f-strings sans trou) et 51 corrections traitées à la main — 26 lignes vides
+  nettoyées, 10 `noqa` motivés pour les imports qui suivent l'aménagement de `sys.path`,
+  et 14 décisions : `B007` (itérer sur `.values()`), `C401`, `F841`, `B905` (`strict=False`
+  écrit noir sur blanc).
 - Une seule exception, déclarée dans `pyproject.toml` avec sa raison : la double espace de fin
   de ligne du gabarit du guide, qui vaut un saut de ligne en Markdown.
 - Deux vrais défauts sont sortis du nettoyage : le contrôle de parité des routes cherchait
