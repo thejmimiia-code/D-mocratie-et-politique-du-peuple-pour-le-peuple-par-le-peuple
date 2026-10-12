@@ -26,14 +26,13 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
 
-from simulateur.gouvernance_contrepouvoir import VERROUS                      # noqa: E402
-from simulateur.nuances_institutionnelles import (                            # noqa: E402
+from simulateur.gouvernance_contrepouvoir import VERROUS  # noqa: E402
+from simulateur.nuances_institutionnelles import (  # noqa: E402
     APPORTS,
     INDICES,
     NIVEAUX,
     REGLAGES,
     VERROUS_HORS_REGLAGE,
-    VERROUS_REGLAGES,
     coherence_nuances,
     delais_ajustes,
     fentes_recalculees,
@@ -43,7 +42,7 @@ from simulateur.nuances_institutionnelles import (                            # 
     tableau_des_niveaux,
     tableau_des_strates,
 )
-from simulateur.parametres import LEVIERS, PRESETS                            # noqa: E402
+from simulateur.parametres import LEVIERS, PRESETS  # noqa: E402
 
 CHEMIN = RACINE / "docs" / "17_NUANCES_INSTITUTIONNELLES_ET_REGLAGES.md"
 TITRE_SECTION_3 = "Les {n} réglages (préfixe `reglage_`), la règle et l'effet"
@@ -125,7 +124,7 @@ def section_seuils() -> str:
         f"- `{cle}` — {VERROUS[cle].nom} : {VERROUS_HORS_REGLAGE[cle]}"
         for cle in sorted(VERROUS_HORS_REGLAGE)
     )
-    return (("Les verrous dont un réglage déplace le nombre, avec la valeur de droit et la valeur "
+    return ("Les verrous dont un réglage déplace le nombre, avec la valeur de droit et la valeur "
              "réglée au statu quo (tous les écarts sont donc à zéro tant qu'aucun curseur ne "
              "bouge) :\n\n"
              + tableau(("Verrou", "Nom", "Article", "Droit", "Réglé", "Écart", "Unité",
@@ -134,7 +133,7 @@ def section_seuils() -> str:
                "Un trou assumé et daté est une décision ; un trou non dit est une omission. Ces "
                f"{len(VERROUS_HORS_REGLAGE)} verrous sont hors d'atteinte d'un curseur de politique "
                "publique, et la raison est écrite ici plutôt que laissée à l'interprétation :\n\n"
-               + explicites)
+               + explicites
             )
 
 
@@ -144,7 +143,7 @@ def section_delais() -> str:
                t["jours_de_rigueur_regles"], "tenable" if t["tenable_dans_la_fenetre"]
                else "**HORS FENÊTRE**") for t in delais["trajets"]]
     jours = delais
-    return (("Huit trajets, leurs jours de rigueur et leur tenue dans la fenêtre résiduelle de la "
+    return ("Huit trajets, leurs jours de rigueur et leur tenue dans la fenêtre résiduelle de la "
              "session. Le calendrier n'est pas un ornement : c'est lui qui décide si une réforme "
              "tient dans un quinquennat.\n\n"
              + tableau(("Trajet", "Nom", "Catégorie", "Droit (jours)", "Réglé (jours)",
@@ -152,7 +151,7 @@ def section_delais() -> str:
              + f"\n\nFenêtre résiduelle : {jours['fenetre_residuelle_statu_quo']} jours au statu quo, "
                f"{jours['fenetre_residuelle_reglee']} réglés. Textes forcables par session : "
                f"{jours['textes_forcables_par_session']}. Cohérence des jours avec l'oscillation "
-               f"des assemblées : `{jours['jours_coherents_avec_oscillation']}`.")
+               f"des assemblées : `{jours['jours_coherents_avec_oscillation']}`."
             )
 
 
@@ -233,8 +232,10 @@ SECTIONS = {
 
 def reconstruire(texte: str) -> str:
     lignes = texte.split("\n")
-    index_titres = [(i, m.group(1)) for i, l in enumerate(lignes)
-                    if (m := re.match(r"^## (\d+)\.", l))]
+    index_titres = []
+    for i, ligne in enumerate(lignes):
+        if (m := re.match(r"^## (\d+)\.", ligne)):
+            index_titres.append((i, m.group(1)))
     # 1. le paragraphe de compte rendu, juste sous le titre de premier niveau
     corps = "\n".join(lignes[:index_titres[0][0]])
     nouveau = reconstruire_intro(corps) + "\n"
@@ -268,8 +269,8 @@ def reconstruire(texte: str) -> str:
 
 def reconstruire_intro(corps: str) -> str:
     lignes = corps.split("\n")
-    for i, l in enumerate(lignes):
-        if l.startswith("Le catalogue compte"):
+    for i, ligne in enumerate(lignes):
+        if ligne.startswith("Le catalogue compte"):
             fin = i
             while fin < len(lignes) and lignes[fin].strip():
                 fin += 1

@@ -156,7 +156,8 @@ class TestInterfaceDansNode(unittest.TestCase):
         routes = ["POST /api/simuler", "POST /api/simuler#variante",
                   "POST /api/simuler#austerite", "POST /api/simuler#neutre"]
         sequence = list(zip(routes,
-                            [sortie_prereglage, sortie_variante, sortie_austerite, sortie_neutre]))
+                            [sortie_prereglage, sortie_variante, sortie_austerite, sortie_neutre],
+                            strict=True))
         return {
             "defauts": defauts,
             "sequence_simuler": [{"route": route} for route, _ in sequence]

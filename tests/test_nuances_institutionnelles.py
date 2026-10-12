@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Les réglages institutionnels doivent être simulables, pas décoratifs.
 
 Contrats testés ici :
@@ -22,8 +21,8 @@ from simulateur.nuances_institutionnelles import (
     REGLAGES,
     coherence_nuances,
     contexte_institutionnel,
-    etat_des_verrous,
     delais_ajustes,
+    etat_des_verrous,
     fentes_recalculees,
     indices_nuances,
     normaliser,
@@ -375,7 +374,7 @@ class TestCroisements(unittest.TestCase):
         """`etat_des_verrous` est la source du bloc « verrous » de la page : il doit
         couvrir les 38 verrous, une seule fois chacun, sans en inventer."""
         for vecteur in ({}, {"reglage_censure_assiette": 1},
-                        {cle: 1.0 for cle in reglages_catalogue()}):
+                        dict.fromkeys(reglages_catalogue(), 1.0)):
             etat = etat_des_verrous(vecteur)
             with self.subTest(reglages=len(vecteur)):
                 toutes = [o["cle"] for groupe in ("touches", "intacts", "hors_reglage")
@@ -410,7 +409,7 @@ class TestCroisements(unittest.TestCase):
         self.assertEqual(etat_des_verrous({})["avertissements"], [])
 
     def test_contexte_serialisable_et_borne(self):
-        contexte = contexte_institutionnel({cle: 1.0 for cle in reglages_catalogue()})
+        contexte = contexte_institutionnel(dict.fromkeys(reglages_catalogue(), 1.0))
         self.assertEqual(set(contexte), {"reglages", "seuils", "delais", "fentes", "indices",
                                          "niveaux", "strates", "verrous", "resume"})
         self.assertEqual([ligne["strate"] for ligne in contexte["strates"]], [1, 2, 3, 4, 5])

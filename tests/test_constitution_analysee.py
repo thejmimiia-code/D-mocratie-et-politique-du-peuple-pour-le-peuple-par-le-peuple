@@ -24,7 +24,6 @@ sys.path.insert(0, str(ROOT))
 from simulateur.constitution_analysee import (  # noqa: E402
     ABROGES,
     ARTICLES,
-    Blocs,
     DATE_CONSULTATION,
     FONCTIONS,
     NUMEROS_ABROGES,
@@ -32,6 +31,7 @@ from simulateur.constitution_analysee import (  # noqa: E402
     ORDRE_ARTICLES,
     STRATES,
     VERSION_TEXTE,
+    Blocs,
     article,
     articles_pour_mecanisme,
     articles_pour_strate,
@@ -100,9 +100,9 @@ class TestContratsDeDonnees(unittest.TestCase):
 
     def test_leviers_cites_existent_dans_le_catalogue(self):
         orphelins = {
-            numero: [l for l in ARTICLES[numero].leviers if l not in LEVIERS]
+            numero: [nom for nom in ARTICLES[numero].leviers if nom not in LEVIERS]
             for numero in ORDRE_ARTICLES
-            if any(l not in LEVIERS for l in ARTICLES[numero].leviers)
+            if any(nom not in LEVIERS for nom in ARTICLES[numero].leviers)
         }
         self.assertEqual(orphelins, {}, "une fiche ne peut relier un article qu'a un levier chiffre")
 

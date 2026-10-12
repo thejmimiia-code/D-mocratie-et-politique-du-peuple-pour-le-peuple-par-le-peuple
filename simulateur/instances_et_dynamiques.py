@@ -47,9 +47,9 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
-from .constitution_analysee import ARTICLES, ORDRE_ARTICLES, article
+from .constitution_analysee import ARTICLES, article
 from .gouvernance_contrepouvoir import MECANISMES, VERROUS
 from .reglements_lois import REGISTRE_LEGAL
 
@@ -1385,12 +1385,12 @@ def _normaliser() -> Dict[str, List[str]]:
             else:
                 retraits.append(f"mecanisme:{m}")
         leviers, pistes = [], list(instance.pistes)
-        for l in instance.leviers:
-            if l in LEVIERS:
-                leviers.append(l)
+        for nom in instance.leviers:
+            if nom in LEVIERS:
+                leviers.append(nom)
             else:
-                pistes.append(l)
-                retraits.append(f"levier:{l}")
+                pistes.append(nom)
+                retraits.append(f"levier:{nom}")
         if retraits:
             signales[cle] = retraits
         INSTANCES[cle] = Instance(

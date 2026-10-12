@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """Couche « nuances institutionnelles » : les réglages deviennent de la géométrie.
 
 `simulateur/parametres.py` expose des curseurs, `constitution_analysee`,
@@ -21,12 +20,12 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .gouvernance_contrepouvoir import ETAT_ASSEMBLEES, MECANISMES, VERROUS, seuil
 from .instances_et_dynamiques import (
-    FENTES,
     FENETRE_RESIDUELLE_JOURS,
+    FENTES,
     INSTANCES,
     STRATEGIES,
     TRAJETS,
@@ -964,7 +963,7 @@ def seuils_ajustes(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Dic
             "statu_quo": base,
             "regle": int(valeur_reglee),
             "ecart": int(valeur_reglee) - base,
-            "reglages_appliques": [l for l in leviers if regle.get(l, 0.0) != LEVIERS[l].defaut],
+            "reglages_appliques": [un for un in leviers if regle.get(un, 0.0) != LEVIERS[un].defaut],
             "note": note,
             "assiette": censure["assiette"] if cle == "censure_voix" else verrou.assiette,
             "libelle_reglage": VERROUS_REGLAGES[cle],
@@ -973,7 +972,7 @@ def seuils_ajustes(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Dic
             ligne["note"] = f"{censure['formule']} — {censure['note']}"
             ligne["quorum_votants"] = int(censure.get("quorum_votants", 0))
         resultat[cle] = ligne
-        
+
     resultat["congres_revision"] = {
         "cle": "congres_revision",
         "nom": VERROUS["congres_revision"].nom,
@@ -1371,10 +1370,7 @@ def reglages_touchant(categorie: str, cle: str) -> List[str]:
                 _, _, identifiant = identifiant.partition(":")
             if type_cible == categorie and identifiant == cle and levier not in resultat:
                 resultat.append(levier)
-    if categorie in ("verrou", "fente", "trajet"):
-        for ligne in croisements().values():
-            pass  # les liens par article sont ajoutés ci-dessous, pas ici
-    for numero, ligne in croisements().items():
+    for ligne in croisements().values():
         if cle in ligne.get(categorie + "s", []) if categorie != "verrou" else cle in ligne["verrous"]:
             for levier in ligne["reglages"]:
                 if levier not in resultat:
@@ -1625,13 +1621,9 @@ def coherence_nuances() -> Dict[str, Any]:
     lignes_strates = par_strate()
     reglages_sans_strate = sorted(
         set(catalogue) - {cle for ligne in lignes_strates for cle in ligne["reglages"]})
-    chiffrees = set(CIBLES_CHIFFREES)
     without_geometry = reglages_sans_cible_chiffree()
     verrous_tous = set(VERROUS)
-    index_cibles = {identifiant for reglage in REGLAGES.values()
-                    for type_cible, identifiant in reglage.get("cibles", ())}
     lignes_croisements = croisements()
-    liees = {cle for ligne in lignes_croisements.values() for cle in ligne["reglages"]}
     accessibles = {}
     for categorie, repertoire in REPERTOIRES.items():
         index_inverse = reglages_par_connaissance(categorie)

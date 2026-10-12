@@ -1,7 +1,6 @@
 """Tests du contrat Vercel : page interactive à la racine et fonctions API."""
 
 from __future__ import annotations
-from typing import Dict, Optional, Tuple
 
 import http.client
 import importlib
@@ -14,6 +13,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import Dict, Optional, Tuple
 from unittest.mock import patch
 
 # Garder les tests réseau déterministes et garantir le cache inscriptible comme

@@ -60,8 +60,8 @@ du 4 août 1995) et l'article 90 (dispositions transitoires).
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
 import unicodedata
+from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 from .parametres import LEVIERS as _LEVIERS

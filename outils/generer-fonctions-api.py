@@ -16,12 +16,12 @@ Les fonctions propres au site (voir `FONCTIONS_DU_SITE`, par exemple
 """
 
 from __future__ import annotations
-from typing import Set, Tuple
 
 import argparse
 import re
 import sys
 from pathlib import Path
+from typing import Set, Tuple
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))

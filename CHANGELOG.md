@@ -6,6 +6,26 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Corrigé — Nettoyage de lint sur les fichiers de la passe, et mort-de-code retiré
+
+- `simulateur/nuances_institutionnelles.py` : trois variables calculées et jamais lues dans
+  `coherence_nuances()` (`chiffrees`, `index_cibles`, `liees`) supprimées — leurs contrôles sont
+  produits ailleurs, en direct (`cibles_inconnues`, `apports_sans_reglage`, `reglages_sans_article`) ;
+  une boucle `for … : pass` sans effet dans `reglages_touchant()` retirée ; import `Iterable` inutile,
+  ligne blanche avec espaces, variables `l` renommées.
+- `outils/generer-doc-nuances.py` : import inutilisé, parenthèses superflues, variables `l` renommées ;
+  sa sortie est restée octet pour octet identique (contrôlée par `--verifier`).
+- `simulateur/constitution_analysee.py`, `simulateur/instances_et_dynamiques.py`,
+  `tests/test_constitution_analysee.py`, `tests/test_dashboard.py`,
+  `tests/test_gouvernance_contrepouvoir.py` : imports inutilisés et variables `l` repris.
+- La dette de style préexistante du dépôt (`typing.List`/`Dict` au lieu de `list`/`dict`, 1 196
+  avertissements `UP006`/`UP035`/`UP045` déjà sur `main`) n'est **pas** reprise ici : une bascule
+  mécanique de 1 400 sites dans cette branche noierait le diff. Elle mérite son propre commit,
+  `ruff check . --fix`, sans changement de comportement.
+- Vérifications : 956 tests OK, sept scénarios `main.py` rejoués, export JSON contrôlé, quatre
+  générateurs `--verifier` à zéro. Le déploiement Vercel du projet de production, rouge sur `main`
+  (l'`ImportError` du pont), est vert sur la branche.
+
 ### Ajouté — Sept réglages neufs, un plan « sans trou », et le contrat Vercel réellement tenu
 
 - `simulateur/nuances_institutionnelles.py` : **7 réglages de plus** (55 au total, catalogue à

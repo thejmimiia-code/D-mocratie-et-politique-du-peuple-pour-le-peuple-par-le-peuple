@@ -5,7 +5,6 @@ Vérifie que le serveur HTTP, les endpoints API et le rendu HTML
 fonctionnent correctement.
 """
 
-from typing import Optional, Tuple
 import http.client
 import json
 import os
@@ -18,6 +17,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import ThreadingHTTPServer
+from typing import Optional, Tuple
 
 from simulateur.dashboard import (
     SCENARIOS,
@@ -1032,7 +1032,7 @@ class TestNuancesServies(unittest.TestCase):
     def test_article_niveau_et_index(self):
         _, donnees = self._appel("/api/nuances?article=CONST_ART_49")
         self.assertIn("reglage_49_3_interdiction", donnees["reglages"])
-        self.assertIn("reglage_49_3_interdiction", {l["reglage"] for l in donnees["fiches"]})
+        self.assertIn("reglage_49_3_interdiction", {fiche["reglage"] for fiche in donnees["fiches"]})
         # Le croisement ne s'arrête pas aux réglages : il dresse tout l'article.
         self.assertIn("censure_voix", donnees["verrous"])
         self.assertIn("censure_par_membres", donnees["fentes"])

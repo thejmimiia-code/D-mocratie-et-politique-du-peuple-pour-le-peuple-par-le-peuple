@@ -28,8 +28,8 @@ from simulateur.gouvernance_contrepouvoir import (  # noqa: E402
     arithmetique_assemblee,
     blocages_possibles,
     chaine_de_reaction,
-    coherence_avec_les_fiches,
     coalition_necessaire,
+    coherence_avec_les_fiches,
     diagnostic,
     rechercher,
     resume_console,
@@ -137,7 +137,7 @@ class TestMechanismes(unittest.TestCase):
         etat = diagnostic()
         json.dumps(etat, ensure_ascii=False)
         self.assertEqual(etat["date_etat"], DATE_ETAT_ASSEMBLEES)
-        lignes = {l["cle"]: l for l in etat["mecanismes"]}
+        lignes = {ligne["cle"]: ligne for ligne in etat["mecanismes"]}
         self.assertIn("motion_censure", lignes)
         seuils = {s["cle"]: s["seuil"] for s in lignes["motion_censure"]["seuils"]}
         self.assertEqual(seuils["censure_voix"], 289)

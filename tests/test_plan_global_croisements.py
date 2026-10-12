@@ -17,32 +17,27 @@ RACINE = Path(__file__).resolve().parent.parent
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
-from simulateur.constitution_analysee import ORDRE_ARTICLES
 from simulateur.gouvernance_contrepouvoir import MECANISMES, VERROUS
 from simulateur.instances_et_dynamiques import FENTES, INSTANCES, STRATEGIES, TRAJETS
 from simulateur.nuances_institutionnelles import (
     APPORTS,
     INDICES,
     NIVEAUX,
-    REPERTOIRES,
     REGLAGES,
     REGLAGES_SANS_GEOMETRIE,
+    REPERTOIRES,
+    SEUILS_INSSENSIBLES,
     UNITES_LISIBLES,
     VERROUS_HORS_REGLAGE,
     VERROUS_REGLAGES,
-    croisements,
-    croisement_pour,
-    delais_ajustes,
     coherence_nuances,
+    croisement_pour,
+    croisements,
+    delais_ajustes,
     reglages_catalogue,
     reglages_par_connaissance,
     seuils_ajustes,
-    reglages_touchant,
-    SEUILS_INSSENSIBLES,
-    strates_touchees,
     synthese_pour_api,
-    tableau_des_niveaux,
-    tableau_des_strates,
 )
 from simulateur.parametres import FAMILLES, LEVIERS, PRESETS
 from simulateur.reglements_lois import REGISTRE_LEGAL
@@ -188,7 +183,7 @@ class TestGeometrieDesReglages(unittest.TestCase):
                 self.assertIn(REGLAGES[cle]["niveau"], NIVEAUX)
 
     def test_quatre_valeurs_par_defaut_sont_le_droit(self):
-        self.assertEqual(self._ecarts(), {cle: 0 for cle in seuils_ajustes()})
+        self.assertEqual(self._ecarts(), dict.fromkeys(seuils_ajustes(), 0))
         from simulateur.gouvernance_contrepouvoir import seuil as seuil_d_droit
         for cle, ligne in seuils_ajustes().items():
             with self.subTest(seuil=cle):
