@@ -8,6 +8,11 @@ distincte et reçoit l'URL complète de la requête : il faut donc réécrire le
 chemin reçu sur la route déclarée, en conservant la chaîne de requête.
 
     api/catalogue.py  ->  class handler(FonctionAPI): ROUTE = "/api/catalogue"
+    api/[...path].py  ->  class handler(PontAPI): sert toutes les routes à la fois
+
+La seconde forme est celle du dépôt : `PontAPI` laisse le moteur router lui-même et
+ne rétablit que le chemin que Vercel a déplacé dans la chaîne de requête. Une seule
+fonction, parce que l'offre Hobby plafonne le nombre de fonctions par déploiement.
 
 ⚠️ Ce fichier est un **ajout du dépôt du site M.R.S.C**, il ne vient pas du
 dépôt du simulateur : `outils/mettre-a-jour-simulateur.py` ne doit ni
@@ -55,3 +60,64 @@ class FonctionAPI(DashboardHandler):
             DashboardHandler.do_POST(self)
         else:
             DashboardHandler.do_HEAD(self)
+
+
+def chemin_de_pont(chemin_recu: str) -> str:
+    """
+    Rétablit le chemin que le moteur sait servir.
+
+    Vercel envoie `/api/simuler?horizon=5` sur `api/[...path].py` avec le chemin
+    d'origine passé dans la chaîne de requête (`?...path=simuler`, parfois
+    `?path=simuler` ou déjà préfixé). Le pont remet les deux morceaux ensemble ;
+    si le chemin est déjà correct, il est rendu tel quel (fonctionnement local).
+    """
+    from urllib.parse import parse_qs, urlencode, urlparse
+
+    cles = ("...path", "..path", ".path", "path")
+    analyse = urlparse(chemin_recu or "/")
+    parametres = parse_qs(analyse.query, keep_blank_values=True)
+    if not any(cle in parametres for cle in cles):
+        return chemin_recu or "/"          # chemin déjà correct : rien à rétablir
+    deplace = (parametres.get("...path") or parametres.get("path") or [""])[0].strip()
+    reste = {cle: valeurs for cle, valeurs in parametres.items() if cle not in cles}
+    suite = f"?{urlencode(reste, doseq=True)}" if reste else ""
+    if not deplace or deplace in {"index", "index.py", "[...path]", "[...path].py"}:
+        return "/" + suite                 # la racine, c'est la page du simulateur
+    route = deplace.lstrip("/")
+    if route.endswith(".py"):
+        route = route[:-3]
+    if route.startswith("api/"):
+        route = f"/{route}"
+    elif not route.startswith("/"):
+        route = f"/api/{route}"
+    return route + suite
+
+
+class PontAPI(DashboardHandler):
+    """Sert toutes les routes du moteur depuis une seule fonction sans serveur.
+
+    Aucune logique n'est redéfinie : le routeur du moteur (`DashboardHandler`)
+    garde la main sur le chemin, le pont ne fait que le reconstituer quand
+    l'hébergeur l'a déplacé dans la chaîne de requête.
+    """
+
+    def do_GET(self) -> None:  # noqa: N802 - API stdlib
+        self._deleguer("GET")
+
+    def do_POST(self) -> None:  # noqa: N802 - API stdlib
+        self._deleguer("POST")
+
+    def do_HEAD(self) -> None:  # noqa: N802 - API stdlib
+        self._deleguer("HEAD")
+
+    def _deleguer(self, methode: str) -> None:
+        # Idempotent : do_HEAD rappelle self.do_GET(), qui repasse ici.
+        retabli = chemin_de_pont(self.path)
+        if retabli != self.path:
+            self.path = retabli
+        if methode == "POST":
+            DashboardHandler.do_POST(self)
+        elif methode == "HEAD":
+            DashboardHandler.do_HEAD(self)
+        else:
+            DashboardHandler.do_GET(self)

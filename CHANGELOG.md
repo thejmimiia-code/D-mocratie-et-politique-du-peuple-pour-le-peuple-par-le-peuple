@@ -6,6 +6,42 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Ajouté — Sept réglages neufs, un plan « sans trou », et le contrat Vercel réellement tenu
+
+- `simulateur/nuances_institutionnelles.py` : **7 réglages de plus** (55 au total, catalogue à
+  **156 leviers**) — `reglage_procedure_acceleree_encadree` (0 à 45 jours),
+  `reglage_nouvelle_deliberation_supprimee`, `reglage_commission_enquete_droit_de_bloc`,
+  `reglage_haute_cour_non_parlementaire` (collège de 120 non parlementaires),
+  `reglage_cee_consultation_prealable` (0 à 30 jours), `reglage_defenseur_saisine_directe`,
+  `reglage_declassification_legislative` (0 à 30 jours). Chacun déclare ses cibles chiffrées, ses
+  articles et ses apports d'indices ; aucun n'est adossé à un préréglage, et le document
+  `docs/SIMULATEUR_PARAMETRABLE.md` le dit (16 préréglages recensés).
+- `etat_des_verrous()` : le registre des 38 verrous est partagé en **touchés / intacts / hors
+  réglage** (20 + 18, la somme est contrôlée sur trois vecteurs), avec avertissements pour les règles
+  privées de leur objet par un réglage. La clé `verrous` voyage dans `contexte_institutionnel` et
+  donc dans `POST /api/nuances`.
+- Interface : nouvelle section `#section-verrous` (trois colonnes + neutralisations) et liste des
+  réglages déplacés avec badges par catégorie de connaissance ; les citations de la Constitution
+  deviennent le lien `/api/constitution?article=N` déjà utilisé pour les leviers (`articlesHtml`),
+  les autres sources restent du texte. un test délègue à `outils/generer-index-simulateur.py --verifier` pour
+  refuser un `index.html` qui ne serait pas la page courante, et le harnais Node contrôle le rendu du bloc.
+- `docs/18_PLAN_GLOBAL_BRAINSTORMING_ET_SANS_TROU.md` : la clause « sans trou » définition par
+  définition, la carte du dépôt, 32 possibilités examinées dont 6 ouvertes assumées, la table des 7
+  réglages neufs, le protocole de relance et les limites.
+- **Deux trous structureux corrigés.** D'une part `api/` comptait 23 fonctions générées — et le pont
+  `api/[...path].py`, seul appelé par Vercel, importait une classe `PontAPI` que
+  `simulateur/pont_api.py` ne définissait pas : toute l'API en production renvoyait une erreur
+  d'import pendant que la suite restait verte. `simulateur/pont_api.py` définit désormais
+  `chemin_de_pont()` et `PontAPI` ; `outils/generer-fonctions-api.py` n'écrit que le parapluie et
+  supprime les fichiers par route ; `tests/test_vercel_runtime.py` charge la fonction unique par son
+  chemin et sert deux routes par HTTP réel. D'autre part les compteurs de la documentation
+  (« 149 leviers », « 48 réglages ») sont passés aux valeurs courantes dans les 10 fichiers d'état
+  et `simulateur/lexique.py`, et `outils/generer-doc-nuances.py` régénère désormais les sept tableaux
+  de `docs/17` avec un mode `--verifier` qui échoue si la page a pris du retard.
+- `tests/test_plan_global_croisements.py` : 30 tests sur les croisements de la passe (invariants de
+  registres, accessibilité des connaissances, plafonds de jours, cohérence des compteurs, contrat de
+  `api/`, limites de `docs/17`).
+
 ### Ajouté — Toutes les nuances institutionnelles deviennent des réglages simulables
 
 - `simulateur/parametres.py` : **48 nouveaux leviers** préfixés `reglage_`, qui portent le
@@ -153,7 +189,9 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   unique, 404, destination de réécriture, HEAD, export sans écriture disque, et
   générateur (suppression limitée aux fichiers générés, refus sur fichier inconnu).
 - README et `docs/HEBERGEMENT.md` documentent le déploiement Vercel. Aucune règle de
-  réécriture `vercel.json` n'est ajoutée. `index.html` est inchangé.
+  réécriture `vercel.json` n'est ajoutée. (Écrit à une passe où le générateur produisait encore un
+  fichier par route : la page était donc vraie sur le papier, fausse sur le terrain. La passe
+  suivante l'a rendue exacte, tests à l'appui.)
 
 ## [1.10.2] — 2026-10-08
 

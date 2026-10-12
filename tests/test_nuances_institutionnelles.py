@@ -22,6 +22,7 @@ from simulateur.nuances_institutionnelles import (
     REGLAGES,
     coherence_nuances,
     contexte_institutionnel,
+    etat_des_verrous,
     delais_ajustes,
     fentes_recalculees,
     indices_nuances,
@@ -64,7 +65,7 @@ class TestReglagesDeclares(unittest.TestCase):
         self.assertEqual(coherence["articles_hors_registre"], [])
         self.assertEqual(coherence["indices_anormaux"], [])
         self.assertEqual(coherence["apports_sans_reglage"], [])
-        self.assertEqual(coherence["fentes_sans_reglage"], [])
+        self.assertEqual(coherence["fentes_inaccessibles_d_un_reglage"], [])
 
     def test_articles_cites_existent_dans_le_registre(self):
         for cle in reglages_catalogue():
@@ -154,13 +155,13 @@ class TestSeuilsRecalcules(unittest.TestCase):
         self.assertEqual(seuils["49_3_delai_motion"]["regle"], 24 + 48)
 
     def test_congres_assiette_et_quorum(self):
-        congres = seuils_ajustes()["congres_voix"]
+        congres = seuils_ajustes()["congres_revision"]
         self.assertEqual(congres["statu_quo"], 555)
         self.assertEqual(congres["scenarios_abstention"]["700"]["suffrages_exprimes"], 420)
         self.assertEqual(congres["scenarios_abstention"]["700"]["membres_composant"], 555)
-        sur_membres = seuils_ajustes({"reglage_congres_assiette_membres": 1.0})["congres_voix"]
+        sur_membres = seuils_ajustes({"reglage_congres_assiette_membres": 1.0})["congres_revision"]
         self.assertIn("fixe", sur_membres["note"])
-        quorum = seuils_ajustes({"reglage_congres_quorum": 50.0})["congres_voix"]
+        quorum = seuils_ajustes({"reglage_congres_quorum": 50.0})["congres_revision"]
         self.assertEqual(quorum["quorum_votants"], 463)
         self.assertIn("reglage_congres_quorum", quorum["reglages_appliques"])
 
@@ -197,7 +198,7 @@ class TestSeuilsRecalcules(unittest.TestCase):
 
     def test_tous_les_verrous_reglables_sont_des_verrous_du_registre(self):
         seuils = seuils_ajustes()
-        derives = {"congres_voix", "seuil_groupe_assemblee_nationale", "etat_urgence_duree_max_mois"}
+        derives = {"seuil_groupe_assemblee_nationale", "etat_urgence_duree_max_mois"}
         for cle in seuils:
             if cle in derives:
                 continue
@@ -370,10 +371,52 @@ class TestCroisements(unittest.TestCase):
         self.assertGreater(synthese["indices"]["redevabilite"]["valeur"], 50.0)
         self.assertIn("irrecevabilite_sans_recours", synthese["resume"]["fentes_neutralisees"])
 
+    def test_letat_des_verrous_partage_le_registre_sans_en_rien_perdre(self):
+        """`etat_des_verrous` est la source du bloc « verrous » de la page : il doit
+        couvrir les 38 verrous, une seule fois chacun, sans en inventer."""
+        for vecteur in ({}, {"reglage_censure_assiette": 1},
+                        {cle: 1.0 for cle in reglages_catalogue()}):
+            etat = etat_des_verrous(vecteur)
+            with self.subTest(reglages=len(vecteur)):
+                toutes = [o["cle"] for groupe in ("touches", "intacts", "hors_reglage")
+                          for o in etat[groupe]]
+                self.assertEqual(etat["total"], len(VERROUS))
+                self.assertEqual(sorted(toutes), sorted(VERROUS))
+                self.assertEqual(len(toutes), len(set(toutes)))
+                for objet in toutes:
+                    self.assertTrue(VERROUS[objet].nom)
+                for objet in etat["hors_reglage"]:
+                    self.assertTrue(objet["explication"],
+                                    f"verrou hors réglage sans explication : {objet['cle']}")
+                    # Aucun seuil n'est recalculé pour lui : c'est justement ce que
+                    # « hors réglage » veut dire. Les réglages listés ici ne sont que
+                    # ceux qui mentionnent la règle, pour que la page l'explique.
+                    self.assertNotIn("seuil_regule", objet)
+                    self.assertNotIn("seuil_statu_quo", objet)
+                    for levier in objet["reglages"]:
+                        self.assertIn(levier, LEVIERS)
+                for ligne in etat["touches"]:
+                    self.assertTrue(ligne["reglages"])
+                    for levier in ligne["reglages"]:
+                        self.assertIn(levier, LEVIERS)
+
+    def test_les_verrous_neutralises_sont_signales_comme_avertissements(self):
+        etat = etat_des_verrous({"reglage_censure_assiette": 1})
+        avertissements = {ligne["cle"]: ligne for ligne in etat["avertissements"]}
+        self.assertIn("censure_par_membres", avertissements)
+        self.assertEqual(avertissements["censure_par_membres"]["reglages"],
+                         ["reglage_censure_assiette"])
+        self.assertTrue(avertissements["censure_par_membres"]["article"])
+        self.assertEqual(etat_des_verrous({})["avertissements"], [])
+
     def test_contexte_serialisable_et_borne(self):
         contexte = contexte_institutionnel({cle: 1.0 for cle in reglages_catalogue()})
         self.assertEqual(set(contexte), {"reglages", "seuils", "delais", "fentes", "indices",
-                                         "niveaux", "resume"})
+                                         "niveaux", "strates", "verrous", "resume"})
+        self.assertEqual([ligne["strate"] for ligne in contexte["strates"]], [1, 2, 3, 4, 5])
+        self.assertTrue(all(ligne["reglages"] for ligne in contexte["strates"]))
+        for ligne in contexte["reglages"].values():
+            self.assertTrue(ligne["strates"])
         self.assertEqual(len(contexte["reglages"]), len(reglages_catalogue()))
         for cle, ligne in contexte["reglages"].items():
             with self.subTest(reglage=cle):

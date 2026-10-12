@@ -16,6 +16,7 @@ import json
 import os
 import socket
 import subprocess
+import sys
 import tempfile
 import threading
 import unittest
@@ -39,6 +40,23 @@ os.environ.setdefault("SIMULATEUR_HORS_LIGNE", "1")
 class TestInterfaceDansNode(unittest.TestCase):
     """Parcours utilisateur complet, exécuté par Node sur la page servie."""
 
+    def test_index_hors_ligne_est_bien_la_page_generee(self):
+        """`index.html` est un fichier généré : il doit être identique à `HTML_PAGE`.
+
+        Sans ce contrôle, la page ouverte en local peut garder une version antérieure
+        de l'UI et donner l'illusion que le contrat est rempli.
+        """
+        import subprocess
+
+        racine = Path(__file__).resolve().parent.parent
+        controle = subprocess.run(
+            [sys.executable, str(racine / "outils" / "generer-index-simulateur.py"), "--verifier"],
+            capture_output=True, text=True, cwd=str(racine), timeout=300)
+        self.assertEqual(controle.returncode, 0, controle.stdout + controle.stderr)
+        contenu = (racine / "index.html").read_text(encoding="utf-8")
+        self.assertNotIn("===SCENARIOS_JSON===", contenu,
+                         "le catalogue des scénarios n'a pas été injecté dans la page")
+        self.assertIn('id="section-verrous"', contenu)
     @classmethod
     def setUpClass(cls):
         if NODE is None:
@@ -164,6 +182,11 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "POST /api/simuler#neutre": sortie_neutre,
                 "POST /api/simuler#decennal": sortie_decennale,
                 "POST /api/conseil": conseil,
+                # Le tableau des nuances institutionnelles est calculé sur un vecteur qui
+                # déplace deux réglages : c'est le seul moyen de vérifier que la section
+                # sait rendre un écart de seuil, une fente et un garde-fou.
+                "POST /api/nuances": json.loads(cls._post("/api/nuances", {"parametres": dict(
+                    defauts, reglage_censure_assiette=1.0, reglage_petition_locale_seuil=8.0)})),
                 "POST /api/donnees": {"ok": True},
             },
             "externe": externes,

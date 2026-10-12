@@ -1261,6 +1261,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_censure_assiette",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Assiette de la motion de censure",
     famille="institutions_democratie",
     description="Le seuil de censure est calculé sur les membres composant l'Assemblée "
@@ -1280,6 +1281,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_congres_quorum",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Quorum ajouté au Congrès",
     famille="institutions_democratie",
     description="Part des membres du Congrès qui doivent voter pour que la révision soit "
@@ -1293,6 +1295,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_congres_assiette_membres",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Compter les trois cinquièmes sur les membres au Congrès",
     famille="institutions_democratie",
     description="Bascule l'assiette du Congrès des suffrages exprimés aux membres "
@@ -1305,6 +1308,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_controle_loi_referendaire",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Contrôle de constitutionnalité des lois référendaires",
     famille="institutions_democratie",
     description="Ouvre la loi adoptée par référendum au contrôle du Conseil "
@@ -1317,6 +1321,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_49_3_interdiction",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Interdiction du 49.3 hors loi de finances",
     famille="institutions_democratie",
     description="La Constitution ne permet qu'un usage par session pour un texte ordinaire, "
@@ -1330,6 +1335,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_delai_motion_49_3",
+    tags=("nuance_institutionnelle", "Parlementaire"),
     libelle="Heures ajoutées au délai de motion contre un 49.3",
     famille="institutions_democratie",
     description="La motion de censure doit être déposée dans les vingt-quatre heures qui "
@@ -1344,6 +1350,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_delai_motion_censure",
+    tags=("nuance_institutionnelle", "Parlementaire"),
     libelle="Jours ajoutés au délai avant le vote de censure",
     famille="institutions_democratie",
     description="Le délai constitutionnel est de deux jours francs. Chaque jour ajouté "
@@ -1356,6 +1363,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_seuil_saisine_conseil",
+    tags=("nuance_institutionnelle", "Judiciaire"),
     libelle="Seuil de saisine du Conseil constitutionnel",
     famille="institutions_democratie",
     description="Soixante députés ou soixante sénateurs aujourd'hui. Abaisser le seuil "
@@ -1376,6 +1384,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_recours_irrecevabilite",
+    tags=("nuance_institutionnelle", "Parlementaire"),
     libelle="Recours collectif contre une irrecevabilité",
     famille="institutions_democratie",
     description="Aujourd'hui, seul le président de l'assemblée peut déférer au Conseil "
@@ -1388,6 +1397,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_droit_amendement",
+    tags=("nuance_institutionnelle", "Parlementaire"),
     libelle="Droit d'amendement garanti, irrecevabilité 40 bornée",
     famille="institutions_democratie",
     description="Le juge (ou la conférence) contrôle la qualification financière au lieu "
@@ -1400,6 +1410,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_ordre_du_jour_partage",
+    tags=("nuance_institutionnelle", "Parlementaire"),
     libelle="Part de l'ordre du jour laissée au Parlement",
     famille="institutions_democratie",
     description="La Constitution réserve une semaine sur quatre au contrôle et un jour par "
@@ -1413,6 +1424,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_seuil_groupes",
+    tags=("nuance_institutionnelle", "Parlementaire"),
     libelle="Baisse du seuil de constitution des groupes",
     famille="institutions_democratie",
     description="Quinze députés, dix sénateurs aujourd'hui. Chaque point retiré ouvre les "
@@ -1427,6 +1439,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_vote_nominal_obligatoire",
+    tags=("nuance_institutionnelle", "Participation"),
     libelle="Scrutin public nominal obligatoire sur tout texte structurant",
     famille="institutions_democratie",
     description="Chaque vote est publié nominativement, sans délégation de vote : "
@@ -1442,6 +1455,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_delai_budget_retraite",
+    tags=("nuance_institutionnelle", "Budgétaire"),
     libelle="Jours retirés au délai de l'Assemblée sur le budget",
     famille="institutions_democratie",
     description="L'article 47 donne quarante jours à l'Assemblée nationale. Les réduire "
@@ -1454,6 +1468,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_delai_senat_budget",
+    tags=("nuance_institutionnelle", "Budgétaire"),
     libelle="Jours ajoutés au délai du Sénat sur le budget",
     famille="institutions_democratie",
     description="Le Sénat dispose de quinze jours. Les porter à trente lui rend un pouvoir "
@@ -1467,6 +1482,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_vote_par_programme",
+    tags=("nuance_institutionnelle", "Budgétaire"),
     libelle="Vote par programme et fongibilité assumée",
     famille="institutions_democratie",
     description="Vote de la mission avant le programme, amendement de majoration de "
@@ -1480,6 +1496,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_or_du_deficit",
+    tags=("nuance_institutionnelle", "Budgétaire"),
     libelle="Marge de déficit inscrite dans la Constitution",
     famille="institutions_democratie",
     description="Plafond de déficit structurel constitutionnalisé, avec clause de sortie "
@@ -1494,6 +1511,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_audit_obligatoire_prealable",
+    tags=("nuance_institutionnelle", "Budgétaire"),
     libelle="Audit obligatoire avant toute réforme structurelle",
     famille="etat_fonction_publique",
     description="Aucun projet de réforme des institutions ou de la fiscalité n'est déposé "
@@ -1508,6 +1526,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_appel_qpc",
+    tags=("nuance_institutionnelle", "Judiciaire"),
     libelle="Appel possible du filtre de non-renvoi d'une QPC",
     famille="regalien",
     description="Le filtre de la juridiction du fond devient contrôlable par une formation "
@@ -1519,6 +1538,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_parquet_independant",
+    tags=("nuance_institutionnelle", "Judiciaire"),
     libelle="Parquet nommé sur avis conforme du CSM",
     famille="regalien",
     description="Aligne le parquet sur le siège : l'avis devient conforme, donc une "
@@ -1530,6 +1550,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_mandat_unique_instances",
+    tags=("nuance_institutionnelle", "Judiciaire"),
     libelle="Mandat unique non renouvelable pour les autorités indépendantes",
     famille="etat_fonction_publique",
     description="Coupe le lien de dépendance né d'une perspective de renouvellement ; "
@@ -1541,6 +1562,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_publication_avis_ce",
+    tags=("nuance_institutionnelle", "Judiciaire"),
     libelle="Publication des avis du Conseil d'État sur les projets de loi",
     famille="etat_fonction_publique",
     description="L'avis, aujourd'hui confidentiel, devient public : les arbitrages du "
@@ -1552,6 +1574,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_execution_cedh",
+    tags=("nuance_institutionnelle", "Judiciaire"),
     libelle="Délai contraignant d'exécution des arrêts CEDH",
     famille="regalien",
     description="Le juge interne peut assortir d'une astreinte le refus d'exécuter un arrêt "
@@ -1565,6 +1588,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_action_de_groupe_administratif",
+    tags=("nuance_institutionnelle", "Judiciaire"),
     libelle="Action de groupe devant le juge administratif",
     famille="regalien",
     description="Élargit aux juridictions administratives l'action de groupe : le référé-"
@@ -1577,6 +1601,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_controle_juge_exception",
+    tags=("nuance_institutionnelle", "Exception"),
     libelle="Contrôle juridictionnel intégral en régime d'exception",
     famille="regalien",
     description="Lever l'immunité de fait des mesures de police prises pendant l'état "
@@ -1588,6 +1613,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_plafond_etat_urgence",
+    tags=("nuance_institutionnelle", "Exception"),
     libelle="Durée maximale totale d'un état d'urgence",
     famille="regalien",
     description="Au-delà du plafond, l'état d'urgence cesse de plein droit sans nouvelle "
@@ -1603,6 +1629,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_petition_locale_seuil",
+    tags=("nuance_institutionnelle", "Territorial"),
     libelle="Seuil de la pétition locale, en pourcentage des inscrits",
     famille="logement_territoires",
     description="Fixe nationalement le seuil qui, faute de loi organique, est laissé au "
@@ -1617,6 +1644,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_referendum_local_automatique",
+    tags=("nuance_institutionnelle", "Territorial"),
     libelle="Référendum local automatique au-delà d'un seuil de pétition",
     famille="logement_territoires",
     description="La consultation a lieu de plein droit quand le seuil est atteint, sans "
@@ -1630,6 +1658,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_senat_suffrage_direct",
+    tags=("nuance_institutionnelle", "Parlementaire"),
     libelle="Sénat élu au suffrage universel direct",
     famille="institutions_democratie",
     description="Remplace le corps électoral restreint : le Sénat cesse d'être la chambre "
@@ -1643,6 +1672,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_autonomie_financiere_garantie",
+    tags=("nuance_institutionnelle", "Territorial"),
     libelle="Plancher constitutionnel de dotation locale",
     famille="logement_territoires",
     description="Garantit en pourcentage la part des ressources locales dans le produit "
@@ -1656,6 +1686,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_epci_suffrage_direct",
+    tags=("nuance_institutionnelle", "Territorial"),
     libelle="Élection au suffrage direct des intercommunalités",
     famille="logement_territoires",
     description="Les conseillers métropolitains et communautaires sont élus directement : "
@@ -1667,6 +1698,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_differentiation_pilotes",
+    tags=("nuance_institutionnelle", "Territorial"),
     libelle="Collectivités autorisées à déroger à titre expérimental",
     famille="logement_territoires",
     description="Nombre de collectivités entrant dans le régime d'expérimentation "
@@ -1683,6 +1715,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_outre_mer_competences",
+    tags=("nuance_institutionnelle", "Outre-mer"),
     libelle="Matières transférées aux collectivités d'outre-mer",
     famille="logement_territoires",
     description="Étend la liste des matières dont une collectivité peut fixer elle-même les "
@@ -1696,6 +1729,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_outre_mer_congres_permament",
+    tags=("nuance_institutionnelle", "Outre-mer"),
     libelle="Congrès des outre-mer permanent, avec droit d'initiative",
     famille="institutions_democratie",
     description="Instance de proposition permanente : ses textes doivent être inscrits à "
@@ -1711,6 +1745,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_subsidiarite_recours",
+    tags=("nuance_institutionnelle", "Européen"),
     libelle="Recours automatique devant la CJUE sur avis de subsidiarité",
     famille="institutions_democratie",
     description="Rends le recours de droit dès qu'une assemblée nationale motive un avis, au "
@@ -1724,6 +1759,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_vote_prealable_actes_ue",
+    tags=("nuance_institutionnelle", "Européen"),
     libelle="Vote préalable du Parlement sur un acte délégué européen",
     famille="institutions_democratie",
     description="Aucune position française en Conseil n'est engagée sur un acte délégué sans "
@@ -1736,6 +1772,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_ancre_ue_reforms",
+    tags=("nuance_institutionnelle", "Européen"),
     libelle="Ancrer une réforme dans le droit dérivé de l'Union",
     famille="industrie_souverainete",
     description="Écrire la réforme comme une transposition large (sur-transposition) : la "
@@ -1754,6 +1791,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_registre_amendements",
+    tags=("nuance_institutionnelle", "Participation"),
     libelle="Registre public nominatif des amendements",
     famille="institutions_democratie",
     description="Chaque amendement est publié avec son porteur, son financeur éventuel et sa "
@@ -1767,6 +1805,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_comptes_temps_reel",
+    tags=("nuance_institutionnelle", "Participation"),
     libelle="Comptes de campagne publiés en temps réel",
     famille="institutions_democratie",
     description="Les recettes et dépenses sont déclarées hebdomadairement pendant la "
@@ -1778,6 +1817,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_chambre_tiree_au_sort",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Chambre de la durée, membres tirés au sort",
     famille="institutions_democratie",
     description="Nombre de membres d'une troisième chambre tirée au sort, à veto suspensif "
@@ -1792,6 +1832,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_convention_veto_suspensif",
+    tags=("nuance_institutionnelle", "Participation"),
     libelle="Veto suspensif d'une convention citoyenne",
     famille="institutions_democratie",
     description="Une convention tirée au sort peut renvoyer une fois un texte au "
@@ -1805,6 +1846,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_revocation_elue",
+    tags=("nuance_institutionnelle", "Participation"),
     libelle="Référendum révocatoire local et national",
     famille="institutions_democratie",
     description="Une pétition atteignant le seuil déclenche la révocation de l'élu ou de "
@@ -1818,6 +1860,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_algorithmes_transparents",
+    tags=("nuance_institutionnelle", "Participation"),
     libelle="Audit public des algorithmes à fort impact",
     famille="industrie_souverainete",
     description="Ouvre le code, les données d'entraînement et les critères des algorithmes "
@@ -1833,6 +1876,7 @@ _lev(Levier(
 
 _lev(Levier(
     cle="reglage_non_retroactivite_in_minus",
+    tags=("nuance_institutionnelle", "Exception"),
     libelle="Interdiction constitutionnelle de la rétroactivité in minus",
     famille="regalien",
     description="Inscrit à l'article 34 la règle dégagée par le juge : nulle loi nouvelle "
@@ -1845,6 +1889,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_stabilite_normative_annees",
+    tags=("nuance_institutionnelle", "Exception"),
     libelle="Années de stabilité garantie d'une règle structurante",
     famille="etat_fonction_publique",
     description="Pendant la durée fixée, une règle fiscale ou normative ne peut être "
@@ -1859,6 +1904,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_verrou_par_loi_organique",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Verrouiller une réforme par une loi organique",
     famille="institutions_democratie",
     description="Fait passer le texte du statut de loi ordinaire à celui de loi organique : "
@@ -1872,6 +1918,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_verrou_par_revision",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
     libelle="Verrouiller une réforme par une révision constitutionnelle",
     famille="institutions_democratie",
     description="Inscrit la réforme dans la Constitution : elle survit à l'alternance "
@@ -1885,6 +1932,7 @@ _lev(Levier(
 ))
 _lev(Levier(
     cle="reglage_verrou_par_engagement_international",
+    tags=("nuance_institutionnelle", "Européen"),
     libelle="Verrouiller une réforme par un engagement international",
     famille="institutions_democratie",
     description="Ancre la règle dans un traité ou un accord : la défaire devient une "
@@ -1894,6 +1942,90 @@ _lev(Levier(
                     "international": 0.6, "democratie": -0.3},
     source="Constitution, art. 53, 54 et 55 ; TFUE et CEDH au registre.",
     articles=("CONST_ART_53", "CONST_ART_54", "CONST_ART_55"),
+))
+
+# — Étage institutionnel : les derniers croisements fermés —
+
+_lev(Levier(
+    cle="reglage_procedure_acceleree_encadree",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Délai plancher avant délibération en procédure accélérée",
+    famille="institutions_democratie",
+    description="La procédure accélérée abaisse de six à quatre semaines le délai entre le dépôt et la discussion. Chaque jour ajouté au plancher rend le texte discutable, et retarde d'autant la navette.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=45.0, pas=5.0,
+    precision=0,
+    effets_directs={"democratie": 0.7, "stabilite_gouvernementale": -0.5, "confiance": 0.3,
+                    "croissance": -0.1},
+    source="Constitution, art. 42 alinéa 3 et 45 alinéa 3.",
+    articles=("CONST_ART_42", "CONST_ART_45"),
+))
+_lev(Levier(
+    cle="reglage_nouvelle_deliberation_supprimee",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Supprimer le droit de nouvelle délibération",
+    famille="institutions_democratie",
+    description="Le Président peut demander une nouvelle délibération de la loi votée, sans que cette demande puisse être refusée. La supprimer accélère la promulgation et retire au chef de l'État son seul arbitrage sur un texte déjà voté.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"stabilite_gouvernementale": 0.5, "democratie": -0.5, "confiance": -0.2},
+    source="Constitution, art. 10 alinéa 2 (et art. 11 alinéa 5 pour la loi référendaire).",
+    articles=("CONST_ART_10",),
+))
+_lev(Levier(
+    cle="reglage_commission_enquete_droit_de_bloc",
+    tags=("nuance_institutionnelle", "Parlementaire"),
+    libelle="Deux commissions d'enquête garanties par groupe et par session",
+    famille="institutions_democratie",
+    description="Le règlement garantit déjà une commission d'enquête par groupe et par session. En garantir deux, c'est désarmer la négociation politique qui éteint la moitié des demandes avant leur dépôt.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"confiance": 0.6, "democratie": 0.7, "stabilite_gouvernementale": -0.6, "budget": -0.2},
+    source="Constitution, art. 51-2 ; résolutions des deux assemblées applicables aux commissions d'enquête.",
+    articles=("CONST_ART_51_1", "CONST_ART_51_2"),
+))
+_lev(Levier(
+    cle="reglage_haute_cour_non_parlementaire",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Haute Cour composée de juges non parlementaires",
+    famille="regalien",
+    description="La Haute Cour est aujourd'hui une assemblée de parlementaires qui juge ses propres membres, à la majorité des deux tiers des deux chambres. La confier à un collège de juges fait disparaître le vote politique préalable.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.7, "confiance": 0.4, "stabilite_gouvernementale": -0.5},
+    source="Constitution, art. 67, 68 et 68-1 (révision constitutionnelle du 23 février 2007).",
+    articles=("CONST_ART_67", "CONST_ART_68", "CONST_ART_68_1", "CONST_ART_26"),
+))
+_lev(Levier(
+    cle="reglage_cee_consultation_prealable",
+    tags=("nuance_institutionnelle", "Participation"),
+    libelle="Consultation préalable obligatoire du CESE sur les programmations",
+    famille="institutions_democratie",
+    description="Le CESE est consulté pour avis sur les projets de loi de programme et de programmation, mais son avis n'oblige personne. Rendre la consultation préalable au dépôt et la réponse motivée obligatoire, c'est transformer un ornement en procédure.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=30.0, pas=5.0,
+    precision=0,
+    effets_directs={"participation": 0.8, "confiance": 0.4, "croissance": -0.1, "budget": -0.1},
+    source="Constitution, art. 69 et 70 ; ordonnance du 28 mai 1982 modifiée.",
+    articles=("CONST_ART_69", "CONST_ART_70", "CONST_ART_71"),
+))
+_lev(Levier(
+    cle="reglage_defenseur_saisine_directe",
+    tags=("nuance_institutionnelle", "Judiciaire"),
+    libelle="Saisine directe du Défenseur des droits",
+    famille="regalien",
+    description="Le Défenseur des droits peut être saisi directement par la personne concernée, ou par un intermédiaire. Ouvrir la saisine sans condition de filtre, c'est multiplier les dossiers — et rendre l'autorité réellement comptable de ses recommandations.",
+    unite="bool", type=TYPE_INTERRUPTEUR, defaut=0.0,
+    effets_directs={"justice": 0.5, "confiance": 0.5, "budget": -0.2},
+    source="Constitution, art. 71-1 ; loi organique du 29 mars 2011.",
+    articles=("CONST_ART_71_1",),
+))
+_lev(Levier(
+    cle="reglage_declassification_legislative",
+    tags=("nuance_institutionnelle", "Constitutionnel"),
+    libelle="Délai de décision sur une irrecevabilité de compétence",
+    famille="institutions_democratie",
+    description="Le gouvernement peut opposer l'article 41, et le Premier ministre demander au Conseil de déclassifier un article : les huit jours laissés au Conseil sont le seuil qui sépare le domaine de la loi de celui du règlement. Les allonger prolonge l'incertitude sur le texte.",
+    unite="jours", type=TYPE_CURSEUR, defaut=0.0, minimum=0.0, maximum=30.0, pas=2.0,
+    precision=0,
+    effets_directs={"democratie": 0.4, "stabilite_gouvernementale": -0.3, "justice": 0.3},
+    source="Constitution, art. 37 alinéa 2 et 41 ; ordonnance du 7 novembre 1958, art. 44 et 45.",
+    articles=("CONST_ART_37", "CONST_ART_41"),
 ))
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -2379,6 +2511,77 @@ PRESETS: Dict[str, Dict[str, Any]] = {
             "reglage_seuil_saisine_conseil": 1.0,
         },
         "couleur": "#eab308",
+    },
+    "assemblees_souveraines": {
+        "libelle": "Assemblées souveraines (nuances institutionnelles ouvertes)",
+        "description": "Le contre-pouvoir comme réglage, sans toucher aux comptes publics : "
+                       "censure comptée sur les suffrages exprimés, 49.3 interdit hors budget, "
+                       "saisine du Conseil à quarante signatures, ordre du jour partagé, pétition "
+                       "locale à 8 %, amendement garanti, vote nominal publié, chambre de la durée "
+                       "tirée au sort, parquet indépendant, fin automatique de l'état d'urgence. "
+                       "Chaque curseur est documenté, aucun n'est gratuit : le module "
+                       "`nuances_institutionnelles` en recalcule les seuils et les délais.",
+        "parametres": {
+            "reglage_censure_assiette": 1.0,
+            "reglage_congres_assiette_membres": 1.0,
+            "reglage_controle_loi_referendaire": 1.0,
+            "reglage_49_3_interdiction": 1.0,
+            "reglage_delai_motion_49_3": 48.0,
+            "reglage_seuil_saisine_conseil": 1.0,
+            "reglage_recours_irrecevabilite": 1.0,
+            "reglage_droit_amendement": 1.0,
+            "reglage_ordre_du_jour_partage": 30.0,
+            "reglage_seuil_groupes": 5.0,
+            "reglage_vote_nominal_obligatoire": 1.0,
+            "reglage_audit_obligatoire_prealable": 1.0,
+            "reglage_appel_qpc": 1.0,
+            "reglage_parquet_independant": 1.0,
+            "reglage_mandat_unique_instances": 1.0,
+            "reglage_publication_avis_ce": 1.0,
+            "reglage_execution_cedh": 180.0,
+            "reglage_action_de_groupe_administratif": 1.0,
+            "reglage_petition_locale_seuil": 8.0,
+            "reglage_referendum_local_automatique": 1.0,
+            "reglage_epci_suffrage_direct": 1.0,
+            "reglage_autonomie_financiere_garantie": 10.0,
+            "reglage_differentiation_pilotes": 8.0,
+            "reglage_outre_mer_competences": 6.0,
+            "reglage_outre_mer_congres_permament": 1.0,
+            "reglage_senat_suffrage_direct": 1.0,
+            "reglage_subsidiarite_recours": 1.0,
+            "reglage_vote_prealable_actes_ue": 1.0,
+            "reglage_registre_amendements": 1.0,
+            "reglage_comptes_temps_reel": 1.0,
+            "reglage_chambre_tiree_au_sort": 140.0,
+            "reglage_convention_veto_suspensif": 1.0,
+            "reglage_revocation_elue": 1.0,
+            "reglage_algorithmes_transparents": 1.0,
+            "reglage_non_retroactivite_in_minus": 1.0,
+            "reglage_controle_juge_exception": 1.0,
+            "reglage_plafond_etat_urgence": 12.0,
+        },
+        "couleur": "#22d3ee",
+    },
+    "verrouillage_par_le_haut": {
+        "libelle": "Verrouillage par le haut (ce qui est acté ne se défait plus)",
+        "description": "L'autre bout du même curseur : réforme inscrite dans la Constitution puis "
+                       "dans un engagement international, ancrée dans le droit dérivé de l'Union, "
+                       "règle d'or du déficit, stabilité normative de cinq ans, délai de censure "
+                       "allongé. La crédibilité gagnée se paie en liberté pour la majorité suivante "
+                       "— le modèle affiche les deux côtés, et les fentes que cela ferme.",
+        "parametres": {
+            "reglage_verrou_par_revision": 1.0,
+            "reglage_verrou_par_loi_organique": 1.0,
+            "reglage_verrou_par_engagement_international": 1.0,
+            "reglage_ancre_ue_reforms": 70.0,
+            "reglage_or_du_deficit": 1.5,
+            "reglage_stabilite_normative_annees": 5.0,
+            "reglage_delai_motion_censure": 10.0,
+            "reglage_seuil_saisine_conseil": 0.0,
+            "reglage_censure_assiette": 0.0,
+            "reglage_controle_juge_exception": 0.0,
+        },
+        "couleur": "#7c3aed",
     },
 }
 

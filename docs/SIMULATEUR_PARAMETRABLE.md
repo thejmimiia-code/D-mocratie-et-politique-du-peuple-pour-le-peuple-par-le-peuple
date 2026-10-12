@@ -1,4 +1,4 @@
-# Simulateur paramétrable — piloter 149 leviers et voir l'impact sur 20 domaines
+# Simulateur paramétrable — piloter 156 leviers et voir l'impact sur 20 domaines
 
 > Tableau de bord unique, sans dépendance externe : `python -m simulateur.dashboard --port 8080`
 > (ou `simulateur-mpol-dashboard` après installation).
@@ -16,7 +16,7 @@ mouvement de curseur. Le sélecteur d'horizon propose une ou deux mandatures
 
 ```
 ┌──────────────────────────── navigateur (page unique) ────────────────────────────┐
-│ 149 leviers (curseurs, interrupteurs, cibles)   ← leviers →   20 domaines notés    │
+│ 156 leviers (curseurs, interrupteurs, cibles)   ← leviers →   20 domaines notés    │
 │ recherche, préréglages, exports JSON/CSV        service       0-100 + indicateurs │
 │ « Rafraîchir les données » → API publiques en direct (fetch CORS)                 │
 └───────────────┬───────────────────────────────────────────┬─────────────────────┘
@@ -25,7 +25,7 @@ mouvement de curseur. Le sélecteur d'horizon propose une ou deux mandatures
 ┌───────────────▼───────────────────────────────────────────▼─────────────────────┐
 │ serveur HTTP (bibliothèque standard, multi-thread, HTTP/1.1)                    │
 │  · moteur_parametrique.simuler()  → horizon 1-10 × 5 échelons + domaines       │
-│  · parametres.normaliser()        → validation et bornage des 149 leviers        │
+│  · parametres.normaliser()        → validation et bornage des 156 leviers        │
 │  · domaines.evaluer_domaines()    → 74 indicateurs concrets, scores 0-100       │
 │  · donnees_live.construire_contexte() → chiffres publics datés et sourcés       │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -33,7 +33,7 @@ mouvement de curseur. Le sélecteur d'horizon propose une ou deux mandatures
 
 | Module | Rôle |
 |---|---|
-| `simulateur/parametres.py` | 149 leviers (14 familles, 14 préréglages doctrinaux, `normaliser()`, `catalogue_public()` |
+| `simulateur/parametres.py` | 156 leviers (14 familles, 16 préréglages doctrinaux, `normaliser()`, `catalogue_public()` |
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs spécifiés (formule + source), `construire_flux()`, `decision_moteur()` |
 | `simulateur/seuils.py` | garde-fous par strate : bornes, messages, marges, risque population |
 | `simulateur/moteur_parametrique.py` | orchestrateur : trajectoire de référence, boucle de convergence, scores, matrice d'impacts |
@@ -47,7 +47,7 @@ mouvement de curseur. Le sélecteur d'horizon propose une ou deux mandatures
 
 ---
 
-## 2. Les 149 leviers
+## 2. Les 156 leviers
 
 Chaque levier est un objet `Levier` documenté : clé, libellé, famille, description,
 unité, type, valeur par défaut, bornes, pas, profil temporel de 5 ans (au-delà,
@@ -71,10 +71,13 @@ Deux règles structurent le moteur :
 
 ### 2 ter. Les réglages institutionnels : le droit devient une variable
 
-48 leviers portent le préfixe `reglage_` : assiette de la motion de censure, quorum du
+55 leviers portent le préfixe `reglage_` : assiette de la motion de censure, quorum du
 Congrès, interdiction du 49.3 hors budget, seuil de saisine du Conseil constitutionnel,
 délais de l'article 47, seuil de pétition locale, matières transférées outre-mer, recours
-contre une irrecevabilité, stabilité normative, verrou par loi organique… Aucun n'est un ornement :
+contre une irrecevabilité, stabilité normative, verrou par loi organique, composition de la
+Haute Cour, saisine directe du Défenseur des droits, commissions d'enquête garanties, délai de
+la procédure accélérée, consultation préalable du CESE, articulation loi-règlement de l'article
+37. Aucun n'est un ornement :
 chacun est un levier de `LEVIERS` (donc visible, réglable, bulle, source, page de
 vérification) **et** une règle de recalcul appliquée par
 `simulateur/nuances_institutionnelles.py`, qui reprend les chiffres des modules de droit :
@@ -95,6 +98,30 @@ vérification) **et** une règle de recalcul appliquée par
 Un réglage à zéro ne change rien, et c'est vérifié par les tests : seuils, délais, fentes
 et indices rendent alors exactement les chiffres des modules de droit. Voir
 [`17_NUANCES_INSTITUTIONNELLES_ET_REGLAGES.md`](17_NUANCES_INSTITUTIONNELLES_ET_REGLAGES.md).
+
+### 2 ter bis. Les seize préréglages, et ce qu'ils éprouvent
+
+Un préréglage n'est pas un scénario : c'est un vecteur complet, relu par le même moteur
+que n'importe quel mouvement de curseur. La liste est celle de `parametres.PRESETS`.
+
+| Clé | Libellé | Leviers déplacés | Ce que le préréglage met à l'épreuve |
+|---|---|---|---|
+| `statut_quo` | Statu quo (inertie) | 0 dont 0 réglage(s) | Aucun levier actionné : la trajectoire actuelle se prolonge |
+| `mandature` | Plan de mandature républicaine | 17 dont 0 réglage(s) | Dossier de mandature global : fraude, niches, DGF sanctuarisée, réformes démocratiques, +60 Md€ de marges récurrentes en année 5 |
+| `double_mandature` | Deux mandatures consécutives (2027-2037) | 26 dont 0 réglage(s) | Doctrine de dix ans : réformes et verrou, second dividende, investissements de cycle long, rattrapage du patrimoine public, adaptation, capital humain… |
+| `resilience` | Résilience républicaine & réarmement | 15 dont 0 réglage(s) | Mandature + effort de défense porté à 3,5 % du PIB et souveraineté industrielle |
+| `austerite` | Austérité brute | 8 dont 0 réglage(s) | Coupes dans les dotations et les dépenses publiques, sans réforme structurelle : fronde fiscale attendue |
+| `transition_ecologique` | Transition écologique & énergie | 10 dont 0 réglage(s) | Rénovation, renouvelables, nucléaire, transports, fiscalité carbone compensée |
+| `justice_sociale` | Justice sociale & services publics | 16 dont 0 réglage(s) | Redistribution, santé, école, logement, minima sociaux, financés par la fiscalité du capital |
+| `choc_mondial` | Stress-test : choc mondial | 5 dont 0 réglage(s) | Stagflation importée : pétrole en forte hausse, taux mondiaux tendus, commerce fragmenté |
+| `crise_geopolitique` | Stress-test : crise géopolitique | 8 dont 0 réglage(s) | Blocus de Taïwan et tensions majeures : semi-conducteurs, marchés, réarmement d'urgence |
+| `crise_taiwan` | Crise de Taïwan (blocus) | 8 dont 0 réglage(s) | Blocus de Taïwan : semi-conducteurs coupés, marchés tendus, souveraineté industrielle en urgence |
+| `hormuz` | Fermeture du détroit d'Hormuz | 7 dont 0 réglage(s) | 20 % du pétrole mondial coupé : Brent au-delà de 150 $, inflation importée, facture énergétique explosive |
+| `escalade_nucleaire` | Escalade nucléaire tactique | 7 dont 0 réglage(s) | Franchissement du seuil nucléaire : dégradation souveraine, fermeture des marchés longs, économie de guerre |
+| `convergence_ww3` | Convergence Chine-Russie-Iran | 10 dont 0 réglage(s) | Guerre mondiale par blocs : commerce fragmenté, effort de défense maximal, résilience totale à construire |
+| `refondation_democratique` | Refondation démocratique | 16 dont 6 réglage(s) | RIC, vote blanc, proportionnelle, conventions citoyennes, transparence : la légitimité comme levier de tout le reste |
+| `assemblees_souveraines` | Assemblées souveraines (nuances institutionnelles ouvertes) | 37 dont 37 réglage(s) | Le contre-pouvoir comme réglage, sans toucher aux comptes publics : censure comptée sur les suffrages exprimés, 49.3 interdit hors budget, saisine du … |
+| `verrouillage_par_le_haut` | Verrouillage par le haut (ce qui est acté ne se défait plus) | 10 dont 10 réglage(s) | L'autre bout du même curseur : réforme inscrite dans la Constitution puis dans un engagement international, ancrée dans le droit dérivé de l'Union, rè… |
 
 ### 2 bis. Un horizon d'une ou deux mandatures
 
@@ -191,7 +218,7 @@ La console complète vit dans le flux de la page (elle défile) ; c'est un
 **ruban compact et collant** qui reste seul en haut de l'écran : verdict,
 compteur d'alertes et de hors-sol, cinq pastilles de strate (S1…S5), risque
 pour la population, et trois boutons — *Masquer le détail des seuils*,
-*Vue compacte*, *Régler les 149 leviers*. Le ruban mesure 44 pixels de haut :
+*Vue compacte*, *Régler les 156 leviers*. Le ruban mesure 44 pixels de haut :
 il ne recouvre jamais les paramètres.
 
 ### Tous les paramètres, visibles et actionnables
@@ -199,7 +226,7 @@ il ne recouvre jamais les paramètres.
 - **Vue confort** : une carte par famille, chaque levier avec sa description,
   sa source et son curseur.
 - **Vue compacte** (bascule dans la barre des leviers) : une ligne par levier —
-  nom, curseur, valeur — pour que **les 149 paramètres** tiennent à l'écran.
+  nom, curseur, valeur — pour que **les 156 paramètres** tiennent à l'écran.
 - Chaque geste part immédiatement : anti-rebond de 180 ms, puis simulation.
 - Pendant la manipulation d'un curseur, la grille **n'est pas reconstruite**
   (sinon le curseur serait remplacé sous les doigts) ; elle l'est au relâchement.
@@ -214,7 +241,7 @@ il ne recouvre jamais les paramètres.
 ## 5. La console de veille permanente
 
 En haut de la page, une console **épinglée** suit le défilement : elle reste
-visible pendant que l'on règle les 149 leviers. Elle répond à trois questions,
+visible pendant que l'on règle les 156 leviers. Elle répond à trois questions,
 en permanence et sans clic supplémentaire (le diagnostic voyage avec chaque
 simulation, aucune requête en plus) :
 
@@ -293,7 +320,7 @@ possible, ce n'est pas une boîte noire :
    statut (live / référence), source, URL, licence ;
 2. **les 20 domaines et leurs 74 indicateurs** — la formule du score et la
    source de chaque chiffre ;
-3. **les 149 leviers** — champ / ligne budgétaire, effets déclarés (thème et
+3. **les 156 leviers** — champ / ligne budgétaire, effets déclarés (thème et
    coefficient), source ;
 4. **les 31 garde-fous** (`GET /api/garde_fous`) — strate, bornes
    (seuil → niveau) et source institutionnelle de chaque seuil ;
@@ -345,7 +372,7 @@ diagnostic est attaché à chaque `SortieSimulation` et exposé par
 ## 6. Les bulles explicatives par réglage
 
 Chaque réglage porte un bouton **« interactions »** : la fiche s'ouvre **dans la
-carte du levier** (jamais par-dessus), donc les 149 paramètres restent visibles et
+carte du levier** (jamais par-dessus), donc les 156 paramètres restent visibles et
 actionnables pendant la lecture. Le contenu n'est pas rédigé à la main : il est
 calculé par `simulateur/bulles.py` à partir du catalogue, des 74 formules
 d'indicateurs et du moteur, puis servi par `GET /api/bulle?levier=…`.
@@ -375,7 +402,7 @@ Une bulle répond à trois questions, dans cet ordre :
    catalogue des autres leviers — de quoi corriger un désagrément sans
    improviser.
 
-État mesuré sur le catalogue actuel (réglage isolé, bornes des 149 leviers) :
+État mesuré sur le catalogue actuel (réglage isolé, bornes des 156 leviers) :
 
 | Constat | Valeur |
 |---|---|
@@ -407,7 +434,7 @@ le délai du `title` natif du navigateur et sans recouvrir durablement l'écran 
 
 La couche d'infobulle est **passive** (`pointer-events:none`) : elle ne capte
 aucun clic, disparaît au départ de la souris, au clic, au défilement et à
-l'ouverture d'une bulle — les 149 paramètres restent donc tous actionnables.
+l'ouverture d'une bulle — les 156 paramètres restent donc tous actionnables.
 Lecture du code : `initialiserInfobulles()`, `survoler()`, `texteAideLevier()`
 dans `simulateur/interface.py`.
 
@@ -449,12 +476,12 @@ python -m simulateur.moteur_parametrique --levier effort_defense_pct_pib=3.5 --l
 | Route | Méthode | Contenu |
 |---|---|---|
 | `/` | GET | page unique du simulateur |
-| `/api/catalogue` | GET | familles, 149 leviers, 14 préréglages, 20 domaines |
+| `/api/catalogue` | GET | familles, 156 leviers, 16 préréglages, 20 domaines |
 | `/api/nuances` | GET | réglages institutionnels recalculés : seuils, délais, fentes, indices (`?parametres={…}`, `?reglage=`, `?article=`, `?niveau=`, `?index=`, `?chercher=`) |
 | `/api/contexte` | GET | contexte instant T + provenance + sources navigateur + diagnostic |
 | `/api/marches` | GET | catalogue de 13 indices; `?refresh=1` demande une collecte auprès du fournisseur tiers et ne garantit pas le temps réel |
 | `/api/simuler` | GET/POST | simulation paramétrique (étapes, domaines, synthèse, impacts, **diagnostic de seuils**, **lecture en clair**) ; `horizon` jusqu'à 10 ans pour la période de deux mandatures (`docs/RD_DOUBLE_MANDATURE.md`) |
-| `/api/comparer` | GET | comparaison des 14 préréglages **avec leur verdict de garde-fous** |
+| `/api/comparer` | GET | comparaison des 16 préréglages **avec leur verdict de garde-fous** |
 | `/api/conseil` | POST | conseiller temps réel : lecture du **dernier mouvement** d'un levier (`cle`, `avant`, `apres`, `parametres`, `horizon`) — effets directs, ricochets, grandeurs, garde-fous, journal, compensations, **budget réel (Md€) et sources officielles** |
 | `/api/garde_fous` | GET | barème complet des 31 garde-fous : strates, bornes, sources institutionnelles (audit) |
 | `/api/bulles` | GET | bulles explicatives du catalogue (`?levier=`, `?detail=resume`, `?mesure=0`) |
@@ -566,7 +593,7 @@ simulateur exactement sur les leviers affichés.
 **Ce que le lien contient.** Seuls les leviers **réellement déplacés** par
 rapport aux valeurs neutres du catalogue sont écrits dans l'adresse (`?sim=`),
 au format JSON compact : une poignée de leviers tient en quelques centaines de
-caractères, là où les 149 paramètres pèseraient plusieurs kilo-octets. À
+caractères, là où les 156 paramètres pèseraient plusieurs kilo-octets. À
 l'ouverture, ces écarts sont relus **par-dessus les valeurs neutres** ; le
 programme de départ (« mandature ») est alors laissé de côté, sinon il
 s'ajouterait aux réglages repris et le lien ne rouvrirait pas la simulation

@@ -273,8 +273,52 @@ for (let i = 0; i < 6; i += 1) await tourner();
 /* 1. Démarrage : catalogue, presets, contexte, préréglage actif. */
 const leviersComplets = (contenu("leviers-grille").match(/class="levier[ "]/g) || []).length;
 noter("charge le catalogue des leviers", leviersComplets > 50, `${leviersComplets} cartes`);
-noter("affiche les 14 préréglages", (elements.get("preset-grid")?.children.length || 0) === 14,
+noter("affiche les 16 préréglages", (elements.get("preset-grid")?.children.length || 0) === 16,
       `${elements.get("preset-grid")?.children.length} cartes`);
+// La couche « nuances institutionnelles » doit être visible dans la page, pas seulement
+// dans les modules : seuils recalculés, fentes, strates et garde-fous.
+noter("rend la section des nuances institutionnelles",
+      contenu("nuances-corps").includes("Seuils recalculés")
+      && contenu("nuances-corps").includes("Délais de rigueur")
+      && contenu("nuances-corps").includes("Cinq strates"),
+      `${contenu("nuances-corps").length} caractères`);
+noter("le tableau des nuances affiche le seuil recalculé par le réglage",
+      contenu("nuances-corps").includes("Voix favorables pour renverser le Gouvernement")
+      && contenu("nuances-corps").includes("reglage_censure_assiette")
+      && contenu("nuances-corps").includes("231"),
+      contenu("nuances-resume").slice(0, 120));
+noter("la section annonce les garde-fous de la couche",
+      contenu("nuances-corps").includes("Garde-fous"),
+      "aucun bloc de garde-fous rendu");
+noter(" chaque levier rattaché à un article porte sa puce de droit positif",
+      contenu("leviers-grille").includes('class="articles"')
+      && contenu("leviers-grille").includes("/api/constitution?article=49"),
+      `${(contenu("leviers-grille").match(/class="articles"/g) || []).length} puces`);
+// L'état des verrous vient de `/api/nuances` : la page ne fait que le partager
+// en trois colonnes et remplacer chaque citation par le lien vers la fiche du serveur.
+const corpsVerrous = contenu("verrous-corps");
+noter("rend les trois colonnes de verrous",
+      corpsVerrous.includes("Touchés par le vecteur") && corpsVerrous.includes("Intacts")
+      && corpsVerrous.includes("Hors réglage"),
+      corpsVerrous.slice(0, 240));
+noter("le verrou touché affiche son seuil recalculé et le réglage qui le bouge",
+      corpsVerrous.includes("Voix favorables pour renverser le Gouvernement")
+      && /289[^<]*→[^<]*231/.test(corpsVerrous.replace(/<[^>]*>/g, " "))
+      && corpsVerrous.includes("reglage_censure_assiette"),
+      corpsVerrous.slice(0, 300));
+noter("les 18 verrous hors réglage sont listés et expliqués",
+      (corpsVerrous.match(/class="hors"/g) || []).length === 18
+      && corpsVerrous.includes("ne peut pas se décréter"),
+      `${(corpsVerrous.match(/class="hors"/g) || []).length} lignes hors réglage`);
+noter("une citation d'article devient un lien vers la fiche servie par le serveur",
+      corpsVerrous.includes('href="/api/constitution?article=49"')
+      && contenu("reglages-corps").includes('href="/api/constitution?article='),
+      `${(corpsVerrous.match(/class="article"/g) || []).length} liens d'article`);
+noter("la liste des réglages déplacés rappelle ce que chacun atteint",
+      contenu("reglages-corps").includes("badge-cible")
+      && contenu("reglages-corps").includes("reglage_censure_assiette")
+      && contenu("reglages-corps").includes("valeur retenue"),
+      contenu("reglages-corps").slice(0, 240));
 noter("affiche les 11 scénarios", (elements.get("scenario-grid")?.children.length || 0) === 11,
       `${elements.get("scenario-grid")?.children.length} cartes`);
 noter("affiche les métriques du contexte instant T", contenu("grid-metrics").includes("PIB nominal"));

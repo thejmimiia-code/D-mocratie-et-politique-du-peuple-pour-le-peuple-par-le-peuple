@@ -16,6 +16,10 @@ aucun CDN) qui contient :
     déclarés, mesures en direct) et d'une **bulle explicative** dépliable ;
   * des infobulles instantanées sur les boutons, cases à cocher, cartes de
     domaine, préréglages et scénarios (couche passive : aucun clic capté) ;
+  * les **nuances institutionnelles** : seuils recalculés, délais de rigueur, fentes,
+    indices, cinq strates, garde-fous de la couche — et l'état des 38 verrous du
+    registre, partagé en touchés / intacts / hors réglage, chaque citation de la
+    Constitution pointant sur la fiche servie par `/api/constitution` ;
   * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;
   * la matrice croisée levier × domaine (impacts calculés par le modèle) ;
   * le journal causal du moteur et les exports JSON/CSV ;
@@ -249,7 +253,51 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .levier.compact .nom{font-size:.73rem}
 .levier.compact input[type=range]{margin-top:0}
 .levier.compact .valeur{font-size:.72rem;text-align:right}
-.levier.compact .desc,.levier.compact .source{display:none}
+.levier.compact .desc,.levier.compact .source,.levier .articles{display:none}
+.levier:not(.compact) .articles{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}
+.levier .articles-legende{font-size:.6rem;color:#64748b;text-transform:uppercase;letter-spacing:.04em}
+.levier .article{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.62rem;color:#8ab4ff;
+  border:1px solid #2b3d5c;border-radius:6px;padding:0 5px;text-decoration:none;background:#111c2c}
+.levier .article:hover{border-color:#8ab4ff;color:#c8dbff}
+.levier .articles-hors{font-size:.6rem;color:#64748b;font-style:italic}
+/* Nuances institutionnelles : la couche qui traduit les curseurs en droit. */
+#section-nuances .nuances-intro{color:#9fb0cc;font-size:.8rem;margin:2px 0 10px}
+#section-nuances table{width:100%;border-collapse:collapse;font-size:.76rem}
+#section-nuances th{color:#7b8aa5;text-align:left;font-weight:600;padding:4px 6px;border-bottom:1px solid #2b3d5c}
+#section-nuances td{padding:4px 6px;border-bottom:1px solid #1b2740;vertical-align:top}
+#section-nuances td.chiffre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
+#section-nuances .plus{color:#7ee0a3}
+#section-nuances .moins{color:#f3a0a0}
+#section-nuances .ok{color:#7ee0a3}
+#section-nuances .hors{color:#f3a0a0;font-weight:700}
+#section-nuances .fentes,#section-nuances .limites{font-size:.74rem;color:#9fb0cc}
+#section-nuances .garde-fous{border:1px solid #7f1d1d;background:#2a1214;border-radius:8px;
+  padding:8px 10px;margin:8px 0;font-size:.76rem;color:#fecaca}
+#section-nuances .puce-indice{display:inline-block;border:1px solid #2b3d5c;border-radius:8px;
+  padding:4px 8px;margin:0 6px 6px 0;background:#111c2c;font-size:.74rem}
+#section-nuances .puce-indice b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+/* Citations : le texte n'est jamais recopié ici, seul le lien vers la fiche servie. */
+#section-nuances a.article,#section-verrous a.article{color:#bae6fd;border-bottom:1px dotted #38bdf8;
+  text-decoration:none;font-style:normal}
+#section-nuances a.article:hover,#section-verrous a.article:hover{border-bottom-style:solid}
+#section-nuances .reglages-touches{display:grid;gap:6px;margin-top:6px}
+#section-nuances .reglage-touche{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;
+  padding:7px 9px;font-size:.76rem}
+#section-nuances .badge-cible{display:inline-block;margin:1px 4px 1px 0;padding:1px 7px;
+  border-radius:999px;border:1px solid #2b3d5c;font-variant-numeric:tabular-nums}
+#section-verrous .verrou-groupe{margin-top:12px}
+#section-verrous .verrou-titre{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;
+  color:#9fb0cc;margin-bottom:4px}
+#section-verrous ul{list-style:none;margin:0;padding:0}
+#section-verrous li{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:.78rem;
+  border-bottom:1px dashed rgba(147,163,189,.18);padding:4px 0}
+#section-verrous li.touche{border-left:3px solid #ef4444;padding-left:8px}
+#section-verrous li.intact{border-left:3px solid #2f8f5b;padding-left:8px}
+#section-verrous li.hors{border-left:3px dashed #d68a2b;padding-left:8px}
+#section-verrous .verrou-seuil{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  white-space:nowrap}
+#section-verrous .puce-reglage{display:inline-block;margin:0 3px;padding:1px 6px;border-radius:999px;
+  border:1px solid #2b3d5c;font-size:.7rem;font-style:normal}
 .levier.modifie{border-left:3px solid var(--accent);padding-left:8px;background:rgba(56,189,248,.06);
   border-radius:0 8px 8px 0}
 .levier.modifie .nom{font-weight:700}
@@ -562,7 +610,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   </section>
 
   <section class="bloc" id="section-leviers">
-    <h2>Vos leviers <span class="aide">tous les paramètres du catalogue, visibles et actionnables — chaque geste se répercute en direct</span></h2>
+    <h2>Vos leviers <span class="aide">tous les paramètres du catalogue, visibles et actionnables — chaque geste se répercute en direct ; la section « Nuances institutionnelles », juste en dessous, traduit chaque curseur en seuil et en délai de droit</span></h2>
     <div class="barre-leviers">
       <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre tous les leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
@@ -571,6 +619,22 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
       </label>
     </div>
     <div class="leviers-grille" id="leviers-grille"></div>
+  </section>
+
+  <section class="bloc" id="section-nuances">
+    <h2>Nuances institutionnelles <span class="aide">ce que les curseurs ci-dessus changent au droit positif : seuils recalculés, délais de rigueur, fentes verrouillées, quatre indices et cinq strates. Calcul de la couche <code>simulateur/nuances_institutionnelles.py</code>, pas une opinion — chaque ligne rappelle l'article et la règle telle qu'elle est écrite.</span></h2>
+    <div class="nuances-intro" id="nuances-resume">Le tableau se met à jour avec la simulation.</div>
+    <div id="nuances-corps"><div class="carte">Chargement du tableau institutionnel…</div></div>
+    <p class="nuances-intro"><button type="button" class="bouton" onclick="rafraichirNuances()">Recalculer maintenant</button>
+      <span class="aide">Le bouton relance <code>POST /api/nuances</code> avec le vecteur complet ; la section suit déjà chaque simulation.</span></p>
+  </section>
+
+  <section class="bloc" id="section-verrous">
+    <h2>Verrous : ce qui tient, ce qui lâche <span class="aide">les 38 règles de blocage du registre <code>simulateur/gouvernance_contrepouvoir.py</code>, partagées en trois colonnes — touchées par le vecteur, intactes, hors de portée d'un curseur. Une quatrième liste rappelle les réglages déplacés et, pour chacun, la catégorie de connaissance qu'il atteint. Rien n'est saisi ici : tout vient de <code>POST /api/nuances</code>.</span></h2>
+    <div class="nuances-intro" id="verrous-resume">Le bloc suit la simulation des nuances.</div>
+    <div id="verrous-corps"><div class="carte">Chargement de l'état des verrous…</div></div>
+    <h3 style="margin:14px 0 6px">Réglages déplacés et ce qu'ils touchent</h3>
+    <div id="reglages-corps" class="reglages-touches"></div>
   </section>
 
   <section class="bloc" id="section-resultats">
@@ -672,6 +736,7 @@ let CATALOGUE = null;
 let CONTEXTE = null;
 let SORTIE = null;
 let PARAMS = {};
+let NUANCES = null;   // dernier tableau des nuances institutionnelles
 let MARCHES = null;
 let ONGLET_STRATE_ACTIF = 'local';
 let PROFIL_MENAGE = {
@@ -1768,6 +1833,254 @@ function effetsDeclaresHtml(bulle){
   return `<div class="bulle-section"><span class="bulle-titre">Effets déclarés au catalogue</span>`
     + `<div>${jetons || 'aucun'}</div></div>`;
 }
+/* Les identifiants de droit positif attachés à un levier : la puce mène à la fiche
+   d'article, pas à un calcul du modèle. Un article n'est jamais une promesse de
+   rendement — c'est le texte qui dit si le réglage est licite, et jusqu'où. */
+function numerosArticle(levier){
+  const bruts = levier.articles || [];
+  const numeros = [];
+  bruts.forEach(identifiant => {
+    const numero = String(identifiant).replace(/^CONST_ART_/, '').replace(/_/g, '-');
+    if (/^[0-9]+(-[0-9]+)*$/.test(numero) && !numeros.includes(numero)) numeros.push(numero);
+  });
+  return numeros;
+}
+function articlesHtml(levier){
+  const numeros = numerosArticle(levier);
+  if (!numeros.length) return '';
+  const puces = numeros.map(numero => {
+    const href = '/api/constitution?article=' + encodeURIComponent(numero);
+    const titre = 'Fiche de droit positif de l\'article ' + numero
+      + ' — texte, chiffres vérifiés, bornes du modèle, réversibilité. Réponse du serveur,'
+      + ' pas un calcul du simulateur.';
+    return '<a class="article" href="' + href + '" target="_blank" rel="noopener" title="'
+      + titre + '">' + numero + '</a>';
+  }).join('');
+  const hors = (levier.articles || []).filter(identifiant =>
+    !/^CONST_ART_/.test(String(identifiant))).length;
+  return '<div class="articles"><span class="articles-legende">droit positif</span>' + puces
+    + (hors > 0 ? '<span class="articles-hors">' + hors + ' hors Constitution</span>' : '')
+    + '</div>';
+}
+/* La section « Nuances institutionnelles » : le vecteur courant est envoyé à
+   /api/nuances, qui renvoie les seuils recalculés, les délais de rigueur, les
+   fentes, les indices, les strates et les garde-fous de la couche. Rien n'est
+   inventé ici : chaque chiffre vient du serveur, et les listes de contrôle qui
+   ne sont pas vides s'affichent en rouge — un trou de la couche doit se voir. */
+async function rafraichirNuances(){
+  const zone = document.getElementById('nuances-corps');
+  if (!zone) return;
+  try{
+    const reponse = await fetch('/api/nuances', {method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({parametres: Object.assign({}, PARAMS)})});
+    if (!reponse.ok) throw new Error('HTTP ' + reponse.status);
+    NUANCES = await reponse.json();
+    renderNuances();
+    renderVerrous();
+    renderReglagesTouches();
+  }catch(erreur){
+    zone.innerHTML = '<div class="carte">Le serveur de nuances n\'a pas répondu : '
+      + erreur + '. Les curseurs restent utilisables ; seul ce tableau manque.</div>';
+  }
+}
+function ecartHtml(ecart){
+  if (!ecart) return '<span class="chiffre">—</span>';
+  const classe = ecart > 0 ? 'plus' : 'moins';
+  const signe = ecart > 0 ? '+' : '−';
+  return '<span class="' + classe + '">' + signe + fmt(Math.abs(ecart), 0) + '</span>';
+}
+function renderNuances(){
+  const zone = document.getElementById('nuances-corps');
+  const intro = document.getElementById('nuances-resume');
+  if (!zone || !NUANCES) return;
+  const resume = NUANCES.resume || {};
+  if (intro){
+    intro.innerHTML = (resume.reglages_deplaces || 0)
+      ? '<b>' + resume.reglages_deplaces + '</b> réglage' + (resume.reglages_deplaces > 1 ? 's' : '')
+        + ' déplacé' + (resume.reglages_deplaces > 1 ? 's' : '') + ' sur ' + resume.reglages_disponibles
+        + ' · ' + resume.articles_croises + ' articles croisés · ' + resume.trajets_tenables
+        + '/' + resume.trajets + ' trajets tenables dans la fenêtre résiduelle'
+        + ((resume.fentes_neutralisees || []).length ? ' · ' + resume.fentes_neutralisees.length
+          + ' fente(s) verrouillée(s)' : '')
+      : 'Aucun réglage institutionnel déplacé : chaque seuil reste à sa valeur de droit. '
+        + resume.reglages_disponibles + ' réglages disponibles, ' + resume.articles_croises
+        + ' articles croisés.';
+  }
+  const seuils = Object.values(NUANCES.seuils || {});
+  const lignes_seuils = seuils.map(ligne => '<tr><td>' + ligne.nom
+    + (ligne.note ? '<br><span class="aide">' + ligne.note + '</span>' : '')
+    + '</td><td class="chiffre">' + ligne.article + '</td><td class="chiffre">'
+    + fmt(ligne.statu_quo, 0) + ' ' + (ligne.unite || '') + '</td><td class="chiffre">'
+    + fmt(ligne.regle, 0) + ' ' + (ligne.unite || '') + '</td><td class="chiffre">'
+    + ecartHtml(ligne.ecart) + '</td><td>' + (ligne.reglages_appliques || []).join(', ')
+    + '</td></tr>').join('');
+  const delais = NUANCES.delais || {};
+  const lignes_trajets = (delais.trajets || []).map(ligne => '<tr><td>' + ligne.nom
+    + '</td><td class="chiffre">' + fmt(ligne.jours_de_rigueur_statu_quo, 0)
+    + ' j</td><td class="chiffre">' + fmt(ligne.jours_de_rigueur_regles, 0) + ' j</td><td>'
+    + (ligne.tenable_dans_la_fenetre ? '<span class="ok">tenable</span>'
+       : '<span class="hors">hors fenêtre</span>') + '</td></tr>').join('');
+  const indices = Object.values(NUANCES.indices || {});
+  const puces_indices = indices.map(indice => '<span class="puce-indice" title="'
+    + (indice.definition || '') + (indice.borne_appliquee ? ' — valeur bornée à 100' : '')
+    + '">' + indice.nom + ' <b>' + fmt(indice.valeur, 1) + '</b> '
+    + (indice.ecart ? ecartHtml(indice.ecart) : '') + '</span>').join('');
+  const fentes = NUANCES.fentes || [];
+  const lignes_fentes = fentes.map(fente => '<span class="puce-indice" title="'
+    + (fente.condition_de_verrouillage || '') + '">' + fente.nom
+    + ' · robustesse ' + fmt(fente.robustesse_reglee, 0)
+    + (fente.neutralisee ? ' · <span class="hors">VERROUILLÉE par '
+        + (fente.reglages_appliques || []).join(', ') + '</span>' : '') + '</span>').join('');
+  const strates = (NUANCES.strates || []).map(ligne => '<tr><td class="chiffre">' + ligne.strate
+    + '</td><td>' + ligne.libelle + '</td><td class="chiffre">' + (ligne.reglages || []).length
+    + '</td><td class="chiffre">' + (ligne.reglages_actifs || []).length
+    + '</td><td class="chiffre">' + (ligne.verrous_touches || []).length
+    + '</td><td class="chiffre">' + (ligne.fentes_verrouillees || []).length + '</td></tr>').join('');
+  const trous = [];
+  const coherence = NUANCES.coherence || {};
+  Object.keys(coherence).forEach(cle => {
+    const valeur = coherence[cle];
+    if (Array.isArray(valeur) && valeur.length && /sans|inconnu|non_|perimees|vides|anormaux|orphelins/.test(cle)){
+      trous.push('<b>' + cle + '</b> : ' + valeur.join(', '));
+    }
+  });
+  zone.innerHTML = (trous.length
+      ? '<div class="garde-fous">Garde-fous de la couche : ' + trous.join(' · ')
+        + ' — un trou vient de s\'ouvrir dans la couche, il doit être comblé.</div>'
+      : '<div class="carte">Garde-fous au vert : aucun verrou sans explication, aucun réglage '
+        + 'sans cible chiffrée, aucune fente ni trajet inatteignable, sur '
+        + (coherence.reglages_catalogue || 0) + ' réglages et '
+        + Object.keys(coherence.total_connaissances || {}).length + ' registres croisés.</div>')
+    + '<h3 style="margin:10px 0 6px">Indices</h3><div>' + (puces_indices || '—') + '</div>'
+    + '<h3 style="margin:12px 0 6px">Seuils recalculés</h3><table><thead><tr><th>Règle</th>'
+    + '<th>Article</th><th>Droit</th><th>Réglé</th><th>Écart</th><th>Réglages appliqués</th>'
+    + '</tr></thead><tbody>' + (lignes_seuils || '<tr><td colspan="6">Aucun seuil bougé.</td></tr>')
+    + '</tbody></table>'
+    + '<h3 style="margin:12px 0 6px">Délais de rigueur</h3><table><thead><tr><th>Trajet</th>'
+    + '<th>Droit</th><th>Réglé</th><th>Fenêtre résiduelle</th></tr></thead><tbody>'
+    + (lignes_trajets || '<tr><td colspan="4">—</td></tr>') + '</tbody></table>'
+    + '<h3 style="margin:12px 0 6px">Fentes</h3><div class="fentes">'
+    + (lignes_fentes || '—') + '</div>'
+    + '<h3 style="margin:12px 0 6px">Cinq strates</h3><table><thead><tr><th>Strate</th><th>Niveau</th>'
+    + '<th>Réglages</th><th>Déplacés</th><th>Verrous touchés</th><th>Fentes verrouillées</th>'
+    + '</tr></thead><tbody>' + (strates || '<tr><td colspan="6">—</td></tr>') + '</tbody></table>'
+    + '<p class="limites">Limites assumées de la couche : ' + (NUANCES.limites || []).join(' ') + '</p>';
+}
+/* Bloc « verrous » + réglages déplacés. Le principe reste le même que partout
+   ailleurs dans la page : le navigateur ne calcule et ne décore aucun chiffre,
+   il met en forme ce que `/api/nuances` a renvoyé. Les seules choses ajoutées
+   sont des liens vers les fiches d'article servies par `/api/constitution`. */
+function lienCitation(identifiant){
+  /* Même transformation que `numerosArticle` pour les leviers : un identifiant de
+     citation de la Constitution devient le lien vers la fiche servie par le serveur.
+     « LOI_… », « DDHC_… », « REGLOC_… » n'ont pas de route dédiée : ils restent du
+     texte brut, jamais un lien inventé qui renverrait un 404 au lecteur. */
+  const brut = String(identifiant || '');
+  if (!/^CONST_ART_/.test(brut)) return '<code>' + echapperTexte(brut || '—') + '</code>';
+  const numero = brut.replace(/^CONST_ART_/, '').replace(/_/g, '-');
+  if (!/^[0-9]+(-[0-9]+)*$/.test(numero)) return '<code>' + echapperTexte(brut) + '</code>';
+  return '<a class="article" href="/api/constitution?article=' + encodeURIComponent(numero)
+    + '" target="_blank" rel="noopener" title="Fiche de droit positif de l\'article ' + numero
+    + ' — texte, chiffres vérifiés, bornes du modèle. Réponse du serveur, pas un calcul du simulateur.">'
+    + echapperTexte(brut) + '</a>';
+}
+function pucesReglages(cles){
+  const catalogue = (NUANCES && NUANCES.reglages) || {};
+  return (cles || []).map(cle => '<span class="puce-reglage" title="'
+    + echapperTexte((catalogue[cle] || {}).libelle || '') + '">'
+    + echapperTexte(cle) + '</span>').join(' ');
+}
+function seuilVerrouHtml(verrou){
+  if (verrou.seuil_statu_quo === undefined || verrou.seuil_statu_quo === null) return '';
+  const fleche = verrou.ecart ? ' <span class="' + (verrou.ecart < 0 ? 'moins' : 'plus') + '">'
+    + (verrou.ecart < 0 ? '−' : '+') + fmt(Math.abs(verrou.ecart), 0) + '</span>' : '';
+  return '<span class="verrou-seuil">' + fmt(verrou.seuil_statu_quo, 0) + ' '
+    + echapperTexte(verrou.unite || '') + ' → <b>' + fmt(verrou.seuil_regule, 0) + '</b>'
+    + echapperTexte(verrou.unite || '') + fleche + '</span>';
+}
+function ligneVerrouHtml(verrou, classe, suiteHtml){
+  return '<li class="' + classe + '"><span>' + lienCitation(verrou.article) + '</span>'
+    + '<span>' + echapperTexte(verrou.nom) + '</span>' + seuilVerrouHtml(verrou)
+    + (suiteHtml || '') + '</li>';
+}
+function renderVerrous(){
+  const zone = document.getElementById('verrous-corps');
+  const intro = document.getElementById('verrous-resume');
+  if (!zone) return;
+  const etat = (NUANCES && NUANCES.verrous) || null;
+  if (!etat){
+    if (intro) intro.innerHTML = '';
+    zone.innerHTML = '<div class="carte">L\'état des verrous n\'a pas été renvoyé par '
+      + '<code>/api/nuances</code> : la page préfère afficher cette absence plutôt que '
+      + 'de reconstituer les chiffres côté navigateur.</div>';
+    return;
+  }
+  const touches = (etat.touches || []).map(verrou => ligneVerrouHtml(verrou, 'touche',
+    '<span>' + pucesReglages(verrou.reglages) + (verrou.note ? ' <span class="aide">'
+      + echapperTexte(verrou.note) + '</span>' : '') + '</span>'));
+  const intacts = (etat.intacts || []).map(verrou => ligneVerrouHtml(verrou, 'intact',
+    (verrou.note && (verrou.reglages || []).length)
+      ? '<span>' + pucesReglages(verrou.reglages) + '</span>' : ''));
+  const hors = (etat.hors_reglage || []).map(verrou => ligneVerrouHtml(verrou, 'hors',
+    '<span class="aide" title="' + echapperTexte(verrou.explication || '') + '">'
+    + echapperTexte(verrou.explication || '') + '</span>'));
+  const avertissements = (etat.avertissements || []).map(ligne => '<li class="touche"><span>'
+    + lienCitation(ligne.article) + '</span><span>' + echapperTexte(ligne.nom)
+    + ' — ' + echapperTexte(ligne.message) + '</span>' + pucesReglages(ligne.reglages)
+    + '</li>').join('');
+  if (intro){
+    intro.innerHTML = '<b>' + touches.length + '</b> verrou(s) touché(s) · '
+      + '<b>' + intacts.length + '</b> intact(s) · <b>' + hors.length
+      + '</b> hors de portée d\'un curseur, sur ' + etat.total
+      + ' règles de blocage au registre. Un verrou « hors réglage » n\'est pas un oubli : '
+      + 'la colonne dit pourquoi il ne peut pas se décréter.';
+  }
+  zone.innerHTML = '<div class="verrou-groupe"><div class="verrou-titre">Touchés par le vecteur</div>'
+    + '<ul>' + (touches.join('') || '<li class="intact">Aucun : chaque seuil est à sa valeur de droit.</li>')
+    + '</ul></div>'
+    + '<div class="verrou-groupe"><div class="verrou-titre">Intacts</div><ul>'
+    + (intacts.join('') || '<li>—</li>') + '</ul></div>'
+    + '<div class="verrou-groupe"><div class="verrou-titre">Hors réglage</div><ul>'
+    + (hors.join('') || '<li>—</li>') + '</ul></div>'
+    + (avertissements ? '<div class="garde-fous">Neutralisations en cours : '
+        + avertissements + '</div>' : '');
+}
+function renderReglagesTouches(){
+  const zone = document.getElementById('reglages-corps');
+  if (!zone) return;
+  const catalogue = (NUANCES && NUANCES.reglages) || {};
+  const deplaces = Object.keys(catalogue).filter(cle => catalogue[cle].deplace);
+  if (!deplaces.length){
+    zone.innerHTML = '<div class="carte">Aucun réglage institutionnel déplacé : le droit '
+      + 'positif est à son état default, rien n\'a donc d\'effet à montrer ici.</div>';
+    return;
+  }
+  const groupes = ['verrou', 'fente', 'trajet', 'mecanisme', 'instance', 'strategie'];
+  zone.innerHTML = deplaces.sort().map(cle => {
+    const ligne = catalogue[cle];
+    const parCategorie = {};
+    (ligne.cibles || []).forEach(cible => {
+      const categorie = groupes.indexOf(cible[0]) >= 0 ? cible[0] : 'autre';
+      (parCategorie[categorie] = parCategorie[categorie] || []).push(cible[1]);
+    });
+    const badges = groupes.filter(groupe => parCategorie[groupe]).map(groupe =>
+      '<span class="badge-cible" title="' + echapperTexte(parCategorie[groupe].join(', ')) + '">'
+      + groupe + ' ' + parCategorie[groupe].length + '</span>').join('');
+    const valeur = (ligne.type === 'interrupteur')
+      ? (ligne.valeur ? 'activé' : 'éteint')
+      : fmt(ligne.valeur, 0) + (ligne.unite ? ' ' + echapperTexte(ligne.unite) : '');
+    return '<div class="reglage-touche"><b>' + echapperTexte(ligne.libelle || cle) + '</b> '
+      + '<span class="aide">' + echapperTexte(cle) + '</span>'
+      + '<div>valeur retenue : <b>' + valeur + '</b> (défaut ' + fmt(ligne.defaut, 0)
+      + ', taux ' + fmt((ligne.taux || 0) * 100, 0) + ' %)'
+      + (badges ? ' · touches : ' + badges : '')
+      + (ligne.sans_geometrie ? ' · <i>' + echapperTexte(ligne.sans_geometrie) + '</i>' : '')
+      + '</div>'
+      + articlesHtml(ligne)
+      + '</div>';
+  }).join('');
+}
 function mesuresHtml(bulle){
   const blocs = (bulle.mesures || []).map(mesure => {
     const seuils = mesure.seuils || {};
@@ -2070,6 +2383,7 @@ function renderLeviers(filtre){
         ${commande}
         <div class="desc">${levier.description}</div>
         ${levier.source ? `<div class="source">Source citée : ${levier.source}</div>` : ''}
+        ${articlesHtml(levier)}
         ${badgeVerificationHtml(levier)}${saisieCitoyenneHtml(levier)}
         ${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}
       </div>`;
@@ -2652,6 +2966,7 @@ async function simuler(avecImpacts){
                                {parametres: parametresEnvoyes, sortie: donnees});
     majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
     majConseilTempsReel(parametresEnvoyes);
+    rafraichirNuances();
     SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees, horizon: horizon};
     // La grille est reconstruite avec ses puces d'impact — sauf pendant qu'un
     // curseur est manipulé, pour ne pas le remplacer sous les doigts.

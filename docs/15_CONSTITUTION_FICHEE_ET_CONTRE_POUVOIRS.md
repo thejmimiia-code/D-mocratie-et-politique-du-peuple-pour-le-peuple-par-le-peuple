@@ -66,7 +66,7 @@ documentation.
 
 ## 4. Ou sont les nombres, et pourquoi ils ne sont pas des leviers
 
-`parametres.LEVIERS` compte 149 leviers et 14 familles, et ce compte est tenu par les
+`parametres.LEVIERS` compte 156 leviers et 14 familles, et ce compte est tenu par les
 tests : aucun levier n'a été ajouté. Les 77 noms de « pistes » (101 occurrences, réparties
 sur 80 fiches) des fiches sont la liste noire
 du modèle — des objets de réforme que la Constitution permet mais que le simulateur ne

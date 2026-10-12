@@ -23,7 +23,7 @@ Une donnée non vérifiée n'est jamais masquée. Le simulateur affiche la valeu
 | Vérifié | 1 | 9 |
 | Partiellement vérifié | 9 | 112 |
 | Chiffre daté | 5 | 0 |
-| Non vérifié | 134 | 68 |
+| Non vérifié | 141 | 68 |
 | Source inaccessible | 0 | 0 |
 
 ## Contribuer : une donnée, une source, une date
@@ -121,6 +121,8 @@ Vous connaissez une valeur officielle plus récente, une source plus fiable, ou 
 | <a id="reglage_controle_juge_exception"></a>Contrôle juridictionnel intégral en régime d'exception `reglage_controle_juge_exception` | désactivé | **Non vérifié** | Constitution, art. 16 et 36 ; loi du 3 avril 1955. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
 | <a id="reglage_plafond_etat_urgence"></a>Durée maximale totale d'un état d'urgence `reglage_plafond_etat_urgence` | 0 mois | **Non vérifié** | Constitution, art. 36 ; loi du 3 avril 1955 prorogée par le Parlement. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
 | <a id="reglage_non_retroactivite_in_minus"></a>Interdiction constitutionnelle de la rétroactivité in minus `reglage_non_retroactivite_in_minus` | désactivé | **Non vérifié** | DDHC, art. 6 (antériorité de la loi pénale) ; jurisprudence constitutionnelle et CE, Assemblée, 2019. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
+| <a id="reglage_haute_cour_non_parlementaire"></a>Haute Cour composée de juges non parlementaires `reglage_haute_cour_non_parlementaire` | désactivé | **Non vérifié** | Constitution, art. 67, 68 et 68-1 (révision constitutionnelle du 23 février 2007). | Source citée non consultée à la date de l'audit : valeur à vérifier. |
+| <a id="reglage_defenseur_saisine_directe"></a>Saisine directe du Défenseur des droits `reglage_defenseur_saisine_directe` | désactivé | **Non vérifié** | Constitution, art. 71-1 ; loi organique du 29 mars 2011. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
 
 ### Énergie & climat
 
@@ -223,6 +225,11 @@ Vous connaissez une valeur officielle plus récente, une source plus fiable, ou 
 | <a id="reglage_verrou_par_loi_organique"></a>Verrouiller une réforme par une loi organique `reglage_verrou_par_loi_organique` | désactivé | **Non vérifié** | Constitution, art. 46 et 61 al. 1 ; art. 34 pour les matières organiques. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
 | <a id="reglage_verrou_par_revision"></a>Verrouiller une réforme par une révision constitutionnelle `reglage_verrou_par_revision` | désactivé | **Non vérifié** | Constitution, art. 89 ; art. 11 pour la voie référendaire. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
 | <a id="reglage_verrou_par_engagement_international"></a>Verrouiller une réforme par un engagement international `reglage_verrou_par_engagement_international` | désactivé | **Non vérifié** | Constitution, art. 53, 54 et 55 ; TFUE et CEDH au registre. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
+| <a id="reglage_procedure_acceleree_encadree"></a>Délai plancher avant délibération en procédure accélérée `reglage_procedure_acceleree_encadree` | 0 jours | **Non vérifié** | Constitution, art. 42 alinéa 3 et 45 alinéa 3. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
+| <a id="reglage_nouvelle_deliberation_supprimee"></a>Supprimer le droit de nouvelle délibération `reglage_nouvelle_deliberation_supprimee` | désactivé | **Non vérifié** | Constitution, art. 10 alinéa 2 (et art. 11 alinéa 5 pour la loi référendaire). | Source citée non consultée à la date de l'audit : valeur à vérifier. |
+| <a id="reglage_commission_enquete_droit_de_bloc"></a>Deux commissions d'enquête garanties par groupe et par session `reglage_commission_enquete_droit_de_bloc` | désactivé | **Non vérifié** | Constitution, art. 51-2 ; résolutions des deux assemblées applicables aux commissions d'enquête. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
+| <a id="reglage_cee_consultation_prealable"></a>Consultation préalable obligatoire du CESE sur les programmations `reglage_cee_consultation_prealable` | 0 jours | **Non vérifié** | Constitution, art. 69 et 70 ; ordonnance du 28 mai 1982 modifiée. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
+| <a id="reglage_declassification_legislative"></a>Délai de décision sur une irrecevabilité de compétence `reglage_declassification_legislative` | 0 jours | **Non vérifié** | Constitution, art. 37 alinéa 2 et 41 ; ordonnance du 7 novembre 1958, art. 44 et 45. | Source citée non consultée à la date de l'audit : valeur à vérifier. |
 
 ### Europe, diplomatie, migration
 

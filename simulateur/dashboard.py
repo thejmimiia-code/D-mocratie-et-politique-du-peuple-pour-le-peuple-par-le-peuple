@@ -26,8 +26,25 @@ Deux niveaux de service cohabitent :
       - `GET  /api/dynamiques`   : yoyo parlementaire et fentes non écrites (`?trajet=47`,
                                  `?fente=…`, `?strategie=…`, `?famille=…`, `?boucles=1`) ;
       - `GET  /api/nuances`      : réglages institutionnels recalculés (`?parametres={"…":1}`,
-                                 `?reglage=…`, `?article=49`, `?niveau=Territorial`,
-                                 `?index=vitesse_legislative`, `?chercher=…`, sinon synthèse).
+                                 `?reglage=…`, `?article=49` (croise seuils, mécanismes,
+                                 instances, fentes et trajets de l'article), `?niveau=Territorial`,
+                                 `?strate=1`, `?index=vitesse_legislative`, `?chercher=…`,
+                                 `?coherence=1`, sinon synthèse) ;
+      - `GET  /api/catalogue`    : familles, leviers, préréglages et valeurs par défaut ;
+      - `GET  /api/presets`      : les préréglages doctrinaux ;
+      - `GET  /api/lexique`      : le lexique pédagogique (`?terme=…`, `?chercher=…`) ;
+      - `GET  /api/marches`      : fiches marchés publics ;
+      - `GET  /api/garde_fous`   : les garde-fous et leurs seuils ;
+      - `GET  /api/conseil`      : le conseiller temps réel (`?levier=…` en GET, vecteur complet
+                                 en POST `{parametres, levier}`) ;
+      - `GET  /api/proxy`        : relais d'un seul indicateur du registre des sources ;
+      - `POST /api/simuler`      : simulation d'un vecteur `{parametres, horizon}` ;
+      - `POST /api/donnees`      : ingestion de valeurs sourcées du navigateur ;
+      - `POST /api/conseil`      : effet papillon sur un vecteur complet ;
+      - `POST /api/nuances`      : recalcul des seuils, délais, fentes, indices et strates
+                                   pour un vecteur complet `{parametres}`.
+      Toute route `GET /api/X` a son jumeau `POST` quand le vecteur est volumineux, et sa
+      fonction Vercel `api/X.py` générée par `outils/generer-fonctions-api.py`.
 
   * **Scénarios historiques** du dépôt, conservés à l'identique pour la
     compatibilité (scripts, CI, utilisateurs) :
@@ -393,6 +410,91 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self._tete_seulement = False
 
     # ── GET ────────────────────────────────────────────────────────────────
+    def _repondre_nuances(self, query):
+        """Toute la couche « nuances institutionnelles » : réglages, seuils recalculés,
+        délais, fenêtre, fentes, indices, strates et garde-fous. Une seule méthode
+        servie par `GET /api/nuances` (filtres dans l'URL) et par `POST /api/nuances`
+        (vecteur complet dans le corps) — le calcul est exactement le même."""
+
+        # Les réglages institutionnels ne sont pas de la décoration : cette route
+        # recalcule seuils, délais, fenêtre, fentes et indices à partir du vecteur.
+        from . import nuances_institutionnelles as nuances
+
+        reglage = query.get("reglage", [""])[0]
+        article = query.get("article", [""])[0]
+        niveau = query.get("niveau", [""])[0]
+        indice = query.get("index", [""])[0]
+        recherche = query.get("chercher", [""])[0]
+        brut = query.get("parametres", [""])[0]
+        vecteur = None
+        if brut:
+            try:
+                lu = json.loads(brut)
+            except ValueError:
+                self._send_json({"error": "parametres doit être un objet JSON"}, status=400)
+                return
+            if not isinstance(lu, dict):
+                self._send_json({"error": "parametres doit être un objet JSON"}, status=400)
+                return
+            vecteur = nuances.normaliser(lu)
+        try:
+            if reglage:
+                if reglage not in nuances.LEVIERS:
+                    self._send_json({
+                        "error": f"réglage inconnu : {reglage}",
+                        "reglages": nuances.reglages_catalogue(),
+                    }, status=404)
+                    return
+                self._send_json(nuances.nuances_pour_levier(reglage))
+            elif article:
+                self._send_json(nuances.croisement_pour(article))
+            elif query.get("strate", [""])[0]:
+                strate = query.get("strate", [""])[0]
+                lignes = [ligne for ligne in nuances.par_strate(vecteur)
+                          if str(ligne["strate"]) == strate]
+                if not lignes:
+                    self._send_json({
+                        "error": f"strate inconnue : {strate}",
+                        "strates": [ligne["strate"] for ligne in nuances.par_strate()],
+                    }, status=404)
+                    return
+                self._send_json({"strate": int(strate), "tableau": lignes[0]})
+            elif query.get("coherence", [""])[0] in ("1", "true", "oui"):
+                self._send_json(nuances.coherence_nuances())
+            elif niveau:
+                lignes = [ligne for ligne in nuances.tableau_des_niveaux(vecteur)
+                          if ligne["niveau"] == niveau]
+                if not lignes:
+                    self._send_json({
+                        "error": f"niveau inconnu : {niveau}",
+                        "niveaux": list(nuances.NIVEAUX),
+                    }, status=404)
+                    return
+                self._send_json({"niveau": niveau, "tableau": lignes[0]})
+            elif indice:
+                indices = nuances.indices_nuances(vecteur)
+                if indice not in indices:
+                    self._send_json({
+                        "error": f"indice inconnu : {indice}",
+                        "indices": sorted(indices),
+                    }, status=404)
+                    return
+                self._send_json(indices[indice])
+            elif recherche:
+                reglages = []
+                for cle, ligne in nuances.contexte_institutionnel(vecteur)["reglages"].items():
+                    texte = " ".join([cle, ligne["libelle"], ligne["regle"], ligne["effet"]])
+                    if recherche.lower() in texte.lower():
+                        reglages.append(dict(ligne, cle=cle))
+                self._send_json({"recherche": recherche, "reglages": reglages,
+                                 "nombre": len(reglages)})
+            else:
+                self._send_json(nuances.synthese_pour_api(vecteur))
+        except Exception:
+            self._send_json({"error": traceback.format_exc()}, status=500)
+
+
+
     def do_GET(self) -> None:  # noqa: N802 - API stdlib
         parsed = urlparse(self.path)
         chemin = parsed.path
@@ -511,7 +613,12 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             "articles_connus": list(constitution.ORDRE_ARTICLES),
                         }, status=404)
                         return
-                    self._send_json(fiche.en_dict())
+                    charge = dict(fiche.en_dict())
+                    from . import nuances_institutionnelles as reglages
+                    recoupe = reglages.croisement_pour(voulu)
+                    charge["reglages"] = recoupe["reglages"]
+                    charge["croisements"] = recoupe["compte"]
+                    self._send_json(charge)
                 elif titre:
                     self._send_json({"titre": titre,
                                      "articles": [a.en_dict() for a in constitution.par_bloc(titre)]})
@@ -544,12 +651,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             "mecanismes": sorted(contre_pouvoirs.MECANISMES),
                         }, status=404)
                         return
+                    from . import nuances_institutionnelles as reglages
+
                     self._send_json({
                         "mecanisme": mecanisme,
                         "fiche": contre_pouvoirs.MECANISMES[mecanisme].en_dict(),
                         "seuils": contre_pouvoirs.seuils_pour(mecanisme),
                         "bloqueurs": contre_pouvoirs.blocages_possibles(mecanisme),
                         "reactions": contre_pouvoirs.chaine_de_reaction(mecanisme),
+                        "reglages": reglages.reglages_par_connaissance("mecanisme").get(mecanisme, []),
                     })
                 elif assemblee:
                     self._send_json(contre_pouvoirs.arithmetique_assemblee(assemblee))
@@ -578,10 +688,13 @@ class DashboardHandler(BaseHTTPRequestHandler):
                             "instances": sorted(autorites.INSTANCES),
                         }, status=404)
                         return
+                    from . import nuances_institutionnelles as reglages
+
                     self._send_json({
                         "instance": valeur.en_dict(),
                         "controles": autorites.qui_juge(valeur.cle),
                         "strategies": autorites.strategies_pour(instance_cle=valeur.cle),
+                        "reglages": reglages.reglages_par_connaissance("instance").get(valeur.cle, []),
                     })
                 elif numero:
                     self._send_json({"article": numero,
@@ -648,71 +761,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
         elif chemin == "/api/nuances":
-            # Les réglages institutionnels ne sont pas de la décoration : cette route
-            # recalcule seuils, délais, fenêtre, fentes et indices à partir du vecteur.
-            from . import nuances_institutionnelles as nuances
-
-            reglage = query.get("reglage", [""])[0]
-            article = query.get("article", [""])[0]
-            niveau = query.get("niveau", [""])[0]
-            indice = query.get("index", [""])[0]
-            recherche = query.get("chercher", [""])[0]
-            brut = query.get("parametres", [""])[0]
-            vecteur = None
-            if brut:
-                try:
-                    lu = json.loads(brut)
-                except ValueError:
-                    self._send_json({"error": "parametres doit être un objet JSON"}, status=400)
-                    return
-                if not isinstance(lu, dict):
-                    self._send_json({"error": "parametres doit être un objet JSON"}, status=400)
-                    return
-                vecteur = nuances.normaliser(lu)
-            try:
-                if reglage:
-                    if reglage not in nuances.LEVIERS:
-                        self._send_json({
-                            "error": f"réglage inconnu : {reglage}",
-                            "reglages": nuances.reglages_catalogue(),
-                        }, status=404)
-                        return
-                    self._send_json(nuances.nuances_pour_levier(reglage))
-                elif article:
-                    self._send_json({"article": article,
-                                     "reglages": nuances.nuances_pour_article(article)})
-                elif niveau:
-                    lignes = [ligne for ligne in nuances.tableau_des_niveaux(vecteur)
-                              if ligne["niveau"] == niveau]
-                    if not lignes:
-                        self._send_json({
-                            "error": f"niveau inconnu : {niveau}",
-                            "niveaux": list(nuances.NIVEAUX),
-                        }, status=404)
-                        return
-                    self._send_json({"niveau": niveau, "tableau": lignes[0]})
-                elif indice:
-                    indices = nuances.indices_nuances(vecteur)
-                    if indice not in indices:
-                        self._send_json({
-                            "error": f"indice inconnu : {indice}",
-                            "indices": sorted(indices),
-                        }, status=404)
-                        return
-                    self._send_json(indices[indice])
-                elif recherche:
-                    reglages = []
-                    for cle, ligne in nuances.contexte_institutionnel(vecteur)["reglages"].items():
-                        texte = " ".join([cle, ligne["libelle"], ligne["regle"], ligne["effet"]])
-                        if recherche.lower() in texte.lower():
-                            reglages.append(dict(ligne, cle=cle))
-                    self._send_json({"recherche": recherche, "reglages": reglages,
-                                     "nombre": len(reglages)})
-                else:
-                    self._send_json(nuances.synthese_pour_api(vecteur))
-            except Exception:
-                self._send_json({"error": traceback.format_exc()}, status=500)
-
+            self._repondre_nuances(query)
         elif chemin == "/api/presets":
             self._send_json({"presets": PRESETS})
 
@@ -845,6 +894,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": str(exc)}, status=400)
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/nuances":
+            # Le même calcul que le GET, par corps : un vecteur complet de 149 leviers
+            # tient mal dans une URL. L'interface s'en sert pour garder la section
+            # « nuances institutionnelles » alignée sur les curseurs, en direct.
+            if not isinstance(corps, dict):
+                self._send_json({"error": "Corps JSON attendu."}, status=400)
+                return
+            self._repondre_nuances({"parametres": [json.dumps(corps.get("parametres") or {})]})
 
         else:
             self._send_status(405)

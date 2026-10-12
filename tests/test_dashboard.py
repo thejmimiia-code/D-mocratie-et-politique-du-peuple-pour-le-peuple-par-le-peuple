@@ -353,7 +353,9 @@ class TestAPIparametrique(unittest.TestCase):
         familles = donnees["parametres"]["familles"]
         leviers = [levier for famille in familles for levier in famille["leviers"]]
         self.assertGreaterEqual(len(leviers), 90)
-        self.assertEqual(len(donnees["parametres"]["presets"]), 14)
+        # Le catalogue sert les seize préréglages ; ce nombre est le fil à couper :
+        # tout préréglage ajouté doit être annoncé dans docs/SIMULATEUR_PARAMETRABLE.md.
+        self.assertEqual(len(donnees["parametres"]["presets"]), 16)
 
     def test_catalogue_boursier_sans_collecte_expose_les_marches_sans_faux_cours(self):
         statut, donnees = self._appel("/api/marches")
@@ -535,7 +537,7 @@ class TestAPIparametrique(unittest.TestCase):
     def test_comparer_les_presets(self):
         statut, donnees = self._appel("/api/comparer")
         self.assertEqual(statut, 200)
-        self.assertEqual(len(donnees["comparaison"]), 14)
+        self.assertEqual(len(donnees["comparaison"]), 16)
         for entree in donnees["comparaison"]:
             self.assertEqual(len(entree["scores"]), 20)
 
@@ -1029,7 +1031,20 @@ class TestNuancesServies(unittest.TestCase):
 
     def test_article_niveau_et_index(self):
         _, donnees = self._appel("/api/nuances?article=CONST_ART_49")
-        self.assertIn("reglage_49_3_interdiction", {l["reglage"] for l in donnees["reglages"]})
+        self.assertIn("reglage_49_3_interdiction", donnees["reglages"])
+        self.assertIn("reglage_49_3_interdiction", {l["reglage"] for l in donnees["fiches"]})
+        # Le croisement ne s'arrête pas aux réglages : il dresse tout l'article.
+        self.assertIn("censure_voix", donnees["verrous"])
+        self.assertIn("censure_par_membres", donnees["fentes"])
+        self.assertTrue(donnees["instances"] and donnees["mecanismes"] and donnees["trajets"])
+        self.assertEqual(donnees["compte"]["reglages"], len(donnees["reglages"]))
+        # Toutes les notations du même article retombent sur le même numéro.
+        for notation in ("49", "article 49", "CONST_ART_49", "art. 49.3"):
+            with self.subTest(article=notation):
+                meme = self._appel(f"/api/nuances?article={urllib.parse.quote(notation)}")[1]
+                self.assertEqual(meme["article"], "49")
+                self.assertEqual(meme["reglages"], donnees["reglages"])
+        self.assertEqual(self._appel("/api/nuances?article=zzz")[1].get("reglages"), [])
         _, niveau = self._appel("/api/nuances?niveau=Territorial")
         self.assertEqual(niveau["tableau"]["niveau"], "Territorial")
         self.assertTrue(niveau["tableau"]["reglages"])
@@ -1037,6 +1052,74 @@ class TestNuancesServies(unittest.TestCase):
         _, indice = self._appel("/api/nuances?index=vitesse_legislative")
         self.assertEqual(indice["cle"], "vitesse_legislative")
         self.assertEqual(self._appel("/api/nuances?index=bidon")[0], 404)
+
+    def test_strates_et_garde_fous_de_la_couche(self):
+        _, strate = self._appel("/api/nuances?strate=2")
+        self.assertEqual(strate["strate"], 2)
+        self.assertEqual(len(strate["tableau"]["reglages"]), len(TestNuancesServies.reglages_catalogue()))
+        self.assertEqual(strate["tableau"]["reglages_actifs"], [])
+        self.assertEqual(strate["tableau"]["fentes_verrouillees"], [])
+        # Une strate ne se lit pas toute seule : le vecteur doit voyager avec la requête.
+        encoded = urllib.parse.quote(json.dumps({"reglage_censure_assiette": 1.0}))
+        _, remuee = self._appel(f"/api/nuances?strate=2&parametres={encoded}")
+        self.assertIn("censure_voix", remuee["tableau"]["verrous_touches"])
+        self.assertEqual(remuee["tableau"]["reglages_actifs"], ["reglage_censure_assiette"])
+        self.assertEqual(len(remuee["tableau"]["fentes_verrouillees"]), 0)
+        self.assertEqual(self._appel("/api/nuances?strate=9")[0], 404)
+        statut, garde_fous = self._appel("/api/nuances?coherence=1")
+        self.assertEqual(statut, 200)
+        for cle in ("verrous_non_expliques", "reglages_sans_cible_chiffree", "exemptions_perimees",
+                    "trajets_sans_reglage", "fentes_inaccessibles_d_un_reglage", "fentes_non_ciblees",
+                    "reglages_sans_strate", "reglages_sans_article", "reglages_sans_regle",
+                    "apports_sans_reglage", "cibles_inconnues", "articles_hors_registre",
+                    "indices_anormaux", "verrous_doublement_classes", "verrous_inventes"):
+            with self.subTest(garde_fou=cle):
+                self.assertEqual(garde_fous[cle], [], f"{cle} : {garde_fous[cle]}")
+        self.assertEqual(garde_fous["strates_couvertes"], [1, 2, 3, 4, 5])
+        self.assertEqual(garde_fous["reglages_sans_strate"], [])
+        # La strate nationale porte tous les réglages (une loi nationale touche tout le
+        # monde) ; les autres strates n'en portent qu'une partie. C'est ce que mesure la
+        # liste `reglages_sans_strate`, qui doit rester vide.
+        self.assertEqual(max(garde_fous["reglages_par_strate"].values()),
+                         len(TestNuancesServies.reglages_catalogue()))
+        self.assertEqual(sorted(garde_fous["reglages_par_strate"]), ["1", "2", "3", "4", "5"])
+        # Au statu quo, aucun verrou n'a bougé ; et les 38 verrous se partagent
+        # exactement entre « réglables » et « expliqués hors réglage ».
+        self.assertEqual(garde_fous["verrous_regles"], [])
+        from simulateur.gouvernance_contrepouvoir import VERROUS
+        self.assertEqual(
+            sorted(garde_fous["verrous_reglables"] + garde_fous["verrous_expliques_hors_reglage"]),
+            sorted(VERROUS))
+        self.assertFalse(set(garde_fous["verrous_reglables"])
+                         & set(garde_fous["verrous_expliques_hors_reglage"]))
+
+    def test_post_accepte_le_vecteur_complet(self):
+        url = f"http://127.0.0.1:{self.__class__.port}/api/nuances"
+        corps = json.dumps({"parametres": {
+            "reglage_censure_assiette": 1.0, "reglage_delai_motion_49_3": 48.0}}).encode("utf-8")
+        requete = urllib.request.Request(url, data=corps, method="POST",
+                                         headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(requete, timeout=60) as reponse:
+            donnees = json.loads(reponse.read().decode("utf-8"))
+        self.assertEqual(donnees["seuils"]["censure_voix"]["regle"], 231)
+        self.assertEqual(donnees["seuils"]["49_3_delai_motion"]["regle"], 72)
+        # un corps vide doit répondre aussi : le statu quo reste un état légitime
+        requete = urllib.request.Request(url, data=b"{}", method="POST",
+                                         headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(requete, timeout=60) as reponse:
+            vierge = json.loads(reponse.read().decode("utf-8"))
+        self.assertEqual(vierge["resume"]["reglages_deplaces"], 0)
+        self.assertTrue(all(ligne["ecart"] == 0 for ligne in vierge["seuils"].values()))
+        self.assertTrue(all(not ligne["reglages_appliques"] for ligne in vierge["seuils"].values()))
+
+    def test_les_autres_registres_rappellent_leurs_reglages(self):
+        _, constitution = self._appel("/api/constitution?article=49")
+        self.assertIn("reglage_49_3_interdiction", constitution["reglages"])
+        self.assertGreaterEqual(constitution["croisements"]["verrous"], 1)
+        _, instance = self._appel("/api/instances?instance=conseil_superieur_de_la_magistrature")
+        self.assertIn("reglage_parquet_independant", instance["reglages"])
+        _, mecanisme = self._appel("/api/contrepouvoirs?mecanisme=motion_censure")
+        self.assertIn("reglage_censure_assiette", mecanisme["reglages"])
 
     def test_recherche_sur_les_reglages(self):
         _, donnees = self._appel("/api/nuances?chercher=quorum")

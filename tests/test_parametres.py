@@ -168,6 +168,7 @@ class TestPresets(unittest.TestCase):
             "transition_ecologique", "justice_sociale", "choc_mondial", "crise_geopolitique",
             "crise_taiwan", "hormuz", "escalade_nucleaire", "convergence_ww3",
             "refondation_democratique",
+            "assemblees_souveraines", "verrouillage_par_le_haut",
         }
         self.assertEqual(set(PRESETS), attendus)
 

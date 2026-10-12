@@ -538,7 +538,7 @@ Le présent dossier est conçu pour une mandature ; mais la doctrine elle-même
 fait de la **période de dix ans** l'horizon naturel du projet. La R&D dédiée
 — [`docs/RD_DOUBLE_MANDATURE.md`](docs/RD_DOUBLE_MANDATURE.md) — inventorie les
 vingt-et-un points stratégiques qui n'existent que sur cette période et les
-traduit dans le simulateur (101 leviers, 14 préréglages, 11 scénarios,
+traduit dans le simulateur (156 leviers, 16 préréglages, 11 scénarios,
 31 garde-fous).
 
 ## 1. Les vingt-et-un points systématiques de la période de dix ans
