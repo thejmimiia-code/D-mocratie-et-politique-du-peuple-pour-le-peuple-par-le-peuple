@@ -14,7 +14,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
 
 RACINE = Path(__file__).resolve().parents[2]
 if str(RACINE) not in sys.path:
@@ -26,7 +26,7 @@ except ImportError:
     # Mode autonome / fallback hors superviseur ÉVA
     class EventBus:  # type: ignore
         """Bus d'événements local pour exécution autonome et tests."""
-        _handlers: Dict[str, List[Any]] = {}
+        _handlers: dict[str, list[Any]] = {}
 
         @classmethod
         def subscribe(cls, topic: str, handler: Any, extension_id: str = ""):
@@ -107,7 +107,7 @@ class ExtensionSimulateurPolitique:
         rapport = EventBus.publier(EVENEMENT_REPONSE, reponse)
         return {"publie": True, "destinataires": rapport.get("destinataires", 0), "reponse": reponse}
 
-    def _executer_simulation(self, scenario: str) -> List[Dict[str, Any]]:
+    def _executer_simulation(self, scenario: str) -> list[dict[str, Any]]:
         """Moteur de calcul des 5 échelons (Local, National, Europe, Monde, Géopolitique)."""
         from simulateur.moteur import MoteurSimulationSystemique
         from simulateur.scenarios import (

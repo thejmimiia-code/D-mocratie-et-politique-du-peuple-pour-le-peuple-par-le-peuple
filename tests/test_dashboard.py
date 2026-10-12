@@ -17,7 +17,6 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from http.server import ThreadingHTTPServer
-from typing import Optional, Tuple
 
 from simulateur.dashboard import (
     SCENARIOS,
@@ -53,7 +52,7 @@ class TestDashboardAPI(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def _get(self, path: str) -> Tuple[int, str]:
+    def _get(self, path: str) -> tuple[int, str]:
         """Effectue une requête GET et retourne (status_code, body)."""
         url = f"http://127.0.0.1:{self.__class__.port}{path}"
         resp = urllib.request.urlopen(url, timeout=30)
@@ -303,7 +302,7 @@ class TestDashboardInterface(unittest.TestCase):
         finally:
             conn.close()
 
-    def _get(self, path: str) -> Tuple[int, str]:
+    def _get(self, path: str) -> tuple[int, str]:
         """Effectue une requête GET et retourne (status_code, body)."""
         url = f"http://127.0.0.1:{self.__class__.port}{path}"
         with urllib.request.urlopen(url, timeout=30) as resp:
@@ -337,7 +336,7 @@ class TestAPIparametrique(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def _appel(self, chemin: str, corps: Optional[dict] = None, methode: Optional[str] = None):
+    def _appel(self, chemin: str, corps: dict | None = None, methode: str | None = None):
         url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
         donnees = None if corps is None else json.dumps(corps).encode("utf-8")
         requete = urllib.request.Request(url, data=donnees, method=methode or ("POST" if corps else "GET"))
@@ -818,7 +817,7 @@ class TestLectureClaireServie(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def _appel(self, chemin: str, corps: Optional[dict] = None):
+    def _appel(self, chemin: str, corps: dict | None = None):
         url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
         donnees = None if corps is None else json.dumps(corps).encode("utf-8")
         requete = urllib.request.Request(url, data=donnees,
@@ -871,7 +870,7 @@ class TestCompressionHTTP(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def _brut(self, chemin: str, encodage: Optional[str] = None) -> http.client.HTTPResponse:
+    def _brut(self, chemin: str, encodage: str | None = None) -> http.client.HTTPResponse:
         connexion = http.client.HTTPConnection("127.0.0.1", self.__class__.port, timeout=120)
         entetes = {"Accept-Encoding": encodage} if encodage else {}
         connexion.request("GET", chemin, headers=entetes)
@@ -933,7 +932,7 @@ class TestCacheDesBulles(unittest.TestCase):
         cls.server.shutdown()
         cls.server.server_close()
 
-    def _duree(self, chemin: str) -> Tuple[float, dict]:
+    def _duree(self, chemin: str) -> tuple[float, dict]:
         url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
         debut = time.perf_counter()
         with urllib.request.urlopen(url, timeout=300) as reponse:

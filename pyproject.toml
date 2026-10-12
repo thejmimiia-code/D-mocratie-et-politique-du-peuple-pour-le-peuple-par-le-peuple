@@ -64,6 +64,11 @@ target-version = "py311"
 select = ["E", "F", "W", "I", "B", "UP", "C4"]
 ignore = ["E501"]
 
+[tool.ruff.lint.per-file-ignores]
+# Le gabarit du guide garde ses doubles espaces de fin de ligne : en Markdown, deux
+# espaces valent un saut de ligne forcé, et les retirer changerait le document engendré.
+"outils/generer-objections.py" = ["W291"]
+
 [tool.mypy]
 python_version = "3.11"
 strict = true

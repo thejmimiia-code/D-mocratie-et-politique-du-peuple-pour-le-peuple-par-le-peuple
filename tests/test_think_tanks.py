@@ -3,24 +3,21 @@ tests/test_think_tanks.py — Validation unitaire et intégration de l'audit con
 des Think Tanks (Local à International) et des 5 paradigmes de stress-test.
 """
 
+import json
+import threading
 import unittest
 import urllib.request
-import json
-import socket
-import threading
-import time
 
 from simulateur.think_tanks import (
-    REGISTRE_THINK_TANKS,
     PARADIGMES_STRESS_TEST,
+    REGISTRE_THINK_TANKS,
+    ResultatStressTestThinkTank,
+    executer_stress_tests_mandature,
+    exporter_catalogue_think_tanks,
     get_think_tank,
     lister_think_tanks_par_echelon,
-    exporter_catalogue_think_tanks,
-    executer_stress_tests_mandature,
-    ThinkTankAudit,
-    ResultatStressTestThinkTank,
 )
-from simulateur.web_server import ThreadedHTTPServer, SimulateurHTTPHandler
+from simulateur.web_server import SimulateurHTTPHandler, ThreadedHTTPServer
 
 
 class TestThinkTanksAudit(unittest.TestCase):

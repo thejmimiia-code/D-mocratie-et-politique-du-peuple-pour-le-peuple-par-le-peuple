@@ -59,7 +59,7 @@ class TestRegistres(unittest.TestCase):
                     self.assertTrue(retrait.startswith("levier:"), retrait)
 
     def test_leviers_valides_et_pistes_etanches(self):
-        for cle, valeur in dyn.INSTANCES.items():
+        for valeur in dyn.INSTANCES.values():
             for levier in valeur.leviers:
                 self.assertIn(levier, LEVIERS)
             for piste in valeur.pistes:

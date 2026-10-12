@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests pour le module historique exhaustif (1792→2026).
 Vérifie l'intégrité des 12 périodes, des séries chronologiques,
@@ -11,26 +10,20 @@ import unittest
 import urllib.request
 
 from simulateur.histoire_france import (
-    PeriodeHistorique,
-    AnneeHistorique,
-    ReformeHistorique,
-    CriseHistorique,
-    PERIODES_HISTORIQUES,
-    SERIES_ANNUELLES,
-    REFORMES_MAJEURES,
     CRISES_HISTORIQUES,
-    DIMENSIONS_COMPARISON,
-    obtenir_toutes_periodes,
-    obtenir_periode_par_id,
+    PERIODES_HISTORIQUES,
+    REFORMES_MAJEURES,
+    SERIES_ANNUELLES,
+    calibrer_parametres_historiques,
     comparer_periodes,
+    exporter_json_complet,
     filtrer_periodes,
-    obtenir_series_chronologiques,
-    obtenir_reformes,
+    generer_synthese_historique,
     obtenir_crises,
     obtenir_options_dropdown,
-    generer_synthese_historique,
-    calibrer_parametres_historiques,
-    exporter_json_complet,
+    obtenir_periode_par_id,
+    obtenir_reformes,
+    obtenir_series_chronologiques,
 )
 
 

@@ -630,7 +630,7 @@ Ce projet ne travaille pas en silo. Il s'inscrit dans un écosystème mondial d'
 
 ### Prérequis
 
-- **Python 3.9+** (Standard Library uniquement — zéro dépendance tierce obligatoire)
+- **Python 3.11+** (`requires-python`, `runtime.txt`) — bibliothèque standard uniquement, zéro dépendance tierce obligatoire
 
 ### Démarrage rapide
 

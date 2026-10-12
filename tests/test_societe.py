@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests pour le module sociétal des 18 domaines (1792→2026).
 Vérifie la structure, les séries, les comparaisons et les endpoints HTTP.
@@ -10,16 +9,14 @@ import unittest
 import urllib.request
 
 from simulateur.societe_domaines import (
-    DomaineSocietal,
-    IndicateurHistorique,
     DOMAINES_SOCIETAUX,
-    obtenir_tous_domaines,
-    obtenir_domaine_par_id,
-    lister_domaines_ids,
     comparer_domaines,
-    obtenir_serie_domaine,
-    generer_synthese_societale,
     exporter_json_domaines,
+    generer_synthese_societale,
+    lister_domaines_ids,
+    obtenir_domaine_par_id,
+    obtenir_serie_domaine,
+    obtenir_tous_domaines,
 )
 
 

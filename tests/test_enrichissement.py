@@ -1,35 +1,34 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests pour le module d'enrichissement historique.
 """
 
-import unittest
 import json
-import sys
 import os
+import sys
+import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from simulateur.enrichissement_historique import (
+    DEMOGRAPHIE_FRANCE,
+    DETTE_PIB_FRANCE,
+    ESPERANCE_VIE_FRANCE,
+    FECONDITE_FRANCE,
     GINI_FRANCE,
     PAUVRETE_FRANCE,
-    DETTE_PIB_FRANCE,
     SOLDE_BUDGETAIRE_FRANCE,
-    DEMOGRAPHIE_FRANCE,
-    FECONDITE_FRANCE,
-    ESPERANCE_VIE_FRANCE,
     THINK_TANKS_ENRICHIS,
+    exporter_json_enrichissement,
+    generer_synthese_enrichissement,
+    obtenir_demographie,
+    obtenir_dette_pib,
+    obtenir_esperance_vie,
+    obtenir_fecondite,
     obtenir_gini,
     obtenir_pauvrete,
-    obtenir_dette_pib,
     obtenir_solde_budgetaire,
-    obtenir_demographie,
-    obtenir_fecondite,
-    obtenir_esperance_vie,
     obtenir_think_tanks_enrichis,
-    generer_synthese_enrichissement,
-    exporter_json_enrichissement,
 )
 
 

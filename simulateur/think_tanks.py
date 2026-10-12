@@ -7,8 +7,8 @@ critiques anticipées, paramètres quantifiés et justifications scientifiques (
 pour immuniser le modèle contre tout reproche de partialité ou de faille systémique.
 """
 
-from dataclasses import dataclass, field
-from typing import Dict, List, Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 
 @dataclass
@@ -31,9 +31,9 @@ class ThinkTankAudit:
     pays_siege: str
     epistemologie: str  # e.g., "libérale-orthodoxe", "post-keynésienne", "écologie-biophysique", "territoriale", etc.
     directeur_ou_fondateur: str
-    sources_cles: List[PublicationThinkTank]
-    hypotheses_et_parametres: Dict[str, Any]
-    objections_anticipees: List[str]
+    sources_cles: list[PublicationThinkTank]
+    hypotheses_et_parametres: dict[str, Any]
+    objections_anticipees: list[str]
     pourquoi_integration: str
     reponse_du_simulateur: str
     stress_test_associe: str  # "liberal_competitivite", "post_keynesien_social", "biophysique_climat", "territorial_decentralise", "ordoliberal_international"
@@ -46,9 +46,9 @@ class ResultatStressTestThinkTank:
     titre: str
     statut: str  # "SOLIDE", "VIGILANCE", "CRITIQUE"
     score_robustesse_sur_100: float
-    criteres_analyses: Dict[str, Dict[str, Any]]
-    objections_relevees: List[str]
-    reponses_systemiques: List[str]
+    criteres_analyses: dict[str, dict[str, Any]]
+    objections_relevees: list[str]
+    reponses_systemiques: list[str]
     justification_scientifique: str
 
 
@@ -56,7 +56,7 @@ class ResultatStressTestThinkTank:
 # CATALOGUE MONDIAL CONTRADICTOIRE DES THINK TANKS (23 INSTITUTS ÉTUDIÉS)
 # ==============================================================================
 
-REGISTRE_THINK_TANKS: Dict[str, ThinkTankAudit] = {
+REGISTRE_THINK_TANKS: dict[str, ThinkTankAudit] = {
     # --------------------------------------------------------------------------
     # 1. ÉCHELON LOCAL & TERRITORIAL
     # --------------------------------------------------------------------------
@@ -1034,8 +1034,8 @@ def executer_stress_tests_mandature(
     etat_local: Any,
     etat_europe: Any,
     etat_mondial: Any,
-    deciles: Optional[Any] = None
-) -> Dict[str, ResultatStressTestThinkTank]:
+    deciles: Any | None = None
+) -> dict[str, ResultatStressTestThinkTank]:
     """
     Évalue la trajectoire du simulateur à l'aune des 5 paradigmes majeurs
     issus des 23 think tanks répertoriés.
@@ -1339,17 +1339,17 @@ def executer_stress_tests_mandature(
 # FONCTIONS UTILITAIRES ET D'EXPORTATION
 # ==============================================================================
 
-def get_think_tank(think_tank_id: str) -> Optional[ThinkTankAudit]:
+def get_think_tank(think_tank_id: str) -> ThinkTankAudit | None:
     """Récupère une fiche complète de think tank par son identifiant."""
     return REGISTRE_THINK_TANKS.get(think_tank_id)
 
 
-def lister_think_tanks_par_echelon(echelon: str) -> List[ThinkTankAudit]:
+def lister_think_tanks_par_echelon(echelon: str) -> list[ThinkTankAudit]:
     """Retourne la liste des think tanks d'un échelon donné."""
     return [tt for tt in REGISTRE_THINK_TANKS.values() if tt.echelon == echelon]
 
 
-def exporter_catalogue_think_tanks() -> Dict[str, Any]:
+def exporter_catalogue_think_tanks() -> dict[str, Any]:
     """Exporte l'ensemble du registre au format dictionnaire sérialisable en JSON."""
     return {
         "metadonnees": {

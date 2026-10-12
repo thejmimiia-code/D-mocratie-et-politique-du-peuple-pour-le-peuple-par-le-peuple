@@ -8,7 +8,6 @@ commentaires) utilisable par les tests comme par la ligne de commande.
 """
 
 from __future__ import annotations
-from typing import List, Tuple
 
 OUVRANTS = {"(": ")", "[": "]", "{": "}"}
 FERMANTS = {v: k for k, v in OUVRANTS.items()}
@@ -20,15 +19,15 @@ def _ligne(texte: str, index: int) -> int:
     return texte.count("\n", 0, index) + 1
 
 
-def verifier_js(texte: str) -> Tuple[bool, str]:
+def verifier_js(texte: str) -> tuple[bool, str]:
     """Retourne (équilibré, message) en ignorant chaînes, gabarits et commentaires."""
-    pile: List[Tuple[str, int]] = []   # délimiteurs ouvrants (code) : (symbole, position)
-    contextes: List[Tuple[str, str]] = [("code", "")]  # ("code", "") ou ("chaine", guillemet)
-    precedents: List[str] = ["\n"]     # dernier caractère signifiant, par contexte
+    pile: list[tuple[str, int]] = []   # délimiteurs ouvrants (code) : (symbole, position)
+    contextes: list[tuple[str, str]] = [("code", "")]  # ("code", "") ou ("chaine", guillemet)
+    precedents: list[str] = ["\n"]     # dernier caractère signifiant, par contexte
     #: Profondeur de pile à l'entrée de chaque substitution `${…}` : c'est elle
     #: qui distingue l'accolade fermante de la substitution de celle d'un objet
     #: littéral imbriqué (`` `${f({})}` ``).
-    profondeurs: List[int] = []
+    profondeurs: list[int] = []
     i, n = 0, len(texte)
     while i < n:
         genre, cle = contextes[-1]

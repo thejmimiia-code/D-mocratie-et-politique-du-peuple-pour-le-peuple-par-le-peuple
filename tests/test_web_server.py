@@ -2,21 +2,21 @@
 tests/test_web_server.py — Tests d'intégration de l'API REST et du serveur Web HTTP.
 """
 
-import unittest
 import json
 import threading
-from urllib.request import urlopen, Request
-from urllib.error import HTTPError
-from simulateur.web_server import (
-    ThreadedHTTPServer,
-    SimulateurHTTPHandler,
-    serialize_resultat,
-    executer_simulation_scenario,
-    executer_simulation_personnalisee,
-    generer_comparatif_global,
-)
-from simulateur.moteur import MoteurSimulationSystemique
+import unittest
+from urllib.request import Request, urlopen
+
 from simulateur.model import DecisionPolitique
+from simulateur.moteur import MoteurSimulationSystemique
+from simulateur.web_server import (
+    SimulateurHTTPHandler,
+    ThreadedHTTPServer,
+    executer_simulation_personnalisee,
+    executer_simulation_scenario,
+    generer_comparatif_global,
+    serialize_resultat,
+)
 
 
 class TestWebServerUnitaires(unittest.TestCase):

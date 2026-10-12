@@ -17,9 +17,9 @@ RACINE = Path(__file__).resolve().parent.parent
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
-from simulateur.gouvernance_contrepouvoir import MECANISMES, VERROUS
-from simulateur.instances_et_dynamiques import FENTES, INSTANCES, STRATEGIES, TRAJETS
-from simulateur.nuances_institutionnelles import (
+from simulateur.gouvernance_contrepouvoir import MECANISMES, VERROUS  # noqa: E402
+from simulateur.instances_et_dynamiques import FENTES, INSTANCES, STRATEGIES, TRAJETS  # noqa: E402
+from simulateur.nuances_institutionnelles import (  # noqa: E402
     APPORTS,
     INDICES,
     NIVEAUX,
@@ -39,8 +39,8 @@ from simulateur.nuances_institutionnelles import (
     seuils_ajustes,
     synthese_pour_api,
 )
-from simulateur.parametres import FAMILLES, LEVIERS, PRESETS
-from simulateur.reglements_lois import REGISTRE_LEGAL
+from simulateur.parametres import FAMILLES, LEVIERS, PRESETS  # noqa: E402
+from simulateur.reglements_lois import REGISTRE_LEGAL  # noqa: E402
 
 
 def _ouvert(cle: str) -> float:
@@ -396,7 +396,7 @@ class TestPariteDesRoutes(unittest.TestCase):
                         | set(re.findall(r'chemin == "(/api/[a-z_]+)"',
                                           source[source.index("    def do_POST"):])))
         generee = (RACINE / "outils" / "generer-fonctions-api.py").read_text(encoding="utf-8")
-        registre = re.search(r"ROUTES: Tuple\[str, \.\.\.\] = \((.*?)\n\)", generee, re.S)
+        registre = re.search(r"ROUTES: [\w.]+\[str, \.\.\.\] = \((.*?)\n\)", generee, re.S)
         cibles = sorted(f"/api/{nom}" for nom in re.findall(r'"([a-z_]+)"', registre.group(1)))
         self.assertEqual(len(routes), len(cibles),
                          f"routes servies {routes} contre registre {cibles}")
@@ -415,11 +415,11 @@ class TestPariteDesRoutes(unittest.TestCase):
         ne contient que ce pont plus les fonctions propres au site.
         """
         outil = (RACINE / "outils" / "generer-fonctions-api.py").read_text(encoding="utf-8")
-        registre = re.search(r"ROUTES: Tuple\[str, \.\.\.\] = \((.*?)\n\)", outil, re.S)
+        registre = re.search(r"ROUTES: [\w.]+\[str, \.\.\.\] = \((.*?)\n\)", outil, re.S)
         cibles = sorted(nom for nom in re.findall(r'"([a-z_]+)"', registre.group(1)))
         site = sorted(nom for nom in re.findall(
             r'"([a-z-]+)"',
-            re.search(r"FONCTIONS_DU_SITE: Tuple\[str, \.\.\.\] = \((.*?)\)", outil, re.S).group(1)))
+            re.search(r"FONCTIONS_DU_SITE: [\w.]+\[str, \.\.\.\] = \((.*?)\)", outil, re.S).group(1)))
         dossiers = sorted(chemin.stem for chemin in (RACINE / "api").glob("*.py"))
         self.assertEqual(dossiers, sorted(["[...path]", *site]),
                          "api/ contient une fonction par route : revenir au pont unique")

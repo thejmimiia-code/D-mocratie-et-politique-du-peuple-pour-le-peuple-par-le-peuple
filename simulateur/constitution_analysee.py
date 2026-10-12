@@ -61,8 +61,9 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Dict, Iterable, List, Optional, Tuple
+from typing import Any
 
 from .parametres import LEVIERS as _LEVIERS
 
@@ -76,7 +77,7 @@ def _sans_accents(texte: str) -> str:
 
 #: Correspondance des clés du catalogue, accents confondus (les fiches sont
 #: rédigées à la main : un accent oublié ne doit pas créer une piste fantôme).
-_CIBLES_LEVIERS: Dict[str, str] = {_sans_accents(c): c for c in _LEVIERS}
+_CIBLES_LEVIERS: dict[str, str] = {_sans_accents(c): c for c in _LEVIERS}
 
 #: Source primaire du texte intégré ici.
 SOURCE_CC = ("https://www.conseil-constitutionnel.fr/le-bloc-de-constitutionnalite/"
@@ -87,10 +88,10 @@ DATE_CONSULTATION = "2026-10-12"
 VERSION_TEXTE = "à jour de la révision constitutionnelle du 8 mars 2024 (IVG, article 34)"
 
 #: Échelons admis (mêmes noms que `reglements_lois.STRATES_VALIDES`).
-STRATES: Tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
+STRATES: tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
 
 #: Fonctions institutionnelles (filtre d'affichage et de recherche).
-FONCTIONS: Tuple[str, ...] = (
+FONCTIONS: tuple[str, ...] = (
     "souveraineté", "exécutif", "législatif", "procédure législative", "budget",
     "contrôle & évaluation", "autorité judiciaire", "outre-mer", "collectivités",
     "démocratie participative", "Europe & traités", "révision", "haute cour",
@@ -108,21 +109,21 @@ class ArticleConstitution:
     fonction: str
     autorite: str
     resume: str
-    regles: Tuple[str, ...] = ()
-    opportunites: Tuple[str, ...] = ()
-    contraintes: Tuple[str, ...] = ()
-    contre_pouvoirs: Tuple[str, ...] = ()
-    croisements: Tuple[str, ...] = ()
-    strates: Tuple[str, ...] = ("National",)
-    mecanismes: Tuple[str, ...] = ()
-    leviers: Tuple[str, ...] = ()
+    regles: tuple[str, ...] = ()
+    opportunites: tuple[str, ...] = ()
+    contraintes: tuple[str, ...] = ()
+    contre_pouvoirs: tuple[str, ...] = ()
+    croisements: tuple[str, ...] = ()
+    strates: tuple[str, ...] = ("National",)
+    mecanismes: tuple[str, ...] = ()
+    leviers: tuple[str, ...] = ()
     #: pistes de réforme que l'article encadre mais que le catalogue ne modélise
     #: pas encore (aucun levier `LEVIERS` de ce nom : rien n'est chiffré).
-    pistes: Tuple[str, ...] = ()
+    pistes: tuple[str, ...] = ()
     cite_texte: bool = False
 
     # ── sérialisation pour l'API et la page ────────────────────────────────
-    def en_dict(self) -> Dict[str, Any]:
+    def en_dict(self) -> dict[str, Any]:
         return {
             "numero": self.numero,
             "titre": self.titre,
@@ -146,11 +147,11 @@ class ArticleConstitution:
             "consulte_le": DATE_CONSULTATION,
         }
 
-    def verrous_texte(self) -> List[str]:
+    def verrous_texte(self) -> list[str]:
         """Tous les nombres du texte qui bornent l'action (délais, quotes, majorités)."""
         return list(self.regles)
 
-    def bilan(self) -> Dict[str, int]:
+    def bilan(self) -> dict[str, int]:
         return {
             "opportunites": len(self.opportunites),
             "contraintes": len(self.contraintes),
@@ -233,7 +234,7 @@ def _a(
 # TITRE I — DE LA SOUVERAINETÉ (articles 1 à 4)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_I: Tuple[ArticleConstitution, ...] = (
+_TITRE_I: tuple[ArticleConstitution, ...] = (
     _a("1", "République indivisible, laïque, démocratique et sociale ; organisation décentralisée",
        "I", "souveraineté", "Législateur (loi) et réviseur (89)",
        "« La France est une République indivisible, laïque, démocratique et sociale. Elle assure "
@@ -336,7 +337,7 @@ _TITRE_I: Tuple[ArticleConstitution, ...] = (
 # TITRE II — LE PRÉSIDENT DE LA RÉPUBLIQUE (articles 5 à 19)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_II: Tuple[ArticleConstitution, ...] = (
+_TITRE_II: tuple[ArticleConstitution, ...] = (
     _a("5", "Rôle du Président : veille à la Constitution, arbitrage, continuité de l'État",
        "II", "exécutif", "Président de la République",
        "« Le Président de la République veille au respect de la Constitution. Il assure, par son arbitrage, "
@@ -705,7 +706,7 @@ _TITRE_II: Tuple[ArticleConstitution, ...] = (
 # TITRE III — LE GOUVERNEMENT (articles 20 à 23)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_III: Tuple[ArticleConstitution, ...] = (
+_TITRE_III: tuple[ArticleConstitution, ...] = (
     _a("20", "Le Gouvernement détermine et conduit la politique de la Nation ; responsabilité devant le Parlement",
        "III", "exécutif", "Gouvernement",
        "« Le Gouvernement détermine et conduit la politique de la nation. Il dispose de l'administration et "
@@ -800,7 +801,7 @@ _TITRE_III: Tuple[ArticleConstitution, ...] = (
 # TITRE IV — LE PARLEMENT (articles 24 à 33)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_IV: Tuple[ArticleConstitution, ...] = (
+_TITRE_IV: tuple[ArticleConstitution, ...] = (
     _a("24", "Le Parlement vote la loi, contrôle, évalue ; Assemblée nationale et Sénat",
        "IV", "législatif", "Parlement (577 députés, 348 sénateurs au maximum)",
        "« Le Parlement vote la loi. Il contrôle l'action du Gouvernement. Il évalue les politiques "
@@ -1020,7 +1021,7 @@ _TITRE_IV: Tuple[ArticleConstitution, ...] = (
 # TITRE V — RAPPORTS PARLEMENT / GOUVERNEMENT (articles 34 à 51-2)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_V: Tuple[ArticleConstitution, ...] = (
+_TITRE_V: tuple[ArticleConstitution, ...] = (
     _a("34", "Domaine de la loi (IVG ajoutée par la révision du 8 mars 2024)",
        "V", "procédure législative", "Parlement",
        "La loi fixe les règles concernant les droits civiques et les garanties fondamentales des citoyens "
@@ -1700,7 +1701,7 @@ _TITRE_V: Tuple[ArticleConstitution, ...] = (
 # TITRE VI — DES TRAITÉS INTERNATIONAUX (articles 52 à 55)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_VI: Tuple[ArticleConstitution, ...] = (
+_TITRE_VI: tuple[ArticleConstitution, ...] = (
     _a("52", "Négociation et ratification des traités",
        "VI", "Europe & traités", "Président de la République ; Gouvernement",
        "« Le Président de la République négocie et ratifie les traités. Il est informé de toute négociation "
@@ -1829,7 +1830,7 @@ _TITRE_VI: Tuple[ArticleConstitution, ...] = (
 # TITRE VII — LE CONSEIL CONSTITUTIONNEL (articles 56 à 63)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_VII: Tuple[ArticleConstitution, ...] = (
+_TITRE_VII: tuple[ArticleConstitution, ...] = (
     _a("56", "Composition et nomination des membres du Conseil constitutionnel",
        "VII", "contrôle & évaluation", "Président de la République, présidents des assemblées",
        "Neuf membres, mandat de neuf ans non renouvelable, renouvellement par tiers tous les trois ans ; "
@@ -2046,7 +2047,7 @@ _TITRE_VII: Tuple[ArticleConstitution, ...] = (
 # TITRE VIII — DE L'AUTORITÉ JUDICIAIRE (articles 64 à 66-1)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_VIII: Tuple[ArticleConstitution, ...] = (
+_TITRE_VIII: tuple[ArticleConstitution, ...] = (
     _a("64", "Le Président garant de l'indépendance de l'autorité judiciaire ; inamovibilité des magistrats du siège",
        "VIII", "autorité judiciaire", "Président ; CSM ; législateur organique",
        "« Le Président de la République est garant de l'indépendance de l'autorité judiciaire. Il est assisté "
@@ -2147,7 +2148,7 @@ _TITRE_VIII: Tuple[ArticleConstitution, ...] = (
 # TITRE IX — LA HAUTE COUR (67-68) ; TITRE X — MEMBRES DU GOUVERNEMENT (68-1 à 68-3)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_IX_X: Tuple[ArticleConstitution, ...] = (
+_TITRE_IX_X: tuple[ArticleConstitution, ...] = (
     _a("67", "Irresponsabilité du Président pour les actes accomplis en cette qualité",
        "IX", "haute cour", "Président de la République",
        "« Le Président de la République n'est pas responsable des actes accomplis en cette qualité, sous "
@@ -2278,7 +2279,7 @@ _TITRE_IX_X: Tuple[ArticleConstitution, ...] = (
 # TITRE XI — CESE (69-71) ; TITRE XI bis — DÉFENSEUR DES DROITS (71-1)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_XI: Tuple[ArticleConstitution, ...] = (
+_TITRE_XI: tuple[ArticleConstitution, ...] = (
     _a("69", "Avis du CESE sur les projets et propositions ; saisine par pétition",
        "XI", "démocratie participative", "CESE (175 membres, plafond 233)",
        "« Le Conseil économique, social et environnemental, saisi par le Gouvernement, donne son avis sur "
@@ -2398,7 +2399,7 @@ _TITRE_XI: Tuple[ArticleConstitution, ...] = (
 # TITRE XII — DES COLLECTIVITÉS TERRITORIALES (articles 72 à 75-1)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_XII: Tuple[ArticleConstitution, ...] = (
+_TITRE_XII: tuple[ArticleConstitution, ...] = (
     _a("72", "Collectivités de la République ; administration libre ; dérogation expérimentale",
        "XII", "collectivités", "Loi ; loi organique ; collectivités territoriales",
        "Les collectivités territoriales de la République sont les communes, les départements, les régions, "
@@ -2763,7 +2764,7 @@ _TITRE_XII: Tuple[ArticleConstitution, ...] = (
 # TITRE XIII — NOUVELLE-CALÉDONIE (76-77) ; TITRE XIV — FRANCOPHONIE (87-88)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_XIII_XIV: Tuple[ArticleConstitution, ...] = (
+_TITRE_XIII_XIV: tuple[ArticleConstitution, ...] = (
     _a("76", "Consultation de 1998 sur l'accord de Nouméa",
        "XIII", "outre-mer", "Peuple de Nouvelle-Calédonie ; loi organique",
        "« Les populations de la Nouvelle-Calédonie sont appelées à se prononcer avant le 31 décembre 1998 "
@@ -2889,7 +2890,7 @@ _TITRE_XIII_XIV: Tuple[ArticleConstitution, ...] = (
 # TITRE XV — DE L'UNION EUROPÉENNE (articles 88-1 à 88-7)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_XV: Tuple[ArticleConstitution, ...] = (
+_TITRE_XV: tuple[ArticleConstitution, ...] = (
     _a("88-1", "Participation à l'Union européenne",
        "XV", "Europe & traités", "République ; TUE et TFUE (Lisbonne)",
        "« La République participe à l'Union européenne constituée d'États qui ont choisi librement d'exercer "
@@ -3114,7 +3115,7 @@ _TITRE_XV: Tuple[ArticleConstitution, ...] = (
 # TITRE XVI — DE LA RÉVISION (article 89)
 # ────────────────────────────────────────────────────────────────────────────
 
-_TITRE_XVI: Tuple[ArticleConstitution, ...] = (
+_TITRE_XVI: tuple[ArticleConstitution, ...] = (
     _a("89", "Révision de la Constitution : navette, référendum ou Congrès à trois cinquièmes",
        "XVI", "révision", "Président sur proposition du Premier ministre ; parlementaires ; électeurs ou "
        "Congrès",
@@ -3173,7 +3174,7 @@ _TITRE_XVI: Tuple[ArticleConstitution, ...] = (
 # ARTICLES ABROGÉS — consignés pour qu'aucun scénario ne les réutilise
 # ────────────────────────────────────────────────────────────────────────────
 
-ABROGES: Tuple[Dict[str, str], ...] = (
+ABROGES: tuple[dict[str, str], ...] = (
     {"numero": "78", "titre": "Compétences législatives et réglementaires de la Communauté",
      "abroge_par": "Loi constitutionnelle n° 95-880 du 4 août 1995",
      "note": "Titre XII « Des collectivités territoriales de la République » dans sa rédaction de 1958 "
@@ -3223,7 +3224,7 @@ ABROGES: Tuple[Dict[str, str], ...] = (
 
 #: Les titres dans l'ordre de la Constitution, tels que publiés par le Conseil
 #: constitutionnel (le titre XI bis et le titre XIV sont intercalés).
-_TITRES: Tuple[Tuple[str, Tuple[ArticleConstitution, ...]], ...] = (
+_TITRES: tuple[tuple[str, tuple[ArticleConstitution, ...]], ...] = (
     ("I", _TITRE_I),
     ("II", _TITRE_II),
     ("III", _TITRE_III),
@@ -3242,7 +3243,7 @@ _TITRES: Tuple[Tuple[str, Tuple[ArticleConstitution, ...]], ...] = (
 
 #: Table de numérotation officielle : sert à détecter une fiche manquante.
 #: 1 à 89, y compris les « bis » et « ter » écrits sous forme 34-1, 88-7, etc.
-NUMEROS_ATTENDUS: Tuple[str, ...] = (
+NUMEROS_ATTENDUS: tuple[str, ...] = (
     "1", "2", "3", "4",
     "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
     "20", "21", "22", "23",
@@ -3264,10 +3265,10 @@ NUMEROS_ATTENDUS: Tuple[str, ...] = (
 )
 
 #: Articles abrogés, numérotés dans le texte historique (consignés dans ABROGES).
-NUMEROS_ABROGES: Tuple[str, ...] = ("78", "79", "80", "81", "82", "83", "84", "85", "86", "90")
+NUMEROS_ABROGES: tuple[str, ...] = ("78", "79", "80", "81", "82", "83", "84", "85", "86", "90")
 
 
-def _cle_tri(numero: str) -> Tuple[int, int]:
+def _cle_tri(numero: str) -> tuple[int, int]:
     """Clé de tri : « 34-1 » vient après « 34 », « 51-2 » après « 51-1 »."""
     base, _, suffixe = numero.partition("-")
     try:
@@ -3277,7 +3278,7 @@ def _cle_tri(numero: str) -> Tuple[int, int]:
 
 
 #: Registres des fiches en vigueur, indexées par numéro d'article.
-ARTICLES: Dict[str, ArticleConstitution] = {}
+ARTICLES: dict[str, ArticleConstitution] = {}
 for _bloc, _fiches in _TITRES:
     for _fiche in _fiches:
         if _fiche.numero in ARTICLES:  # garde-fou contre un doublon silencieux
@@ -3285,7 +3286,7 @@ for _bloc, _fiches in _TITRES:
         ARTICLES[_fiche.numero] = _fiche
 
 #: Ordre de lecture du texte officiel.
-ORDRE_ARTICLES: Tuple[str, ...] = tuple(sorted(ARTICLES, key=_cle_tri))
+ORDRE_ARTICLES: tuple[str, ...] = tuple(sorted(ARTICLES, key=_cle_tri))
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -3296,7 +3297,7 @@ _ALINEA = re.compile(r"\s*(?:al\.?|alinéa|paragraphe)\s*\d+\s*(?:bis|ter)?$", r
 _POINT_ALINEA = re.compile(r"\.(\d+)$")
 
 
-def article(numero: str) -> Optional[ArticleConstitution]:
+def article(numero: str) -> ArticleConstitution | None:
     """Fiche d'un article, ou None.
 
     Tolère les notations usuelles : « Article 49 », « art. 49 », « 49 al. 3 » et
@@ -3316,7 +3317,7 @@ def article(numero: str) -> Optional[ArticleConstitution]:
     return None
 
 
-def par_bloc(bloc: str) -> List[ArticleConstitution]:
+def par_bloc(bloc: str) -> list[ArticleConstitution]:
     """Fiches d'un titre (« V », « Titre V », «XI bis »…)."""
     cle = (bloc or "").strip()
     for prefixe in ("Titre ", "titre "):
@@ -3327,12 +3328,12 @@ def par_bloc(bloc: str) -> List[ArticleConstitution]:
     return [f for f in (ARTICLES[n] for n in ORDRE_ARTICLES) if f.bloc == libelle] if libelle else []
 
 
-def par_fonction(fonction: str) -> List[ArticleConstitution]:
+def par_fonction(fonction: str) -> list[ArticleConstitution]:
     """Fiches relevant d'une fonction institutionnelle (`FONCTIONS`)."""
     return [ARTICLES[n] for n in ORDRE_ARTICLES if ARTICLES[n].fonction == fonction]
 
 
-def rechercher(terme: str, limite: int = 25) -> List[Dict[str, Any]]:
+def rechercher(terme: str, limite: int = 25) -> list[dict[str, Any]]:
     """Recherche pleine texte dans les fiches : numéro, champ touché, extrait."""
     mot = (terme or "").strip().lower()
     if len(mot) < 2:
@@ -3343,7 +3344,7 @@ def rechercher(terme: str, limite: int = 25) -> List[Dict[str, Any]]:
         ("contre-pouvoirs", "contre_pouvoirs"), ("autorité", "autorite"),
         ("mécanismes", "mecanismes"), ("leviers", "leviers"),
     )
-    resultats: List[Dict[str, Any]] = []
+    resultats: list[dict[str, Any]] = []
     for numero in ORDRE_ARTICLES:
         fiche = ARTICLES[numero]
         for libelle, attribut in champs:
@@ -3369,25 +3370,25 @@ def rechercher(terme: str, limite: int = 25) -> List[Dict[str, Any]]:
     return resultats
 
 
-def chaine(articles: Iterable[str]) -> List[Dict[str, Any]]:
+def chaine(articles: Iterable[str]) -> list[dict[str, Any]]:
     """Enveloppe d'articles : d'abord ceux demandés, puis leurs croisements directs.
 
     Utilité : aucun article ne fonctionne seul. Demander « 49 » doit faire remonter
     le 50 (démission), le 12 (dissolution possible), le 47 (budget) — sans quoi le
     lecteur croit que la censure suffit à faire tomber un gouvernement.
     """
-    vus: List[str] = []
+    vus: list[str] = []
     for numero in articles:
         cle = (numero or "").strip()
         if cle and cle not in vus and cle in ARTICLES:
             vus.append(cle)
-    bordure: List[str] = []
+    bordure: list[str] = []
     for numero in list(vus):
         for lien in ARTICLES[numero].croisements:
             lien = lien.strip()
             if lien in ARTICLES and lien not in vus and lien not in bordure:
                 bordure.append(lien)
-    sortie: List[Dict[str, Any]] = []
+    sortie: list[dict[str, Any]] = []
     for numero in vus:
         fiche = ARTICLES[numero]
         entete = {**fiche.en_dict(), "distance": 0}
@@ -3398,7 +3399,7 @@ def chaine(articles: Iterable[str]) -> List[Dict[str, Any]]:
     return sortie
 
 
-def verrous_pour(levier: str) -> List[Dict[str, Any]]:
+def verrous_pour(levier: str) -> list[dict[str, Any]]:
     """Contraintes et seuils constitutionnels opposables à un levier du catalogue."""
     cle = (levier or "").strip()
     sorties = []
@@ -3417,7 +3418,7 @@ def verrous_pour(levier: str) -> List[Dict[str, Any]]:
     return sorties
 
 
-def opportunites_pour(levier: str) -> List[Dict[str, Any]]:
+def opportunites_pour(levier: str) -> list[dict[str, Any]]:
     """Facultés ouvertes par la Constitution à un levier du catalogue."""
     cle = (levier or "").strip()
     sorties = []
@@ -3434,19 +3435,19 @@ def opportunites_pour(levier: str) -> List[Dict[str, Any]]:
     return sorties
 
 
-def articles_pour_strate(strate: str) -> List[str]:
+def articles_pour_strate(strate: str) -> list[str]:
     """Numéros des articles dont l'effet touche une strate (`STRATES`)."""
     return [n for n in ORDRE_ARTICLES if strate in ARTICLES[n].strates]
 
 
-def articles_pour_mecanisme(mecanisme: str) -> List[str]:
+def articles_pour_mecanisme(mecanisme: str) -> list[str]:
     """Numéros des articles qui organisent un mécanisme du moteur."""
     return [n for n in ORDRE_ARTICLES if mecanisme in ARTICLES[n].mecanismes]
 
 
-def couverture() -> Dict[str, Any]:
+def couverture() -> dict[str, Any]:
     """État du registre : compteurs, écarts éventuels, densité par titre."""
-    par_titre: Dict[str, int] = {}
+    par_titre: dict[str, int] = {}
     for numero in ORDRE_ARTICLES:
         par_titre[ARTICLES[numero].bloc] = par_titre.get(ARTICLES[numero].bloc, 0) + 1
     manquants = [n for n in NUMEROS_ATTENDUS if n not in ARTICLES]
@@ -3482,8 +3483,8 @@ def couverture() -> Dict[str, Any]:
 # ────────────────────────────────────────────────────────────────────────────
 
 def vers_registre_legal(
-    deja_presents: Optional[Iterable[str]] = None,
-) -> Dict[str, Dict[str, str]]:
+    deja_presents: Iterable[str] | None = None,
+) -> dict[str, dict[str, str]]:
     """Fiches converties au format `reglements_lois.ArticleDeLoi`.
 
     Seuls les identifiants absents du registre existant sont produits : les
@@ -3493,7 +3494,7 @@ def vers_registre_legal(
     l'article 72-1.
     """
     connus = set(deja_presents or ())
-    sorties: Dict[str, Dict[str, str]] = {}
+    sorties: dict[str, dict[str, str]] = {}
     for numero in ORDRE_ARTICLES:
         fiche = ARTICLES[numero]
         identifiant = "CONST_ART_" + numero.replace("-", "_")
@@ -3521,7 +3522,7 @@ def vers_registre_legal(
     return sorties
 
 
-def greffe_sur_registre() -> Dict[str, Any]:
+def greffe_sur_registre() -> dict[str, Any]:
     """Tente la fusion avec `reglements_lois.REGISTRE_LEGAL` (import toléré en échec)."""
     try:  # pragma: no cover - le registre existe dans le dépôt
         from . import reglements_lois as _rl
@@ -3537,7 +3538,7 @@ def greffe_sur_registre() -> Dict[str, Any]:
     return {"disponible": True, "ajoutes": len(apports), "exists": len(connus)}
 
 
-def synthese_pour_api() -> Dict[str, Any]:
+def synthese_pour_api() -> dict[str, Any]:
     """Charge utile de la page « Constitution analysée » et de l'API /constitution."""
     return {
         "titre": "Constitution analysée article par article",
@@ -3571,7 +3572,7 @@ def synthese_pour_api() -> Dict[str, Any]:
 
 #: Ordre d'affichage des titres (le titre XI bis et les titres IX/X sont fusionnés
 #: dans les tables, mais l'affichage suit la numération officielle).
-_BLOCS_ORDONNES: Tuple[str, ...] = (
+_BLOCS_ORDONNES: tuple[str, ...] = (
     "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X", "XI", "XI bis", "XII",
     "XIII", "XIV", "XV", "XVI",
 )

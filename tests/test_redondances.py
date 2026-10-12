@@ -406,7 +406,10 @@ class TestRedondancesStabiliteNumeriqueEtStress(unittest.TestCase):
 
     def test_exhaustivite_sources_officielles_et_audit(self):
         """Invariant de traçabilité : toutes les catégories macroéconomiques sont couvertes par des sources officielles certifiées."""
-        from simulateur.sources_officielles import REGISTRE_SOURCES_OFFICIELLES, lister_sources_par_categorie
+        from simulateur.sources_officielles import (
+            REGISTRE_SOURCES_OFFICIELLES,
+            lister_sources_par_categorie,
+        )
         self.assertGreaterEqual(len(REGISTRE_SOURCES_OFFICIELLES), 20)
         categories = ["Macroéconomie", "Marchés", "Fiscalité", "Social", "Territoires", "International", "Institutions"]
         for cat in categories:
@@ -416,15 +419,15 @@ class TestRedondancesStabiliteNumeriqueEtStress(unittest.TestCase):
     def test_invariant_audit_contradictoire_think_tanks(self):
         """Invariant de robustesse contradictoire : les 23 think tanks répertoriés sont tous rattachés aux 5 stress-tests."""
         from simulateur.think_tanks import (
-            REGISTRE_THINK_TANKS,
             PARADIGMES_STRESS_TEST,
+            REGISTRE_THINK_TANKS,
             executer_stress_tests_mandature,
         )
         self.assertEqual(len(REGISTRE_THINK_TANKS), 23)
         self.assertEqual(len(PARADIGMES_STRESS_TEST), 5)
 
         # Vérifie que chaque think tank a un paradigme valide et un champ pourquoi/reponse
-        for tt_id, tt in REGISTRE_THINK_TANKS.items():
+        for tt in REGISTRE_THINK_TANKS.values():
             self.assertIn(tt.stress_test_associe, PARADIGMES_STRESS_TEST)
             self.assertTrue(len(tt.pourquoi_integration) > 30)
             self.assertTrue(len(tt.reponse_du_simulateur) > 30)
@@ -433,7 +436,7 @@ class TestRedondancesStabiliteNumeriqueEtStress(unittest.TestCase):
         # Vérifie l'exécution des stress-tests
         res = executer_stress_tests_mandature(None, None, None, None, None)
         self.assertEqual(len(res), 5)
-        for p_id, st in res.items():
+        for st in res.values():
             self.assertEqual(st.statut, "SOLIDE")
             self.assertGreaterEqual(st.score_robustesse_sur_100, 95.0)
 

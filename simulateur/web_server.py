@@ -10,65 +10,50 @@ import json
 import os
 import sys
 import urllib.parse
-from http.server import HTTPServer, BaseHTTPRequestHandler
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-from typing import Dict, Any, List
+from typing import Any
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from simulateur.model import DecisionPolitique, ResultatEtapeSimulation
-from simulateur.moteur import MoteurSimulationSystemique
-from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
-    get_scenario_austerite_brutale,
-    get_scenario_choc_mondial_stagflation,
-)
-from simulateur.reglements_lois import get_corpus_lois, rechercher_loi
-from simulateur.sources_officielles import (
-    REGISTRE_SOURCES_OFFICIELLES,
-    exporter_catalogue_sources,
-    lister_sources_par_categorie,
-)
-from simulateur.think_tanks import (
-    REGISTRE_THINK_TANKS,
-    PARADIGMES_STRESS_TEST,
-    get_think_tank,
-    lister_think_tanks_par_echelon,
-    exporter_catalogue_think_tanks,
-    executer_stress_tests_mandature,
-)
 from simulateur.histoire_france import (
-    PERIODES_HISTORIQUES,
-    SERIES_ANNUELLES,
-    REFORMES_MAJEURES,
-    CRISES_HISTORIQUES,
-    DIMENSIONS_COMPARISON,
-    obtenir_toutes_periodes,
-    obtenir_periode_par_id,
+    calibrer_parametres_historiques,
     comparer_periodes,
     filtrer_periodes,
-    obtenir_series_chronologiques,
-    obtenir_reformes,
+    generer_synthese_historique,
     obtenir_crises,
     obtenir_options_dropdown,
-    generer_synthese_historique,
-    calibrer_parametres_historiques,
-    exporter_json_complet,
+    obtenir_reformes,
+    obtenir_series_chronologiques,
+)
+from simulateur.model import DecisionPolitique, ResultatEtapeSimulation
+from simulateur.moteur import MoteurSimulationSystemique
+from simulateur.reglements_lois import get_corpus_lois
+from simulateur.scenarios import (
+    get_scenario_austerite_brutale,
+    get_scenario_choc_mondial_stagflation,
+    get_scenario_mandature_5_ans,
+    get_scenario_statut_quo,
 )
 from simulateur.societe_domaines import (
     DOMAINES_SOCIETAUX,
-    obtenir_tous_domaines,
-    obtenir_domaine_par_id,
-    lister_domaines_ids,
     comparer_domaines,
-    obtenir_serie_domaine,
     generer_synthese_societale,
-    exporter_json_domaines,
+    obtenir_domaine_par_id,
+    obtenir_serie_domaine,
+)
+from simulateur.sources_officielles import (
+    REGISTRE_SOURCES_OFFICIELLES,
+    exporter_catalogue_sources,
+)
+from simulateur.think_tanks import (
+    executer_stress_tests_mandature,
+    exporter_catalogue_think_tanks,
+    get_think_tank,
 )
 
 
-def serialize_resultat(r: ResultatEtapeSimulation) -> Dict[str, Any]:
+def serialize_resultat(r: ResultatEtapeSimulation) -> dict[str, Any]:
     """Convertit un ResultatEtapeSimulation en dictionnaire JSON-sérialisable."""
     return {
         "annee": r.annee,
@@ -176,7 +161,7 @@ def serialize_resultat(r: ResultatEtapeSimulation) -> Dict[str, Any]:
     }
 
 
-def executer_simulation_scenario(nom: str) -> List[Dict[str, Any]]:
+def executer_simulation_scenario(nom: str) -> list[dict[str, Any]]:
     """Exécute un scénario prédéfini et renvoie la trajectoire sérialisée."""
     moteur = MoteurSimulationSystemique()
     if nom == "mandature":
@@ -196,7 +181,7 @@ def executer_simulation_scenario(nom: str) -> List[Dict[str, Any]]:
     return [serialize_resultat(r) for r in moteur.historique_etapes]
 
 
-def executer_simulation_personnalisee(annees_decisions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+def executer_simulation_personnalisee(annees_decisions: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Exécute une simulation sur-mesure à partir d'une liste de paramètres par année."""
     moteur = MoteurSimulationSystemique()
     for idx, d in enumerate(annees_decisions, start=1):
@@ -230,7 +215,7 @@ def executer_simulation_personnalisee(annees_decisions: List[Dict[str, Any]]) ->
     return [serialize_resultat(r) for r in moteur.historique_etapes]
 
 
-def generer_comparatif_global() -> Dict[str, Any]:
+def generer_comparatif_global() -> dict[str, Any]:
     """Génère la comparaison croisée des 4 scénarios à l'Année 5."""
     scenarios = ["mandature", "statut_quo", "austerite", "choc_mondial"]
     comparatif = {}
@@ -1142,10 +1127,10 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
 
         self._envoyer_json(404, {"erreur": "Action non supportée"})
 
-    def _generer_rapport_markdown(self, scenario: str, traj: List[Dict[str, Any]]) -> str:
+    def _generer_rapport_markdown(self, scenario: str, traj: list[dict[str, Any]]) -> str:
         lignes = [
             f"# RAPPORT DE SIMULATION MACRO-POLITIQUE : SCÉNARIO {scenario.upper()}",
-            f"> Modèle gigogne à 4 strates (Local, National, Europe, Marchés) — France 2026",
+            "> Modèle gigogne à 4 strates (Local, National, Europe, Marchés) — France 2026",
             "",
             "## TABLEAU DE BORD QUINQUENNAL",
             "| Année | PIB Nominal | Déficit (Md€) | Déficit (% PIB) | Dette (% PIB) | Taux OAT | Spread Bund | Tension Locale | Confiance | PDE UE | Note |",
@@ -1175,10 +1160,10 @@ def demarrer_serveur_web(host: str = "0.0.0.0", port: int = 8000):
     """Démarre le serveur Web HTTP sur le port spécifié."""
     adresse = (host, port)
     serveur = ThreadedHTTPServer(adresse, SimulateurHTTPHandler)
-    print(f"\n" + "=" * 80)
+    print("\n" + "=" * 80)
     print(f"🚀 SERVEUR WEB DU SIMULATEUR DÉMARRÉ SUR http://{host}:{port}")
-    print(f"   Modèle systémique gigogne à 5 échelons (Local, National, Europe, Mondial, Géopolitique)")
-    print(f"   Prévisualisation immédiate en direct disponible.")
+    print("   Modèle systémique gigogne à 5 échelons (Local, National, Europe, Mondial, Géopolitique)")
+    print("   Prévisualisation immédiate en direct disponible.")
     print("=" * 80 + "\n")
     try:
         serveur.serve_forever()
@@ -3545,7 +3530,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
     function showTab(tabName) {
       document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
       document.querySelectorAll('nav button').forEach(el => el.classList.remove('active'));
-      
+
       const targetPane = document.getElementById('tab-' + tabName);
       if (targetPane) targetPane.classList.add('active');
 
@@ -4361,7 +4346,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         const respTT = await fetch('/api/think_tanks');
         const dataTT = await respTT.json();
         allThinkTanks = dataTT.think_tanks || [];
-        
+
         const totalEl = document.getElementById('tt-kpi-total');
         if (totalEl) totalEl.innerText = allThinkTanks.length + " Instituts";
 
@@ -4448,7 +4433,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
           <div class="tt-meta">
             🎯 <strong>Orientation :</strong> <span style="color:#e2e8f0;">${tt.epistemologie}</span>
           </div>
-          
+
           <div style="background:#090d16; padding:10px; border-radius:6px; margin-bottom:10px;">
             <div style="font-size:0.8rem; font-weight:700; color:#cbd5e1; margin-bottom:6px;">📚 Publications & Méthodologie :</div>
             ${pubsHtml}

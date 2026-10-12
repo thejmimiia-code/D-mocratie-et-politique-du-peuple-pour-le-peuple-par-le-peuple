@@ -12,13 +12,12 @@ tests/test_assemblees.py — Tests exhaustifs des assemblées représentatives e
 """
 
 import unittest
+
 from simulateur.model import DecisionPolitique
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
     get_scenario_austerite_brutale,
-    get_scenario_statut_quo,
-    get_scenario_choc_mondial_stagflation,
+    get_scenario_mandature_5_ans,
 )
 
 
@@ -29,7 +28,7 @@ class TestAssembleesParlementaires(unittest.TestCase):
         """Sous le Plan de Mandature, la censure recule et la majorité se consolide."""
         moteur = MoteurSimulationSystemique()
         for dec in get_scenario_mandature_5_ans():
-            res = moteur.appliquer_etape(dec)
+            moteur.appliquer_etape(dec)
 
         res_final = moteur.historique_etapes[-1]
         self.assertFalse(res_final.gouvernement_censure)
@@ -40,7 +39,7 @@ class TestAssembleesParlementaires(unittest.TestCase):
         """Une austérité brutale fait flamber la grogne civique et provoque la censure (voix >= 289)."""
         moteur = MoteurSimulationSystemique()
         for dec in get_scenario_austerite_brutale():
-            res = moteur.appliquer_etape(dec)
+            moteur.appliquer_etape(dec)
 
         # En fin d'austérité brutale, la tension dépasse 90/100 -> le gouvernement est censuré
         res_final = moteur.historique_etapes[-1]

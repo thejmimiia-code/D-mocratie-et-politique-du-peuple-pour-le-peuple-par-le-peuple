@@ -30,7 +30,6 @@ n'est interrogée, les mesures ne dépendent donc pas du réseau.
 """
 
 from __future__ import annotations
-from typing import Optional, Tuple
 
 import argparse
 import gzip
@@ -86,7 +85,7 @@ class Serveur:
         connexion.close()
         return annonce
 
-    def temps(self, chemin: str, encodage: Optional[str] = "gzip") -> float:
+    def temps(self, chemin: str, encodage: str | None = "gzip") -> float:
         """Durée du meilleur aller-retour, en millisecondes."""
         connexion = HTTPConnection("127.0.0.1", self.port, timeout=120)
         entetes = {"Accept-Encoding": encodage} if encodage else {}
@@ -98,7 +97,7 @@ class Serveur:
         connexion.close()
         return duree
 
-    def post(self, chemin: str, corps: dict, encodage: str = "gzip") -> Tuple[float, int]:
+    def post(self, chemin: str, corps: dict, encodage: str = "gzip") -> tuple[float, int]:
         charge = json.dumps(corps).encode("utf-8")
         connexion = HTTPConnection("127.0.0.1", self.port, timeout=300)
         debut = time.perf_counter()

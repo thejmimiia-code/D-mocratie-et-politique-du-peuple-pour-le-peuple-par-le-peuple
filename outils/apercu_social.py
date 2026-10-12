@@ -15,7 +15,6 @@ dépendance autre que Pillow (`pip install pillow`).
 """
 
 from __future__ import annotations
-from typing import Optional, Tuple
 
 import argparse
 import sys
@@ -66,7 +65,7 @@ def degrade(largeur: int, hauteur: int) -> Image.Image:
 
 
 def centrer(dessin: ImageDraw.ImageDraw, texte: str, y: int,
-            police_texte: ImageFont.FreeTypeFont, couleur: Tuple[int, int, int]) -> None:
+            police_texte: ImageFont.FreeTypeFont, couleur: tuple[int, int, int]) -> None:
     """Écrit un texte centré horizontalement."""
     gauche, haut, droite, bas = dessin.textbbox((0, 0), texte, font=police_texte)
     dessin.text(((LARGEUR - (droite - gauche)) / 2 - gauche, y), texte,
@@ -74,8 +73,8 @@ def centrer(dessin: ImageDraw.ImageDraw, texte: str, y: int,
 
 
 def chip(dessin: ImageDraw.ImageDraw, x: int, y: int, texte: str,
-         police_texte: ImageFont.FreeTypeFont, couleur: Tuple[int, int, int],
-         remplissage: Optional[Tuple[int, int, int]] = None) -> int:
+         police_texte: ImageFont.FreeTypeFont, couleur: tuple[int, int, int],
+         remplissage: tuple[int, int, int] | None = None) -> int:
     """Pastille arrondie ; retourne l'abscisse de fin."""
     marge_x, marge_y = 14, 7
     gauche, haut, droite, bas = dessin.textbbox((0, 0), texte, font=police_texte)

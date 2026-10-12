@@ -32,7 +32,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 #: Date d'observation de l'état des assemblées (XVIIᵉ législature, renouvellement
 #: sénatorial du 27 septembre 2026).
@@ -44,20 +44,20 @@ DATE_ETAT_ASSEMBLEES_NOTE = (
 )
 
 #: Nombre de sièges constitutionnellement possibles.
-SIEGES_THEORIQUES: Dict[str, int] = {"assemblee_nationale": 577, "senat": 348}
+SIEGES_THEORIQUES: dict[str, int] = {"assemblee_nationale": 577, "senat": 348}
 SIEGES_THEORIQUES["congres"] = sum(SIEGES_THEORIQUES.values())
 SIEGES_THEORIQUES["haute_cour"] = SIEGES_THEORIQUES["congres"]
 
 #: Effectifs réels constatés à la date ci-dessus (sièges vacants pris en compte :
 #: trois circonscriptions de la XVIIᵉ législature n'étaient pas pourvues).
-SIEGES_POURVUS: Dict[str, int] = {"assemblee_nationale": 574, "senat": 348}
+SIEGES_POURVUS: dict[str, int] = {"assemblee_nationale": 574, "senat": 348}
 SIEGES_POURVUS["congres"] = sum(SIEGES_POURVUS.values())
 SIEGES_POURVUS["haute_cour"] = SIEGES_POURVUS["congres"]
 
 #: Le texte dit « majorité des membres composant l'Assemblée » : l'assiette est donc
 #: l'effectif légal (577), pas le nombre de sièges pourvus — c'est ce qui rend une
 #: censure légèrement plus facile quand des sièges sont vacants.
-ASSIETES: Dict[str, str] = {
+ASSIETES: dict[str, str] = {
     "membres_assemblee_nationale": "577 députés (effectif légal, art. 24)",
     "membres_assemblee_nationale_pourvus": "députés effectivement en siège",
     "membres_senat": "348 sénateurs (effectif légal, art. 24)",
@@ -97,7 +97,7 @@ class Verrou:
     texte: str = ""
     sens: str = "atteindre"              # "atteindre" | "ne_pas_depasser" | "entre"
 
-    def base(self, effectifs: Optional[Dict[str, int]] = None) -> int:
+    def base(self, effectifs: dict[str, int] | None = None) -> int:
         donnees = effectifs or {}
         if self.assiette in donnees:
             return int(donnees[self.assiette])
@@ -113,7 +113,7 @@ class Verrou:
             "regle": 0, "occurrences": 0, "heures": 0,
         }.get(self.assiette, 0)
 
-    def seuil(self, effectifs: Optional[Dict[str, int]] = None) -> int:
+    def seuil(self, effectifs: dict[str, int] | None = None) -> int:
         """Valeur du seuil dans l'unité de l'assiette (voix, signatures, jours)."""
         if self.regle == "fixe":
             return self.valeur
@@ -127,7 +127,7 @@ class Verrou:
             return int(math.floor(cible)) + 1
         return int(math.ceil(cible))
 
-    def en_dict(self, effectifs: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+    def en_dict(self, effectifs: dict[str, int] | None = None) -> dict[str, Any]:
         base = self.base(effectifs)
         seuil = self.seuil(effectifs)
         unite = self.unite or {"jours": "jours", "semaines": "semaines", "mois": "mois",
@@ -168,7 +168,7 @@ class Verrou:
 
 #: Les verrous du régime. Un seul endroit où le calcul est fait : si le texte
 #: bouge, on corrige ici et le modèle suit.
-_VERROUS_BRUTS: Tuple[Verrou, ...] = (
+_VERROUS_BRUTS: tuple[Verrou, ...] = (
     Verrou("censure_signatures", "Signatures nécessaires pour déposer une motion de censure", "49",
            "membres_assemblee_nationale", numerateur=1, denominateur=10,
            texte="« Une telle motion n'est recevable que si elle est signée par au moins un dixième des "
@@ -331,7 +331,7 @@ _VERROUS_BRUTS: Tuple[Verrou, ...] = (
                  "relève de la loi (34)."),
 )
 
-VERROUS: Dict[str, Verrou] = {v.cle: v for v in _VERROUS_BRUTS}
+VERROUS: dict[str, Verrou] = {v.cle: v for v in _VERROUS_BRUTS}
 
 
 @dataclass(frozen=True)
@@ -342,17 +342,17 @@ class Mecanisme:
     nom: str
     famille: str            # renverser | faire_adopter | bloquer | consulter | armer | exception
     resume: str
-    articles: Tuple[str, ...] = ()
-    verrous: Tuple[str, ...] = ()
+    articles: tuple[str, ...] = ()
+    verrous: tuple[str, ...] = ()
     acteurs: str = ""
     condition: str = ""
-    declenche: Tuple[str, ...] = ()
-    empeche_par: Tuple[str, ...] = ()
+    declenche: tuple[str, ...] = ()
+    empeche_par: tuple[str, ...] = ()
     effet_modele: str = ""
     observation: str = ""
     cout: str = ""
 
-    def en_dict(self, effectifs: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+    def en_dict(self, effectifs: dict[str, int] | None = None) -> dict[str, Any]:
         return {
             "cle": self.cle,
             "nom": self.nom,
@@ -370,7 +370,7 @@ class Mecanisme:
         }
 
 #: Les manœuvres du régime, avec ce qui les rend possibles et ce qui les tue.
-_MECANISMES_BRUTS: Tuple[Mecanisme, ...] = (
+_MECANISMES_BRUTS: tuple[Mecanisme, ...] = (
     Mecanisme(
         "motion_censure", "Renverser le Gouvernement par une motion de censure", "renverser",
         "Une motion signée par un dixième des députés, votée quarante-huit heures plus tard à la majorité "
@@ -953,14 +953,14 @@ _MECANISMES_BRUTS: Tuple[Mecanisme, ...] = (
     ),
 )
 
-MECANISMES: Dict[str, Mecanisme] = {m.cle: m for m in _MECANISMES_BRUTS}
+MECANISMES: dict[str, Mecanisme] = {m.cle: m for m in _MECANISMES_BRUTS}
 
 #: Familles de mécanismes (filtre d'affichage).
-FAMILLES: Tuple[str, ...] = ("renverser", "faire_adopter", "bloquer", "consulter", "armer", "exception")
+FAMILLES: tuple[str, ...] = ("renverser", "faire_adopter", "bloquer", "consulter", "armer", "exception")
 
 #: État des assemblées à la date d'observation : il sert à traduire les seuils en
 #: voix disponibles, pas à prédire une issue.
-ETAT_ASSEMBLEES: Dict[str, Dict[str, Any]] = {
+ETAT_ASSEMBLEES: dict[str, dict[str, Any]] = {
     "assemblee_nationale": {
         "legislature": "XVIIe",
         "sieges": 577,
@@ -998,19 +998,19 @@ ETAT_ASSEMBLEES: Dict[str, Dict[str, Any]] = {
 # CALCULS
 # ────────────────────────────────────────────────────────────────────────────
 
-def _effectifs(sieges: Optional[Dict[str, int]] = None) -> Dict[str, int]:
+def _effectifs(sieges: dict[str, int] | None = None) -> dict[str, int]:
     return dict(sieges or {})
 
 
-def seuil(cle_verrou: str, effectifs: Optional[Dict[str, int]] = None) -> int:
+def seuil(cle_verrou: str, effectifs: dict[str, int] | None = None) -> int:
     """Valeur du seuil (voix, signatures, jours) pour un verrou donné."""
     verrou = VERROUS.get(cle_verrou)
     return verrou.seuil(_effectifs(effectifs)) if verrou else 0
 
 
 def seuils_pour(
-    cle_mecanisme: str, effectifs: Optional[Dict[str, int]] = None
-) -> List[Dict[str, Any]]:
+    cle_mecanisme: str, effectifs: dict[str, int] | None = None
+) -> list[dict[str, Any]]:
     """Tableau chiffré des verrous franchis par une manœuvre."""
     mecanisme = MECANISMES.get(cle_mecanisme)
     if mecanisme is None:
@@ -1019,13 +1019,13 @@ def seuils_pour(
     return [VERROUS[c].en_dict(donnees) for c in mecanisme.verrous if c in VERROUS]
 
 
-def tableau_des_seuils(effectifs: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+def tableau_des_seuils(effectifs: dict[str, int] | None = None) -> dict[str, Any]:
     """Tous les verrous du régime, chiffrés pour un effectif donné."""
     donnees = _effectifs(effectifs)
     return {cle: verrou.en_dict(donnees) for cle, verrou in VERROUS.items()}
 
 
-def blocages_possibles(cle_mecanisme: str) -> List[Dict[str, Any]]:
+def blocages_possibles(cle_mecanisme: str) -> list[dict[str, Any]]:
     """Ce qui peut faire échouer la manœuvre, avec l'article qui l'autorise."""
     mecanisme = MECANISMES.get(cle_mecanisme)
     if mecanisme is None:
@@ -1043,16 +1043,16 @@ def blocages_possibles(cle_mecanisme: str) -> List[Dict[str, Any]]:
     return sorties
 
 
-def chaine_de_reaction(cle_mecanisme: str, profondeur: int = 3) -> List[Dict[str, Any]]:
+def chaine_de_reaction(cle_mecanisme: str, profondeur: int = 3) -> list[dict[str, Any]]:
     """Ce que la manœuvre déclenche, puis ce que la suite déclenche à son tour.
 
     Une censure appelle une démission, qui appelle une nomination, qui appelle
     éventuellement une dissolution : la valeur du contre-pouvoir est dans la chaîne,
     pas dans le premier maillon.
     """
-    vus: List[str] = []
-    files: List[Tuple[str, int]] = [(cle_mecanisme, 0)]
-    sorties: List[Dict[str, Any]] = []
+    vus: list[str] = []
+    files: list[tuple[str, int]] = [(cle_mecanisme, 0)]
+    sorties: list[dict[str, Any]] = []
     while files:
         cle, niveau = files.pop(0)
         if cle in vus or niveau > profondeur:
@@ -1071,7 +1071,7 @@ def chaine_de_reaction(cle_mecanisme: str, profondeur: int = 3) -> List[Dict[str
     return sorties
 
 
-def arithmetique_assemblee(nom: str) -> Dict[str, Any]:
+def arithmetique_assemblee(nom: str) -> dict[str, Any]:
     """Seuils internes d'une assemblée, à partir de son effectif légal."""
     etat = ETAT_ASSEMBLEES.get(nom)
     if etat is None:
@@ -1091,7 +1091,7 @@ def arithmetique_assemblee(nom: str) -> Dict[str, Any]:
     }
 
 
-def coalition_necessaire(cle_mecanisme: str, nom_assemblee: str = "assemblee_nationale") -> Dict[str, Any]:
+def coalition_necessaire(cle_mecanisme: str, nom_assemblee: str = "assemblee_nationale") -> dict[str, Any]:
     """De combien de groupes la manœuvre a-t-elle besoin, étant donnée la composition ?"""
     mecanisme = MECANISMES.get(cle_mecanisme)
     if mecanisme is None:
@@ -1133,7 +1133,7 @@ def coalition_necessaire(cle_mecanisme: str, nom_assemblee: str = "assemblee_nat
     }
 
 
-def diagnostic(effectifs: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
+def diagnostic(effectifs: dict[str, int] | None = None) -> dict[str, Any]:
     """Tableau de bord : chaque mécanisme, ses seuils chiffrés, ses bloqueurs."""
     donnees = _effectifs(effectifs)
     lignes = []
@@ -1158,7 +1158,7 @@ def diagnostic(effectifs: Optional[Dict[str, int]] = None) -> Dict[str, Any]:
     }
 
 
-def rechercher(terme: str) -> List[Dict[str, Any]]:
+def rechercher(terme: str) -> list[dict[str, Any]]:
     """Recherche dans les mécanismes et les verrous."""
     mot = (terme or "").strip().lower()
     if len(mot) < 3:
@@ -1177,7 +1177,7 @@ def rechercher(terme: str) -> List[Dict[str, Any]]:
     return sorties
 
 
-def coherence_avec_les_fiches() -> Dict[str, Any]:
+def coherence_avec_les_fiches() -> dict[str, Any]:
     """Contrôle de recoupement avec `simulateur.constitution_analysee`.
 
     Le vocabulaire des fiches est ouvert (il décrit finement les mécanismes), mais
@@ -1207,7 +1207,7 @@ def coherence_avec_les_fiches() -> Dict[str, Any]:
     }
 
 
-def synthese_pour_api() -> Dict[str, Any]:
+def synthese_pour_api() -> dict[str, Any]:
     """Charge utile pour la page « contre-pouvoirs » et pour l'API."""
     return {
         "titre": "L'arithmétique des contre-pouvoirs",

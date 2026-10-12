@@ -21,16 +21,15 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Set, Tuple
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
 
 #: Fonctions propres au site (pas des routes du moteur) : ni générées, ni signalées.
-FONCTIONS_DU_SITE: Tuple[str, ...] = ("verifier-source",)
+FONCTIONS_DU_SITE: tuple[str, ...] = ("verifier-source",)
 
 #: Routes du moteur à exposer (voir `simulateur/dashboard.py`, do_GET/do_POST).
-ROUTES: Tuple[str, ...] = (
+ROUTES: tuple[str, ...] = (
     "catalogue",
     "contexte",
     "donnees",
@@ -88,7 +87,7 @@ class handler(PontAPI):  # noqa: N801 - nom attendu par Vercel
 '''
 
 
-def routes_du_moteur() -> Set[str]:
+def routes_du_moteur() -> set[str]:
     """Routes réellement servies, lues dans le source du moteur."""
     source = (RACINE / "simulateur" / "dashboard.py").read_text(encoding="utf-8")
     return set(re.findall(r'chemin == "(/api/[a-z_]+)"', source))

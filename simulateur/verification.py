@@ -23,7 +23,6 @@ page, et le simulateur propose au citoyen de noter sa propre valeur sourcée.
 """
 
 from __future__ import annotations
-from typing import Dict
 
 from dataclasses import dataclass
 
@@ -42,7 +41,7 @@ FORMULAIRE_CONTRIBUTION = (
     "/issues/new?template=donnee-a-verifier.md"
 )
 
-STATUTS: Dict[str, str] = {
+STATUTS: dict[str, str] = {
     "verifie": "Vérifié",
     "partiel": "Partiellement vérifié",
     "date_decalee": "Chiffre daté",
@@ -68,7 +67,7 @@ INTERNE_DOSSIER = "Chiffrage interne au dossier de mandature : hypothèse, non v
 
 #: Statuts construits à la volée pour les cent neuf articles de la Constitution
 #: fusionnés dans le registre (voir `_statuts_constitution`).
-_STATUTS_CONSTITUTION: Dict[str, Verification] = {}
+_STATUTS_CONSTITUTION: dict[str, Verification] = {}
 
 #: Lettre affichée sur une fiche constitutionnelle : ce n'est pas un avis
 #: juridique, c'est une lecture de travail adossée au texte officiel.
@@ -81,7 +80,7 @@ NOTE_CONSTITUTION = (
 )
 
 
-def _statuts_constitution() -> Dict[str, Verification]:
+def _statuts_constitution() -> dict[str, Verification]:
     """Statuts des articles de la Constitution, fabriqués à la première demande.
 
     L'import est différé : `simulateur.constitution_analysee` s'appuie sur
@@ -105,7 +104,7 @@ def _statuts_constitution() -> Dict[str, Verification]:
 
 #: Leviers dont au moins une partie a été contrôlée sur une source officielle ou
 #: secondaire explicitement citée (voir `docs/PLAN_AUDIT_GLOBAL.md`, lots 2 et 3).
-VERIFICATIONS_LEVIERS: Dict[str, Verification] = {
+VERIFICATIONS_LEVIERS: dict[str, Verification] = {
     "tva_energie_5_5": Verification(
         "partiel", DATE_AUDIT,
         "https://bofip.impots.gouv.fr/bofip/14705-PGP.html/identifiant=BOI-RES-TVA-000209-20260826",
@@ -192,7 +191,7 @@ VERIFICATIONS_LEVIERS: Dict[str, Verification] = {
 }
 
 #: Articles du registre dont le texte ou le numéro a été contrôlé (lots 1 à 3).
-VERIFICATIONS_ARTICLES: Dict[str, Verification] = {
+VERIFICATIONS_ARTICLES: dict[str, Verification] = {
     "CC_2017_752_DC": Verification(
         "verifie", DATE_AUDIT,
         "https://www.legifrance.gouv.fr/cons/id/CONSTEXT000035597362",
@@ -293,7 +292,7 @@ def verification_article(identifiant: str) -> Verification:
     )
 
 
-def en_dict(cle: str, source: str = "") -> Dict[str, str]:
+def en_dict(cle: str, source: str = "") -> dict[str, str]:
     """Forme sérialisable, consommée par l'interface et l'API."""
     v = verification_levier(cle, source)
     return {

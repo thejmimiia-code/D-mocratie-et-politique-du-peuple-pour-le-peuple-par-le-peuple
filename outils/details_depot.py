@@ -13,7 +13,6 @@ le bloc exact à copier dans *Edit repository details*.
 """
 
 from __future__ import annotations
-from typing import Optional, Tuple
 
 import argparse
 import json
@@ -100,7 +99,7 @@ Réglages recommandés dans la même page
 """
 
 
-def _gh(*arguments: str) -> Tuple[int, str]:
+def _gh(*arguments: str) -> tuple[int, str]:
     gh = shutil.which("gh")
     if gh is None:
         return 127, "gh CLI absent"
@@ -108,7 +107,7 @@ def _gh(*arguments: str) -> Tuple[int, str]:
     return proc.returncode, (proc.stdout or proc.stderr).strip()
 
 
-def etat_actuel() -> Optional[dict]:
+def etat_actuel() -> dict | None:
     """Lit les réglages actuels du dépôt (None si l'API est indisponible)."""
     code, sortie = _gh("api", f"repos/{DEPOT}",
                        "--jq", "{description,homepage,topics,visibility,license:.license.spdx_id}")

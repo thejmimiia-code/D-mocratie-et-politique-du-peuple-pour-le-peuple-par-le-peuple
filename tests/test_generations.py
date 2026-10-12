@@ -5,20 +5,19 @@ et de l'Indice d'Harmonie Intergénérationnelle (IEHI).
 """
 
 import unittest
+
 from simulateur.model import (
     CohorteGeneration1Seniors,
     CohorteGeneration2Actifs,
     CohorteGeneration3Jeunesse,
+    DecisionPolitique,
     FluxCroisesIntergenerationnels,
     StrateCycleDeVieEtGenerations,
-    DecisionPolitique,
-    ResultatEtapeSimulation,
 )
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
     get_scenario_austerite_brutale,
+    get_scenario_mandature_5_ans,
 )
 
 

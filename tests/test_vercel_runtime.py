@@ -13,7 +13,6 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import Dict, Optional, Tuple
 from unittest.mock import patch
 
 # Garder les tests réseau déterministes et garantir le cache inscriptible comme
@@ -134,7 +133,7 @@ class TestCheminDePont(unittest.TestCase):
 class TestFonctionsVercelHTTP(unittest.TestCase):
     @staticmethod
     def requete(handler: type[BaseHTTPRequestHandler], methode: str, chemin: str,
-                corps: Optional[Dict[str, object]] = None) -> Tuple[int, str, str]:
+                corps: dict[str, object] | None = None) -> tuple[int, str, str]:
         serveur = ThreadingHTTPServer(("127.0.0.1", 0), handler)
         thread = threading.Thread(target=serveur.serve_forever, daemon=True)
         thread.start()

@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Tests pour le module de simulation multi-agents."""
 
-import unittest
-import sys
 import os
+import sys
+import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from simulateur.modele_multi_agents import (
-    TypeAgent,
-    StrategieConsommation,
-    StrategieInvestissement,
-    AgentMenage,
-    AgentEntreprise,
     AgentCollectivite,
+    AgentEntreprise,
+    AgentMenage,
     EnvironnementMarche,
     ModeleMultiAgents,
+    StrategieConsommation,
+    StrategieInvestissement,
     creer_modele_demo,
     executer_simulation,
 )

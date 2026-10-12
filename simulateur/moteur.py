@@ -3,9 +3,8 @@ simulateur/moteur.py — Moteur de simulation systémique à poupées russes (4 
 Calé rigoureusement sur les données et contraintes à l'instant T (AFT, INSEE, Eurostat, CGCT).
 """
 
-import math
 import hashlib
-from typing import List, Dict, Any, Tuple
+import math
 
 from simulateur.geopolitique_annuelle import (
     EchelonGeopolitique,
@@ -18,17 +17,7 @@ from simulateur.model import (
     EchelonMondial,
     EchelonNational,
     ResultatEtapeSimulation,
-    SousSecteurBlocCommunal,
-    SousSecteurDepartements,
-    SousSecteurRegions,
-    SousSecteurEtatCentral,
-    SousSecteurSecuriteSociale,
-    SousSecteurParlement,
     StrateCycleDeVieEtGenerations,
-    CohorteGeneration1Seniors,
-    CohorteGeneration2Actifs,
-    CohorteGeneration3Jeunesse,
-    FluxCroisesIntergenerationnels,
 )
 
 #: Délai de maturité des investissements à cycle long (années).
@@ -89,14 +78,14 @@ class MoteurSimulationSystemique:
         self.europe = europe or EchelonEuropeen()
         self.mondial = mondial or EchelonMondial()
         self.geo = geo or EchelonGeopolitique()
-        self.historique_etapes: List[ResultatEtapeSimulation] = []
+        self.historique_etapes: list[ResultatEtapeSimulation] = []
 
         # ── Références de calibrage « instant T » ─────────────────────────────
         # Centralisées ici pour que `moteur_parametrique.calibrer_contexte` puisse
         # recaler le moteur sur des données publiques réelles sans toucher à la
         # logique causale. Les valeurs par défaut reproduisent le calage du projet
         # (septembre 2026) : les tests et scénarios historiques sont inchangés.
-        self.reference: Dict[str, float] = {
+        self.reference: dict[str, float] = {
             "brent_usd": 82.5,
             "eur_usd": 1.08,
             "inflation_pct": 2.1,
@@ -122,12 +111,12 @@ class MoteurSimulationSystemique:
         # ── Profondeur temporelle : deux mandatures consécutives ─────────────
         # Registre des investissements à cycle long : (année de maturité, Md€).
         # Le rendement n'est compté qu'à maturité, jamais avant (courbe en J).
-        self.investissements_differes: List[Tuple[int, float]] = []
+        self.investissements_differes: list[tuple[int, float]] = []
         # Phase 2 (points P16-P21) : registres explicites de scénarios longs.
         self.dette_technique_infrastructures_mde: float = 0.0
         self.stock_adaptation_climat_mde: float = 0.0
-        self.investissements_capital_humain: List[Tuple[int, float]] = []
-        self.investissements_capacites_defense: List[Tuple[int, float]] = []
+        self.investissements_capital_humain: list[tuple[int, float]] = []
+        self.investissements_capacites_defense: list[tuple[int, float]] = []
 
     def _capital_humain_mature(self, annee: int) -> float:
         """Investissements éducatifs arrivés à maturité (proxy en Md€), P18."""
@@ -143,7 +132,7 @@ class MoteurSimulationSystemique:
             if annee >= annee_maturite
         ), 2)
 
-    def _investissements_matures(self, annee: int) -> Tuple[float, float]:
+    def _investissements_matures(self, annee: int) -> tuple[float, float]:
         """Stock mature (Md€) et rendement annuel (Md€ de PIB) à l'année donnée.
 
         Chaque programme investi rapporte, une fois mature,
@@ -172,7 +161,7 @@ class MoteurSimulationSystemique:
         if (isinstance(facteur_activite, bool) or not math.isfinite(facteur_activite)
                 or not 0 < facteur_activite <= 1):
             raise ValueError("facteur_activite doit être fini et dans ]0, 1]")
-        commentaires: List[str] = []
+        commentaires: list[str] = []
 
         # =========================================================================
         # 0. CHOCS MONDIAUX (Matières Premières, Devises, Taux Mondiaux) & PIB
@@ -1034,7 +1023,7 @@ class MoteurSimulationSystemique:
         satisfaction_sp = max(25.0, min(95.0, round(58.0 + (acces_sp - 65.0) * 0.6 - (self.local.tension_sociale_territoriale * 0.2), 1)))
 
         # Signature d'intégrité cryptographique SHA256 pour traçabilité d'audit
-        sig_sha = hashlib.sha256(f"PLF-{decision.annee}-{deficit_net_consolide:.2f}-{self.national.dette_maastricht_stock_mde:.2f}-{ratio_deficit_pib:.2f}".encode("utf-8")).hexdigest()[:16]
+        sig_sha = hashlib.sha256(f"PLF-{decision.annee}-{deficit_net_consolide:.2f}-{self.national.dette_maastricht_stock_mde:.2f}-{ratio_deficit_pib:.2f}".encode()).hexdigest()[:16]
 
         # =========================================================================
         # 7. INSTANTANÉ DE L'ÉTAPE CONSOLIDÉE

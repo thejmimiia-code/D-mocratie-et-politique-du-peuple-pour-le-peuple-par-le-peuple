@@ -47,7 +47,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .constitution_analysee import ARTICLES, article
 from .gouvernance_contrepouvoir import MECANISMES, VERROUS
@@ -57,7 +57,7 @@ from .reglements_lois import REGISTRE_LEGAL
 #: compétence, mais elles changent de composition, et leur jurisprudence bouge.
 DATE_OBSERVATION = "2026-10-12"
 
-NIVEAUX: Tuple[str, ...] = (
+NIVEAUX: tuple[str, ...] = (
     "Constitutionnel",
     "Administratif",
     "Judiciaire",
@@ -73,7 +73,7 @@ NIVEAUX: Tuple[str, ...] = (
 
 #: Ce qu'un acte d'une instance produit juridiquement. Le vocabulaire est fermé pour
 #: que `robustesse()` puisse comparer deux verrous sans comparer des mots.
-EFFETS: Dict[str, str] = {
+EFFETS: dict[str, str] = {
     "censure": "le texte disparaît ou est promulgué amendé",
     "abrogation_rejet": "le juge refuse d'écarter la norme",
     "annulation": "l'acte disparaît rétroactivement",
@@ -93,7 +93,7 @@ EFFETS: Dict[str, str] = {
 
 #: Niveaux de texte, du plus attaquable au plus verrouillé. Le « verrou de retour » d'une
 #: fente est le niveau le plus bas parmi ses prémisses : c'est par là qu'on la défait.
-ETAGES: Tuple[str, ...] = (
+ETAGES: tuple[str, ...] = (
     "réglementaire",
     "loi ordinaire",
     "loi organique",
@@ -104,7 +104,7 @@ ETAGES: Tuple[str, ...] = (
 
 #: Qui peut faire annuler quoi, par étage. Un « trou » est toujours aussi un endroit où
 #: le niveau d'attaque n'existe pas.
-QUI_ATTAQUE: Dict[str, Tuple[str, ...]] = {
+QUI_ATTAQUE: dict[str, tuple[str, ...]] = {
     "réglementaire": ("juge administratif (REC pour excès de pouvoir)", "exception d'illégalité devant tout juge"),
     "loi ordinaire": ("Conseil constitutionnel (a priori, art. 61 al. 1)", "QPC (art. 61-1)", "exception d'inconventionnalité devant le juge national"),
     "loi organique": ("Conseil constitutionnel obligatoire (art. 61 al. 1)", "QPC si elle légifère"),
@@ -114,7 +114,7 @@ QUI_ATTAQUE: Dict[str, Tuple[str, ...]] = {
 }
 
 
-def _references(fondement: Tuple[str, ...]) -> Dict[str, List[str]]:
+def _references(fondement: tuple[str, ...]) -> dict[str, list[str]]:
     """Classe les fondements : articles de fiche, identifiants du registre, autres.
 
     Un fondement doit être résoluble : soit un numéro d'article de la Constitution, soit
@@ -140,21 +140,21 @@ class Instance:
     nom: str
     niveau: str
     mission: str
-    fondement: Tuple[str, ...] = ()
+    fondement: tuple[str, ...] = ()
     composition: str = ""
     designation: str = ""
-    saisissable_par: Tuple[str, ...] = ()
-    effets: Tuple[str, ...] = ()
-    peut_bloquer: Tuple[str, ...] = ()      # clés de mécanismes du module contre-pouvoirs
-    verrous: Tuple[str, ...] = ()           # clés de verrous chiffrés du même module
+    saisissable_par: tuple[str, ...] = ()
+    effets: tuple[str, ...] = ()
+    peut_bloquer: tuple[str, ...] = ()      # clés de mécanismes du module contre-pouvoirs
+    verrous: tuple[str, ...] = ()           # clés de verrous chiffrés du même module
     juge_par: str = ""
-    delais: Tuple[Tuple[str, int], ...] = ()
+    delais: tuple[tuple[str, int], ...] = ()
     observation: str = ""
     fiabilite: str = "texte"                # texte | pratique | a_verifier
-    leviers: Tuple[str, ...] = ()
-    pistes: Tuple[str, ...] = ()
+    leviers: tuple[str, ...] = ()
+    pistes: tuple[str, ...] = ()
 
-    def en_dict(self) -> Dict[str, Any]:
+    def en_dict(self) -> dict[str, Any]:
         refs = _references(self.fondement)
         return {
             "cle": self.cle,
@@ -194,7 +194,7 @@ class Instance:
 # saisines et les délais sont rattachés aux verrous chiffrés du module des
 # contre-pouvoirs pour que le même nombre ne vive pas à deux endroits.
 
-INSTANCES: Dict[str, Instance] = {
+INSTANCES: dict[str, Instance] = {
     "conseil_constitutionnel": Instance(
         cle="conseil_constitutionnel",
         nom="Conseil constitutionnel",
@@ -757,7 +757,7 @@ class Battement:
     condition: str = ""
     note: str = ""
 
-    def en_dict(self) -> Dict[str, Any]:
+    def en_dict(self) -> dict[str, Any]:
         return {
             "cle": self.cle,
             "de": self.de,
@@ -779,13 +779,13 @@ class Trajet:
     cle: str
     nom: str
     categorie: str                # legislatif | budgetaire | constitutionnel | controle | exception
-    etapes: Tuple[Battement, ...]
-    articles: Tuple[str, ...] = ()
+    etapes: tuple[Battement, ...]
+    articles: tuple[str, ...] = ()
     issue: str = ""
-    blocages: Tuple[str, ...] = ()      # clés de mécanismes capables d'arrêter le trajet
+    blocages: tuple[str, ...] = ()      # clés de mécanismes capables d'arrêter le trajet
     note: str = ""
 
-    def en_dict(self, donnees: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    def en_dict(self, donnees: dict[str, Any] | None = None) -> dict[str, Any]:
         etapes = [b.en_dict() for b in self.etapes]
         jours = sum(b.jours for b in self.etapes)
         return {
@@ -821,7 +821,7 @@ def _b(cle: str, de: str, vers: str, acte: str, fondement: str = "", jours: int 
     return Battement(cle, de, vers, acte, fondement, jours, sens, condition, note)
 
 
-TRAJETS: Dict[str, Trajet] = {
+TRAJETS: dict[str, Trajet] = {
     "projet_ordinaire": Trajet(
         cle="projet_ordinaire",
         nom="Projet de loi ordinaire, procédure avec procédure accélérée",
@@ -1183,7 +1183,7 @@ TRAJETS: Dict[str, Trajet] = {
 }
 
 
-def trajet(cle: str) -> Optional[Trajet]:
+def trajet(cle: str) -> Trajet | None:
     """Trajet par sa clé, tolérant aux notations usuelles (« budget », « 47 »)."""
     if not cle:
         return None
@@ -1201,7 +1201,7 @@ def trajet(cle: str) -> Optional[Trajet]:
     return None
 
 
-def oscillation(cle: str, jours_restants: Optional[int] = None) -> Dict[str, Any]:
+def oscillation(cle: str, jours_restants: int | None = None) -> dict[str, Any]:
     """Le trajet traduit en temps : ce qui reste, ce qui bloque, ce qui verrouille.
 
     Le calcul est déterministe et borné par les délais de rigueur des articles cités :
@@ -1244,7 +1244,7 @@ def oscillation(cle: str, jours_restants: Optional[int] = None) -> Dict[str, Any
     }
 
 
-def asymetrie_des_chambres() -> List[Dict[str, Any]]:
+def asymetrie_des_chambres() -> list[dict[str, Any]]:
     """Ce que le Sénat peut retarder, ce qu'il peut empêcher — trajet par trajet.
 
     La règle non écrite du bicamérisme français tient en une distinction : sur une loi
@@ -1272,9 +1272,9 @@ def asymetrie_des_chambres() -> List[Dict[str, Any]]:
     return sorties
 
 
-def rapport_de_temps() -> Dict[str, Any]:
+def rapport_de_temps() -> dict[str, Any]:
     """Vue d'ensemble : quels battements usent qui, en jours de rigueur."""
-    par_sens: Dict[str, Dict[str, int]] = {}
+    par_sens: dict[str, dict[str, int]] = {}
     for value in TRAJETS.values():
         for battement in value.etapes:
             case = par_sens.setdefault(battement.sens, {"battements": 0, "jours": 0})
@@ -1363,13 +1363,13 @@ INSTANCES["peuple"] = Instance(
 # de levier qui ne figure pas au catalogue est retirée du champ et signalée. Une liste
 # d'attracteurs n'a de valeur que si elle est adressable.
 
-FILTRES_NORMALISATION: Dict[str, List[str]] = {}
+FILTRES_NORMALISATION: dict[str, list[str]] = {}
 
 
-def _normaliser() -> Dict[str, List[str]]:
+def _normaliser() -> dict[str, list[str]]:
     from .parametres import LEVIERS
 
-    signales: Dict[str, List[str]] = {}
+    signales: dict[str, list[str]] = {}
     for cle, instance in list(INSTANCES.items()):
         retraits = []
         verrous = []
@@ -1416,17 +1416,17 @@ class Strategie:
     nom: str
     famille: str                  # faire_avancer | faire_reculer | armer | contourner | verrouiller
     acte: str
-    fondement: Tuple[str, ...] = ()
+    fondement: tuple[str, ...] = ()
     condition: str = ""
     comptage: str = ""             # le nombre qui décide : voix, jours, signatures
-    verrous: Tuple[str, ...] = ()
+    verrous: tuple[str, ...] = ()
     deja_vue: str = ""             # antécédents documentés, jamais supposés
-    contree_par: Tuple[str, ...] = ()
+    contree_par: tuple[str, ...] = ()
     instance: str = ""
     fiabilite: str = "texte"
-    pistes: Tuple[str, ...] = ()
+    pistes: tuple[str, ...] = ()
 
-    def en_dict(self) -> Dict[str, Any]:
+    def en_dict(self) -> dict[str, Any]:
         return {
             "cle": self.cle,
             "nom": self.nom,
@@ -1446,11 +1446,11 @@ class Strategie:
         }
 
 
-FAMILLES_STRATEGIE: Tuple[str, ...] = (
+FAMILLES_STRATEGIE: tuple[str, ...] = (
     "faire_avancer", "faire_reculer", "armer", "contourner", "verrouiller",
 )
 
-STRATEGIES: Dict[str, Strategie] = {
+STRATEGIES: dict[str, Strategie] = {
     "engagement_49_3": Strategie(
         cle="engagement_49_3",
         nom="Faire adopter sans vote en engageant la responsabilité",
@@ -1693,8 +1693,8 @@ class Fente:
     type: str                      # fente | porte | droit_sans_juge
     sens: str                      # a_qui_sert_le_trou
     deduction: str
-    premisses: Tuple[str, ...]
-    articles: Tuple[str, ...] = ()
+    premisses: tuple[str, ...]
+    articles: tuple[str, ...] = ()
     raison_du_silence: str = ""
     ce_que_ca_change: str = ""
     etage: str = "loi ordinaire"
@@ -1702,10 +1702,10 @@ class Fente:
     point_de_vigilance: str = ""
     computation: str = ""          # nom de la fonction qui recalcule l'effet chiffré
     fiabilite: str = "deduite"     # deduite | a_verifier | ecrite_sous_usee
-    instances: Tuple[str, ...] = ()
-    pistes: Tuple[str, ...] = ()
+    instances: tuple[str, ...] = ()
+    pistes: tuple[str, ...] = ()
 
-    def en_dict(self) -> Dict[str, Any]:
+    def en_dict(self) -> dict[str, Any]:
         return {
             "cle": self.cle,
             "nom": self.nom,
@@ -1728,7 +1728,7 @@ class Fente:
         }
 
 
-def _resoudre(premisse: str) -> Dict[str, Any]:
+def _resoudre(premisse: str) -> dict[str, Any]:
     """Vérifie une prémisses : « art:89 », « reg:LOI_ORG_2009_403 », « verrou:x »,
     « mecanisme:x », « instance:x », « jurisprudence:x » (non vérifiable ici)."""
     genre, _, valeur = (premisse or "").partition(":")
@@ -1761,7 +1761,7 @@ def _resoudre(premisse: str) -> Dict[str, Any]:
     return sortie
 
 
-FENTES: Dict[str, Fente] = {
+FENTES: dict[str, Fente] = {
     "congres_par_exprimes": Fente(
         cle="congres_par_exprimes",
         nom="Le Congrès se calcule sur les votants, pas sur les sièges",
@@ -2161,7 +2161,7 @@ FENTES: Dict[str, Fente] = {
 }
 
 
-def arithmetique_abstention_congres(votants: int) -> Dict[str, Any]:
+def arithmetique_abstention_congres(votants: int) -> dict[str, Any]:
     """Combine l'article 89 et l'arithmétique des contre-pouvoirs pour montrer l'effet."""
     from .gouvernance_contrepouvoir import seuil as seuil_chiffre
 
@@ -2180,7 +2180,7 @@ def arithmetique_abstention_congres(votants: int) -> Dict[str, Any]:
     }
 
 
-def effets_de_fente(cle: str) -> Dict[str, Any]:
+def effets_de_fente(cle: str) -> dict[str, Any]:
     """Les fentes qui se chiffrent se chiffrent ; les autres n'inventent rien."""
     if cle == "congres_par_exprimes":
         return {
@@ -2214,7 +2214,7 @@ def effets_de_fente(cle: str) -> Dict[str, Any]:
 
 #: Barème de robustesse. Il est volontairement brutal : il ne note pas la valeur
 #: politique d'une fente, il note la solidité de ce qui la rend défendable.
-POIDS_ROBUSTESSE: Dict[str, int] = {
+POIDS_ROBUSTESSE: dict[str, int] = {
     "base_ecrite": 30,
     "clarte_de_competence": 20,
     "procedure_ancre": 20,
@@ -2225,7 +2225,7 @@ POIDS_ROBUSTESSE: Dict[str, int] = {
 ARTICLES_DE_COMPETENCE = ("34", "37", "39", "44", "45", "47", "48", "61", "89")
 
 
-def robustesse(fente: Fente) -> Dict[str, Any]:
+def robustesse(fente: Fente) -> dict[str, Any]:
     """Score de défendabilité d'une fente, barème公开 et recalculable.
 
     Rien ici ne dit qu'une fente est « irréfutable ». Le barème mesure quatre choses que
@@ -2279,7 +2279,7 @@ def robustesse(fente: Fente) -> Dict[str, Any]:
     }
 
 
-def etage_de_verrouillage(fente: Fente) -> Dict[str, Any]:
+def etage_de_verrouillage(fente: Fente) -> dict[str, Any]:
     """Par quel étage de texte la fente se défait, et qui y a accès."""
     etage = fente.etage if fente.etage in ETAGES else ETAGES[0]
     return {
@@ -2292,7 +2292,7 @@ def etage_de_verrouillage(fente: Fente) -> Dict[str, Any]:
     }
 
 
-def instance(cle: str) -> Optional[Instance]:
+def instance(cle: str) -> Instance | None:
     """Instance par sa clé, ou par un début de nom (« conseil » finds Conseil d'État)."""
     propre = (cle or "").strip().lower()
     if propre in INSTANCES:
@@ -2303,7 +2303,7 @@ def instance(cle: str) -> Optional[Instance]:
     return None
 
 
-def instances_pour_article(numero: str) -> List[Dict[str, Any]]:
+def instances_pour_article(numero: str) -> list[dict[str, Any]]:
     """Les instances dont un article fonde, limite ou arme une compétence."""
     propre = (numero or "").strip()
     fiche = article(propre)
@@ -2324,7 +2324,7 @@ def instances_pour_article(numero: str) -> List[Dict[str, Any]]:
     return sorties
 
 
-def saisines_pour(acteur: str) -> List[Dict[str, Any]]:
+def saisines_pour(acteur: str) -> list[dict[str, Any]]:
     """Ce qu'un acteur (groupe, électeur, justiciable, soixante-signataires) peut déclencher."""
     mot = (acteur or "").strip().lower()
     if len(mot) < 3:
@@ -2349,7 +2349,7 @@ def saisines_pour(acteur: str) -> List[Dict[str, Any]]:
     return sorties
 
 
-def qui_juge(cle: str) -> Dict[str, Any]:
+def qui_juge(cle: str) -> dict[str, Any]:
     """La chaîne de contrôle d'une instance, jusqu'à ce qu'elle bute sur le silence."""
     valeur = instance(cle)
     if valeur is None:
@@ -2381,7 +2381,7 @@ def qui_juge(cle: str) -> Dict[str, Any]:
     }
 
 
-def boucle_de_controles() -> List[Dict[str, Any]]:
+def boucle_de_controles() -> list[dict[str, Any]]:
     """Les boucles de contrôle complètes : où elles se ferment, où elles n'existent pas."""
     boucles = {
         "decret": ("réglementaire", ["préfet", "juridictions_administratives", "conseil_etat", "cjue"]),
@@ -2413,8 +2413,8 @@ def boucle_de_controles() -> List[Dict[str, Any]]:
 
 
 def strategies_pour(
-    famille: Optional[str] = None, instance_cle: Optional[str] = None
-) -> List[Dict[str, Any]]:
+    famille: str | None = None, instance_cle: str | None = None
+) -> list[dict[str, Any]]:
     """Les stratégies documentées, filtrables par famille ou par instance."""
     sorties = []
     for value in STRATEGIES.values():
@@ -2426,7 +2426,7 @@ def strategies_pour(
     return sorties
 
 
-def fentes_pour(numero: Optional[str] = None, type_fente: Optional[str] = None) -> List[Dict[str, Any]]:
+def fentes_pour(numero: str | None = None, type_fente: str | None = None) -> list[dict[str, Any]]:
     """Fentes et portes, filtrables par article ou par nature."""
     sorties = []
     for value in FENTES.values():
@@ -2447,7 +2447,7 @@ def fentes_pour(numero: Optional[str] = None, type_fente: Optional[str] = None) 
     return sorties
 
 
-def rechercher(terme: str) -> List[Dict[str, Any]]:
+def rechercher(terme: str) -> list[dict[str, Any]]:
     """Recherche plein texte sur les quatre registres du module."""
     mot = _sans_accents((terme or "").strip())
     if len(mot) < 3:
@@ -2486,14 +2486,14 @@ def _sans_accents(texte: str) -> str:
     return "".join(c for c in decompose if not unicodedata.combining(c))
 
 
-def coherence_avec_le_droit() -> Dict[str, Any]:
+def coherence_avec_le_droit() -> dict[str, Any]:
     """Aucune référence du module ne doit pointer dans le vide.
 
     C'est le contrat anti-décoration : une instance dont l'article n'existe pas, une
     stratégie dont l'instance est inventée, une fente dont une prémisses n'est pas
     résoluble, ou une fente annoncée chiffrée sans calcul disponible — tout remonte ici.
     """
-    problemes: Dict[str, List[str]] = {
+    problemes: dict[str, list[str]] = {
         "instances_niveau_invalide": [],
         "instances_effet_inconnu": [],
         "instances_fondement_non_resolu": [],
@@ -2561,7 +2561,7 @@ def coherence_avec_le_droit() -> Dict[str, Any]:
     }
 
 
-def synthese_pour_api() -> Dict[str, Any]:
+def synthese_pour_api() -> dict[str, Any]:
     """Le payload complet, sérialisable en JSON, avec ses dates et ses limites."""
     tableaux = []
     for cle in INSTANCES:

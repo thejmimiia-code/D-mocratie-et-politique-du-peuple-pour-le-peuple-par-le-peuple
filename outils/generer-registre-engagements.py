@@ -28,8 +28,8 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
 
-from dataclasses import asdict  # noqa: E402
 from contextlib import redirect_stdout  # noqa: E402
+from dataclasses import asdict  # noqa: E402
 from io import StringIO  # noqa: E402
 
 from simulateur.contradiction import objections, portee_du_levier  # noqa: E402
