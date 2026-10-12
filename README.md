@@ -75,6 +75,8 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 * **[`docs/03_ECONOMIES_ET_EFFICACITE_ETAT.md`](docs/03_ECONOMIES_ET_EFFICACITE_ETAT.md)** : Économies de fonctionnement (**+24 Md€ / an**) sans casse sociale (fusion doublons région/département, achats massifiés allotis 30% PME, niches inefficaces).
 * **[`docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md`](docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md)** : Baisse TVA énergie à 5,5 % (**-9 Md€ / an**, gain 150-300 €/foyer), déficit ramené sous les 3 % du PIB, désendettement net de 51 Md€/an.
 * **[`docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md`](docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md)** : 10 fiches de riposte tactique démontant les pièges des oppositions et éditorialistes.
+
+> Les 3 taux structurants du plan — 3 % de déficit (Maastricht), 30 % de marchés réservés aux PME (CCP L.2113-10), 5,5 % de TVA énergie (directive 2022/542) — sont vérifiés par le garde-fou des compteurs comme les 156 leviers.
 * **[`docs/ANALYSE_TENSION_GLOBALE_2026.md`](docs/ANALYSE_TENSION_GLOBALE_2026.md)** : analyse des tensions géopolitiques mondiales (conflits actifs, arsenaux nucléaires, chokepoints, chemins d'escalade vers une guerre mondiale).
 * **[`docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`](docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md)** : **strate 5** — audit des éléments manquants, phases de recherche et calibrage sourcé (SIPRI, OTAN La Haye, AIE, PSE, OCDE), équations de transmission, 5 nouveaux scénarios et leur suite de validation.
 

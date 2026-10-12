@@ -592,7 +592,7 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
                     "conseils_de_quartier_count": 1550,
                     "quartiers_prioritaires_ville_qpv": 1514,
                     "communes_rurales_moins_1000": 25800,
-                    "bourgs_centres_1k_10k": 7650,
+                    "bourgs_centres_1k_10k": 7629,
                     "villes_moyennes_10k_50k": 1280,
                     "grandes_agglomerations_50k_200k": 180,
                     "metropoles_200k_plus": 22,

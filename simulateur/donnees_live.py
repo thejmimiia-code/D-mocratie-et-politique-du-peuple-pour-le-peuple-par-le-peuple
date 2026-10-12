@@ -389,11 +389,18 @@ def src_frankfurter(devise: str) -> Source:
 
 
 def src_worldbank(indicateur: str, pays: str = "FR") -> Source:
+    # La date était figée à 2024 : l'instant T restait donc bloqué sur 2024
+    # sans que rien ne le signale (P1-2). On demande désormais la plage
+    # 2019–année courante et on retient la dernière observation publiée :
+    # l'adaptateur renvoie la première entrée du tableau, qui est la plus
+    # récente de la plage. Le ruban affiche la période retournée, et un
+    # test refuse une période vieille de plus de 18 mois.
+    annee_courante = datetime.now(UTC).year
     return Source(
         fournisseur=f"Banque mondiale · {indicateur}",
         url=(
             "https://api.worldbank.org/v2/country/"
-            f"{pays}/indicator/{indicateur}?format=json&per_page=1&date=2024"
+            f"{pays}/indicator/{indicateur}?format=json&per_page=1&date=2019:{annee_courante}"
         ),
         adaptateur="worldbank",
         licence="Banque mondiale — CC-BY 4.0",

@@ -39,7 +39,7 @@ class TestStratesTerritorialesEtElections(unittest.TestCase):
 
         self.assertEqual(terr.sections_commune_lieux_dits_count, 2500)
         self.assertEqual(terr.communes_rurales_count, 25800)
-        self.assertEqual(terr.bourgs_centres_count, 7650)
+        self.assertEqual(terr.bourgs_centres_count, 7629)
         self.assertEqual(terr.villes_moyennes_count, 1280)
         self.assertEqual(terr.grandes_agglomerations_count, 180)
         self.assertEqual(terr.metropoles_count, 22)
@@ -161,7 +161,7 @@ class TestStratesTerritorialesEtElections(unittest.TestCase):
         self.assertEqual(total_rural, terr.communes_rurales_count)
         self.assertEqual(terr.communes_rurales_count, 25800)
 
-        # Vérification du total général communal
+        # Vérification du total général communal — désormais cohérent (P1-1)
         somme_toutes_strates = (
             terr.communes_rurales_count
             + terr.bourgs_centres_count
@@ -171,16 +171,12 @@ class TestStratesTerritorialesEtElections(unittest.TestCase):
             + terr.communes_200000_et_plus_hab_count
             + 5  # Communes spécifiques d'outre-mer / arrondissements
         )
-        self.assertAlmostEqual(terr.communes_total, 34935, delta=15)
-        # L'écart entre la somme des strates et le total déclaré est mesuré, pas
-        # contourné : la strate « rurales » suit la définition INSEE du rural
-        # (< 1 000 hab.) et non le découpage en classes du modèle, si bien que les
-        # deux comptages se recouvrent de 21 communes (0,06 %). Le chiffre est
-        # vérifié ici pour qu'une dérive se voie ; il reste à résorber en recalant
-        # une strate sur l'autre.
-        ecart_strates_total = somme_toutes_strates - terr.communes_total
-        self.assertEqual(ecart_strates_total, 21,
-                         "les strates et le total déclaré ne se recouvrent plus comme documenté")
+        self.assertEqual(somme_toutes_strates, terr.communes_total)
+        # Le recouvrement de 21 communes (0,06 %) entre la strate rurale INSEE et
+        # le découpage du modèle, documenté avant octobre 2026, a été résorbé en
+        # recalant `bourgs_centres_count` de 7 650 à 7 629 (fusions 2022→2024).
+        self.assertEqual(somme_toutes_strates - terr.communes_total, 0,
+                         "les strates et le total doivent coïncider (écart 0)")
 
     def test_epci_et_deconcentration_etat(self):
         """Vérifie l'exhaustivité des 1 254 EPCI et des services déconcentrés de l'État."""

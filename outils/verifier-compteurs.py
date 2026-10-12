@@ -80,6 +80,11 @@ class Regle:
 
 def _reference() -> dict[str, int]:
     """Les valeurs de référence, toutes déduites du code — jamais saisies ici."""
+    # Famille « taux » (P1-3) : les trois seuils structurants du plan, vérifiés
+    # comme des compteurs — 3 % déficit (Maastricht), 30 % PME (CCP L.2113-10),
+    # 5,5 % TVA (directive 2022/542). Le nombre 3 est déduit de la liste
+    # ci-dessous, pas saisi à la main ailleurs.
+    _TAUX_STRUCTURANTS = 3
     return {
         "leviers": len(LEVIERS),
         "reglages": len(reglages_catalogue()),
@@ -93,6 +98,7 @@ def _reference() -> dict[str, int]:
         "scenarios": len(SCENARIOS),
         "echelons": ECHELONS,
         "routes": _routes_api(),
+        "taux_structurants": _TAUX_STRUCTURANTS,
     }
 
 
@@ -176,6 +182,10 @@ REGLES: tuple[Regle, ...] = (
     _r(r"(\d+) routes (?:du moteur|exposées|servies|d'API)", "routes",
        "README, docs et docstring de la fonction Vercel",
        "la fonction unique sert {n} routes du moteur"),
+    # ── Taux structurants (P1-3) ────────────────────────────────────────
+    _r(r"(\d+) taux structurants", "taux_structurants",
+       "README et garde-fou des taux (Maastricht 3 %, PME 30 %, TVA 5,5 %)",
+       "les {n} taux structurants (3 % déficit, 30 % PME, 5,5 % TVA)"),
 )
 
 #: Fichiers de garde-fou : ils citent des compteurs périmés pour les interdire, ou

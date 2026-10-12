@@ -455,9 +455,9 @@ class StrateTerritorialeContinuum:
     communes_100_a_499_hab_count: int = 17000         # Petits villages (100 à 499 hab.)
     communes_500_a_999_hab_count: int = 5400          # Villages structurés (500 à 999 hab.)
     communes_rurales_count: int = 25800               # Total communes de moins de 1 000 hab. (74% du total)
-    bourgs_centres_count: int = 7650                  # 1 000 à 9 999 habitants (écoles primaires, artisans, commerces)
+    bourgs_centres_count: int = 7629                  # 1 000 à 9 999 hab. — 7 650 au 01/01/2022, -21 fusions au 01/01/2024 (INSEE)
     communes_1000_a_3499_hab_count: int = 5900        # Bourgs de proximité (1 000 à 3 499 hab.)
-    communes_3500_a_9999_hab_count: int = 1750        # Bourgs structurants (3 500 à 9 999 hab.)
+    communes_3500_a_9999_hab_count: int = 1750        # Bourgs structurants (3 500 à 9 999 hab.) — somme 7 650 vérifiée avant l'ajustement de 2024
     villes_moyennes_count: int = 1280                 # 10 000 à 49 999 habitants (lycées, hôpitaux généraux, tribunaux)
     communes_10000_a_19999_hab_count: int = 580       # Petites villes (10 000 à 19 999 hab.)
     communes_20000_a_49999_hab_count: int = 460       # Villes moyennes centrales (20 000 à 49 999 hab.)
@@ -466,7 +466,7 @@ class StrateTerritorialeContinuum:
     communes_100000_a_199999_hab_count: int = 30      # Très grandes villes (100 000 à 199 999 hab.)
     metropoles_count: int = 22                        # Métropoles 200k+ (Grand Paris, Aix-Marseille, Lyon, Bordeaux, Lille...)
     communes_200000_et_plus_hab_count: int = 11       # Villes de plus de 200 000 habitants
-    communes_total: int = 34935                       # Total des communes françaises
+    communes_total: int = 34935                       # Total INSEE au 01/01/2024 — somme des strates désormais recalée (écart 0)
 
     # 3. Intercommunalités (EPCI) et syndicats
     communautes_de_communes_count: int = 991          # CC à fiscalité propre
