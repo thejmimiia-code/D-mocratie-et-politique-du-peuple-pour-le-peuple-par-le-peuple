@@ -151,7 +151,7 @@ class TestPhase2DeuxMandatures(unittest.TestCase):
                 self.assertTrue(LEVIERS[levier].source.strip())
         flux = construire_flux(parametres, 0)
         self.assertGreater(flux["depenses_nouvelles_mde"], 0.0)
-        self.assertEqual(len(LEVIERS), 101)
+        self.assertEqual(len(LEVIERS), 149)
         self.assertIn("entretien_capital_public", PRESETS["double_mandature"]["parametres"])
 
     def test_p21_sortie_est_un_ledger_pas_un_score_composite(self):

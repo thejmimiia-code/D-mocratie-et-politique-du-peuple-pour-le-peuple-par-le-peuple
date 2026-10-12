@@ -51,6 +51,7 @@ ROUTES: Tuple[str, ...] = (
     "contrepouvoirs",
     "instances",
     "dynamiques",
+    "nuances",
 )
 
 GABARIT = '''"""Fonction Vercel — route {route} du simulateur.

@@ -613,7 +613,7 @@ class TestReglagesPartageables(unittest.TestCase):
         self.assertIn('id="avis-lien"', self.page)
 
     def test_le_lien_ne_transporte_que_ce_qui_a_bouge(self):
-        """Les 101 paramètres n'ont rien à faire dans une adresse."""
+        """Les 149 paramètres n'ont rien à faire dans une adresse."""
         self.assertIn("function reglagesModifies()", self.script)
         self.assertIn("function lienReglages()", self.script)
         self.assertIn("?sim=", self.script)

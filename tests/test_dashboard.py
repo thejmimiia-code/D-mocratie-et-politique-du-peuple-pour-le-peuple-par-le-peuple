@@ -969,3 +969,79 @@ class TestCacheDesBulles(unittest.TestCase):
         _, complet = self._duree("/api/bulles?detail=resume")
         self.assertGreater(len(complet.get("bulles", {})), 50)
         self.assertEqual(sorted(bulles), ["tva_taux_normal"])
+
+
+class TestNuancesServies(unittest.TestCase):
+    """/api/nuances : les réglages institutionnels recalculés, en HTTP."""
+
+    from simulateur.nuances_institutionnelles import INDICES, reglages_catalogue
+
+    @classmethod
+    def setUpClass(cls):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("", 0))
+        cls.port = sock.getsockname()[1]
+        sock.close()
+        cls.server = create_server("127.0.0.1", cls.port)
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+
+    def _appel(self, chemin: str):
+        url = f"http://127.0.0.1:{self.__class__.port}{chemin}"
+        try:
+            with urllib.request.urlopen(url, timeout=60) as reponse:
+                return reponse.status, json.loads(reponse.read().decode("utf-8"))
+        except urllib.error.HTTPError as erreur:
+            return erreur.code, json.loads(erreur.read().decode("utf-8"))
+
+    def test_la_synthese_porte_tous_les_etages(self):
+        statut, donnees = self._appel("/api/nuances")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["objet"], "nuances_institutionnelles")
+        self.assertEqual(donnees["resume"]["reglages_disponibles"], len(TestNuancesServies.reglages_catalogue()))
+        self.assertEqual(set(donnees["indices"]), set(TestNuancesServies.INDICES))
+        self.assertTrue(all(i["valeur"] == 50.0 for i in donnees["indices"].values()))
+        self.assertEqual(donnees["coherence"]["cibles_inconnues"], [])
+        self.assertTrue(donnees["limites"])
+
+    def test_reglage_unique_renseigne_sa_fiche(self):
+        statut, donnees = self._appel("/api/nuances?reglage=reglage_censure_assiette")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["cle"], "reglage_censure_assiette")
+        self.assertEqual(donnees["touchant"][0]["verrou"], "censure_voix")
+        self.assertTrue(donnees["fentes_affectees"])
+        statut, erreur = self._appel("/api/nuances?reglage=pas_un_reglage")
+        self.assertEqual(statut, 404)
+        self.assertIn("reglage_censure_assiette", erreur["reglages"])
+
+    def test_parametres_recalcules_en_http(self):
+        encoded = urllib.parse.quote(json.dumps({"reglage_delai_budget_retraite": 20.0}))
+        statut, donnees = self._appel(f"/api/nuances?parametres={encoded}")
+        self.assertEqual(statut, 200)
+        self.assertEqual(donnees["seuils"]["budget_an_delai"]["regle"], 20)
+        statut, erreur = self._appel("/api/nuances?parametres=%7Bpas%20du%20json")
+        self.assertEqual(statut, 400)
+
+    def test_article_niveau_et_index(self):
+        _, donnees = self._appel("/api/nuances?article=CONST_ART_49")
+        self.assertIn("reglage_49_3_interdiction", {l["reglage"] for l in donnees["reglages"]})
+        _, niveau = self._appel("/api/nuances?niveau=Territorial")
+        self.assertEqual(niveau["tableau"]["niveau"], "Territorial")
+        self.assertTrue(niveau["tableau"]["reglages"])
+        self.assertEqual(self._appel("/api/nuances?niveau=Mars")[0], 404)
+        _, indice = self._appel("/api/nuances?index=vitesse_legislative")
+        self.assertEqual(indice["cle"], "vitesse_legislative")
+        self.assertEqual(self._appel("/api/nuances?index=bidon")[0], 404)
+
+    def test_recherche_sur_les_reglages(self):
+        _, donnees = self._appel("/api/nuances?chercher=quorum")
+        cles = {ligne["cle"] for ligne in donnees["reglages"]}
+        self.assertIn("reglage_congres_quorum", cles)
+        self.assertTrue(all(ligne["niveau"] for ligne in donnees["reglages"]))
+        self.assertEqual(donnees["nombre"], len(donnees["reglages"]))
+        self.assertEqual(self._appel("/api/nuances?chercher=zzz")[1]["reglages"], [])

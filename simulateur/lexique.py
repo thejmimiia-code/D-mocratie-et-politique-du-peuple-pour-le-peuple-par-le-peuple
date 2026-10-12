@@ -877,7 +877,7 @@ TERMES: Tuple[Terme, ...] = (
         definition="Un réglage. Chaque levier correspond à une décision"
                    " publique possible : un taux, un montant, une règle activée"
                    " ou non. Bouger un levier relance toute la simulation.",
-        repere="101 leviers répartis en 14 familles.",
+        repere="149 leviers répartis en 14 familles, dont 48 réglages institutionnels.",
         formes=("levier", "leviers", "réglage", "curseur"),
         voir=("domaine", "preset"),
     ),

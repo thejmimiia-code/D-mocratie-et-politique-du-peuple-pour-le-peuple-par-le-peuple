@@ -24,7 +24,10 @@ Deux niveaux de service cohabitent :
       - `GET  /api/instances`    : les autorités qui gravitent à chaque étage (`?instance=…`,
                                  `?article=49`, `?saisine=soixante`, `?chercher=…`) ;
       - `GET  /api/dynamiques`   : yoyo parlementaire et fentes non écrites (`?trajet=47`,
-                                 `?fente=…`, `?strategie=…`, `?famille=…`, `?boucles=1`).
+                                 `?fente=…`, `?strategie=…`, `?famille=…`, `?boucles=1`) ;
+      - `GET  /api/nuances`      : réglages institutionnels recalculés (`?parametres={"…":1}`,
+                                 `?reglage=…`, `?article=49`, `?niveau=Territorial`,
+                                 `?index=vitesse_legislative`, `?chercher=…`, sinon synthèse).
 
   * **Scénarios historiques** du dépôt, conservés à l'identique pour la
     compatibilité (scripts, CI, utilisateurs) :
@@ -641,6 +644,72 @@ class DashboardHandler(BaseHTTPRequestHandler):
                                      "asymetrie": autorites.asymetrie_des_chambres()})
                 else:
                     self._send_json(autorites.synthese_pour_api())
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/nuances":
+            # Les réglages institutionnels ne sont pas de la décoration : cette route
+            # recalcule seuils, délais, fenêtre, fentes et indices à partir du vecteur.
+            from . import nuances_institutionnelles as nuances
+
+            reglage = query.get("reglage", [""])[0]
+            article = query.get("article", [""])[0]
+            niveau = query.get("niveau", [""])[0]
+            indice = query.get("index", [""])[0]
+            recherche = query.get("chercher", [""])[0]
+            brut = query.get("parametres", [""])[0]
+            vecteur = None
+            if brut:
+                try:
+                    lu = json.loads(brut)
+                except ValueError:
+                    self._send_json({"error": "parametres doit être un objet JSON"}, status=400)
+                    return
+                if not isinstance(lu, dict):
+                    self._send_json({"error": "parametres doit être un objet JSON"}, status=400)
+                    return
+                vecteur = nuances.normaliser(lu)
+            try:
+                if reglage:
+                    if reglage not in nuances.LEVIERS:
+                        self._send_json({
+                            "error": f"réglage inconnu : {reglage}",
+                            "reglages": nuances.reglages_catalogue(),
+                        }, status=404)
+                        return
+                    self._send_json(nuances.nuances_pour_levier(reglage))
+                elif article:
+                    self._send_json({"article": article,
+                                     "reglages": nuances.nuances_pour_article(article)})
+                elif niveau:
+                    lignes = [ligne for ligne in nuances.tableau_des_niveaux(vecteur)
+                              if ligne["niveau"] == niveau]
+                    if not lignes:
+                        self._send_json({
+                            "error": f"niveau inconnu : {niveau}",
+                            "niveaux": list(nuances.NIVEAUX),
+                        }, status=404)
+                        return
+                    self._send_json({"niveau": niveau, "tableau": lignes[0]})
+                elif indice:
+                    indices = nuances.indices_nuances(vecteur)
+                    if indice not in indices:
+                        self._send_json({
+                            "error": f"indice inconnu : {indice}",
+                            "indices": sorted(indices),
+                        }, status=404)
+                        return
+                    self._send_json(indices[indice])
+                elif recherche:
+                    reglages = []
+                    for cle, ligne in nuances.contexte_institutionnel(vecteur)["reglages"].items():
+                        texte = " ".join([cle, ligne["libelle"], ligne["regle"], ligne["effet"]])
+                        if recherche.lower() in texte.lower():
+                            reglages.append(dict(ligne, cle=cle))
+                    self._send_json({"recherche": recherche, "reglages": reglages,
+                                     "nombre": len(reglages)})
+                else:
+                    self._send_json(nuances.synthese_pour_api(vecteur))
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
