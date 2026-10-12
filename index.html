@@ -3620,6 +3620,10 @@ function auditMethodesHtml(){
   const nbLeviers = (((CATALOGUE || {}).parametres || {}).defauts
                      ? Object.keys(CATALOGUE.parametres.defauts).length : 0);
   const nbDomaines = ((CATALOGUE || {}).domaines || []).length;
+  // Préréglages et scénarios sont comptés comme les leviers : lus dans les
+  // données servies, jamais écrits en dur dans la phrase qui les annonce.
+  const nbPresets = Object.keys((CATALOGUE || {}).presets || {}).length;
+  const nbScenarios = Object.keys(SCENARIOS || {}).length;
   const nbIndicateurs = ((CATALOGUE || {}).domaines || [])
     .reduce((somme, domaine) => somme + (domaine.indicateurs || []).length, 0);
   return `<ul style="margin-left:16px;line-height:1.7">
@@ -3635,7 +3639,7 @@ function auditMethodesHtml(){
       compris.</li>
     <li><b>Périmètre chiffré :</b> ${nbLeviers} leviers, ${nbDomaines} domaines,
       ${nbIndicateurs} indicateurs (formule + source), 31 garde-fous (26 absolus + 5 en écart),
-      14 préréglages, 11 scénarios.</li>
+      ${nbPresets} préréglages, ${nbScenarios} scénarios.</li>
     <li><b>Hypothèses P16-P21 (scénarios, pas observations) :</b> patrimoine : 145/24 = 6,04 Md€/an,
       annualisation exploratoire des 140-150 Md€ de besoins à 2050 ; climat : 143/30 = 4,77 Md€/an
       de pertes moyennes (hors budget APU), avec le ratio Barnier 8/30 annualisé uniquement comme

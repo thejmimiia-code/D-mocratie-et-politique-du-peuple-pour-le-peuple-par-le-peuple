@@ -4,7 +4,7 @@ Pourquoi ce module existe
 -------------------------
 
 Le simulateur sert des charges JSON volumineuses : environ 240 Kio pour une
-simulation complète, 198 Kio pour le catalogue des 149 leviers, 100 Kio pour le
+simulation complète, 198 Kio pour le catalogue des 156 leviers, 100 Kio pour le
 contexte « instant T ». Sur une connexion ordinaire, c'est le transfert — et non
 le calcul (35 ms côté serveur) — qui donne l'impression d'une page lente :
 chaque mouvement de curseur déclenche une simulation dont la réponse traverse

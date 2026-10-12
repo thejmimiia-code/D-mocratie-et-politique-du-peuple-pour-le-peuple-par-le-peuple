@@ -318,7 +318,7 @@ class TestAPIparametrique(unittest.TestCase):
     """API du simulateur paramétrable (leviers, contexte réel, impacts croisés).
 
     Ces routes remplacent les cartes généralistes du premier tableau de bord :
-    elles servent la table des 93 leviers, la grille des 20 domaines, le contexte
+    elles servent la table des 156 leviers, la grille des 20 domaines, le contexte
     « instant T » et la matrice d'impacts calculée par le modèle.
     """
 

@@ -1177,7 +1177,7 @@ def demarrer_serveur_web(host: str = "0.0.0.0", port: int = 8000):
     serveur = ThreadedHTTPServer(adresse, SimulateurHTTPHandler)
     print(f"\n" + "=" * 80)
     print(f"🚀 SERVEUR WEB DU SIMULATEUR DÉMARRÉ SUR http://{host}:{port}")
-    print(f"   Modèle systémique gigogne à 4 échelons (Local, National, Europe, Marchés)")
+    print(f"   Modèle systémique gigogne à 5 échelons (Local, National, Europe, Mondial, Géopolitique)")
     print(f"   Prévisualisation immédiate en direct disponible.")
     print("=" * 80 + "\n")
     try:

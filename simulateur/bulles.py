@@ -12,7 +12,7 @@ calculée qui répond à trois questions, dans cet ordre :
   2. **Quelles répercussions, à quelles amplitudes ?** — pour chaque borne du
      réglage (et pour un pas au-delà du défaut), une simulation réelle compare
      le réglage isolé à la trajectoire de référence : score des 20 domaines,
-     écart des indicateurs, niveau des 33 garde-fous (tolérable / vigilance /
+     écart des indicateurs, niveau des 31 garde-fous (tolérable / vigilance /
      risqué / hors-sol), risque population, strates 1 → 5 et journal
      institutionnel (« Alerte censure », « Report forcé sur la taxe foncière »,
      « Sortie de la PDE »…).

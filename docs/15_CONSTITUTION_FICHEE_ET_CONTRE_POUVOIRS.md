@@ -80,7 +80,7 @@ peut donc plus promettre un levier qui n'existe pas.
 ## 5. Verification
 
 ```bash
-python3 -m unittest discover -s tests -p "test_*.py"   # 836 tests, OK (skipped=11)
+python3 -m unittest discover -s tests -p "test_*.py"   # OK (skipped=11)
 python3 -c "from simulateur import constitution_analysee as ca; print(ca.resume_console())"
 python3 -c "from simulateur import gouvernance_contrepouvoir as gc; print(gc.resume_console())"
 python3 outils/generer-page-verification.py             # regenere docs/VERIFICATION_DONNEES.md

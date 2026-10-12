@@ -942,7 +942,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
         elif chemin == "/api/nuances":
-            # Le même calcul que le GET, par corps : un vecteur complet de 149 leviers
+            # Le même calcul que le GET, par corps : un vecteur complet de 156 leviers
             # tient mal dans une URL. L'interface s'en sert pour garder la section
             # « nuances institutionnelles » alignée sur les curseurs, en direct.
             if not isinstance(corps, dict):

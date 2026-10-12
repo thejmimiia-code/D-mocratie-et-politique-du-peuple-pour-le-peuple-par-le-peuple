@@ -39,7 +39,7 @@ faut le rendre fidèle à ce que le dépôt fait aujourd'hui.
 
 | Champ | État au 5 octobre 2026 (constaté par API) | État cible |
 |---|---|---|
-| **Description** | « Plateforme de réflexion républicaine et Simulateur macro-politique systémique (**Modèle gigogne à 4 échelons**) » | la description du § 2 (270 caractères) |
+| **Description** | « Plateforme de réflexion républicaine et Simulateur macro-politique systémique (**Modèle gigogne à quatre échelons**) » (état observé, obsolète) | la description du § 2 (270 caractères) |
 | **Website** | `https://d-mocratie-et-politique-du-peuple-p.vercel.app` → **renvoie 404** (vérifié) | vide, ou la documentation (§ 2) |
 | **Topics** | *aucun* | les 20 sujets du § 2 |
 | **Social preview** | aucune image | `docs/apercu_social.png` (1280 × 640) |
@@ -157,7 +157,7 @@ un fichier (comme au § 2), jamais à se connecter.
 - [ ] `gh api … --jq '.topics | length'` renvoie `20`
 - [ ] l'aperçu social est téléversé (`docs/apercu_social.png`, empreinte vérifiée)
 - [ ] `python3 outils/details_depot.py` affiche « Déjà à jour, rien à faire »
-- [ ] `python3 -m unittest discover -s tests -p "test_*.py"` reste vert (**399 tests**)
+- [ ] `python3 -m unittest discover -s tests -p "test_*.py"` reste vert (« OK (skipped=11) », le compte s'affiche à l'exécution)
 - [ ] `ruff check .` reste vert
 - [ ] la section « Réglages du dépôt » de `docs/REPOSITORY_DETAILS.md` est à jour,
       et cette note peut être supprimée ou marquée comme faite
@@ -174,14 +174,14 @@ remplacé par un **simulateur paramétrable**.
 | `simulateur/parametres.py` | 156 leviers en 14 familles (dont 55 réglages institutionnels `reglage_*`), 16 préréglages doctrinaux, `normaliser()` |
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs (formule + source), médiateurs annuels |
 | `simulateur/moteur_parametrique.py` | références, convergence, scores 0-100, matrice d'impacts croisés, horizon 1-10 ans et ledger P21 |
-| `simulateur/donnees_live.py` | 38 indicateurs publics (Eurostat, BCE, Frankfurter, Banque mondiale, Opendatasoft, Yahoo, Stooq) |
+| `simulateur/donnees_live.py` | 52 indicateurs publics (Eurostat, BCE, Frankfurter, Banque mondiale, Opendatasoft, Yahoo, Stooq) |
 | `simulateur/seuils.py` | 31 garde-fous (26 absolus + 5 en écart) par strate : tolérable → vigilance → risqué → hors-sol ; `bareme_public()` pour l'audit |
 | `simulateur/conseil.py` | conseiller temps réel (« effet papillon ») : chaque mouvement rejoué avant/après, directs + ricochets, garde-fous, compensations |
 | `simulateur/interface.py` | page unique : ruban de veille, 156 leviers, 20 domaines, exports |
 | `simulateur/dashboard.py` | API JSON : `/api/catalogue`, `/contexte`, `/simuler`, `/comparer`, `/conseil`, `/garde_fous`, `/presets`, `/proxy`, `/donnees` |
 | `simulateur/wsgi.py` | pont WSGI : branche le handler ci-dessus sur une requête d'hébergeur, sans dupliquer le routeur |
 | `Procfile`, `requirements.txt`, `runtime.txt`, `render.yaml`, `Dockerfile` | publication en ligne : hébergeur Python, bouton Render, image Docker (GHCR) |
-| `tests/` | **399 tests verts**, dont un harnais Node qui exécute réellement la page |
+| `tests/` | suite unittest verte (`discover -s tests`), dont un harnais Node qui exécute réellement la page |
 
 État Git au 7 octobre 2026 : branche `arena/43a71329-d-mocratie-et-politique-du-peu`,
 **PR #16 ouverte** vers `main` ; l'évolution P16-P21 et l'horizon interactif sont
