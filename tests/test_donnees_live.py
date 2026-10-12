@@ -356,5 +356,57 @@ class TestCollecteEtCache(unittest.TestCase):
         self.assertIn(contexte.mode, {"live", "mixte"})
 
 
+class TestFraicheurBanqueMondiale(unittest.TestCase):
+    """P1-2 — la date Banque mondiale ne doit plus être figée à 2024."""
+
+    def test_url_banque_mondiale_couvre_l_annee_courante(self):
+        from datetime import UTC, datetime
+
+        from simulateur.donnees_live import INDICATEURS
+
+        annee_courante = str(datetime.now(UTC).year)
+        for cle, indicateur in INDICATEURS.items():
+            for source in indicateur.sources:
+                if "Banque mondiale" not in source.fournisseur:
+                    continue
+                with self.subTest(indicateur=cle):
+                    self.assertIn(annee_courante, source.url,
+                                  f"l'URL Banque mondiale de {cle} doit couvrir l'année courante, pas une année figée")
+                    self.assertNotIn("date=2024\"", source.url)
+                    self.assertIn("date=2019:", source.url)
+
+    def test_reference_banque_mondiale_non_perimee(self):
+        # Les snapshots embarqués ne doivent pas dater de plus d'un an à la
+        # DATE_VERIFICATION, sinon l'instant T affiche une vieille année sans
+        # le dire. Les indicateurs annuels de la Banque mondiale sont publiés
+        # avec ~6 mois de décalage : une période 2025 reste fraîche en
+        # octobre 2026. On tolère donc l'année courante ou l'année précédente.
+        from datetime import datetime
+
+        try:
+            verif = datetime.strptime(DATE_VERIFICATION, "%Y-%m-%d")
+        except ValueError:
+            self.skipTest(f"DATE_VERIFICATION illisible : {DATE_VERIFICATION}")
+        for cle, indicateur in INDICATEURS.items():
+            if not indicateur.reference:
+                continue
+            # Seules les références dont la source est la Banque mondiale sont
+            # concernées : le PIB a une source Banque mondiale secondaire mais
+            # sa référence vient d'Eurostat, donc il n'est pas compté ici.
+            ref_fournisseur = indicateur.reference[2] if len(indicateur.reference) > 2 else ""
+            if "Banque mondiale" not in ref_fournisseur:
+                continue
+            with self.subTest(indicateur=cle):
+                periode = indicateur.reference[1]
+                annee_str = periode[:4]
+                if not annee_str.isdigit():
+                    continue
+                annee = int(annee_str)
+                self.assertGreaterEqual(annee, verif.year - 1,
+                    f"{cle} : période {periode} trop ancienne à {DATE_VERIFICATION} — mettre le snapshot à jour")
+                self.assertLessEqual(annee, verif.year,
+                    f"{cle} : période {periode} dans le futur à {DATE_VERIFICATION}")
+
+
 if __name__ == "__main__":
     unittest.main()
