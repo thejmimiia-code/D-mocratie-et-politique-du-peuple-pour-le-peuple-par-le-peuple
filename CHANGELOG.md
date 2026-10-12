@@ -6,6 +6,87 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Ajouté — `docs/19` : le plan de renforcement, ses constats et ses preuves de fin
+
+- `docs/19_PLAN_DE_RENFORCEMENT_ET_LACUNES.md` : l'audit du 12 octobre 2026 en une page —
+  les six instruments de mesure, les trous trouvés (CI rouge, compteurs périmés, onze tests
+  jamais exécutés, métadonnées GitHub bloquées faute de droits), ce qui a été corrigé, et les
+  dix chantiers restants classés en trois horizons, **chacun avec sa preuve de fin**. Le
+  document dit aussi ce que l'audit n'a pas trouvé et pourquoi il n'est pas indépendant.
+
+### Ajouté — Les compteurs annoncés se déduisent du code (`outils/verifier-compteurs.py`)
+
+- Douze référentiels lus dans le code (leviers, réglages, préréglages, familles, domaines,
+  indicateurs, indicateurs publics, domaines sociétaux, garde-fous, scénarios, échelons,
+  routes), **24 règles de phrase**, et une seconde famille de contrôles : les comptes qu'un
+  document vivant ne doit pas annoncer du tout (le nombre de tests change à chaque commit).
+- Les rapports datés (journal, R&D, audits, revues de dépôts tiers) sont exemptés, chacun
+  avec sa raison écrite ; le contrôle refuse une exemption sans raison ou visant un fichier
+  absent. `tests/test_compteurs.py` est la contre-épreuve : chaque règle doit accepter son
+  gabarit au compte réel et rugir sur un compte faussé — une règle morte est un échec.
+- Corrigés au passage : « 93 leviers croisables » dans `pyproject.toml`, la description
+  GitHub et la page des réglages ; « 149 leviers » dans `outils/details_depot.py`,
+  `simulateur/compression.py` et `simulateur/dashboard.py` ; « 38 indicateurs publics » au
+  lieu de 52 dans trois documents ; « 33 garde-fous » au lieu de 31 dans deux fichiers ;
+  « 16 routes du moteur » et « 20 routes exposées » au lieu de 22 ; « modèle gigogne à
+  4 échelons » dans `simulateur/web_server.py` ; « 18 domaines d'impact » au lieu de 20 ; et
+  **douze comptes de tests recopiés** dans huit documents vivants (README, CONTRIBUTING,
+  NOTE_POUR_CLAUDE, docs/15, docs/16, docs/18, docs/METHODOLOGIE, docs/README). Les documents
+  datés gardent les leurs. `README.md` et `docs/METHODOLOGIE.md` annonçaient Python 3.9+ alors que
+  `pyproject.toml` exige 3.11 : les deux documents sont alignés sur le `requires-python`.
+- La page compte désormais ses préréglages et ses scénarios comme ses leviers : lus dans les
+  données servies, jamais écrits dans la phrase qui les annonce.
+
+### Corrigé — `ruff check .` passe de 1 553 erreurs à zéro, sans changer un résultat
+
+- La dette annoncée dans l'entrée précédente a eu son commit dédié : 1 522 corrections
+  automatiques (annotations `typing.List`/`Optional` au goût du jour, imports triés et
+  purgés, f-strings sans trou) et 51 corrections traitées à la main — 26 lignes vides
+  nettoyées, 10 `noqa` motivés pour les imports qui suivent l'aménagement de `sys.path`,
+  et 14 décisions : `B007` (itérer sur `.values()`), `C401`, `F841`, `B905` (`strict=False`
+  écrit noir sur blanc).
+- Une seule exception, déclarée dans `pyproject.toml` avec sa raison : la double espace de fin
+  de ligne du gabarit du guide, qui vaut un saut de ligne en Markdown.
+- Deux vrais défauts sont sortis du nettoyage : le contrôle de parité des routes cherchait
+  `ROUTES: Tuple[str, ...]` dans le générateur et ne trouvait donc plus rien une fois les
+  annotations modernisées ; et `tests/test_territoires_elections.py` calculait la somme des
+  strates communales sans jamais la comparer — vérifiée, elle révèle **21 communes de
+  recouvrement** (0,06 %) entre la strate rurale INSEE et le découpage du modèle, désormais
+  borné et nommé.
+- La CI épingle `ruff==0.17.0` : une montée de version qui change les règles doit être une
+  décision, pas une surprise.
+
+### Ajouté — La CI exécute les onze tests d'API qui ne s'exécutaient jamais
+
+- `tests/test_societe.py` et `tests/test_histoire.py` interrogeaient `http://127.0.0.1:8000`
+  sans qu'aucun serveur ne tourne : les onze cas se sautaient à chaque exécution depuis leur
+  écriture. Ils acceptent maintenant l'adresse du serveur par `SIMULATEUR_BASE_URL`, et la CI
+  démarre la console (`python3 -m simulateur.web_server 8000`), attend qu'elle réponde,
+  exécute les deux modules — zéro saut — puis l'arrête.
+
+### Ajouté — Organiser la contradiction : 24 objections, 4 contre-modèles, un registre daté
+
+- `simulateur/contradiction.py` : le registre qui renverse la charge de la preuve. **24
+  objections** (10 adossées aux mesures du plan, 14 aux hypothèses du moteur) portent chacune
+  une citation de l'attaquant, la concession écrite, ce qui survit malgré elle, le fait qui
+  ferait changer d'avis, ses sources datées et son statut ; **4 contre-modèles** cohérents
+  (État minimal et revenu universel, mur de la réalité, réalisme d'adoption, orthodoxie
+  budgétaire) sont mesurés au modèle dans `docs/20_CONTRE_MODELES.md`. Les gages des mesures
+  sont confrontés à la portée des leviers, déduite du catalogue : **21 Md€/an de réserve de
+  portée** apparaissent, calculés et non saisis.
+- `outils/generer-objections.py` et `outils/generer-registre-engagements.py` engendrent
+  `docs/05` (cinq pièces nouvelles par fiche), `docs/20`, `docs/21` et
+  `docs/22_REGISTRE_ENGAGEMENTS.md` — ce dernier rejoue le scénario de mandature et nomme,
+  indicateur par indicateur, la source extérieure qui jugera le plan, avec les seuils de
+  réussite et d'échec. Les deux outils ont un mode `--verifier` que la CI exerce.
+- `GET /api/objections` (filtres `famille`, `statut`, `levier`, `chercher`), la section
+  *Objections* de la page avec ses quatre filtres et ses cartes de contre-modèles, sept étapes
+  de plus dans le harnais Node, et `.github/ISSUE_TEMPLATE/objection.md` pour déposer une
+  objection sourcée.
+- `tests/test_contradiction.py` : 22 cas (garde-fous du registre, gages confrontés aux
+  en-têtes de fiches, fraîcheur des documents engendrés, HTTP et page).
+
+
 ### Corrigé — Nettoyage de lint sur les fichiers de la passe, et mort-de-code retiré
 
 - `simulateur/nuances_institutionnelles.py` : trois variables calculées et jamais lues dans

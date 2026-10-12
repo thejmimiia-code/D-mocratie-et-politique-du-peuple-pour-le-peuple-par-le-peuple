@@ -176,6 +176,7 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "GET /api/bulle": bulle,
                 "GET /api/bulles": json.loads(cls._get("/api/bulles?detail=resume")),
                 "GET /api/garde_fous": json.loads(cls._get("/api/garde_fous")),
+                "GET /api/objections": json.loads(cls._get("/api/objections")),
                 "GET /api/lexique": json.loads(cls._get("/api/lexique")),
                 "POST /api/simuler": sortie_prereglage,
                 "POST /api/simuler#variante": sortie_variante,

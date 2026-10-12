@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple
+
 """
 simulateur/reglements_lois.py — Registre programmatique intégral des textes de lois et règlements.
 Permet d'interroger les articles de lois et leurs contraintes mathématiques dans le simulateur.
@@ -7,7 +7,7 @@ Permet d'interroger les articles de lois et leurs contraintes mathématiques dan
 from dataclasses import dataclass
 
 #: Échelons du modèle gigogne : seules valeurs admises pour `strate_impactee`.
-STRATES_VALIDES: Tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
+STRATES_VALIDES: tuple[str, ...] = ("Local", "National", "Europe", "Mondial", "Transversal")
 
 
 @dataclass
@@ -21,7 +21,7 @@ class ArticleDeLoi:
     effet_simulation: str
 
 
-REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
+REGISTRE_LEGAL: dict[str, ArticleDeLoi] = {
     # -------------------------------------------------------------------------
     # BLOC CONSTITUTIONNEL
     # -------------------------------------------------------------------------
@@ -1086,7 +1086,7 @@ REGISTRE_LEGAL: Dict[str, ArticleDeLoi] = {
 }
 
 
-def get_corpus_lois() -> Dict[str, ArticleDeLoi]:
+def get_corpus_lois() -> dict[str, ArticleDeLoi]:
     """Retourne l'intégralité du registre légal."""
     return REGISTRE_LEGAL
 
@@ -1150,7 +1150,7 @@ CNUDM_ART_56_ZEE = REGISTRE_LEGAL["CNUDM_ART_56_ZEE"]
 LOI_55_1052_TAAF = REGISTRE_LEGAL["LOI_55_1052_TAAF"]
 
 
-def rechercher_loi(mot_cle: str) -> List[ArticleDeLoi]:
+def rechercher_loi(mot_cle: str) -> list[ArticleDeLoi]:
     """Recherche des textes par mot-clé dans le titre, le code ou l'effet."""
     mot_cle_lower = mot_cle.lower()
     resultats = []

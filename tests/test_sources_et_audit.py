@@ -4,27 +4,24 @@ de l'auditabilité en temps réel et des dynamiques socio-économiques et mondia
 """
 
 import unittest
+
+from simulateur.model import (
+    AuditTrailResultat,
+    StrateCSPPopulations,
+    StrateDecilesEtInegalites,
+    StrateFluxMondiauxEtReels,
+    StrateImpactCulturelEtServices,
+)
+from simulateur.moteur import MoteurSimulationSystemique
+from simulateur.reglements_lois import REGISTRE_LEGAL
+from simulateur.scenarios import (
+    get_scenario_austerite_brutale,
+    get_scenario_mandature_5_ans,
+)
 from simulateur.sources_officielles import (
     REGISTRE_SOURCES_OFFICIELLES,
     get_source,
     lister_sources_par_categorie,
-    exporter_catalogue_sources,
-)
-from simulateur.reglements_lois import REGISTRE_LEGAL
-from simulateur.moteur import MoteurSimulationSystemique
-from simulateur.model import (
-    DecisionPolitique,
-    StrateDecilesEtInegalites,
-    StrateCSPPopulations,
-    StrateFluxMondiauxEtReels,
-    StrateImpactCulturelEtServices,
-    AuditTrailResultat,
-)
-from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
-    get_scenario_austerite_brutale,
-    get_scenario_choc_mondial_stagflation,
 )
 
 

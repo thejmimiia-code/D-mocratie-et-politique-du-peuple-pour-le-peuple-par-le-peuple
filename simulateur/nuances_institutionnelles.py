@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from .gouvernance_contrepouvoir import ETAT_ASSEMBLEES, MECANISMES, VERROUS, seuil
 from .instances_et_dynamiques import (
@@ -69,7 +69,7 @@ HYPOTHESE_VOTANTS_CENSURE = 0.80  # part des membres qui prennent part au vote, 
 # ────────────────────────────────────────────────────────────────────────────
 
 #: Étiquettes de niveau, dans l'ordre d'affichage.
-NIVEAUX: Tuple[str, ...] = (
+NIVEAUX: tuple[str, ...] = (
     "Constitutionnel",
     "Parlementaire",
     "Budgétaire",
@@ -87,7 +87,7 @@ PREFIXE = "reglage_"
 #: Réglages pilotés par la couche, avec la règle appliquée et ses cibles.
 #: `cibles` = (type de cible, identifiant dans le module de droit). Les identifiants
 #: sont contrôlés par `coherence_nuances()` : une cible inexistante fait rougir les tests.
-REGLAGES: Dict[str, Dict[str, Any]] = {
+REGLAGES: dict[str, dict[str, Any]] = {
     # — Étage constitutionnel —
     "reglage_censure_assiette": {
         "niveau": "Constitutionnel",
@@ -448,7 +448,7 @@ REGLAGES: Dict[str, Dict[str, Any]] = {
 
 #: Contributions aux indices : coefficient appliqué au taux d'ouverture du réglage
 #: (0 = statu quo, 1 = borne haute). Un coefficient négatif dit ce que le réglage coûte.
-APPORTS: Dict[str, Dict[str, float]] = {
+APPORTS: dict[str, dict[str, float]] = {
     "reglage_censure_assiette": {"capacite_de_renversement": 14.0, "stabilite": -9.0},
     "reglage_congres_quorum": {"capacite_de_revision": -11.0, "redevabilite": 4.0},
     "reglage_congres_assiette_membres": {"capacite_de_revision": -9.0, "redevabilite": 5.0},
@@ -509,7 +509,7 @@ APPORTS: Dict[str, Dict[str, float]] = {
 #: Verrous qu'un réglage bien réel laisse inchangés à son maximum, et pourquoi. Ce n'est
 #: pas une tolérance : `coherence_nuances()` échoue dès qu'un de ces verrous se met à bouger,
 #: pour que la mention soit réexaminée et non héritée.
-SEUILS_INSSENSIBLES: Dict[str, str] = {
+SEUILS_INSSENSIBLES: dict[str, str] = {
     "congres_revision": "à assemblée plnière, les trois cinquièmes de 925 donnent 555 : le "
                         "réglage ne déplace le nombre que si l'abstention déplace l'assemblée — "
                         "voir `scenarios_abstention` du même seuil",
@@ -523,7 +523,7 @@ SEUILS_INSSENSIBLES: Dict[str, str] = {
 #: `coherence_nuances()` exige que cette liste recouvre exactement les réglages sans cible chiffrée.
 CIBLES_CHIFFREES = ("verrou", "fente", "trajet", "etape", "seuil_derive", "mecanisme", "fenetre")
 
-REGLAGES_SANS_GEOMETRIE: Dict[str, str] = {
+REGLAGES_SANS_GEOMETRIE: dict[str, str] = {
     "reglage_defenseur_saisine_directe": "l'article 71-1 ne fixe aucun seuil : la saisine directe ouvre une porte, elle ne déplace pas un nombre — le réglage est porté par les indices de contrôle et de redevabilité",
     "reglage_autonomie_financiere_garantie":
         "un plancher de dotation est une masse budgétaire, portée par les lignes de recette locales, "
@@ -553,9 +553,9 @@ REGLAGES_SANS_GEOMETRIE: Dict[str, str] = {
 }
 
 
-def reglages_sans_cible_chiffree() -> List[str]:
+def reglages_sans_cible_chiffree() -> list[str]:
     """Réglages dont aucune cible ne produit de nombre recalculé."""
-    orphelins: List[str] = []
+    orphelins: list[str] = []
     for cle in reglages_catalogue():
         types = {type_cible for type_cible, _ in REGLAGES[cle].get("cibles", ())}
         if not types & set(CIBLES_CHIFFREES):
@@ -564,7 +564,7 @@ def reglages_sans_cible_chiffree() -> List[str]:
 
 
 #: Part de résistance retirée à une fente par un réglage (1.0 = verrouillée).
-NEUTRALISATIONS: Dict[str, Dict[str, float]] = {
+NEUTRALISATIONS: dict[str, dict[str, float]] = {
     "censure_par_membres": {"reglage_censure_assiette": 1.0},
     "congres_par_exprimes": {"reglage_congres_assiette_membres": 1.0},
     "absence_de_quorum": {"reglage_congres_quorum": 0.5},
@@ -594,7 +594,7 @@ NEUTRALISATIONS: Dict[str, Dict[str, float]] = {
 }
 
 #: Indices rendus par la couche, avec leur définition lisible.
-INDICES: Dict[str, str] = {
+INDICES: dict[str, str] = {
     "capacite_de_blocage_parlementaire":
         "ce qui est nécessaire pour arrêter un texte : amendement, ordre du jour, niches, seconde chambre",
     "capacite_de_renversement":
@@ -618,25 +618,25 @@ INDICES: Dict[str, str] = {
 # 2. Lecture des réglages
 # ────────────────────────────────────────────────────────────────────────────
 
-def reglages_presents() -> List[str]:
+def reglages_presents() -> list[str]:
     """Les leviers du catalogue que cette couche sait recalculer."""
     return sorted(cle for cle in LEVIERS if cle in REGLAGES)
 
 
-def reglages_catalogue() -> List[str]:
+def reglages_catalogue() -> list[str]:
     """Les leviers institutionnels déclarés dans le catalogue (préfixe `reglage_`)."""
     return sorted(cle for cle in LEVIERS if cle.startswith(PREFIXE))
 
 
-def _bornes(cle: str) -> Tuple[float, float]:
+def _bornes(cle: str) -> tuple[float, float]:
     levier = LEVIERS.get(cle)
     return levier.bornes if levier else (0.0, 1.0)
 
 
-def normaliser(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
+def normaliser(parametres: dict[str, Any] | None = None) -> dict[str, float]:
     """Vecteur des seuls réglages institutionnels, écrêté à ses bornes."""
     source = dict(valeurs_par_defaut()) if parametres is None else dict(parametres)
-    vecteur: Dict[str, float] = {}
+    vecteur: dict[str, float] = {}
     for cle in reglages_catalogue():
         brut = source.get(cle, LEVIERS[cle].defaut)
         try:
@@ -648,7 +648,7 @@ def normaliser(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, float]:
     return vecteur
 
 
-def taux(cle: str, vecteur: Dict[str, float]) -> float:
+def taux(cle: str, vecteur: dict[str, float]) -> float:
     """Ouverture d'un réglage, de 0 (statu quo) à 1 (borne haute)."""
     levier = LEVIERS.get(cle)
     valeur = vecteur.get(cle, 0.0)
@@ -672,7 +672,7 @@ def niveau_de(cle: str) -> str:
 
 #: Unités lisibles, quand le verrou du registre ne porte que l'assiette ou un texte
 #: (« seuil fixé par la loi » ne se suffit pas à lui-même).
-UNITES_LISIBLES: Dict[str, str] = {
+UNITES_LISIBLES: dict[str, str] = {
     "censure_voix": "voix",
     "congres_revision": "voix",
     "saisine_conseil_signatures": "signatures",
@@ -691,7 +691,7 @@ UNITES_LISIBLES: Dict[str, str] = {
 }
 
 #: Verrous que cette couche sait ajuster, et nom lisible du calcul.
-VERROUS_REGLAGES: Dict[str, str] = {
+VERROUS_REGLAGES: dict[str, str] = {
     "censure_voix": "majorité exigée pour renverser le Gouvernement",
     "censure_delai": "délai avant le vote de la motion de censure",
     "49_3_delai_motion": "délai de dépôt de la motion contre un 49.3",
@@ -716,7 +716,7 @@ VERROUS_REGLAGES: Dict[str, str] = {
 
 #: Verrous que aucun réglage ne déplace, et pourquoi : un trou assumé est une décision,
 #: un trou non dit est une omission. `coherence_nuances()` exige que la liste soit exhaustive.
-VERROUS_HORS_REGLAGE: Dict[str, str] = {
+VERROUS_HORS_REGLAGE: dict[str, str] = {
     "censure_signatures": "le dixième des membres est une protection contre l'obstruction : "
                           "le faire varier ne peut pas se décréter par un curseur de politique publique",
     "censure_plafond_motions": "limitation du nombre de motions par session, touchée seulement par une "
@@ -752,7 +752,7 @@ VERROUS_HORS_REGLAGE: Dict[str, str] = {
 }
 
 
-def _voix_censure(regle: Dict[str, float]) -> Dict[str, Any]:
+def _voix_censure(regle: dict[str, float]) -> dict[str, Any]:
     """Seuil de censure selon l'assiette retenue (calcul sur l'effectif légal)."""
     etat = ETAT_ASSEMBLEES["assemblee_nationale"]
     membres = int(etat["sieges"])
@@ -782,7 +782,7 @@ def _voix_censure(regle: Dict[str, float]) -> Dict[str, Any]:
     return resultat
 
 
-def _congres(regle: Dict[str, float], votants: int = CONGRES_EFFECTIF) -> Dict[str, Any]:
+def _congres(regle: dict[str, float], votants: int = CONGRES_EFFECTIF) -> dict[str, Any]:
     """Trois cinquièmes du Congrès, selon l'assiette retenue et le nombre de votants.
 
     Le calcul est fait pour plusieurs taux de participation parce que tout l'enjeu de
@@ -794,14 +794,14 @@ def _congres(regle: Dict[str, float], votants: int = CONGRES_EFFECTIF) -> Dict[s
     base = arithmetique_abstention_congres(votants)
     seuil_sur_exprimes = int(base["voix_requises"])
     voix = seuil_sur_membres if sur_membres else seuil_sur_exprimes
-    notes: List[str] = []
+    notes: list[str] = []
     quorum_pct = float(regle.get("reglage_congres_quorum", 0.0))
     quorum = int(math.ceil(CONGRES_EFFECTIF * quorum_pct / 100.0)) if quorum_pct > 0 else 0
     if quorum:
         notes.append(f"quorum de {quorum} votants requis ({quorum_pct:.0f} % des {CONGRES_EFFECTIF} membres)")
         if quorum > voix:
             notes.append("le quorum dépasse le seuil de voix : c'est la présence qui décide, plus la majorité")
-    scenarios: Dict[str, Dict[str, int]] = {}
+    scenarios: dict[str, dict[str, int]] = {}
     for participation in (925, 800, 700, 617):
         exprimes = int(arithmetique_abstention_congres(participation)["voix_requises"])
         scenarios[str(participation)] = {
@@ -828,15 +828,15 @@ def _congres(regle: Dict[str, float], votants: int = CONGRES_EFFECTIF) -> Dict[s
     }
 
 
-def seuils_ajustes(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, Any]]:
+def seuils_ajustes(parametres: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
     """Chaque verrou réglable, avec sa valeur de droit et sa valeur réglée."""
     regle = normaliser(parametres)
-    resultat: Dict[str, Dict[str, Any]] = {}
+    resultat: dict[str, dict[str, Any]] = {}
     censure = _voix_censure(regle)
     congres = _congres(regle)
     seuils = {cle: int(seuil(cle)) for cle in VERROUS_REGLAGES}
 
-    applicables: Dict[str, Tuple[Any, List[str], str]] = {
+    applicables: dict[str, tuple[Any, list[str], str]] = {
         "censure_voix": (
             censure["voix_requises"],
             ["reglage_censure_assiette"],
@@ -1041,9 +1041,9 @@ APPEL_FILTRE_JOURS = 60       # un second filtre, c'est un mois de plus avant la
 
 #: Les fenêtres de temps que les réglages peuvent rogner. Une seule aujourd'hui : la part
 #: d'ordre du jour laissée au Gouvernement pendant la session.
-FENETRES_REGLABLES: Tuple[str, ...] = ("utile",)
+FENETRES_REGLABLES: tuple[str, ...] = ("utile",)
 
-ETAPES_REGLABLES: Dict[str, Tuple[Tuple[str, int], ...]] = {
+ETAPES_REGLABLES: dict[str, tuple[tuple[str, int], ...]] = {
     "budget:an_vote": (("reglage_delai_budget_retraite", -1),),
     "budget:senat": (("reglage_delai_senat_budget", 1),),
     "renversement:delai": (("reglage_delai_motion_censure", 1),),
@@ -1057,12 +1057,12 @@ ETAPES_REGLABLES: Dict[str, Tuple[Tuple[str, int], ...]] = {
 }
 
 
-def delais_ajustes(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def delais_ajustes(parametres: dict[str, Any] | None = None) -> dict[str, Any]:
     """Chaque trajet, ses jours de rigueur et leur tenabilité dans la fenêtre réglée."""
     regle = normaliser(parametres)
     part_parlementaire = float(regle.get("reglage_ordre_du_jour_partage", 0.0))
     fenetre = int(round(FENETRE_RESIDUELLE_JOURS * (1.0 - part_parlementaire / 100.0)))
-    trajets: List[Dict[str, Any]] = []
+    trajets: list[dict[str, Any]] = []
     for cle, trajet in TRAJETS.items():
         reference = oscillation(cle)
         etapes = []
@@ -1071,7 +1071,7 @@ def delais_ajustes(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Any
         for etape in trajet.etapes:
             jours = int(etape.jours)
             identifiant = f"{cle}:{etape.cle}"
-            reglages_appliques: List[str] = []
+            reglages_appliques: list[str] = []
             delta = 0
             for levier, pas in ETAPES_REGLABLES.get(identifiant, ()):
                 valeur = regle.get(levier, 0.0)
@@ -1135,10 +1135,10 @@ def delais_ajustes(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Any
 # 5. Fentes : ce que les réglages changent à une déduction
 # ────────────────────────────────────────────────────────────────────────────
 
-def _degre_neutralisation(cle_fente: str, regle: Dict[str, float]) -> Tuple[float, List[str]]:
+def _degre_neutralisation(cle_fente: str, regle: dict[str, float]) -> tuple[float, list[str]]:
     reglages = NEUTRALISATIONS.get(cle_fente, {})
     reste = 1.0
-    appliques: List[str] = []
+    appliques: list[str] = []
     for levier, poids in reglages.items():
         ouverture = taux(levier, regle) if levier in LEVIERS else 0.0
         if ouverture > 0.0:
@@ -1147,18 +1147,18 @@ def _degre_neutralisation(cle_fente: str, regle: Dict[str, float]) -> Tuple[floa
     return max(0.0, min(1.0, 1.0 - reste)), appliques
 
 
-def fentes_recalculees(parametres: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def fentes_recalculees(parametres: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Les fentes du droit, avec l'effet des réglages sur leur arithmétique et leur solidité."""
     regle = normaliser(parametres)
     seuils = seuils_ajustes(regle)
-    lignes: List[Dict[str, Any]] = []
+    lignes: list[dict[str, Any]] = []
     for cle, fente in FENTES.items():
         degre, appliques = _degre_neutralisation(cle, regle)
         brut = robustesse(fente)
         score = int(round(brut["score"] * (1.0 - 0.7 * degre)))
         if degre >= 0.999:
             score = 0
-        lecture: Dict[str, Any] = {}
+        lecture: dict[str, Any] = {}
         congres_ligne = seuils["congres_revision"]
         if cle == "censure_par_membres":
             lecture = {
@@ -1218,14 +1218,14 @@ def _numero(identifiant: str) -> str:
     return ""
 
 
-def _citations(objet: Any) -> List[str]:
+def _citations(objet: Any) -> list[str]:
     """Les numéros d'article cités par un objet d'un module de droit.
 
     Les modules citent tantôt `articles`, tantôt `fondement` (liste ou prose), tantôt un
     `fondement_resolu`. On ne garde que le premier nombre de chaque citation : « 65 al. 6 »
     cite l'article 65, pas l'article 6.
     """
-    bruts: List[str] = []
+    bruts: list[str] = []
     for champ in ("articles", "fondement"):
         valeur = getattr(objet, champ, None)
         if isinstance(valeur, str):
@@ -1243,13 +1243,13 @@ def _citations(objet: Any) -> List[str]:
     return sorted(numeros, key=lambda item: (len(item), item))
 
 
-def croisements() -> Dict[str, Dict[str, List[str]]]:
+def croisements() -> dict[str, dict[str, list[str]]]:
     """Index article → {réglages, verrous, mécanismes, instances, fentes, trajets, stratégies}.
 
     Tout est déduit des citations déjà portées par les modules : aucun lien n'est saisi à la
     main, donc aucun lien ne peut pourrir en silence.
     """
-    index: Dict[str, Dict[str, List[str]]] = {}
+    index: dict[str, dict[str, list[str]]] = {}
 
     def ajouter(numero: str, categorie: str, cle: str) -> None:
         if not numero:
@@ -1289,7 +1289,7 @@ def croisements() -> Dict[str, Dict[str, List[str]]]:
 
 
 #: Les six registres de connaissance que la couche doit pouvoir croiser.
-REPERTOIRES: Dict[str, Dict[str, Any]] = {
+REPERTOIRES: dict[str, dict[str, Any]] = {
     "verrou": VERROUS,
     "fente": FENTES,
     "trajet": TRAJETS,
@@ -1299,12 +1299,12 @@ REPERTOIRES: Dict[str, Dict[str, Any]] = {
 }
 
 
-def reglages_par_connaissance(categorie: str) -> Dict[str, List[str]]:
+def reglages_par_connaissance(categorie: str) -> dict[str, list[str]]:
     """Index inverse : pour chaque verrou / fente / trajet / mécanisme / instance / stratégie,
     les réglages qui la touchent — par cible déclarée puis par citation d'article."""
     champ = {"verrou": "verrous", "fente": "fentes", "trajet": "trajets",
              "mecanisme": "mecanismes", "instance": "instances", "strategie": "strategies"}[categorie]
-    index: Dict[str, List[str]] = {}
+    index: dict[str, list[str]] = {}
     for ligne in croisements().values():
         for cle in ligne[champ]:
             index.setdefault(cle, [])
@@ -1331,7 +1331,7 @@ def normalise_numero(valeur: str) -> str:
     return trouve.group(1) if trouve else texte
 
 
-def croisement_pour(numero: str) -> Dict[str, Any]:
+def croisement_pour(numero: str) -> dict[str, Any]:
     """
     Tout ce qu'un article dresse comme pouvoir, comme contrainte et comme réglage.
 
@@ -1357,11 +1357,11 @@ def croisement_pour(numero: str) -> Dict[str, Any]:
     }
 
 
-def reglages_touchant(categorie: str, cle: str) -> List[str]:
+def reglages_touchant(categorie: str, cle: str) -> list[str]:
     """Les réglages qui touchent un verrou, une fente, un trajet, un mécanisme ou une instance."""
     if categorie == "reglage":
         return []
-    resultat: List[str] = []
+    resultat: list[str] = []
     for levier in reglages_catalogue():
         for type_cible, identifiant in REGLAGES[levier].get("cibles", ()):
             if type_cible in ("index", "seuil_derive", "mecanisme") and categorie != type_cible:
@@ -1378,7 +1378,7 @@ def reglages_touchant(categorie: str, cle: str) -> List[str]:
     return sorted(resultat)
 
 
-def strates_touchees(cle: str) -> List[int]:
+def strates_touchees(cle: str) -> list[int]:
     """Les strates du simulateur (1 locale → 5 géopolitique) que ce réglage traverse."""
     from .bulles import strates_theme
     strates: set = set()
@@ -1387,12 +1387,12 @@ def strates_touchees(cle: str) -> List[int]:
     return sorted(int(num) for num in strates)
 
 
-def par_strate(parametres: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def par_strate(parametres: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Réglages déplacés par strate, avec les seuils et les fentes concernés."""
     regle = normaliser(parametres)
     seuils = seuils_ajustes(regle)
     fentes = {ligne["cle"]: ligne for ligne in fentes_recalculees(regle)}
-    lignes: Dict[int, Dict[str, Any]] = {}
+    lignes: dict[int, dict[str, Any]] = {}
     for cle in reglages_catalogue():
         for strate in strates_touchees(cle) or [2]:
             ligne = lignes.setdefault(strate, {
@@ -1428,12 +1428,12 @@ _LIBELLE_STRATE = {
 # 6. Indices institutionnels
 # ────────────────────────────────────────────────────────────────────────────
 
-def indices_nuances(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Dict[str, Any]]:
+def indices_nuances(parametres: dict[str, Any] | None = None) -> dict[str, dict[str, Any]]:
     """Sept indices + un : 50 = l'état du droit, ni bien ni mal, tel qu'il est écrit."""
     regle = normaliser(parametres)
-    indices: Dict[str, Dict[str, Any]] = {}
+    indices: dict[str, dict[str, Any]] = {}
     for cle, definition in INDICES.items():
-        composants: List[Dict[str, Any]] = []
+        composants: list[dict[str, Any]] = []
         brut = 0.0
         for levier, contributions in APPORTS.items():
             if cle not in contributions:
@@ -1468,7 +1468,7 @@ def indices_nuances(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Di
     return indices
 
 
-def _lecture_indice(cle: str, valeur: float, composants: List[Dict[str, Any]]) -> str:
+def _lecture_indice(cle: str, valeur: float, composants: list[dict[str, Any]]) -> str:
     ecart = round(valeur - 50.0, 1)
     if abs(ecart) < 0.6:
         return "état du droit : aucun réglage institutionnel n'a été déplacé"
@@ -1482,19 +1482,19 @@ def _lecture_indice(cle: str, valeur: float, composants: List[Dict[str, Any]]) -
 # 7. Tableau par niveau, contexte, cohérence
 # ────────────────────────────────────────────────────────────────────────────
 
-def tableau_des_strates(parametres: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def tableau_des_strates(parametres: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Même tableau, lu dans la grille à cinq échelons du simulateur."""
     return par_strate(parametres)
 
 
-def tableau_des_niveaux(parametres: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
+def tableau_des_niveaux(parametres: dict[str, Any] | None = None) -> list[dict[str, Any]]:
     """Pour chaque niveau, les réglages actifs et leurs effets agrégés sur les domaines."""
     regle = normaliser(parametres)
-    lignes: List[Dict[str, Any]] = []
+    lignes: list[dict[str, Any]] = []
     for niveau in NIVEAUX:
         cles = [cle for cle in reglages_catalogue() if niveau_de(cle) == niveau]
         actifs = [cle for cle in cles if regle.get(cle, 0.0) != LEVIERS[cle].defaut]
-        domaines: Dict[str, float] = {}
+        domaines: dict[str, float] = {}
         for cle in actifs:
             effet = LEVIERS[cle].effets_directs
             for theme, coefficient in effet.items():
@@ -1516,7 +1516,7 @@ def tableau_des_niveaux(parametres: Optional[Dict[str, Any]] = None) -> List[Dic
     return lignes
 
 
-def contexte_institutionnel(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def contexte_institutionnel(parametres: dict[str, Any] | None = None) -> dict[str, Any]:
     """Tout ce que la couche sait calculer, en un objet sérialisable."""
     regle = normaliser(parametres)
     return {
@@ -1562,13 +1562,13 @@ def contexte_institutionnel(parametres: Optional[Dict[str, Any]] = None) -> Dict
     }
 
 
-def coherence_nuances() -> Dict[str, Any]:
+def coherence_nuances() -> dict[str, Any]:
     """Contrôles internes : rien ne doit être déclaré sans exister, ni exister sans règle."""
     catalogue = reglages_catalogue()
     declares = reglages_presents()
     manquants = [cle for cle in catalogue if cle not in REGLAGES]
     orphelins = [cle for cle in REGLAGES if cle not in LEVIERS]
-    cibles_inconnues: List[str] = []
+    cibles_inconnues: list[str] = []
     for cle, reglage in REGLAGES.items():
         for type_cible, identifiant in reglage.get("cibles", ()):
             if type_cible == "verrou" and identifiant not in VERROUS:
@@ -1715,7 +1715,7 @@ def coherence_nuances() -> Dict[str, Any]:
     }
 
 
-def nuances_pour_article(identifiant: str) -> List[Dict[str, Any]]:
+def nuances_pour_article(identifiant: str) -> list[dict[str, Any]]:
     """Les réglages qui touchent un article (identifiant du registre légal)."""
     lignes = []
     for cle in reglages_catalogue():
@@ -1730,7 +1730,7 @@ def nuances_pour_article(identifiant: str) -> List[Dict[str, Any]]:
     return lignes
 
 
-def nuances_pour_levier(cle: str) -> Dict[str, Any]:
+def nuances_pour_levier(cle: str) -> dict[str, Any]:
     """Fiche d'un réglage : ce qu'il change, où, et avec quel effet mesuré."""
     if cle not in LEVIERS:
         return {"erreur": "levier inconnu", "cle": cle}
@@ -1776,9 +1776,9 @@ def nuances_pour_levier(cle: str) -> Dict[str, Any]:
 # 8. Sorties
 # ────────────────────────────────────────────────────────────────────────────
 
-def _verrous_neutralises(regle: Dict[str, float]) -> Dict[str, List[str]]:
+def _verrous_neutralises(regle: dict[str, float]) -> dict[str, list[str]]:
     """Verrous privés de leur objet par un réglage déplacé : `{verrou: [réglages]}`."""
-    resultat: Dict[str, List[str]] = {}
+    resultat: dict[str, list[str]] = {}
     for cle, reglages in NEUTRALISATIONS.items():
         actifs = sorted(levier for levier, poids in reglages.items()
                         if poids and taux(levier, regle) > 0)
@@ -1787,7 +1787,7 @@ def _verrous_neutralises(regle: Dict[str, float]) -> Dict[str, List[str]]:
     return resultat
 
 
-def etat_des_verrous(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def etat_des_verrous(parametres: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Où en est chaque verrou du registre avec le vecteur de réglages actif.
 
@@ -1800,12 +1800,12 @@ def etat_des_verrous(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, A
     """
     regle = normaliser(parametres)
     seuils = seuils_ajustes(regle)
-    touches: List[Dict[str, Any]] = []
-    intacts: List[Dict[str, Any]] = []
-    hors_reglage: List[Dict[str, Any]] = []
+    touches: list[dict[str, Any]] = []
+    intacts: list[dict[str, Any]] = []
+    hors_reglage: list[dict[str, Any]] = []
     for cle, verrou in VERROUS.items():
         ligne = seuils.get(cle)
-        occurrence: Dict[str, Any] = {
+        occurrence: dict[str, Any] = {
             "cle": cle,
             "nom": verrou.nom,
             "article": verrou.article,
@@ -1852,7 +1852,7 @@ def etat_des_verrous(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, A
     }
 
 
-def synthese_pour_api(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def synthese_pour_api(parametres: dict[str, Any] | None = None) -> dict[str, Any]:
     """Ce que sert `/api/nuances` : le contexte complet, plus sa lecture courte."""
     contexte = contexte_institutionnel(parametres)
     indices = contexte["indices"]
@@ -1881,11 +1881,11 @@ def synthese_pour_api(parametres: Optional[Dict[str, Any]] = None) -> Dict[str, 
     }
 
 
-def resume_console(parametres: Optional[Dict[str, Any]] = None) -> str:
+def resume_console(parametres: dict[str, Any] | None = None) -> str:
     """Lecture texte, une ligne par information utile."""
     synthese = synthese_pour_api(parametres)
     regle = normaliser(parametres)
-    lignes: List[str] = []
+    lignes: list[str] = []
     lignes.append(f"Réglages institutionnels : {synthese['resume']['reglages_disponibles']} disponibles, "
                   f"{synthese['resume']['reglages_deplaces']} déplacés")
     for ligne in sorted(synthese["seuils"].values(), key=lambda d: -abs(d["ecart"]))[:6]:

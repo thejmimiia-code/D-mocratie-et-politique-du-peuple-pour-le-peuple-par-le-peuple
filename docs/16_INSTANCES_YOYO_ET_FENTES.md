@@ -96,8 +96,8 @@ de prose et ne chiffrent jamais un scénario.
     GET /api/dynamiques     ?trajet=47 · ?fente=congres_par_exprimes · ?strategie=… · ?famille=armer
                             · ?boucles=1 ; sans paramètre, la synthèse complète
 
-    python3 outils/generer-fonctions-api.py --verifier      # 20 routes exposées
-    python3 -m unittest discover -s tests -p "test_*.py"   # 873 tests, OK (skipped=11)
+    python3 outils/generer-fonctions-api.py --verifier      # 22 routes exposées
+    python3 -m unittest discover -s tests -p "test_*.py"   # OK (skipped=11)
 
 ## 6. Limites
 

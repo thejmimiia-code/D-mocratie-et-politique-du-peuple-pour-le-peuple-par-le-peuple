@@ -30,7 +30,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from simulateur.verification import en_dict as statut_verification
 
@@ -58,7 +58,7 @@ class LigneBudgetaire:
     libelle: str
     sens: str
     base_mde: float
-    domaines: Tuple[str, ...] = ()
+    domaines: tuple[str, ...] = ()
     source: str = ""
     categorie_comptable: str = ""   # ex. "APU", "ODM", "PLF mission"
 
@@ -74,38 +74,38 @@ class Levier:
     unite: str = "Md€"
     type: str = TYPE_CURSEUR
     defaut: float = 0.0
-    minimum: Optional[float] = None
-    maximum: Optional[float] = None
-    pas: Optional[float] = None
-    modalites: Tuple[Tuple[str, float], ...] = ()   # (libellé, valeur) pour TYPE_CHOIX
+    minimum: float | None = None
+    maximum: float | None = None
+    pas: float | None = None
+    modalites: tuple[tuple[str, float], ...] = ()   # (libellé, valeur) pour TYPE_CHOIX
     #: Champ de `DecisionPolitique` alimenté directement (le cas échéant).
-    champ: Optional[str] = None
+    champ: str | None = None
     #: Facteur de conversion levier → champ (ex. taux de PIB → Md€).
     facteur: float = 1.0
     #: Ligne budgétaire suivie par `domaines.py` (le cas échéant).
-    ligne: Optional[str] = None
+    ligne: str | None = None
     #: Profil de montée en charge par année (fractions 1re → 5e année).
-    profil: Tuple[float, float, float, float, float] = (0.4, 0.7, 0.9, 1.0, 1.0)
+    profil: tuple[float, float, float, float, float] = (0.4, 0.7, 0.9, 1.0, 1.0)
     #: Effets directs documentés sur les domaines (identifiant → effet par unité).
-    effets_directs: Dict[str, float] = field(default_factory=dict)
+    effets_directs: dict[str, float] = field(default_factory=dict)
     source: str = ""
-    tags: Tuple[str, ...] = ()
+    tags: tuple[str, ...] = ()
     precision: int = 1
     #: Identifiants d'articles du registre `reglements_lois.REGISTRE_LEGAL` qui
     #: encadrent ce levier (liens croisés vérifiés par les tests).
-    articles: Tuple[str, ...] = ()
+    articles: tuple[str, ...] = ()
 
     # — commodités d'affichage ————————————————————————————————————————————
     @property
-    def bornes(self) -> Tuple[float, float]:
+    def bornes(self) -> tuple[float, float]:
         mini = self.minimum if self.minimum is not None else 0.0
         maxi = self.maximum if self.maximum is not None else 1.0
         return mini, maxi
 
-    def modalites_serialisables(self) -> List[Dict[str, Any]]:
+    def modalites_serialisables(self) -> list[dict[str, Any]]:
         return [{"libelle": libelle, "valeur": valeur} for libelle, valeur in self.modalites]
 
-    def en_dict(self) -> Dict[str, Any]:
+    def en_dict(self) -> dict[str, Any]:
         return {
             "cle": self.cle,
             "libelle": self.libelle,
@@ -131,7 +131,7 @@ class Levier:
 
 
 #: Familles de leviers (ordre d'affichage dans l'interface).
-FAMILLES: Dict[str, Dict[str, str]] = {
+FAMILLES: dict[str, dict[str, str]] = {
     "fiscalite_menages": {"libelle": "Fiscalité des ménages", "couleur": "#38bdf8"},
     "fiscalite_entreprises": {"libelle": "Fiscalité des entreprises & fraude", "couleur": "#0ea5e9"},
     "depenses_sociales": {"libelle": "Protection sociale & solidarité", "couleur": "#22c55e"},
@@ -148,7 +148,7 @@ FAMILLES: Dict[str, Dict[str, str]] = {
     "exogene_monde": {"libelle": "Chocs mondiaux (exogènes)", "couleur": "#64748b"},
 }
 
-LEVIERS: Dict[str, Levier] = {}
+LEVIERS: dict[str, Levier] = {}
 
 
 def _lev(levier: Levier) -> Levier:
@@ -2245,7 +2245,7 @@ _lev(Levier(
 
 #: Scénarios-préréglages : des combinaisons de leviers prêtes à charger,
 #: pour partir d'une doctrine cohérente plutôt que d'un curseur isolé.
-PRESETS: Dict[str, Dict[str, Any]] = {
+PRESETS: dict[str, dict[str, Any]] = {
     "statut_quo": {
         "libelle": "Statu quo (inertie)",
         "description": "Aucun levier actionné : la trajectoire actuelle se prolonge.",
@@ -2586,15 +2586,15 @@ PRESETS: Dict[str, Dict[str, Any]] = {
 }
 
 
-def leviers_par_famille() -> Dict[str, List[Levier]]:
+def leviers_par_famille() -> dict[str, list[Levier]]:
     """Regroupe les leviers par famille, dans l'ordre d'affichage."""
-    regroupement: Dict[str, List[Levier]] = {cle: [] for cle in FAMILLES}
+    regroupement: dict[str, list[Levier]] = {cle: [] for cle in FAMILLES}
     for levier in LEVIERS.values():
         regroupement.setdefault(levier.famille, []).append(levier)
     return {cle: valeurs for cle, valeurs in regroupement.items() if valeurs}
 
 
-def valeurs_par_defaut() -> Dict[str, float]:
+def valeurs_par_defaut() -> dict[str, float]:
     """Vecteur de paramètres par défaut (pilotage neutre)."""
     return {cle: levier.defaut for cle, levier in LEVIERS.items()}
 
@@ -2626,7 +2626,7 @@ def _en_nombre(brut: Any, cle: str, defaut: float) -> float:
         raise ValueError(f"valeur non numérique pour {cle} : {brut!r}") from erreur
 
 
-def normaliser(parametres: Dict[str, Any] | None) -> Dict[str, float]:
+def normaliser(parametres: dict[str, Any] | None) -> dict[str, float]:
     """Valide et borne un vecteur de paramètres reçu de l'interface ou d'un test.
 
     * clés inconnues → erreur explicite (aucune politique silencieuse) ;
@@ -2636,7 +2636,7 @@ def normaliser(parametres: Dict[str, Any] | None) -> Dict[str, float]:
       valeur hors liste qui reste dans l'intervalle est une erreur, pas une approximation ;
     * champs absents ou `None` → valeur par défaut du levier.
     """
-    resultat: Dict[str, float] = {}
+    resultat: dict[str, float] = {}
     inconnues = set(parametres or ()) - set(LEVIERS)
     if inconnues:
         raise ValueError(f"leviers inconnus : {', '.join(sorted(inconnues))}")
@@ -2660,7 +2660,7 @@ def normaliser(parametres: Dict[str, Any] | None) -> Dict[str, float]:
     return resultat
 
 
-def catalogue_public() -> Dict[str, Any]:
+def catalogue_public() -> dict[str, Any]:
     """Vue sérialisable complète : familles, leviers, préréglages."""
     return {
         "familles": [
@@ -2675,7 +2675,7 @@ def catalogue_public() -> Dict[str, Any]:
 def resume_effets_lever(cle: str) -> str:
     """Résumé lisible des rattachements d'un levier (pour la documentation)."""
     levier = LEVIERS[cle]
-    morceaux: List[str] = []
+    morceaux: list[str] = []
     if levier.champ:
         morceaux.append(f"moteur : {levier.champ} (×{levier.facteur:g})")
     if levier.ligne:
@@ -2687,7 +2687,7 @@ def resume_effets_lever(cle: str) -> str:
     return " ; ".join(morceaux) if morceaux else "aucun effet déclaré"
 
 
-def iter_levers(familles: Optional[Iterable[str]] = None) -> Iterable[Levier]:
+def iter_levers(familles: Iterable[str] | None = None) -> Iterable[Levier]:
     """Itère sur les leviers (filtre optionnel par famille)."""
     selection = set(familles) if familles else None
     for levier in LEVIERS.values():

@@ -1,7 +1,7 @@
 """
 tests/test_moteur_parametrique.py — Tests de l'orchestrateur paramétrique.
 
-C'est la pièce qui transforme un vecteur de 93 leviers en trajectoire à 5 ans,
+C'est la pièce qui transforme un vecteur de 156 leviers en trajectoire à 5 ans,
 en scores de domaine et en matrice d'impacts croisés. Les tests vérifient le
 contrat public (formes, bornes, déterminisme) et les propriétés économiques
 attendues (sens des effets, cohérence de la référence).

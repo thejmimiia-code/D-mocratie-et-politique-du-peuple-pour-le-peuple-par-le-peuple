@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Module historique exhaustif : 234 ans d'histoire fiscale, économique, sociale,
 démographique et institutionnelle de la France (1792→2026).
@@ -23,11 +22,9 @@ justifier chaque paramètre de politique publique par analogie ou
 contraste avec le passé long de la Nation.
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Optional, Tuple
 import json
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
-
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # SECTION 1 : STRUCTURES DE DONNÉES
@@ -76,10 +73,10 @@ class PeriodeHistorique:
     alliances: str
     solde_exterieur_pct_pib: float  # balance commerciale / PIB
     # -- Contexte qualitatif --
-    evenements_cles: List[str] = field(default_factory=list)
-    reformes_majeures: List[str] = field(default_factory=list)
-    lecons_pour_simulateur: List[str] = field(default_factory=list)
-    sources: List[str] = field(default_factory=list)
+    evenements_cles: list[str] = field(default_factory=list)
+    reformes_majeures: list[str] = field(default_factory=list)
+    lecons_pour_simulateur: list[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -116,7 +113,7 @@ class ReformeHistorique:
     impact_immediat: str  # effet sur les indicateurs
     impact_long_terme: str  # effet cumulé
     rendement_estime_mds_euros: float  # impact budgétaire estimé
-    sources: List[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
     pertinence_pour_simulateur: str = ""
 
 
@@ -135,7 +132,7 @@ class CriseHistorique:
     reponse_publique: str
     duree_recuperation_annees: int
     lecons: str
-    sources: List[str] = field(default_factory=list)
+    sources: list[str] = field(default_factory=list)
 
 
 @dataclass
@@ -143,8 +140,8 @@ class ComparaisonInterRegime:
     """Structure de comparaison entre deux périodes historiques."""
     periode_a: str
     periode_b: str
-    dimensions: Dict[str, Dict[str, float]]  # dimension -> {a: val, b: val, delta: val}
-    enseignements: List[str] = field(default_factory=list)
+    dimensions: dict[str, dict[str, float]]  # dimension -> {a: val, b: val, delta: val}
+    enseignements: list[str] = field(default_factory=list)
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -159,7 +156,7 @@ class ComparaisonInterRegime:
 #   PIB/hab : Maddison Project Database 2020 (USD 2011 PPP)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PERIODES_HISTORIQUES: List[PeriodeHistorique] = [
+PERIODES_HISTORIQUES: list[PeriodeHistorique] = [
 
     # ── 1. RÉVOLUTION & DIRECTOIRE (1792-1799) ──────────────────────────────
     PeriodeHistorique(
@@ -950,7 +947,7 @@ PERIODES_HISTORIQUES: List[PeriodeHistorique] = [
 #           Maddison Project Database, Banque de France, Trésor-Economics
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SERIES_ANNUELLES: List[AnneeHistorique] = [
+SERIES_ANNUELLES: list[AnneeHistorique] = [
     # annee, pib_mds€, dette%, deficit%, recettes%, depenses%, pop_M, pib_hab€, inflation%, chomage%, taux_lt%, gini, top10%, solde_com, PO%, evenement, source
     AnneeHistorique(1870, 420, 113.0, -15.0, 10.0, 25.0, 36.1, 11600, 0.0, 4.0, 5.0, 0.50, 50.0, 0.0, 10.0, "Guerre franco-prussienne, chute du Second Empire", "Chicago Fed (2024), Piketty (2001)"),
     AnneeHistorique(1880, 460, 100.0, -2.0, 11.0, 13.0, 37.7, 12200, -0.5, 5.0, 4.5, 0.50, 50.0, 0.5, 11.0, "Réparations allemandes payées, début stabilisation", "Chicago Fed (2024), Lévy-Leboyer"),
@@ -978,7 +975,7 @@ SERIES_ANNUELLES: List[AnneeHistorique] = [
 # SECTION 4 : RÉFORMES FISCALES ET SOCIALES MAJEURES (1790→2026)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-REFORMES_MAJEURES: List[ReformeHistorique] = [
+REFORMES_MAJEURES: list[ReformeHistorique] = [
     ReformeHistorique(
         id="quatre_vieilles_1790",
         nom="Création des « quatre vieilles » contributions directes",
@@ -1046,7 +1043,7 @@ REFORMES_MAJEURES: List[ReformeHistorique] = [
 # SECTION 5 : CRISES HISTORIQUES MAJEURES (1792→2026)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CRISES_HISTORIQUES: List[CriseHistorique] = [
+CRISES_HISTORIQUES: list[CriseHistorique] = [
     CriseHistorique(
         id="assignats_1793_1796",
         nom="Hyperinflation des assignats",
@@ -1206,12 +1203,12 @@ DIMENSIONS_COMPARISON = {
 # SECTION 7 : FONCTIONS D'ANALYSE ET DE COMPARAISON
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def obtenir_toutes_periodes() -> List[Dict]:
+def obtenir_toutes_periodes() -> list[dict]:
     """Retourne la liste de toutes les périodes historiques."""
     return [asdict(p) for p in PERIODES_HISTORIQUES]
 
 
-def obtenir_periode_par_id(periode_id: str) -> Optional[Dict]:
+def obtenir_periode_par_id(periode_id: str) -> dict | None:
     """Retourne une période par son identifiant."""
     for p in PERIODES_HISTORIQUES:
         if p.id == periode_id:
@@ -1220,7 +1217,7 @@ def obtenir_periode_par_id(periode_id: str) -> Optional[Dict]:
 
 
 def comparer_periodes(periode_a_id: str, periode_b_id: str,
-                      dimensions: Optional[List[str]] = None) -> ComparaisonInterRegime:
+                      dimensions: list[str] | None = None) -> ComparaisonInterRegime:
     """Compare deux périodes historiques sur les dimensions demandées."""
     a = next((p for p in PERIODES_HISTORIQUES if p.id == periode_a_id), None)
     b = next((p for p in PERIODES_HISTORIQUES if p.id == periode_b_id), None)
@@ -1277,16 +1274,16 @@ def comparer_periodes(periode_a_id: str, periode_b_id: str,
 
 
 def filtrer_periodes(
-    annee_min: Optional[int] = None,
-    annee_max: Optional[int] = None,
-    type_regime: Optional[str] = None,
-    dette_min: Optional[float] = None,
-    dette_max: Optional[float] = None,
-    chomage_min: Optional[float] = None,
-    chomage_max: Optional[float] = None,
-    gini_min: Optional[float] = None,
-    gini_max: Optional[float] = None,
-) -> List[Dict]:
+    annee_min: int | None = None,
+    annee_max: int | None = None,
+    type_regime: str | None = None,
+    dette_min: float | None = None,
+    dette_max: float | None = None,
+    chomage_min: float | None = None,
+    chomage_max: float | None = None,
+    gini_min: float | None = None,
+    gini_max: float | None = None,
+) -> list[dict]:
     """Filtre les périodes selon des critères multiples."""
     resultats = []
     for p in PERIODES_HISTORIQUES:
@@ -1314,9 +1311,9 @@ def filtrer_periodes(
 
 def obtenir_series_chronologiques(
     indicateur: str,
-    annee_debut: Optional[int] = None,
-    annee_fin: Optional[int] = None,
-) -> List[Dict]:
+    annee_debut: int | None = None,
+    annee_fin: int | None = None,
+) -> list[dict]:
     """Extrait une série chronologique pour un indicateur donné."""
     resultats = []
     for s in SERIES_ANNUELLES:
@@ -1335,10 +1332,10 @@ def obtenir_series_chronologiques(
 
 
 def obtenir_reformes(
-    categorie: Optional[str] = None,
-    annee_min: Optional[int] = None,
-    annee_max: Optional[int] = None,
-) -> List[Dict]:
+    categorie: str | None = None,
+    annee_min: int | None = None,
+    annee_max: int | None = None,
+) -> list[dict]:
     """Retourne les réformes historiques filtrées."""
     resultats = []
     for r in REFORMES_MAJEURES:
@@ -1353,9 +1350,9 @@ def obtenir_reformes(
 
 
 def obtenir_crises(
-    type_crise: Optional[str] = None,
-    gravite_min: Optional[int] = None,
-) -> List[Dict]:
+    type_crise: str | None = None,
+    gravite_min: int | None = None,
+) -> list[dict]:
     """Retourne les crises historiques filtrées."""
     resultats = []
     for c in CRISES_HISTORIQUES:
@@ -1367,7 +1364,7 @@ def obtenir_crises(
     return resultats
 
 
-def obtenir_options_dropdown() -> Dict:
+def obtenir_options_dropdown() -> dict:
     """Retourne toutes les options pour les menus déroulants de l'interface."""
     return {
         "periodes": [
@@ -1378,13 +1375,13 @@ def obtenir_options_dropdown() -> Dict:
             {"id": k, "label": v["label"]}
             for k, v in DIMENSIONS_COMPARISON.items()
         ],
-        "types_regime": sorted(set(p.type_regime for p in PERIODES_HISTORIQUES)),
-        "categories_reforme": sorted(set(r.categorie for r in REFORMES_MAJEURES)),
-        "types_crise": sorted(set(c.type_crise for c in CRISES_HISTORIQUES)),
+        "types_regime": sorted({p.type_regime for p in PERIODES_HISTORIQUES}),
+        "categories_reforme": sorted({r.categorie for r in REFORMES_MAJEURES}),
+        "types_crise": sorted({c.type_crise for c in CRISES_HISTORIQUES}),
     }
 
 
-def calculer_moyenne_mobile(serie: List[Dict], fenetre: int = 10) -> List[Dict]:
+def calculer_moyenne_mobile(serie: list[dict], fenetre: int = 10) -> list[dict]:
     """Calcule une moyenne mobile sur une fenêtre de N années."""
     resultats = []
     for i in range(len(serie)):
@@ -1456,7 +1453,7 @@ def generer_synthese_historique() -> str:
 # SECTION 8 : COMPATIBILITÉ AVEC LE SIMULATEUR (CALIBRATION)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def calibrer_parametres_historiques() -> Dict:
+def calibrer_parametres_historiques() -> dict:
     """
     Retourne les paramètres historiques de référence pour calibrer
     le simulateur macro-politique (vérification de cohérence).

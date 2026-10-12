@@ -3,7 +3,6 @@
 Aucune conversion de l'indice géopolitique en probabilité. Voir le protocole R&D v3.
 """
 
-from typing import Dict, List, Optional, Tuple
 import argparse
 import hashlib
 import json
@@ -45,7 +44,7 @@ class Observation:
     mois: str
     revision: int
     cible: str
-    valeur: Optional[int]
+    valeur: int | None
     couverture: str
     nature: str
     source: str
@@ -83,7 +82,7 @@ class Observation:
 
 
 class Registre:
-    def __init__(self, observations: Tuple[Observation, ...]):
+    def __init__(self, observations: tuple[Observation, ...]):
         if not observations:
             raise ValueError('Registre vide')
         if len({o.cible for o in observations}) != 1:
@@ -91,9 +90,9 @@ class Registre:
         if len({o.nature for o in observations}) != 1:
             raise ValueError('Ne pas mélanger observations réelles et synthétiques')
         revisions = set()
-        identites: Dict[str, Tuple[str, str]] = {}
-        cellules: Dict[Tuple[str, str], str] = {}
-        groupes: Dict[str, List[Observation]] = {}
+        identites: dict[str, tuple[str, str]] = {}
+        cellules: dict[tuple[str, str], str] = {}
+        groupes: dict[str, list[Observation]] = {}
         for o in observations:
             cle = (o.identifiant, o.revision)
             cellule = (o.unite, o.mois)
@@ -107,13 +106,13 @@ class Registre:
             groupes.setdefault(o.identifiant, []).append(o)
         for groupe in groupes.values():
             ordre = sorted(groupe, key=lambda o: o.revision)
-            for avant, apres in zip(ordre, ordre[1:]):
+            for avant, apres in zip(ordre, ordre[1:], strict=False):
                 if (apres.publication < avant.publication
                         or apres.disponibilite < avant.disponibilite):
                     raise ValueError('Une révision ne peut être antidatée')
         self.observations = tuple(sorted(observations, key=lambda o: (o.unite, o.mois, o.revision)))
 
-    def instantane(self, au: str, mode: str = 'locale') -> Dict[Tuple[str, str], Observation]:
+    def instantane(self, au: str, mode: str = 'locale') -> dict[tuple[str, str], Observation]:
         """Dernière révision connue ; un retrait null remplace bien l'ancienne valeur."""
         limite = date_iso(au)
         if mode not in ('locale', 'publique'):
@@ -131,7 +130,7 @@ class Registre:
         return hashlib.sha256(contenu.encode()).hexdigest()
 
 
-def _objet_unique(paires: List[tuple]) -> dict:
+def _objet_unique(paires: list[tuple]) -> dict:
     resultat = {}
     for cle, valeur in paires:
         if cle in resultat:
@@ -155,7 +154,7 @@ def importer_jsonl(chemin: Path) -> Registre:
     return Registre(tuple(observations))
 
 
-def prevoir(registre: Registre, origine: str, unites: Tuple[str, ...],
+def prevoir(registre: Registre, origine: str, unites: tuple[str, ...],
             minimum: int = 6, mode: str = 'locale') -> dict:
     """Au premier jour, prévoir le mois qui débute. Aucun hyperparamètre ajusté."""
     jour = date_iso(origine)
@@ -193,7 +192,7 @@ def prevoir(registre: Registre, origine: str, unites: Tuple[str, ...],
     return {'predictions': predictions, 'abstentions': abstentions}
 
 
-def metriques(paires: List[Tuple[float, int]]) -> dict:
+def metriques(paires: list[tuple[float, int]]) -> dict:
     """Scores sur le même échantillon : bas = meilleur ; alerte si p >= 0,5."""
     for p, y in paires:
         if (isinstance(p, bool) or not isinstance(p, (int, float))
@@ -222,7 +221,7 @@ def metriques(paires: List[Tuple[float, int]]) -> dict:
 
 
 def evaluer(registre: Registre, debut: str, fin: str, au: str,
-            unites: Tuple[str, ...], minimum: int = 6, mode: str = 'locale') -> dict:
+            unites: tuple[str, ...], minimum: int = 6, mode: str = 'locale') -> dict:
     premier, dernier, evaluation = date_iso(debut), date_iso(fin), date_iso(au)
     if premier.day != 1 or dernier.day != 1 or not premier <= dernier:
         raise ValueError('Période de prévision mensuelle invalide')
@@ -230,7 +229,7 @@ def evaluer(registre: Registre, debut: str, fin: str, au: str,
         raise ValueError('Évaluer après la clôture du dernier mois cible')
     verite = registre.instantane(au, mode)
     predictions, abstentions, exclusions = [], [], []
-    scores: Dict[str, List[Tuple[float, int]]] = {nom: [] for nom in MODELES}
+    scores: dict[str, list[tuple[float, int]]] = {nom: [] for nom in MODELES}
     origine = premier
     while origine <= dernier:
         lot = prevoir(registre, origine.isoformat(), unites, minimum, mode)

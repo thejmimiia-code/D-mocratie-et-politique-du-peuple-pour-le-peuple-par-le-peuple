@@ -5,18 +5,12 @@ Projet : Démocratie et politique, du peuple, pour le peuple, par le peuple.
 """
 
 import sys
+
 from simulateur.cli import (
+    SCENARIOS_DISPONIBLES,
+    USAGE_SCENARIOS,
     executer_scenario,
-    lancer_menu_interactif,
-    comparer_tous_scenarios,
-    afficher_stress_tests_cli,
-    afficher_think_tanks_cli,
-    afficher_histoire_cli,
-    afficher_societe_cli,
 )
-
-
-from simulateur.cli import SCENARIOS_DISPONIBLES, USAGE_SCENARIOS, executer_scenario
 
 
 def main() -> None:

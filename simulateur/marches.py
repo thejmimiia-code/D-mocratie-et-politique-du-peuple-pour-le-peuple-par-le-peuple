@@ -20,13 +20,15 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
-UTC = timezone.utc
-from typing import Any, Dict, Optional, Tuple
+from datetime import UTC, datetime
+
+UTC = UTC
+from typing import Any  # noqa: E402
+
 try:
     from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 except ImportError:
-    from datetime import tzinfo, timedelta
+    from datetime import timedelta, tzinfo
     class ZoneInfoNotFoundError(KeyError):
         pass
     class ZoneInfo(tzinfo):
@@ -55,7 +57,7 @@ DELAI_RESEAU_SECONDES = 7.0
 # Les symboles sont des identifiants Yahoo Finance; les valeurs ne sont pas
 # embarquées dans le dépôt afin d'éviter de transformer un instantané de marché
 # sous licence de prototype en jeu de données redistribué.
-MARCHES_ACTIONS: Tuple[Dict[str, str], ...] = (
+MARCHES_ACTIONS: tuple[dict[str, str], ...] = (
     {
         "cle": "cac40", "nom": "CAC 40", "symbole": "^FCHI",
         "region": "France", "place": "Euronext Paris", "devise": "EUR",
@@ -123,7 +125,7 @@ MARCHES_ACTIONS: Tuple[Dict[str, str], ...] = (
     },
 )
 
-_CACHE_COTATIONS: Dict[str, Dict[str, Any]] = {}
+_CACHE_COTATIONS: dict[str, dict[str, Any]] = {}
 _CACHE_VERROU = threading.Lock()
 
 
@@ -135,7 +137,7 @@ def _url_yahoo(symbole: str) -> str:
     )
 
 
-def _date_utc(timestamp: Any) -> Optional[str]:
+def _date_utc(timestamp: Any) -> str | None:
     try:
         return datetime.fromtimestamp(float(timestamp), UTC).isoformat(timespec="seconds")
     except (TypeError, ValueError, OverflowError, OSError):
@@ -143,8 +145,8 @@ def _date_utc(timestamp: Any) -> Optional[str]:
 
 
 def _fraicheur_cotation(
-    cotation: Dict[str, Any], *, maintenant: Optional[datetime] = None, cache: bool = False
-) -> Dict[str, Any]:
+    cotation: dict[str, Any], *, maintenant: datetime | None = None, cache: bool = False
+) -> dict[str, Any]:
     """Requalifie un cours selon son âge et la date locale de sa place.
 
     Les calendriers fériés des places ne sont pas embarqués : une date sans
@@ -202,7 +204,7 @@ def _fraicheur_cotation(
     }
 
 
-def _lire_cotation(marche: Dict[str, str], timeout: float = DELAI_RESEAU_SECONDES) -> Dict[str, Any]:
+def _lire_cotation(marche: dict[str, str], timeout: float = DELAI_RESEAU_SECONDES) -> dict[str, Any]:
     url = _url_yahoo(marche["symbole"])
     requete = urllib.request.Request(
         url,
@@ -247,7 +249,7 @@ def _lire_cotation(marche: Dict[str, str], timeout: float = DELAI_RESEAU_SECONDE
     return _fraicheur_cotation(observation, maintenant=maintenant)
 
 
-def _nombre(valeur: Any) -> Optional[float]:
+def _nombre(valeur: Any) -> float | None:
     try:
         resultat = float(valeur)
     except (TypeError, ValueError):
@@ -255,7 +257,7 @@ def _nombre(valeur: Any) -> Optional[float]:
     return resultat if resultat == resultat else None
 
 
-def obtenir_cotations(*, actualiser: bool = True, timeout: float = DELAI_RESEAU_SECONDES) -> Dict[str, Any]:
+def obtenir_cotations(*, actualiser: bool = True, timeout: float = DELAI_RESEAU_SECONDES) -> dict[str, Any]:
     """Retourne les indices connus et, si demandé, tente une lecture simultanée.
 
     Les échecs réseau ne sont jamais remplacés par un faux cours. Un relevé déjà
@@ -263,8 +265,8 @@ def obtenir_cotations(*, actualiser: bool = True, timeout: float = DELAI_RESEAU_
     et un statut explicitement marqué `cache`.
     """
     maintenant = datetime.now(UTC).isoformat(timespec="seconds")
-    observations: Dict[str, Dict[str, Any]] = {}
-    erreurs: Dict[str, str] = {}
+    observations: dict[str, dict[str, Any]] = {}
+    erreurs: dict[str, str] = {}
     if actualiser:
         with ThreadPoolExecutor(max_workers=8, thread_name_prefix="cotation") as pool:
             futures = {
@@ -325,6 +327,6 @@ def obtenir_cotations(*, actualiser: bool = True, timeout: float = DELAI_RESEAU_
     }
 
 
-def catalogue_cotations() -> Dict[str, Any]:
+def catalogue_cotations() -> dict[str, Any]:
     """Métadonnées sans déclencher d'appel réseau (par ex. pour les tests)."""
     return obtenir_cotations(actualiser=False)

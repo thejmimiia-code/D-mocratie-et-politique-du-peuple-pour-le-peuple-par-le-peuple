@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Module d'enrichissement historique : séries longues vérifiées (1792→2026).
 Ajoute les données manquantes couvrant :
@@ -28,11 +27,8 @@ Sources primaires :
   • Bozio (2024) — « What lies behind France's low level of income inequality? »
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Optional
 import json
 from datetime import datetime
-
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # SECTION 1 : INDICE DE GINI — FRANCE (1970→2023)
@@ -40,7 +36,7 @@ from datetime import datetime
 # Méthodologie : Gini coefficient sur revenus disponibles des ménages
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-GINI_FRANCE: List[Dict] = [
+GINI_FRANCE: list[dict] = [
     # Source : Banque mondiale / CEIC / Our World in Data
     # Min historique : 0.297 (2006) — Max historique : 0.371 (1970)
     # Tendance : baisse forte 1970→1985, stabilisation 1985→2005,
@@ -115,7 +111,7 @@ GINI_FRANCE: List[Dict] = [
 # Note : données 1970-1990 sur périmètre incomplet (hors revenus financiers)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PAUVRETE_FRANCE: List[Dict] = [
+PAUVRETE_FRANCE: list[dict] = [
     # Source : INSEE — « Pauvreté monétaire en France depuis 1970 »
     # « L'essentiel sur la pauvreté » (juillet 2026)
     # Note : seuil 60% du niveau de vie médian
@@ -191,7 +187,7 @@ PAUVRETE_FRANCE: List[Dict] = [
 # Méthodologie : dette brute des administrations publiques / PIB nominal
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-DETTE_PIB_FRANCE: List[Dict] = [
+DETTE_PIB_FRANCE: list[dict] = [
     # Source : IMF DataMapper + Eulerpool + CEIC
     # Séquence complète 1978→2025
     {"annee": 1978, "dette_pct_pib": 21.4, "source": "IMF DataMapper / Eulerpool",
@@ -300,7 +296,7 @@ DETTE_PIB_FRANCE: List[Dict] = [
 # Données trimestrielles agrégées annuellement
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-SOLDE_BUDGETAIRE_FRANCE: List[Dict] = [
+SOLDE_BUDGETAIRE_FRANCE: list[dict] = [
     # Source : CEIC Data — Consolidated Fiscal Balance (% of Nominal GDP)
     # Séquence : Dec 1949 → Jun 2026
     # Moyenne historique : -2,3% du PIB (1949-2024)
@@ -376,7 +372,7 @@ SOLDE_BUDGETAIRE_FRANCE: List[Dict] = [
 # Source : INSEE Bilan démographique 2024, INED
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-DEMOGRAPHIE_FRANCE: List[Dict] = [
+DEMOGRAPHIE_FRANCE: list[dict] = [
     # Population (milliers d'habitants)
     {"annee": 1901, "population_milliers": 38972, "source": "INSEE / Historiques"},
     {"annee": 1946, "population_milliers": 40125, "source": "INSEE"},
@@ -390,7 +386,7 @@ DEMOGRAPHIE_FRANCE: List[Dict] = [
     {"annee": 2025, "population_milliers": 68600, "source": "INSEE (janvier 2025)"},
 ]
 
-FECONDITE_FRANCE: List[Dict] = [
+FECONDITE_FRANCE: list[dict] = [
     # Indicateur conjoncturel de fécondité (enfants par femme)
     {"annee": 1946, "icf": 2.98, "source": "INED", "contexte": "Baby-boom"},
     {"annee": 1950, "icf": 2.95, "source": "INED", "contexte": "Baby-boom"},
@@ -412,7 +408,7 @@ FECONDITE_FRANCE: List[Dict] = [
      "contexte": "DERNIÈRE MESURE — 663 000 naissances, -21,5% vs 2010"},
 ]
 
-ESPERANCE_VIE_FRANCE: List[Dict] = [
+ESPERANCE_VIE_FRANCE: list[dict] = [
     # Espérance de vie à la naissance par genre
     {"annee": 1994, "femmes": 81.8, "hommes": 73.6, "source": "INSEE"},
     {"annee": 2000, "femmes": 82.8, "hommes": 75.2, "source": "INSEE"},
@@ -436,7 +432,7 @@ ESPERANCE_VIE_FRANCE: List[Dict] = [
 # Note : données avant 1999 converties en euros (1 FRF = 0.15245 EUR)
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PIB_NOMINAL_FRANCE: List[Dict] = [
+PIB_NOMINAL_FRANCE: list[dict] = [
     # Source : Wikipedia / INSEE comptes nationaux
     # Données en milliards d'euros courants
     {"annee": 1949, "pib_mds_euros": 13.2, "source": "INSEE (rétropolation)"},
@@ -466,7 +462,7 @@ PIB_NOMINAL_FRANCE: List[Dict] = [
 ]
 
 # Taux de croissance annuel du PIB en volume (%)
-CROISSANCE_PIB_FRANCE: List[Dict] = [
+CROISSANCE_PIB_FRANCE: list[dict] = [
     # Source : Wikipedia / INSEE / eco3min
     # Trente Glorieuses : moyenne 5.3%/an (1949-1974)
     # Ralentissement : moyenne 2.2%/an (1974-2007)
@@ -507,7 +503,7 @@ CROISSANCE_PIB_FRANCE: List[Dict] = [
 # Méthodologie : chômage au sens du BIT, population active 15-64 ans
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-CHOMAGE_FRANCE: List[Dict] = [
+CHOMAGE_FRANCE: list[dict] = [
     # Source : INSEE — « L'essentiel sur le chômage » (août 2026)
     # « Activité, emploi et chômage en 2024 et en séries longues » (mars 2025)
     # Min historique : 3.1% (T1 1975) — Max historique : 10.6% (1994/1997)
@@ -585,7 +581,7 @@ CHOMAGE_FRANCE: List[Dict] = [
 # Note : hors cotisations sociales imputées et crédits d'impôt
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-PRELEVEMENTS_OBLIGATOIRES_FRANCE: List[Dict] = [
+PRELEVEMENTS_OBLIGATOIRES_FRANCE: list[dict] = [
     # Source : INSEE — Tableaux de l'Économie Française
     # Pic historique : 45.5% (1999) — Minimum : 30.0% (1960)
     {"annee": 1960, "taux_pct_pib": 30.0, "source": "INSEE",
@@ -623,7 +619,7 @@ PRELEVEMENTS_OBLIGATOIRES_FRANCE: List[Dict] = [
 # Méthodologie : évolution annuelle moyenne de l'indice des prix
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-INFLATION_FRANCE: List[Dict] = [
+INFLATION_FRANCE: list[dict] = [
     # Source : INSEE, france-inflation.com (convertisseur franc-euros)
     # Sélection de points clés sur 124 ans
     # Pic historique : >50% (1946-1947, reconstruction)
@@ -681,7 +677,7 @@ INFLATION_FRANCE: List[Dict] = [
 # Source : rapports IGF, HCFP, OFCE, Nova Terra, Jean-Jaurès
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-THINK_TANKS_ENRICHIS: List[Dict] = [
+THINK_TANKS_ENRICHIS: list[dict] = [
     {
         "nom": "IGF — Inspection Générale des Finances",
         "niveau": "National",
@@ -808,67 +804,67 @@ THINK_TANKS_ENRICHIS: List[Dict] = [
 # SECTION 7 : FONCTIONS D'ACCÈS
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def obtenir_gini(annee_debut: int = 1970, annee_fin: int = 2023) -> List[Dict]:
+def obtenir_gini(annee_debut: int = 1970, annee_fin: int = 2023) -> list[dict]:
     """Retourne l'indice de Gini pour la période spécifiée."""
     return [g for g in GINI_FRANCE if annee_debut <= g["annee"] <= annee_fin]
 
 
-def obtenir_pauvrete(annee_debut: int = 1970, annee_fin: int = 2024) -> List[Dict]:
+def obtenir_pauvrete(annee_debut: int = 1970, annee_fin: int = 2024) -> list[dict]:
     """Retourne le taux de pauvreté pour la période spécifiée."""
     return [p for p in PAUVRETE_FRANCE if annee_debut <= p["annee"] <= annee_fin]
 
 
-def obtenir_dette_pib(annee_debut: int = 1978, annee_fin: int = 2025) -> List[Dict]:
+def obtenir_dette_pib(annee_debut: int = 1978, annee_fin: int = 2025) -> list[dict]:
     """Retourne la dette/PIB pour la période spécifiée."""
     return [d for d in DETTE_PIB_FRANCE if annee_debut <= d["annee"] <= annee_fin]
 
 
-def obtenir_solde_budgetaire(annee_debut: int = 1949, annee_fin: int = 2026) -> List[Dict]:
+def obtenir_solde_budgetaire(annee_debut: int = 1949, annee_fin: int = 2026) -> list[dict]:
     """Retourne le solde budgétaire pour la période spécifiée."""
     return [s for s in SOLDE_BUDGETAIRE_FRANCE if annee_debut <= s["annee"] <= annee_fin]
 
 
-def obtenir_demographie() -> List[Dict]:
+def obtenir_demographie() -> list[dict]:
     """Retourne la série démographique complète."""
     return DEMOGRAPHIE_FRANCE
 
 
-def obtenir_pib_nominal() -> List[Dict]:
+def obtenir_pib_nominal() -> list[dict]:
     """Retourne la série du PIB nominal."""
     return PIB_NOMINAL_FRANCE
 
 
-def obtenir_croissance_pib() -> List[Dict]:
+def obtenir_croissance_pib() -> list[dict]:
     """Retourne la série de croissance du PIB."""
     return CROISSANCE_PIB_FRANCE
 
 
-def obtenir_chomage(annee_debut: int = 1975, annee_fin: int = 2025) -> List[Dict]:
+def obtenir_chomage(annee_debut: int = 1975, annee_fin: int = 2025) -> list[dict]:
     """Retourne le taux de chômage pour la période spécifiée."""
     return [c for c in CHOMAGE_FRANCE if annee_debut <= c["annee"] <= annee_fin]
 
 
-def obtenir_prelevements(annee_debut: int = 1960, annee_fin: int = 2024) -> List[Dict]:
+def obtenir_prelevements(annee_debut: int = 1960, annee_fin: int = 2024) -> list[dict]:
     """Retourne les prélèvements obligatoires pour la période spécifiée."""
     return [p for p in PRELEVEMENTS_OBLIGATOIRES_FRANCE if annee_debut <= p["annee"] <= annee_fin]
 
 
-def obtenir_inflation(annee_debut: int = 1901, annee_fin: int = 2025) -> List[Dict]:
+def obtenir_inflation(annee_debut: int = 1901, annee_fin: int = 2025) -> list[dict]:
     """Retourne l'inflation pour la période spécifiée."""
     return [i for i in INFLATION_FRANCE if annee_debut <= i["annee"] <= annee_fin]
 
 
-def obtenir_fecondite() -> List[Dict]:
+def obtenir_fecondite() -> list[dict]:
     """Retourne la série de fécondité complète."""
     return FECONDITE_FRANCE
 
 
-def obtenir_esperance_vie() -> List[Dict]:
+def obtenir_esperance_vie() -> list[dict]:
     """Retourne la série d'espérance de vie."""
     return ESPERANCE_VIE_FRANCE
 
 
-def obtenir_think_tanks_enrichis() -> List[Dict]:
+def obtenir_think_tanks_enrichis() -> list[dict]:
     """Retourne les think tanks complémentaires."""
     return THINK_TANKS_ENRICHIS
 
@@ -881,42 +877,42 @@ def generer_synthese_enrichissement() -> str:
         "═" * 80,
         "",
         f"📊 Indice de Gini : {len(GINI_FRANCE)} points (1970→2023)",
-        f"   Min : 0.297 (2006) | Max : 0.371 (1970) | Dernier : 0.318 (2023)",
+        "   Min : 0.297 (2006) | Max : 0.371 (1970) | Dernier : 0.318 (2023)",
         "",
         f"📉 Taux de pauvreté (seuil 60%) : {len(PAUVRETE_FRANCE)} points (1970→2024)",
-        f"   Min : 12.4% (2004) | Max : 18.2% (1970) | Dernier : 15.4% (2024)",
-        f"   9,8 millions de personnes en 2024 — PLUS HAUT JAMAIS MESURÉ",
+        "   Min : 12.4% (2004) | Max : 18.2% (1970) | Dernier : 15.4% (2024)",
+        "   9,8 millions de personnes en 2024 — PLUS HAUT JAMAIS MESURÉ",
         "",
         f"💰 Dette publique / PIB : {len(DETTE_PIB_FRANCE)} points (1978→2025)",
-        f"   Min : 21.3% (1980) | Max : 115.6% (2025) | Dernier : 115.6% (2025)",
+        "   Min : 21.3% (1980) | Max : 115.6% (2025) | Dernier : 115.6% (2025)",
         "",
         f"📊 Solde budgétaire : {len(SOLDE_BUDGETAIRE_FRANCE)} points (1949→2026)",
-        f"   Min : -8.9% (2020) | Max : ~0% (2000) | Dernier : -5.8% (2024)",
+        "   Min : -8.9% (2020) | Max : ~0% (2000) | Dernier : -5.8% (2024)",
         "",
         f"👶 Démographie : {len(DEMOGRAPHIE_FRANCE)} points population",
         f"👩‍👧 Fécondité : {len(FECONDITE_FRANCE)} points (1946→2024)",
-        f"   Dernier : 1.62 enfant/femme (2024) — RECORD BAS",
+        "   Dernier : 1.62 enfant/femme (2024) — RECORD BAS",
         "",
         f"⏳ Espérance de vie : {len(ESPERANCE_VIE_FRANCE)} points (1994→2024)",
-        f"   Dernier : F=85.6 ans / H=80.0 ans (2024)",
+        "   Dernier : F=85.6 ans / H=80.0 ans (2024)",
         "",
         f"📈 PIB nominal : {len(PIB_NOMINAL_FRANCE)} points (1949→2024)",
-        f"   1949 : 13,2 Md€ | 2024 : 2 955 Md€ | Facteur : ×224",
+        "   1949 : 13,2 Md€ | 2024 : 2 955 Md€ | Facteur : ×224",
         "",
         f"📈 Croissance PIB : {len(CROISSANCE_PIB_FRANCE)} points (1950→2024)",
-        f"   Trente Glorieuses : 5,3%/an | 1974→2007 : 2,2%/an | 2007→2024 : 0,8%/an",
+        "   Trente Glorieuses : 5,3%/an | 1974→2007 : 2,2%/an | 2007→2024 : 0,8%/an",
         "",
         f"👷 Chômage : {len(CHOMAGE_FRANCE)} points (1975→2025)",
-        f"   Min : 3,6% (1975) | Max : 10,6% (1994) | Dernier : 7,4% (2024)",
+        "   Min : 3,6% (1975) | Max : 10,6% (1994) | Dernier : 7,4% (2024)",
         "",
         f"🏛️ Think tanks enrichis : {len(THINK_TANKS_ENRICHIS)}",
         "   IGF, HCFP, OFCE, Nova Terra, Jean-Jaurès, RESF AN, Commission européenne",
         "",
         f"🏛️ Prélèvements obligatoires : {len(PRELEVEMENTS_OBLIGATOIRES_FRANCE)} points (1960→2024)",
-        f"   Min : 30,0% (1960) | Max : 45,2% (2017) | Dernier : 43,6% (2024)",
+        "   Min : 30,0% (1960) | Max : 45,2% (2017) | Dernier : 43,6% (2024)",
         "",
         f"📈 Inflation (IPC) : {len(INFLATION_FRANCE)} points (1901→2025)",
-        f"   Record : 55% (1946) | Record moderne : 13,7% (1974) | Dernier : 0,9% (2025)",
+        "   Record : 55% (1946) | Record moderne : 13,7% (1974) | Dernier : 0,9% (2025)",
         "",
         "═" * 80,
     ]

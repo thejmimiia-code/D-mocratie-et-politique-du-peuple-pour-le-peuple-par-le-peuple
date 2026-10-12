@@ -5,7 +5,7 @@ Données réelles calées à l'instant T (septembre 2026).
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Tuple, Any
+from typing import Any
 
 # =============================================================================
 # STRATE 1 : ÉCHELON LOCAL (La Cellule de Base Territoriale)
@@ -449,7 +449,7 @@ class StrateTerritorialeContinuum:
     sections_commune_lieux_dits_count: int = 2500     # Sections de commune avec commission syndicale (art. L. 2411-1 CGCT)
     conseils_de_quartier_count: int = 1550            # Conseils de quartier des communes >= 80k hab. (art. L. 2143-1 CGCT)
     quartiers_prioritaires_ville_qpv: int = 1514      # QPV relevant de la politique de la ville
-    
+
     # 2. Les 9 strates démographiques communales (INSEE)
     communes_moins_100_hab_count: int = 3400          # Communes hyper-rurales (< 100 hab.)
     communes_100_a_499_hab_count: int = 17000         # Petits villages (100 à 499 hab.)
@@ -467,7 +467,7 @@ class StrateTerritorialeContinuum:
     metropoles_count: int = 22                        # Métropoles 200k+ (Grand Paris, Aix-Marseille, Lyon, Bordeaux, Lille...)
     communes_200000_et_plus_hab_count: int = 11       # Villes de plus de 200 000 habitants
     communes_total: int = 34935                       # Total des communes françaises
-    
+
     # 3. Intercommunalités (EPCI) et syndicats
     communautes_de_communes_count: int = 991          # CC à fiscalité propre
     communautes_agglomeration_count: int = 228        # CA (plus de 50 000 hab.)
@@ -476,7 +476,7 @@ class StrateTerritorialeContinuum:
     metropole_lyon_statut_particulier: int = 1        # Collectivité à statut particulier exerçant compétences dép./métro.
     epci_total: int = 1254                            # Total intercommunalités à fiscalité propre (991 CC + 228 CA + 14 CU + 21 Métropoles)
     syndicats_intercommunaux_sivu_sivom: int = 8400   # Syndicats d'eau, déchets, transports, énergie
-    
+
     # 4. Déconcentration de l'État et Circonscriptions républicaines
     arrondissements_deconcentres_count: int = 332     # Sous-préfectures territoriales de l'État
     cantons_electoraux_count: int = 2054              # Circonscriptions d'élection des conseils départementaux
@@ -485,7 +485,7 @@ class StrateTerritorialeContinuum:
     agences_regionales_sante_ars: int = 18            # ARS (13 métropolitaines + 5 ultramarines)
     cours_appel_judiciaires_count: int = 36           # Cours d'appel judiciaires
     zones_defense_securite_count: int = 12            # 7 métropolitaines + 5 outre-mer
-    
+
     # 5. Départements et Régions
     departements_metropolitains_count: int = 96        # 96 départements métropolitains
     departements_outremer_count: int = 5              # 5 départements d'outre-mer (Guadeloupe, Martinique, Guyane, Réunion, Mayotte)
@@ -506,14 +506,14 @@ class StrateOutreMerDetail:
     nouvelle_caledonie_population_millions: float = 0.27 # Titre XIII (988 - 3 provinces, Congrès de NC, Sénat coutumier)
     francais_etranger_inscrits_millions: float = 2.10 # Registre consulaire mondial (11 députés, 12 sénateurs, AFE)
     outremer_population_totale_millions: float = 2.83 # 2.83 millions d'habitants sur les territoires ultramarins
-    
+
     # Souveraineté maritime et ZEE (2e rang mondial)
     zee_maritime_millions_km2: float = 10.2           # 10.2 millions de km² de Zone Économique Exclusive
     zee_pacifique_millions_km2: float = 6.8           # Polynésie (4.8), Nouvelle-Calédonie (1.4), Wallis (0.3), Clipperton (0.4)
     zee_indien_millions_km2: float = 2.6              # TAAF australes (1.7), Éparses (0.6), La Réunion (0.3), Mayotte (0.07)
     zee_atlantique_antilles_guyane_km2: float = 0.5   # Guadeloupe, Martinique, Guyane, Saint-Pierre-et-Miquelon
     zee_metropole_facade_europeenne_km2: float = 0.3  # Manche, Mer du Nord, Atlantique, Méditerranée
-    
+
     # Indicateurs économiques et continuité
     surcout_vie_chere_outremer_pct: float = 32.5      # Surcoût moyen des prix alimentaires et vitaux vs Métropole
     octroi_de_mer_recette_mde: float = 1.60           # Taxe locale d'importation finançant les communes d'Outre-mer
@@ -528,7 +528,7 @@ class StrateFonctionsElectorales:
     reu_electeurs_inscrits_millions: float = 49.5     # Répertoire Électoral Unique tenu par l'INSEE
     procurations_dematerialisees_pct: float = 68.0      # Identité certifiée France Identité
     commissions_controle_electorales_count: int = 34935 # Commissions de contrôle REU dans chaque commune
-    
+
     # 2. Taux de participation projetés par scrutin
     taux_participation_presidentielle_pct: float = 72.0 # Projection scrutin présidentiel
     taux_participation_legislatives_pct: float = 66.5   # Projection scrutin législatif
@@ -537,7 +537,7 @@ class StrateFonctionsElectorales:
     taux_participation_regionales_pct: float = 45.0     # Projection scrutin régional
     taux_participation_departementales_pct: float = 43.5 # Projection scrutin départemental
     taux_participation_consulaires_pct: float = 28.0    # Projection scrutin des Français de l'étranger
-    
+
     # 3. Assemblées et seuils constitutionnels
     circonscriptions_legislatives_total: int = 577      # 539 Métropole + 27 Outre-mer + 11 Français de l'étranger
     grands_electeurs_senat_total: int = 162000          # Collège électoral sénatorial (95% délégués municipaux)
@@ -548,7 +548,7 @@ class StrateFonctionsElectorales:
     conseillers_regionaux_total: int = 1757             # Élus régionaux
     deputes_europeens_france_total: int = 81            # Députés au Parlement européen
     conseillers_francais_etranger_total: int = 442      # Conseillers consulaires
-    
+
     # 4. Seuils légaux et règles électorales
     seuil_second_tour_legislatives_pct_inscrits: float = 12.5 # Seuil maintien au 2nd tour (L. 126)
     seuil_second_tour_departementales_pct_inscrits: float = 12.5 # Seuil maintien cantonal (L. 210-1)
@@ -559,7 +559,7 @@ class StrateFonctionsElectorales:
     prime_majoritaire_regionales_pct: float = 25.0      # Prime 25% liste en tête (L. 338)
     parrainages_presidentiels_requis: int = 500         # Élus habilités sur au moins 30 départements
     departements_minimum_parrainages: int = 30          # Règle géographique des parrainages
-    
+
     # 5. Démocratie directe et voies référendaires
     rip_seuil_parlementaires: int = 185                 # 1/5e des membres du Parlement (Art. 11 al. 3)
     rip_seuil_electeurs_millions: float = 4.95          # 1/10e des électeurs inscrits REU
@@ -875,7 +875,7 @@ class ResultatEtapeSimulation:
     investissements_longs_engages_cumules_mde: float = 0.0  # P21 : flux d'investissement cumulés
     reformes_structurelles_actives: float = 0.0        # P20 : intensité simultanée déclarée
 
-    commentaires: List[str] = field(default_factory=list)
+    commentaires: list[str] = field(default_factory=list)
     # Dynamiques des Assemblées Représentatives et Décisionnelles
     voix_censure_an: int = 265                        # Assemblée nationale : projection motion de censure art. 49.2
     gouvernement_censure: bool = False                # Vrai si voix_censure_an >= 289
@@ -967,7 +967,7 @@ class ResultatEtapeSimulation:
     conformite_organique_lolf: bool = True             # Respect strict de la LOLF et de la hiérarchie des normes
     signature_integrite_sha256: str = ""               # Empreinte cryptographique de validation du calcul
 
-    commentaires: List[str] = field(default_factory=list)
+    commentaires: list[str] = field(default_factory=list)
 
     @property
     def territoire(self) -> "StrateTerritorialeContinuum":
@@ -1104,7 +1104,7 @@ class ResultatEtapeSimulation:
         )
 
     @property
-    def stress_tests_think_tanks(self) -> Dict[str, Any]:
+    def stress_tests_think_tanks(self) -> dict[str, Any]:
         """Exécute et retourne les évaluations contradictoires des think tanks."""
         from simulateur.think_tanks import executer_stress_tests_mandature
         return executer_stress_tests_mandature(

@@ -3,7 +3,6 @@
 Pas de téléchargement implicite, pas d'antidatage, pas de somme de victimes imputée.
 """
 
-from typing import List
 import argparse
 import csv
 import hashlib
@@ -41,7 +40,7 @@ class ContratImport:
     preuve_disponibilite: str
     debut: str
     fin: str
-    pays_ids: List[int]
+    pays_ids: list[int]
     couverture_exhaustive: bool = False
     preuve_exhaustivite: str = ''
 

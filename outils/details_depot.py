@@ -13,7 +13,6 @@ le bloc exact à copier dans *Edit repository details*.
 """
 
 from __future__ import annotations
-from typing import Optional, Tuple
 
 import argparse
 import json
@@ -24,12 +23,11 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 DEPOT = "thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple"
-DEPOT_COURT = "thejmimiia-code/D-mocratie-et-politique-du-peuple"
 
 #: Description du dépôt (limite GitHub : 350 caractères).
 DESCRIPTION = (
     "Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → "
-    "géopolitique) : 149 leviers croisables, 20 domaines d'impact notés 0-100, données "
+    "géopolitique) : 156 leviers croisables, 20 domaines d'impact notés 0-100, données "
     "publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils "
     "tolérables et hors-sol."
 )
@@ -100,7 +98,7 @@ Réglages recommandés dans la même page
 """
 
 
-def _gh(*arguments: str) -> Tuple[int, str]:
+def _gh(*arguments: str) -> tuple[int, str]:
     gh = shutil.which("gh")
     if gh is None:
         return 127, "gh CLI absent"
@@ -108,7 +106,7 @@ def _gh(*arguments: str) -> Tuple[int, str]:
     return proc.returncode, (proc.stdout or proc.stderr).strip()
 
 
-def etat_actuel() -> Optional[dict]:
+def etat_actuel() -> dict | None:
     """Lit les réglages actuels du dépôt (None si l'API est indisponible)."""
     code, sortie = _gh("api", f"repos/{DEPOT}",
                        "--jq", "{description,homepage,topics,visibility,license:.license.spdx_id}")

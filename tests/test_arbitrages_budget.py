@@ -3,22 +3,20 @@ tests/test_arbitrages_budget.py — Tests unitaires et d'intégration de la mod�
 des arbitrages budgétaires et de la gouvernance ministérielle de Bercy.
 """
 
-import json
 import unittest
+
 from simulateur.model import (
-    ProfilMinistreBudget,
     DirecteurCabinetBercy,
     JaugesSurvieBercy,
-    StrateGouvernanceBudgetaireBercy,
+    ProfilMinistreBudget,
     StrateBatailleDuBudget,
-    ResultatEtapeSimulation,
+    StrateGouvernanceBudgetaireBercy,
 )
 from simulateur.moteur import MoteurSimulationSystemique
 from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
     get_scenario_austerite_brutale,
     get_scenario_choc_mondial_stagflation,
+    get_scenario_mandature_5_ans,
 )
 
 

@@ -76,7 +76,7 @@ Tous les dossiers de mandature, chiffrages et textes de loi sont disponibles dan
 * **[`docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md`](docs/04_POUVOIR_D_ACHAT_ET_TRAJECTOIRE.md)** : Baisse TVA énergie à 5,5 % (**-9 Md€ / an**, gain 150-300 €/foyer), déficit ramené sous les 3 % du PIB, désendettement net de 51 Md€/an.
 * **[`docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md`](docs/05_GUIDE_AUTODEFENSE_ET_CONTRE_ARGUMENTS.md)** : 10 fiches de riposte tactique démontant les pièges des oppositions et éditorialistes.
 * **[`docs/ANALYSE_TENSION_GLOBALE_2026.md`](docs/ANALYSE_TENSION_GLOBALE_2026.md)** : analyse des tensions géopolitiques mondiales (conflits actifs, arsenaux nucléaires, chokepoints, chemins d'escalade vers une guerre mondiale).
-* **[`docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`](docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md)** : **strate 5** — audit des éléments manquants, phases de recherche et calibrage sourcé (SIPRI, OTAN La Haye, AIE, PSE, OCDE), équations de transmission, 5 nouveaux scénarios et validation par 61 tests.
+* **[`docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md`](docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md)** : **strate 5** — audit des éléments manquants, phases de recherche et calibrage sourcé (SIPRI, OTAN La Haye, AIE, PSE, OCDE), équations de transmission, 5 nouveaux scénarios et leur suite de validation.
 
 ---
 
@@ -387,9 +387,9 @@ Quand un système technique tombe en panne, on ne demande pas à un communiquant
 | **Think tanks** | 30 laboratoires d'idées (Local → Mondial) avec stress-tests croisés | ✅ Intégré |
 | **Base historique** | 12 périodes de la Ire République (1792) à la Ve République (2026) | ✅ Sourcé |
 | **Module multi-agents** | ABM prototype (ménages, entreprises, collectivités, Gini, IR, IS, chocs) | ✅ Opérationnel |
-| **247 tests de validation** | Couverture complète de tous les modules, 0 échec, ~1.1 s | ✅ Vert |
+| **Suite de validation** | Couverture complète de tous les modules, 0 échec (le compte s'affiche à l'exécution) | ✅ Vert |
 | **14 volumes de documentation** | 95 articles, 25+ sources certifiées, méthodologie SFC | ✅ Publiés |
-| **Interface web** | 13 onglets experts, 35+ endpoints API REST | ✅ En ligne |
+| **Interface web** | page unique, sections experte et publique, API JSON servie par la fonction unique | ✅ En ligne |
 | **CLI** | 8 commandes (mandature, statut quo, austérité, choc mondial, comparatif, stress-tests, think tanks, histoire) | ✅ Fonctionnel |
 
 ### Les 5 paradigmes de stress-test
@@ -630,7 +630,7 @@ Ce projet ne travaille pas en silo. Il s'inscrit dans un écosystème mondial d'
 
 ### Prérequis
 
-- **Python 3.9+** (Standard Library uniquement — zéro dépendance tierce obligatoire)
+- **Python 3.11+** (`requires-python`, `runtime.txt`) — bibliothèque standard uniquement, zéro dépendance tierce obligatoire
 
 ### Démarrage rapide
 
@@ -663,11 +663,11 @@ python3 main.py menu           # Menu interactif en terminal
 
 ```bash
 python3 -m unittest discover tests
-# → 247 tests, 0 échec (11 HTTP skippés), ~1.1 s
+# → 0 échec (11 sauts HTTP), ~1 minute
 ```
 
 > ✅ **Plafond de l'offre Hobby : 12 fonctions par déploiement.** `api/` ne contient
-> qu'une seule fonction pour les 16 routes du moteur, `[...path].py`, plus
+> qu'une seule fonction pour les 22 routes du moteur, `[...path].py`, plus
 > `verifier-source` : deux fonctions au total. Aucune règle de réécriture
 > (`vercel.json`) n'est nécessaire. Pour un hébergement sans Vercel (un seul
 > processus), voir [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md).
@@ -752,7 +752,7 @@ Ces expériences interrogent le modèle ; elles ne constituent pas des prévisio
 [Inventaire des points stratégiques systématiques de la période de dix ans]
 (docs/RD_DOUBLE_MANDATURE.md) : calendrier électoral, verrou constitutionnel,
 usure du capital politique, second dividende de la dette, investissements à
-cycle long — avec deux scénarios décennaux exécutables et 16 tests dédiés.
+cycle long — avec deux scénarios décennaux exécutables et leur suite de tests dédiée.
 
 ## Conflits et risques systémiques
 

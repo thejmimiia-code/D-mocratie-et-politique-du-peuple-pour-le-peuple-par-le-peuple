@@ -2,11 +2,12 @@
 
 import json
 import unittest
-from datetime import datetime, timezone
-UTC = timezone.utc
-from unittest.mock import patch
+from datetime import UTC, datetime
 
-from simulateur import marches
+UTC = UTC
+from unittest.mock import patch  # noqa: E402
+
+from simulateur import marches  # noqa: E402
 
 
 class _Reponse:

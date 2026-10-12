@@ -1,25 +1,23 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Tests pour le module sociétal des 18 domaines (1792→2026).
 Vérifie la structure, les séries, les comparaisons et les endpoints HTTP.
 """
 
 import json
+import os
 import unittest
 import urllib.request
 
 from simulateur.societe_domaines import (
-    DomaineSocietal,
-    IndicateurHistorique,
     DOMAINES_SOCIETAUX,
-    obtenir_tous_domaines,
-    obtenir_domaine_par_id,
-    lister_domaines_ids,
     comparer_domaines,
-    obtenir_serie_domaine,
-    generer_synthese_societale,
     exporter_json_domaines,
+    generer_synthese_societale,
+    lister_domaines_ids,
+    obtenir_domaine_par_id,
+    obtenir_serie_domaine,
+    obtenir_tous_domaines,
 )
 
 
@@ -172,7 +170,8 @@ class TestDomainesSpecifiques(unittest.TestCase):
 class TestHttpSociete(unittest.TestCase):
     """Tests d'intégration des endpoints HTTP."""
 
-    BASE = "http://127.0.0.1:8000"
+    #: Le serveur à interroger : celui du poste, ou celui que la CI démarre.
+    BASE = os.environ.get("SIMULATEUR_BASE_URL", "http://127.0.0.1:8000")
 
     def _get_json(self, path: str):
         try:

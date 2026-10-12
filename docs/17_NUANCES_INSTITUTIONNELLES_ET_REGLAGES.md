@@ -258,7 +258,7 @@ GET /api/nuances      ?parametres={"reglage_petition_locale_seuil":8} · ?reglag
 | Fichier | Rôle |
 |---|---|
 | `simulateur/nuances_institutionnelles.py` | la couche : registre des réglages, seuils, délais, fentes, indices, cohérence |
-| `simulateur/parametres.py` | les 48 leviers `reglage_*`, bornés et sourcés, dans `LEVIERS` |
+| `simulateur/parametres.py` | les 55 leviers `reglage_*`, bornés et sourcés, dans `LEVIERS` |
 | `tests/test_nuances_institutionnelles.py` | 41 cas : neutralité, arithmétique, verrouillages, indices, croisements |
 | `api/nuances.py` | fonction sans serveur, générée par `outils/generer-fonctions-api.py` |
 

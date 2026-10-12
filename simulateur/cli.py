@@ -1,4 +1,3 @@
-from typing import Dict, List, Optional, Tuple
 """
 simulateur/cli.py — Interface terminale pour le simulateur multi-strates (Local, National, Europe, Marchés).
 """
@@ -9,6 +8,14 @@ import sys
 from dataclasses import asdict, fields
 from pathlib import Path
 
+from simulateur.histoire_france import (
+    CRISES_HISTORIQUES,
+    PERIODES_HISTORIQUES,
+    REFORMES_MAJEURES,
+    SERIES_ANNUELLES,
+    comparer_periodes,
+    generer_synthese_historique,
+)
 from simulateur.model import (
     ResultatEtapeSimulation,
 )
@@ -25,29 +32,17 @@ from simulateur.scenarios import (
     get_scenario_mandature_5_ans,
     get_scenario_resilience_republicaine,
     get_scenario_statut_quo,
-    get_scenario_austerite_brutale,
-    get_scenario_choc_mondial_stagflation,
+)
+from simulateur.societe_domaines import (
+    generer_synthese_societale,
 )
 from simulateur.think_tanks import (
     REGISTRE_THINK_TANKS,
-    PARADIGMES_STRESS_TEST,
     executer_stress_tests_mandature,
-)
-from simulateur.histoire_france import (
-    PERIODES_HISTORIQUES,
-    SERIES_ANNUELLES,
-    REFORMES_MAJEURES,
-    CRISES_HISTORIQUES,
-    generer_synthese_historique,
-    comparer_periodes,
-)
-from simulateur.societe_domaines import (
-    DOMAINES_SOCIETAUX,
-    generer_synthese_societale,
 )
 
 # Catalogue central des scénarios : clé CLI -> (fabrique de décisions, titre affiché)
-CATALOGUE_SCENARIOS: Dict[str, Tuple] = {
+CATALOGUE_SCENARIOS: dict[str, tuple] = {
     "mandature": (get_scenario_mandature_5_ans, "PLAN DE MANDATURE RÉPUBLICAIN (+60 Md€ en Année 5)"),
     "statut_quo": (get_scenario_statut_quo, "STATUT QUO (Immobilisme politique et inertie)"),
     "austerite": (get_scenario_austerite_brutale, "AUSTÉRITÉ AVEUGLE (Coupes territoriales et fronde fiscale)"),
@@ -85,7 +80,7 @@ CATALOGUE_SCENARIOS: Dict[str, Tuple] = {
     ),
 }
 
-SCENARIOS_DISPONIBLES: Tuple[str, ...] = tuple(CATALOGUE_SCENARIOS)
+SCENARIOS_DISPONIBLES: tuple[str, ...] = tuple(CATALOGUE_SCENARIOS)
 USAGE_SCENARIOS = "|".join(SCENARIOS_DISPONIBLES)
 
 
@@ -96,7 +91,7 @@ def afficher_banniere() -> None:
     print("=" * 105)
 
 
-def afficher_tableau_resultats(titre: str, resultats: List[ResultatEtapeSimulation]) -> None:
+def afficher_tableau_resultats(titre: str, resultats: list[ResultatEtapeSimulation]) -> None:
     print(f"\n>>> RÉSULTATS DE LA SIMULATION : {titre}")
     print("-" * 115)
     header = (
@@ -178,8 +173,8 @@ def afficher_detail_annee(r: ResultatEtapeSimulation) -> None:
 
 def executer_scenario(
     nom_scenario: str,
-    export_path: Optional[str] = None,
-) -> List[ResultatEtapeSimulation]:
+    export_path: str | None = None,
+) -> list[ResultatEtapeSimulation]:
     moteur = MoteurSimulationSystemique()
 
     if nom_scenario not in CATALOGUE_SCENARIOS:
@@ -202,7 +197,7 @@ def executer_scenario(
 
 def export_scenario(
     nom_scenario: str,
-    resultats: List[ResultatEtapeSimulation],
+    resultats: list[ResultatEtapeSimulation],
     export_path: str,
 ) -> str:
     """
@@ -226,7 +221,7 @@ def export_scenario(
 
 def exporter_json(
     nom_scenario: str,
-    resultats: List[ResultatEtapeSimulation],
+    resultats: list[ResultatEtapeSimulation],
     chemin: str,
 ) -> str:
     """Exporte les résultats vers un fichier JSON structuré."""
@@ -244,7 +239,7 @@ def exporter_json(
 
 def exporter_csv(
     nom_scenario: str,
-    resultats: List[ResultatEtapeSimulation],
+    resultats: list[ResultatEtapeSimulation],
     chemin: str,
 ) -> str:
     """Exporte les résultats vers un fichier CSV (une ligne par année)."""
@@ -340,7 +335,7 @@ def afficher_stress_tests_cli():
     print("AUDIT CONTRADICTOIRE : ÉVALUATION DES 5 PARADIGMES DE STRESS-TEST (23 THINK TANKS)")
     print("=" * 105)
     res = executer_stress_tests_mandature(None, None, None, None, None)
-    for k, st in res.items():
+    for st in res.values():
         print(f"\n[{st.statut}] {st.titre} — Score: {st.score_robustesse_sur_100:.0f} %")
         print(f"  * Rationale scientifique : {st.justification_scientifique}")
         print("  * Critères audités :")
@@ -357,7 +352,7 @@ def afficher_think_tanks_cli():
     print("\n" + "=" * 105)
     print("RÉPERTOIRE MONDIAL DES 23 THINK TANKS AUDITÉS (LOCAL À MONDIAL)")
     print("=" * 105)
-    for tt_id, tt in REGISTRE_THINK_TANKS.items():
+    for tt in REGISTRE_THINK_TANKS.values():
         print(f"\n• [{tt.echelon.upper()}] {tt.nom} ({tt.sigle}) — Siège: {tt.pays_siege}")
         print(f"  Orientation : {tt.epistemologie} | Direction: {tt.directeur_ou_fondateur}")
         print(f"  Objection   : {tt.objections_anticipees[0]}")

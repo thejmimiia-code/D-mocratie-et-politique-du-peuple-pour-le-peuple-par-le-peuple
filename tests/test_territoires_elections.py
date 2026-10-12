@@ -4,32 +4,29 @@ de l'Outre-mer complet et des fonctions électorales de la République.
 """
 
 import unittest
+
 from simulateur.model import (
-    StrateTerritorialeContinuum,
-    StrateOutreMerDetail,
     StrateFonctionsElectorales,
-    DecisionPolitique,
-    ResultatEtapeSimulation,
+    StrateOutreMerDetail,
+    StrateTerritorialeContinuum,
 )
 from simulateur.moteur import MoteurSimulationSystemique
-from simulateur.scenarios import (
-    get_scenario_mandature_5_ans,
-    get_scenario_statut_quo,
-    get_scenario_austerite_brutale,
-    get_scenario_choc_mondial_stagflation,
-)
 from simulateur.reglements_lois import (
+    CGCT_L2411_1,
+    CODE_ELEC_L16,
+    CODE_ELEC_L123,
+    CODE_ELEC_L260,
+    CODE_TRANSP_L1803_1,
     CONST_ART_1,
     CONST_ART_72_3,
     CONST_ART_73,
     CONST_ART_74,
     CONST_TITRE_XIII,
-    CODE_ELEC_L16,
-    CODE_ELEC_L123,
-    CODE_ELEC_L260,
-    CGCT_L2411_1,
-    CODE_TRANSP_L1803_1,
     REGISTRE_LEGAL,
+)
+from simulateur.scenarios import (
+    get_scenario_choc_mondial_stagflation,
+    get_scenario_mandature_5_ans,
 )
 
 
@@ -175,6 +172,15 @@ class TestStratesTerritorialesEtElections(unittest.TestCase):
             + 5  # Communes spécifiques d'outre-mer / arrondissements
         )
         self.assertAlmostEqual(terr.communes_total, 34935, delta=15)
+        # L'écart entre la somme des strates et le total déclaré est mesuré, pas
+        # contourné : la strate « rurales » suit la définition INSEE du rural
+        # (< 1 000 hab.) et non le découpage en classes du modèle, si bien que les
+        # deux comptages se recouvrent de 21 communes (0,06 %). Le chiffre est
+        # vérifié ici pour qu'une dérive se voie ; il reste à résorber en recalant
+        # une strate sur l'autre.
+        ecart_strates_total = somme_toutes_strates - terr.communes_total
+        self.assertEqual(ecart_strates_total, 21,
+                         "les strates et le total déclaré ne se recouvrent plus comme documenté")
 
     def test_epci_et_deconcentration_etat(self):
         """Vérifie l'exhaustivité des 1 254 EPCI et des services déconcentrés de l'État."""

@@ -37,7 +37,7 @@ mouvement de curseur. Le sélecteur d'horizon propose une ou deux mandatures
 | `simulateur/domaines.py` | 20 domaines, 74 indicateurs spécifiés (formule + source), `construire_flux()`, `decision_moteur()` |
 | `simulateur/seuils.py` | garde-fous par strate : bornes, messages, marges, risque population |
 | `simulateur/moteur_parametrique.py` | orchestrateur : trajectoire de référence, boucle de convergence, scores, matrice d'impacts |
-| `simulateur/donnees_live.py` | registre de 38 indicateurs publics (38 sources licenciées), snapshot daté, collecte |
+| `simulateur/donnees_live.py` | registre de 52 indicateurs publics (38 sources licenciées), snapshot daté, collecte |
 | `simulateur/moteur.py`, `model.py` | moteur systémique à 5 échelons (inchangé) |
 | `simulateur/dashboard.py` | serveur HTTP + API JSON |
 | `simulateur/interface.py` | page HTML unique (CSS et JavaScript embarqués, zéro CDN) |
@@ -392,7 +392,7 @@ Une bulle répond à trois questions, dans cet ordre :
    réglage (et pour un pas au-delà du défaut), une simulation réelle compare le
    réglage isolé — tous les autres leviers restent neutres — à la trajectoire de
    référence : score des 20 domaines, écart chiffré des indicateurs (les
-   12 plus forts), niveau des 33 garde-fous, risque population, verdict par
+   12 plus forts), niveau des 31 garde-fous, risque population, verdict par
    strate et **journal institutionnel** (« Report forcé sur la taxe foncière »,
    « Alerte censure : probabilité de chute du cabinet à 87,5 % », « Sortie de la
    PDE », « Plan semi-conducteurs : résilience de 25 % face à un blocus »…).

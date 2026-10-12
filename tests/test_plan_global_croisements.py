@@ -17,9 +17,9 @@ RACINE = Path(__file__).resolve().parent.parent
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
-from simulateur.gouvernance_contrepouvoir import MECANISMES, VERROUS
-from simulateur.instances_et_dynamiques import FENTES, INSTANCES, STRATEGIES, TRAJETS
-from simulateur.nuances_institutionnelles import (
+from simulateur.gouvernance_contrepouvoir import MECANISMES, VERROUS  # noqa: E402
+from simulateur.instances_et_dynamiques import FENTES, INSTANCES, STRATEGIES, TRAJETS  # noqa: E402
+from simulateur.nuances_institutionnelles import (  # noqa: E402
     APPORTS,
     INDICES,
     NIVEAUX,
@@ -39,8 +39,8 @@ from simulateur.nuances_institutionnelles import (
     seuils_ajustes,
     synthese_pour_api,
 )
-from simulateur.parametres import FAMILLES, LEVIERS, PRESETS
-from simulateur.reglements_lois import REGISTRE_LEGAL
+from simulateur.parametres import FAMILLES, LEVIERS, PRESETS  # noqa: E402
+from simulateur.reglements_lois import REGISTRE_LEGAL  # noqa: E402
 
 
 def _ouvert(cle: str) -> float:
@@ -319,7 +319,8 @@ class TestFraicheurDesDocuments(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.scripts = ["outils/generer-doc-nuances.py", "outils/generer-page-verification.py",
-                       "outils/generer-index-simulateur.py", "outils/generer-fonctions-api.py"]
+                       "outils/generer-index-simulateur.py", "outils/generer-fonctions-api.py",
+                       "outils/generer-objections.py", "outils/generer-registre-engagements.py"]
 
     def test_les_generateurs_ne_prennent_pas_de_retard(self):
         for script in self.scripts:
@@ -340,21 +341,24 @@ class TestFraicheurDesDocuments(unittest.TestCase):
         self.assertIn(f"{len(PRESETS)} préréglages", page)
 
     def test_compteurs_des_documents_d_etat(self):
-        annuaires = [RACINE, RACINE / "docs", RACINE / "api"]
-        annonces = []
-        for repertoire in annuaires:
-            for chemin in sorted(repertoire.glob("*.md")):
-                if chemin.name in {"CHANGELOG.md", "RD_DOUBLE_MANDATURE.md",
-                                   "DOSSIER_DE_MANDATURE_GLOBAL.md"}:
-                    continue          # journaux de bord datés : ils gardent leurs chiffres
-                texte = chemin.read_text(encoding="utf-8")
-                for motif in (r"\b149 leviers\b", r"\b149 paramètres\b", r"\b48 réglages\b",
-                              r"\b14 préréglages\b", r"\b14 presets\b"):
-                    for correspondance in re.finditer(motif, texte):
-                        annonces.append(f"{chemin.name} : {correspondance.group(0)}")
-        self.assertEqual(annonces, [],
+        """Délègue au garde-fou général des compteurs (`outils/verifier-compteurs.py`).
+
+        Les motifs périmés connus sont cités ici pour mémoire : le contrôle qui les
+        cherche couvre désormais leviers, réglages, préréglages, familles, domaines,
+        indicateurs, garde-fous, scénarios, échelons et routes — et refuse qu'un
+        document vivant annonce le compte de ses tests.
+        """
+        import importlib.util
+
+        chemin = RACINE / "outils" / "verifier-compteurs.py"
+        spec = importlib.util.spec_from_file_location("verifier_compteurs", chemin)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules["verifier_compteurs"] = module
+        spec.loader.exec_module(module)
+        anomalies = module.verifier(RACINE)
+        self.assertEqual(anomalies, [],
                          "compteur périmé — régénérer la page ou reprendre le chiffre : "
-                         + "; ".join(annonces))
+                         + "; ".join(anomalies))
 
     def test_tout_document_est_indexe(self):
         index = (RACINE / "docs" / "README.md").read_text(encoding="utf-8")
@@ -392,7 +396,7 @@ class TestPariteDesRoutes(unittest.TestCase):
                         | set(re.findall(r'chemin == "(/api/[a-z_]+)"',
                                           source[source.index("    def do_POST"):])))
         generee = (RACINE / "outils" / "generer-fonctions-api.py").read_text(encoding="utf-8")
-        registre = re.search(r"ROUTES: Tuple\[str, \.\.\.\] = \((.*?)\n\)", generee, re.S)
+        registre = re.search(r"ROUTES: [\w.]+\[str, \.\.\.\] = \((.*?)\n\)", generee, re.S)
         cibles = sorted(f"/api/{nom}" for nom in re.findall(r'"([a-z_]+)"', registre.group(1)))
         self.assertEqual(len(routes), len(cibles),
                          f"routes servies {routes} contre registre {cibles}")
@@ -411,11 +415,11 @@ class TestPariteDesRoutes(unittest.TestCase):
         ne contient que ce pont plus les fonctions propres au site.
         """
         outil = (RACINE / "outils" / "generer-fonctions-api.py").read_text(encoding="utf-8")
-        registre = re.search(r"ROUTES: Tuple\[str, \.\.\.\] = \((.*?)\n\)", outil, re.S)
+        registre = re.search(r"ROUTES: [\w.]+\[str, \.\.\.\] = \((.*?)\n\)", outil, re.S)
         cibles = sorted(nom for nom in re.findall(r'"([a-z_]+)"', registre.group(1)))
         site = sorted(nom for nom in re.findall(
             r'"([a-z-]+)"',
-            re.search(r"FONCTIONS_DU_SITE: Tuple\[str, \.\.\.\] = \((.*?)\)", outil, re.S).group(1)))
+            re.search(r"FONCTIONS_DU_SITE: [\w.]+\[str, \.\.\.\] = \((.*?)\)", outil, re.S).group(1)))
         dossiers = sorted(chemin.stem for chemin in (RACINE / "api").glob("*.py"))
         self.assertEqual(dossiers, sorted(["[...path]", *site]),
                          "api/ contient une fonction par route : revenir au pont unique")

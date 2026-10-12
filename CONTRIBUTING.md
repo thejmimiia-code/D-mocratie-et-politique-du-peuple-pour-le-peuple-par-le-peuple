@@ -47,7 +47,7 @@ simulateur/
 ├── cli.py                # Interface terminale
 └── web_server.py         # Serveur HTTP et API REST
 tests/
-└── test_*.py             # 166 tests (unittest)
+└── test_*.py             # suite unittest (le compte s'affiche à l'exécution)
 docs/
 └── *.md                  # 14 volumes de référence
 ```

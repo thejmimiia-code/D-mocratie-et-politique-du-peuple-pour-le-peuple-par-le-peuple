@@ -2,9 +2,12 @@
 tests/test_extension_eva.py — Tests unitaires de l'extension ÉVA Simulateur Politique (Protocole 4.2.3).
 """
 
-import unittest
 import asyncio
-from extension_eva.main import ExtensionSimulateurPolitique, EventBus, EVENEMENT_DEMANDE, EVENEMENT_REPONSE
+import unittest
+
+from extension_eva.main import (
+    ExtensionSimulateurPolitique,
+)
 
 
 class TestExtensionSimulateurPolitique(unittest.TestCase):

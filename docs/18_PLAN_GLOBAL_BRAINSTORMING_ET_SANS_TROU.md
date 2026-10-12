@@ -173,7 +173,7 @@ Pour rejouer l'audit complet après n'importe quelle modification :
 # 1. les invariants de croisement et la fraîcheur des documents générés
 python3 -m unittest tests.test_plan_global_croisements -v
 
-# 2. toute la suite (922 tests, ~55 s)
+# 2. toute la suite (~1 minute)
 python3 -m unittest discover -s tests -p "test_*.py"
 
 # 3. régénérer ce qui est produit, puis contrôler qu'il ne reste aucun écart

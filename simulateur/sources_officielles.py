@@ -7,8 +7,8 @@ son intitulé certifié, sa valeur de référence, son millésime, sa méthodolo
 sa marge d'incertitude et l'URL officielle d'accès en open data / consultation publique.
 """
 
-from dataclasses import dataclass, asdict
-from typing import Dict, List, Optional, Any
+from dataclasses import asdict, dataclass
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -28,11 +28,11 @@ class SourceOfficielle:
     statut_certification: str
     intervalle_incertitude_pct: float
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
-REGISTRE_SOURCES_OFFICIELLES: Dict[str, SourceOfficielle] = {
+REGISTRE_SOURCES_OFFICIELLES: dict[str, SourceOfficielle] = {
     # -------------------------------------------------------------------------
     # 1. MACROÉCONOMIE & FINANCES PUBLIQUES (INSEE, DGFIP, DIRECTION DU BUDGET)
     # -------------------------------------------------------------------------
@@ -558,16 +558,16 @@ REGISTRE_SOURCES_OFFICIELLES: Dict[str, SourceOfficielle] = {
 }
 
 
-def get_source(id_source: str) -> Optional[SourceOfficielle]:
+def get_source(id_source: str) -> SourceOfficielle | None:
     """Retourne la source officielle correspondant à l'identifiant, ou None."""
     return REGISTRE_SOURCES_OFFICIELLES.get(id_source)
 
 
-def lister_sources_par_categorie(categorie: str) -> List[SourceOfficielle]:
+def lister_sources_par_categorie(categorie: str) -> list[SourceOfficielle]:
     """Filtre les sources officielles par catégorie thématique."""
     return [s for s in REGISTRE_SOURCES_OFFICIELLES.values() if s.categorie.lower() == categorie.lower()]
 
 
-def exporter_catalogue_sources() -> List[Dict[str, Any]]:
+def exporter_catalogue_sources() -> list[dict[str, Any]]:
     """Exporte l'ensemble des sources au format dictionnaire pour l'API REST."""
     return [s.to_dict() for s in REGISTRE_SOURCES_OFFICIELLES.values()]

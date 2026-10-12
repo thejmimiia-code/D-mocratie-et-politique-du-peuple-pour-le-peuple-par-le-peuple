@@ -157,13 +157,13 @@ Le score moyen du Plan de Mandature est de **100% SOLIDE**.
 ## 6. Architecture Technique
 
 ### 6.1 Stack
-- **Python 3.9+** (Standard Library uniquement)
+- **Python 3.11+** (bibliothèque standard uniquement)
 - **Zero dépendance externe** (pas de pip install nécessaire)
 - **Serveur HTTP intégré** (http.server)
-- **Tests** : unittest (222 tests, 0 échec)
+- **Tests** : unittest, 0 échec (le compte s'affiche à l'exécution)
 
 ### 6.2 Interfaces
-- **Web** : 13 onglets, 35+ endpoints API REST
+- **Web** : page unique (sections experte et publique) et API JSON
 - **CLI** : 8 commandes (mandature, comparatif, --stress-tests, --think-tanks, --histoire, --societe, menu, web)
 - **JSON** : Export complet de toutes les données
 

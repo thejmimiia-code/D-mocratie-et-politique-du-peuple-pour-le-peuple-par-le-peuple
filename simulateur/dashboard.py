@@ -32,6 +32,10 @@ Deux niveaux de service cohabitent :
                                  `?coherence=1`, sinon synthèse) ;
       - `GET  /api/catalogue`    : familles, leviers, préréglages et valeurs par défaut ;
       - `GET  /api/presets`      : les préréglages doctrinaux ;
+      - `GET  /api/objections`   : le registre de la contradiction (`?famille=mesure`,
+                                 `?statut=en_cours`, `?levier=…`, `?chercher=…`) : objections
+                                 fortes, concessions, ce qui ferait changer d'avis, et les
+                                 contre-modèles ;
       - `GET  /api/lexique`      : le lexique pédagogique (`?terme=…`, `?chercher=…`) ;
       - `GET  /api/marches`      : fiches marchés publics ;
       - `GET  /api/garde_fous`   : les garde-fous et leurs seuils ;
@@ -68,7 +72,7 @@ import traceback
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Lock
-from typing import Any, Dict, List, Tuple
+from typing import Any
 from urllib.parse import parse_qs, urlparse
 
 from simulateur.bulles import DETAILS, bulle_levier, bulles_catalogue
@@ -101,7 +105,7 @@ from simulateur.seuils import bareme_public
 
 #: Catalogue des scénarios historiques : clé → (fabrique de décisions, nom,
 #: description, couleur). `fn` est exposé pour la compatibilité des tests.
-SCENARIOS: Dict[str, Dict[str, Any]] = {
+SCENARIOS: dict[str, dict[str, Any]] = {
     "mandature": {
         "nom": "Plan de mandature républicaine",
         "description": "Réformes structurelles, fraude, niches : déficit sous 3 % en année 5.",
@@ -173,14 +177,14 @@ SCENARIOS: Dict[str, Dict[str, Any]] = {
 }
 
 #: Référence de contexte réutilisée entre les requêtes (mise en cache mémoire).
-_CONTEXTE_CACHE: Dict[str, Any] = {"contexte": None}
+_CONTEXTE_CACHE: dict[str, Any] = {"contexte": None}
 
 
 # ────────────────────────────────────────────────────────────────────────────
 # Simulation historique (API d'origine, conservée à l'identique)
 # ────────────────────────────────────────────────────────────────────────────
 
-def run_simulation_api(scenario: str) -> Dict[str, Any]:
+def run_simulation_api(scenario: str) -> dict[str, Any]:
     """Exécute un scénario historique et retourne une charge utile sérialisable."""
     if scenario not in SCENARIOS:
         return {"error": f"Scénario inconnu : {scenario}"}
@@ -202,7 +206,7 @@ def contexte_courant(rafraichir: bool = False):
     return _CONTEXTE_CACHE["contexte"]
 
 
-_CACHE_BULLES: Dict[tuple, Any] = {}
+_CACHE_BULLES: dict[tuple, Any] = {}
 _VERROU_BULLES = Lock()
 
 
@@ -234,7 +238,7 @@ def catalogue_bulles(contexte, cles=None, avec_mesure: bool = True, detail: str 
     return resultat
 
 
-def _avec_lecture(sortie) -> Dict[str, Any]:
+def _avec_lecture(sortie) -> dict[str, Any]:
     """Ajoute la « lecture en clair » à une sortie de simulation sérialisée.
 
     Les chiffres du moteur sont exacts ; ils ne sont pas forcément lisibles par
@@ -250,7 +254,7 @@ def _avec_lecture(sortie) -> Dict[str, Any]:
     return charge
 
 
-def enregistrer_donnees_navigateur(lectures_brutes: Dict[str, Any]) -> Dict[str, Any]:
+def enregistrer_donnees_navigateur(lectures_brutes: dict[str, Any]) -> dict[str, Any]:
     """Fusionne des valeurs collectées par le navigateur dans le cache local.
 
     Le navigateur de l'utilisateur peut atteindre des API publiques même quand
@@ -285,7 +289,7 @@ def enregistrer_donnees_navigateur(lectures_brutes: Dict[str, Any]) -> Dict[str,
             "lectures": sorted(lectures)}
 
 
-def rapport_collecte() -> Dict[str, Any]:
+def rapport_collecte() -> dict[str, Any]:
     """Diagnostic de collecte : quelles séries sont live, en référence ou absentes."""
     contexte = contexte_courant()
     details = contexte.provenance
@@ -325,7 +329,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", "0")
         self.end_headers()
 
-    def _preparer_charge(self, charge: bytes) -> Tuple[bytes, str | None]:
+    def _preparer_charge(self, charge: bytes) -> tuple[bytes, str | None]:
         """Compresse la charge si le navigateur l'accepte (voir compression.py).
 
         Le gain est mesuré et documenté dans docs/RD_OPTIMISATION_FLUIDITE.md :
@@ -347,7 +351,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if not self._tete_seulement:
             self.wfile.write(charge)
 
-    def _send_json(self, donnees: Dict[str, Any], status: int = 200) -> None:
+    def _send_json(self, donnees: dict[str, Any], status: int = 200) -> None:
         charge, encodage = self._preparer_charge(
             json.dumps(donnees, ensure_ascii=False, default=str).encode("utf-8")
         )
@@ -385,7 +389,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return None
 
     @staticmethod
-    def _parametres_depuis_requete(corps: Any, query: Dict[str, List[str]]) -> Dict[str, float]:
+    def _parametres_depuis_requete(corps: Any, query: dict[str, list[str]]) -> dict[str, float]:
         if isinstance(corps, dict) and "parametres" in corps:
             return dict(corps.get("parametres") or {})
         if "params" in query:
@@ -762,6 +766,48 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         elif chemin == "/api/nuances":
             self._repondre_nuances(query)
+
+        elif chemin == "/api/objections":
+            # Le registre de la contradiction : objections fortes, concessions, ce qui
+            # ferait changer d'avis, et les quatre contre-modèles. Les filtres ne
+            # recalculent rien : ils trient le registre, et les comptes suivent.
+            from . import contradiction as desaccords
+
+            famille = query.get("famille", [""])[0]
+            statut = query.get("statut", [""])[0]
+            levier = query.get("levier", [""])[0]
+            recherche = query.get("chercher", [""])[0]
+            if famille and famille not in desaccords.FAMILLES:
+                self._send_json({"error": f"famille inconnue : {famille}",
+                                 "familles": desaccords.FAMILLES}, status=404)
+                return
+            if statut and statut not in desaccords.STATUTS:
+                self._send_json({"error": f"statut inconnu : {statut}",
+                                 "statuts": desaccords.STATUTS}, status=404)
+                return
+            if not any((famille, statut, levier, recherche)):
+                self._send_json(desaccords.synthese_pour_api())
+                return
+            try:
+                lignes = desaccords.filtrer(famille=famille or None, statut=statut or None,
+                                            levier=levier or None, chercher=recherche or None)
+                self._send_json({
+                    "filtres": {"famille": famille, "statut": statut, "levier": levier,
+                                "chercher": recherche},
+                    "total": len(lignes),
+                    "objections": [desaccords.ligne_pour_api(o) for o in lignes],
+                    "statuts": desaccords.STATUTS,
+                    "familles": desaccords.FAMILLES,
+                    "comptes": {
+                        "par_statut": {cle: sum(1 for o in lignes if o.statut == cle)
+                                       for cle in desaccords.STATUTS},
+                        "par_famille": {cle: sum(1 for o in lignes if o.famille == cle)
+                                        for cle in desaccords.FAMILLES},
+                    },
+                })
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
         elif chemin == "/api/presets":
             self._send_json({"presets": PRESETS})
 
@@ -896,7 +942,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
         elif chemin == "/api/nuances":
-            # Le même calcul que le GET, par corps : un vecteur complet de 149 leviers
+            # Le même calcul que le GET, par corps : un vecteur complet de 156 leviers
             # tient mal dans une URL. L'interface s'en sert pour garder la section
             # « nuances institutionnelles » alignée sur les curseurs, en direct.
             if not isinstance(corps, dict):

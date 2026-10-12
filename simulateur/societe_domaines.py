@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
 Module sociétal exhaustif : 18 domaines de la société française (1792→2026).
 Couvre : Éducation, Santé, Justice, Défense, Travail, Logement, Transport,
@@ -31,11 +30,9 @@ Sources primaires mobilisées :
   • INSEE / CNAF — Mariages, divorces, naissances, PACS
 """
 
-from dataclasses import dataclass, field, asdict
-from typing import List, Dict, Optional
 import json
+from dataclasses import asdict, dataclass
 from datetime import datetime
-
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # SECTION 1 : STRUCTURES DE DONNÉES
@@ -58,12 +55,12 @@ class DomaineSocietal:
     nom: str
     icon: str
     description: str
-    indicateurs_cles: Dict[str, str]  # {id_indicateur: label}
-    serie_historique: List[IndicateurHistorique]
-    reformes_majeures: List[Dict[str, str]]
-    crises: List[Dict[str, str]]
-    parametres_calibration: Dict[str, Dict[str, float]]
-    sources_principales: List[str]
+    indicateurs_cles: dict[str, str]  # {id_indicateur: label}
+    serie_historique: list[IndicateurHistorique]
+    reformes_majeures: list[dict[str, str]]
+    crises: list[dict[str, str]]
+    parametres_calibration: dict[str, dict[str, float]]
+    sources_principales: list[str]
     pertinence_pour_simulateur: str = ""
     pourquoi_integration: str = ""
 
@@ -72,7 +69,7 @@ class DomaineSocietal:
 # SECTION 2 : LES 18 DOMAINES SOCIÉTAUX
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-DOMAINES_SOCIETAUX: List[DomaineSocietal] = [
+DOMAINES_SOCIETAUX: list[DomaineSocietal] = [
 
     # ── 1. ÉDUCATION ───────────────────────────────────────────────
     DomaineSocietal(
@@ -796,12 +793,12 @@ DOMAINES_SOCIETAUX: List[DomaineSocietal] = [
 # SECTION 3 : FONCTIONS D'ACCÈS ET D'ANALYSE
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-def obtenir_tous_domaines() -> List[Dict]:
+def obtenir_tous_domaines() -> list[dict]:
     """Retourne tous les domaines sociétaux."""
     return [asdict(d) for d in DOMAINES_SOCIETAUX]
 
 
-def obtenir_domaine_par_id(domaine_id: str) -> Optional[Dict]:
+def obtenir_domaine_par_id(domaine_id: str) -> dict | None:
     """Retourne un domaine par son identifiant."""
     for d in DOMAINES_SOCIETAUX:
         if d.id == domaine_id:
@@ -809,12 +806,12 @@ def obtenir_domaine_par_id(domaine_id: str) -> Optional[Dict]:
     return None
 
 
-def lister_domaines_ids() -> List[str]:
+def lister_domaines_ids() -> list[str]:
     """Retourne la liste des identifiants de domaines."""
     return [d.id for d in DOMAINES_SOCIETAUX]
 
 
-def comparer_domaines(domaine_a_id: str, domaine_b_id: str) -> Dict:
+def comparer_domaines(domaine_a_id: str, domaine_b_id: str) -> dict:
     """Compare deux domaines sociétaux."""
     a = next((d for d in DOMAINES_SOCIETAUX if d.id == domaine_a_id), None)
     b = next((d for d in DOMAINES_SOCIETAUX if d.id == domaine_b_id), None)
@@ -835,7 +832,7 @@ def comparer_domaines(domaine_a_id: str, domaine_b_id: str) -> Dict:
     }
 
 
-def obtenir_serie_domaine(domaine_id: str, indicateur_id: Optional[str] = None) -> List[Dict]:
+def obtenir_serie_domaine(domaine_id: str, indicateur_id: str | None = None) -> list[dict]:
     """Retourne la série historique d'un domaine, éventuellement filtrée par indicateur."""
     domaine = next((d for d in DOMAINES_SOCIETAUX if d.id == domaine_id), None)
     if not domaine:
@@ -869,7 +866,7 @@ def generer_synthese_societale() -> str:
         lignes.append(f"  Crises : {len(d.crises)}")
         lignes.append(f"  Pourquoi intégré : {d.pourquoi_integration}")
         if d.parametres_calibration:
-            lignes.append(f"  Paramètres de calibration :")
+            lignes.append("  Paramètres de calibration :")
             for key, val in d.parametres_calibration.items():
                 lignes.append(f"    - {key} : {val}")
         lignes.append("")
