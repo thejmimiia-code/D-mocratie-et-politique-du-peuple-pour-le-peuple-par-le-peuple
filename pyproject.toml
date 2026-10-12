@@ -5,10 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "simulateur-macro-politique"
 version = "1.0.0"
-description = "Simulateur macro-politique systémique à 5 échelons : 156 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct et console de veille des seuils tolérables et hors-sol."
+description = "Simulateur macro-politique systémique à 5 échelons : 156 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct et console de veille des seuils tolérables avant crises."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Loi 1901 — Open-Source et Privé" }
+license = { file = "LICENSE" }
 authors = [
     { name = "Thejmimiia", email = "thejmimiia@gmail.com" }
 ]
@@ -61,6 +61,9 @@ line-length = 100
 target-version = "py311"
 
 [tool.ruff.lint]
+# `UP` (pyupgrade) est conservé : `main` l'avait retiré parce qu'il échouait sur 1 196
+# sites de code hérité ; cette branche a corrigé ces sites, donc la règle tient à nouveau.
+# La retirer ici laisserait la dette se reformer sans que rien ne le signale.
 select = ["E", "F", "W", "I", "B", "UP", "C4"]
 ignore = ["E501"]
 
