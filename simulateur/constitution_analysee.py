@@ -59,7 +59,8 @@ du 4 août 1995) et l'article 90 (dispositions transitoires).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+import re
+from dataclasses import dataclass
 import unicodedata
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
@@ -2200,7 +2201,7 @@ _TITRE_IX_X: Tuple[ArticleConstitution, ...] = (
                "les quinze jours)",
                "le Conseil constitutionnel (incompétent sur l'opportunité, compétent sur la loi organique "
                "du 29 novembre 2011)"],
-       croise=["7", "26", "67", "68-1", "71-1", "90"],
+       croise=["7", "26", "65", "67", "68-1", "71-1"],
        mecanismes=("haute_cour", "procedure_destitution"),
        leviers=("regime_immunites",)),
     _a("68-1", "Responsabilité pénale des membres du Gouvernement devant la CJR",
@@ -3291,13 +3292,24 @@ ORDRE_ARTICLES: Tuple[str, ...] = tuple(sorted(ARTICLES, key=_cle_tri))
 # CONSULTATION
 # ────────────────────────────────────────────────────────────────────────────
 
+_ALINEA = re.compile(r"\s*(?:al\.?|alinéa|paragraphe)\s*\d+\s*(?:bis|ter)?$", re.IGNORECASE)
+_POINT_ALINEA = re.compile(r"\.(\d+)$")
+
+
 def article(numero: str) -> Optional[ArticleConstitution]:
-    """Fiche d'un article, ou None. Accepte « art. 49 » et « 49 »."""
+    """Fiche d'un article, ou None.
+
+    Tolère les notations usuelles : « Article 49 », « art. 49 », « 49 al. 3 » et
+    « 49.3 » renvoient tous à la fiche de l'article 49 — l'alinéa n'a pas de fiche
+    propre, c'est l'article qui porte la règle.
+    """
     cleaned = (numero or "").strip().lower()
     for prefixe in ("article ", "art. ", "art "):
         if cleaned.startswith(prefixe):
             cleaned = cleaned[len(prefixe):]
-    cleaned = cleaned.replace(" al.", "").replace(" alinéa", "").strip()
+    cleaned = _ALINEA.sub("", cleaned)
+    cleaned = _POINT_ALINEA.sub("", cleaned)
+    cleaned = cleaned.replace("bis", "").replace("ter", "").strip()
     for candidat in (cleaned, cleaned.replace("-", "‑")):
         if candidat in ARTICLES:
             return ARTICLES[candidat]
@@ -3537,7 +3549,9 @@ def synthese_pour_api() -> Dict[str, Any]:
             "Pour chaque article en vigueur : règles chiffrées, opportunités, contraintes, "
             "contre-pouvoirs, croisements avec les autres articles, strates touchées, "
             "mécanismes du moteur et leviers du catalogue. Synthèse de travail adossée au "
-            "texte officiel ; les articles courts sont cités in extenso."
+            "texte officiel ; les articles courts sont cités in extenso. Un modèle, pas une "
+            "prophétie : ces fiches disent ce que le droit permet et ce qui le bloque, jamais "
+            "ce qui arrivera."
         ),
         "source": SOURCE_CC,
         "version": VERSION_TEXTE,

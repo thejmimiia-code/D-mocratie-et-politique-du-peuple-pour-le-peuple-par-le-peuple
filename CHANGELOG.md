@@ -6,6 +6,34 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Ajouté — La Constitution ficheée article par article et l'arithmétique des contre-pouvoirs
+
+- `simulateur/constitution_analysee.py` : 109 fiches, une par article en vigueur du texte
+  officiel (Titres I → XVI), plus 10 entrées pour les articles abrogés (78 à 86, 90).
+  Chaque fiche porte ses règles chiffrées, ses opportunités, ses contraintes, les
+  contre-pouvoirs qui l'encadrent, les articles à lire avec, les strates qui encaissent,
+  les mécanismes du moteur et les leviers réels du catalogue. `couverture()` garantit
+  l'exhaustivité, `article()` accepte « art. 49 », « 49 al. 3 » et « 49.3 ».
+- La fabrique filtre les leviers sur `parametres.LEVIERS` et bascule tout nom inconnu dans
+  un champ `pistes` : une fiche ne peut plus promettre un levier qui n'existe pas (77 pistes
+  aujourd'hui, aucune d'entre elles chiffrée dans le simulateur).
+- `simulateur/gouvernance_contrepouvoir.py` : 31 manœuvres et 39 verrous — signatures,
+  majorités, délais, plafonds — avec `ETAT_ASSEMBLEES` daté du 12 octobre 2026
+  (574 sièges pourvus à l'Assemblée, 289 pour la majorité absolue, 175 au Sénat, 555 au
+  Congrès sur 925 suffrages exprimés). `coherence_avec_les_fiches()` refuse qu'un mécanisme
+  ne soit relié à aucune fiche.
+- Passerelle `vers_registre_legal()` : `REGISTRE_LEGAL` passe de 37 à 189 identifiants sans
+  que les 37 entrées constitutionnelles préexistantes soient touchées, et chaque entrée
+  greffée est marquée « synthèse de travail » avec la source et sa date.
+- `simulateur/verification.py` n'importe plus le module constitutionnel au chargement
+  (cycle d'imports évité) et résout les statuts à la demande, en donnant la priorité aux
+  entrées manuelles.
+- Deux fichiers de tests (45 cas) recalculent les seuils à la main : suite complète à
+  828 tests, `OK (skipped=11)`. Les 7 échecs du harnais navigateur ont été corrigés au
+  passage (`tests/navigateur_interface.mjs` extrayait le mauvais bloc `<script>`).
+- `docs/15_CONSTITUTION_FICHEE_ET_CONTRE_POUVOIRS.md` : ce qui est couvert, ce qui ne
+  l'est pas, et comment le vérifier. Aucune route HTTP ni page d'interface ajoutée.
+
 ### Modifié — Une seule fonction Vercel pour les routes du moteur (`api/`)
 
 - `api/` ne contient plus une fonction par route (16 fichiers) : la fonction
