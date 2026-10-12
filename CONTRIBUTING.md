@@ -17,7 +17,7 @@ Utilisez les modèles d'issue fournis :
 1. **Forkez** le dépôt
 2. **Créez une branche** dédiée : `git checkout -b feature/votre-modification`
 3. **Conventions de code** :
-   - Python 3.10+, typage explicite, docstrings complètes
+   - Python 3.11+, typage explicite, docstrings complètes
    - Toute donnée chiffrée doit être sourcée (INSEE, DGFIP, AFT, BCE, etc.)
    - 100% des tests doivent passer avant soumission
 4. **Tests** : ajoutez des tests pour toute nouvelle fonctionnalité dans `tests/`
@@ -36,20 +36,30 @@ Toute donnée intégrée au simulateur **doit** :
 
 ```
 simulateur/
-├── model.py              # Dataclasses des 4 échelons
+├── model.py              # Dataclasses des 5 échelons (Local → National → Europe → Mondial → Géopolitique)
 ├── moteur.py             # Moteur de calcul SFC
-├── scenarios.py          # 4 scénarios prédéfinis
-├── reglements_lois.py    # 95 articles de loi
-├── sources_officielles.py# 25+ sources certifiées
-├── think_tanks.py        # 23 think tanks audités
+├── moteur_parametrique.py# Orchestrateur 156 leviers × 20 domaines (horizon 1-10 ans)
+├── parametres.py         # 156 leviers (14 familles, 16 préréglages, normaliser / catalogue_public)
+├── domaines.py           # 20 domaines d'impact, 74 indicateurs (evaluer_domaines)
+├── societe_domaines.py   # 18 domaines sociétaux (histoire longue 1792→2026)
 ├── histoire_france.py    # 12 périodes (1792→2026)
-├── societe_domaines.py   # 18 domaines sociétaux
-├── cli.py                # Interface terminale
-└── web_server.py         # Serveur HTTP et API REST
+├── seuils.py             # Garde-fous par strate (31 seuils, bornes & risque)
+├── compression.py        # Compression HTTP négociée (gzip/deflate/br/zstd, seuil 512 o)
+├── lexique.py            # 83 termes définis, API /api/lexique + balisage page
+├── clarte.py             # Lecture en clair (phrases fidèles, neutres, sourcées)
+├── bulles.py             # 101 bulles explicatives + cache (101 bulles, clef contexte)
+├── conseil.py            # Conseiller temps réel « effet papillon » (levier isolé, budget réel)
+├── sources_officielles.py# 52 indicateurs publics sourcés (Eurostat, BCE, Banque mondiale)
+├── donnees_live.py       # Registre 52 indicateurs, snapshot daté, collecte CORS ou hors-ligne
+├── dashboard.py          # Serveur HTTP multi-thread + API JSON (22 routes du moteur)
+├── interface.py          # Page unique (156 leviers, rendu différé des 7 onglets, recherche)
+├── web_server.py         # Console héritée (compatibilité, 11 scénarios)
+├── pont_api.py           # Routeur unique Vercel (22 routes → api/[...path].py)
+└── wsgi.py               # Point d'entrée WSGI (Render, Docker, gunicorn)
 tests/
-└── test_*.py             # suite unittest (le compte s'affiche à l'exécution)
+└── test_*.py             # suite de tests (le compte s'affiche à l'exécution)
 docs/
-└── *.md                  # 14 volumes de référence
+└── *.md                  # volumes de référence + R&D (double mandature, géopolitique, fluidité...)
 ```
 
 ### Lancer les tests

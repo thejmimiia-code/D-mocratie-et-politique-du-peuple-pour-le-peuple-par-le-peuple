@@ -732,10 +732,6 @@ sait rien.
 
 ---
 
-## License
-
-Ce projet est publié sous licence **MIT** — voir le fichier [LICENSE](LICENSE) pour les détails.
-
 ## Laboratoire R&D exploratoire
 
 Stress-tests appariés, réalisation partielle des réformes et mesure des interactions :
