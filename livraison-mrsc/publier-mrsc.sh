@@ -175,19 +175,63 @@ import shutil  # noqa: E402
 import subprocess  # noqa: E402
 import tempfile  # noqa: E402
 
+import json  # noqa: E402
+
+# Les données structurées de la page : ce sont des données, pas du JavaScript.
+# Les confondre ferait échouer `node --check` sur du JSON valide (défaut vu en
+# vrai : le moteur pose désormais un `<script type="application/ld+json">`).
+TYPES_JS = ("text/javascript", "application/javascript", "module")
+balises = re.findall(r"<script([^>]*)>(.*?)</script>", page, re.S)
+a_verifier, structures = [], []
+for attributs, contenu in balises:
+    if re.search(r"\bsrc\s*=", attributs):
+        continue
+    trouve = re.search(r"\btype\s*=\s*[\"']([^\"']*)[\"']", attributs)
+    type_ = (trouve.group(1) if trouve else "text/javascript").lower().split(";", 1)[0].strip()
+    if type_ in TYPES_JS:
+        a_verifier.append(contenu)
+    elif type_ in ("application/ld+json", "application/json"):
+        structures.append((type_, contenu))
+
+if not structures:
+    raise SystemExit("Données structurées absentes de la page publiée")
+for type_, contenu in structures:
+    try:
+        charge = json.loads(contenu)
+    except json.JSONDecodeError as erreur:
+        raise SystemExit(f"{type_} invalide : {erreur}")
+    types = []
+    cles = set()
+
+    def _parcourir(noeud):
+        if isinstance(noeud, dict):
+            if "@type" in noeud:
+                types.append(str(noeud["@type"]))
+            cles.update(str(cle) for cle in noeud)
+            for valeur in noeud.values():
+                _parcourir(valeur)
+        elif isinstance(noeud, list):
+            for valeur in noeud:
+                _parcourir(valeur)
+
+    _parcourir(charge)
+    interdits = {"aggregateRating", "review", "ratingValue", "faqPage"} & cles
+    if interdits:
+        raise SystemExit("Données structurées malhonnêtes : " + ", ".join(sorted(interdits)))
+    print(f"  ✓ {type_} : JSON valide, types {', '.join(types) or 'aucun'}")
+
 node = shutil.which("node")
 if node is None:
     print("  · node absent : contrôle de syntaxe des scripts sauté")
 else:
-    for rang, script in enumerate(
-        re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", page, re.S), 1
-    ):
+    print(f"  · {len(balises)} balise(s) <script>, {len(a_verifier)} en JavaScript à vérifier")
+    for rang, script in enumerate(a_verifier, 1):
         essai = pathlib.Path(tempfile.mkdtemp()) / f"script-{rang}.mjs"
         essai.write_text(script, encoding="utf-8")
         resultat = subprocess.run([node, "--check", str(essai)], capture_output=True, text=True)
         if resultat.returncode:
             raise SystemExit(f"Script {rang} invalide : {resultat.stderr.strip()[-400:]}")
-        print(f"  ✓ script {rang} ({len(script)} caractères)")
+        print(f"  ✓ script JavaScript {rang} ({len(script)} caractères)")
 PY
 
 # La veille du site compare la révision copiée au sommet de `main` : elle a sa

@@ -7,6 +7,7 @@ de sorte qu'une promesse écrite dans la documentation soit tenue par du code �
 
 from __future__ import annotations
 
+import importlib.util
 import re
 import subprocess
 import sys
@@ -320,7 +321,10 @@ class TestFraicheurDesDocuments(unittest.TestCase):
     def setUpClass(cls):
         cls.scripts = ["outils/generer-doc-nuances.py", "outils/generer-page-verification.py",
                        "outils/generer-index-simulateur.py", "outils/generer-fonctions-api.py",
-                       "outils/generer-objections.py", "outils/generer-registre-engagements.py"]
+                       "outils/generer-objections.py", "outils/generer-registre-engagements.py",
+                       # Ce que lisent les robots : les fichiers de la racine doivent
+                       # correspondre au module et au catalogue.
+                       "outils/generer-surface-publique.py"]
 
     def test_les_generateurs_ne_prennent_pas_de_retard(self):
         for script in self.scripts:
@@ -331,6 +335,20 @@ class TestFraicheurDesDocuments(unittest.TestCase):
                 )
                 self.assertEqual(proc.returncode, 0,
                                  f"{script} --verifier : {proc.stdout}{proc.stderr}")
+
+    @unittest.skipUnless(
+        importlib.util.find_spec("PIL") is not None,
+        "Pillow n'est pas installé : l'aperçu de partage ne peut pas être regénéré "
+        "pour comparaison (la CI l'installe, donc ce contrôle y tourne).",
+    )
+    def test_le_generateur_d_apercu_ne_prend_pas_de_retard(self):
+        """Le dessin se vérifie en le refaisant : c'est ce que fait `--verifier`."""
+        proc = subprocess.run(
+            [sys.executable, "outils/apercu_social.py", "--verifier"], cwd=str(RACINE),
+            capture_output=True, text=True, timeout=600,
+        )
+        self.assertEqual(proc.returncode, 0,
+                         f"outils/apercu_social.py --verifier : {proc.stdout}{proc.stderr}")
 
     def test_docs_17_porte_le_nombre_de_reglages_reel(self):
         page = (RACINE / "docs" / "17_NUANCES_INSTITUTIONNELLES_ET_REGLAGES.md").read_text("utf-8")

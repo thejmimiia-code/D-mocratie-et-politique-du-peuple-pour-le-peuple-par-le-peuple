@@ -38,6 +38,9 @@ dev = [
     "pytest>=7.0",
     "mypy>=1.0",
     "ruff>=0.1.0",
+    # Outillage d'images, sans effet sur l'exécution : l'aperçu de partage se
+    # vérifie en le redessinant (`outils/apercu_social.py --verifier`).
+    "Pillow>=10",
 ]
 benchmark = [
     "pytest-benchmark>=4.0",

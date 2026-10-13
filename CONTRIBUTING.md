@@ -53,6 +53,7 @@ simulateur/
 ├── donnees_live.py       # Registre 52 indicateurs, snapshot daté, collecte CORS ou hors-ligne
 ├── dashboard.py          # Serveur HTTP multi-thread + API JSON (22 routes du moteur)
 ├── interface.py          # Page unique (156 leviers, rendu différé des 7 onglets, recherche)
+├── surface_publique.py   # Ce que la page dit d'elle-même aux robots (robots.txt, sitemap.xml, llms.txt, en-tête)
 ├── web_server.py         # Console héritée (compatibilité, 11 scénarios)
 ├── pont_api.py           # Routeur unique Vercel (22 routes → api/[...path].py)
 └── wsgi.py               # Point d'entrée WSGI (Render, Docker, gunicorn)

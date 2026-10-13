@@ -27,6 +27,13 @@ jobs:
           python -m pip install .
           simulateur-mpol-run --help
 
+      - name: Installer Pillow
+        # Seule dépendance d'outillage de la suite : l'aperçu de partage se
+        # vérifie en le redessinant (`outils/apercu_social.py --verifier`). Le
+        # test correspondant saute proprement quand Pillow manque — on l'installe
+        # ici pour que le contrôle tourne vraiment, plutôt que de le perdre.
+        run: python -m pip install "Pillow>=10"
+
       - name: Run unit tests
         run: |
           python -m unittest discover -s tests -p "test_*.py" -v

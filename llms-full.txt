@@ -1,0 +1,257 @@
+# Simulateur Macro-Politique — Démocratie et politique du peuple — le contenu, en texte
+
+> Modèle systémique ouvert : réglez les leviers de politique publique et voyez, échelon par échelon, l'effet sur les budgets, la dette et les services publics.
+
+Adresse canonique : <https://d-mocratie-et-politique-du-peuple-p.vercel.app/>
+Code source (licence MIT) : [dépôt du simulateur](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple)
+Présentation par le M.R.S.C : [page du site](https://thejmimiia-code.github.io/MRSC/simulateur.html)
+
+Ce fichier est engendré par `simulateur/surface_publique.py` à partir du
+catalogue du moteur : les nombres et les libellés qui suivent sont ceux de
+l'outil publié, pas une copie figée. Les descriptions sont coupées à la
+première phrase utile ; la page interactive donne le texte entier.
+
+## Ce que contient l'outil
+
+- 156 leviers réglables, rangés en 5 classes ;
+- 20 domaines d'impact, notés de 0 à 100 ;
+- 52 indicateurs publics collectés à la source, avec provenance, période et licence ;
+- 11 scénarios types rejouables, année par année ;
+- 5 échelons en cascade : local, national, européen, mondial, géopolitique ;
+- un audit qui affiche, pour chaque réglage, sa plage, son effet déclaré et sa source.
+
+## Les classes de leviers
+
+### Recettes nouvelles (+) — `recettes`
+
+Qui paie, et combien cela rapporte-t-il ? Mesures qui font entrer de l'argent dans les caisses publiques : fiscalité, recouvrement de la fraude, extinction de niches inefficaces, accises. Le curseur règle l'intensité ; le montant lu est un gain annuel pour le budget.
+
+- **Aides aux entreprises — conditionnalité** (`conditionnement_aides_entreprises`) — de 0 à 20 Md€, défaut 0 : Ciblage des aides (environnement, emploi local, salaires décents) et suppression des aides non conditionnées. Gisement 20 Md€.
+- **CSG / CRDS — hausse** (`csg_crds_hausse`) — de 0 à 3 pts, défaut 0 : Hausse en points de la CSG-CRDS sur l'ensemble des revenus. Assiette ≈ 1 100 Md€ : +1 point ≈ +11 Md€.
+- **Droits de succession — réfaction à 100 000 €** (`succession_reforme`) — de -2 à 4 Md€, défaut 0 : Relèvement de l'abattement et barème simplifié ; rendement net variable selon le seuil retenu (−2 à +4 Md€).
+- **Fraude fiscale — IA et data-mining** (`lutte_fraude_fiscale_ia`) — de 0 à 10 Md€, défaut 0 : Croisement automatisé des données (DSN, DAC7/DAC8, facturation) pour recouvrer la fraude fiscale et sociale. Dossier de mandature : 10 Md€/an.
+- **Fraude sociale criminelle — redressement** (`fraude_sociale`) — de 0 à 4 Md€, défaut 0 : Ciblage des fraudes organisées (faux droits, trafics) sans viser les erreurs de bonne foi. Dossier de mandature : 2,5 Md€/an.
+- **Impôt minimum mondial (OCDE Pilier 2)** (`impot_minimum_pilier2`) — de 0 à 8 Md€, défaut 0 : Application effective du taux plancher de 15 % aux multinationales (CGI art. 223 VJ) : ~8 Md€ de recettes potentielles.
+- **Impôt sur la fortune (base élargie)** (`isf_retablissement`) : Rétablissement d'un impôt annuel sur les patrimoines, avec abattement sur la résidence principale. Rendement brut de référence : 5 Md€.
+- **Impôt sur le revenu — tranche supérieure** (`ir_tranche_superieure`) — de -5 à 15 pts, défaut 0 : Relèvement en points du taux marginal de la tranche la plus élevée (45 % aujourd'hui). Rendement ≈ 1,1 Md€ par point (hors effets comportementaux).
+- **Mécanisme d'ajustement carbone aux frontières** (`macf_carbone_frontiere`) — de 0 à 6 Md€, défaut 0 : Application du MACF aux importations à forte intensité carbone (acier, ciment, aluminium, engrais) : ~6 Md€/an à terme.
+- **Niches fiscales inefficaces — extinction** (`niches_fiscales`) — de 0 à 100 %, défaut 0 : Suppression progressive des niches à faible rendement social ou environnemental. Gisement total évalué à 90 Md€ ; le curseur porte sur la fraction supprimée (un montant en Md€ est déduit).
+- **Superprofits — contribution temporaire** (`taxe_superprofits`) — de 0 à 15 Md€, défaut 0 : Contribution temporaire sur les bénéfices excédentaires des secteurs pétrole brut, gaz naturel, charbon et raffinage, sur le modèle du chapitre III du règlement (UE) 2022/1854 : exercices 2022 et/ou 2023, profits au-delà de +20 % de la moyenne des exercices à partir de 2018, taux minimal de 33 %. Ce règlement n'est…
+- **Taxe carbone — trajectoire** (`taxe_carbone`) — de 0 à 150 €/tCO2, défaut 0 : Prix du carbone sur les énergies fossiles hors ETS. 10 €/t ≈ +3,5 Md€ de recettes ; compensation possible via chèque énergie.
+- **Taxe sur les transactions financières — extension** (`extension_ttf`) — de 0 à 8 Md€, défaut 0 : Proposition : élargissement de l'assiette aux produits dérivés et aux transactions intra-journalières : +5 Md€/an (non vérifié). Le droit actuel (art. 235 ter ZD CGI) vise les titres de capital.
+- **Taxes comportementales (tabac, alcool, sucre)** (`taxe_comportements`) — de 0 à 5 Md€, défaut 0 : Hausse des accises sur les produits nocifs : effet sanitaire différé, recettes et risque de marché parallèle.
+- **TVA — taux normal** (`tva_taux_normal`) — de -3 à 5 pts, défaut 0 : Variation en points du taux normal de TVA (20 % aujourd'hui). Assiette taxée ≈ 780 Md€ (taux normal) : +1 point ≈ +7,8 Md€ de recettes.
+
+### Économies d'efficacité (✂) — `economies`
+
+Qu'est-ce qu'on arrête de payer à vide ? Mesures dont la finalité est de réduire la dépense publique à service égal : doublons de structure, achats publics négociés, simplification administrative. Elles ne ferment pas de guichet : elles suppriment de la dépense redondante.
+
+- **Commande publique massifiée** (`commande_publique`) — de 0 à 8 Md€, défaut 0 : Regroupement des achats de l'État et des collectivités, négociation des prix, clauses sociales et environnementales.
+- **Fusion des doublons territoriaux** (`fusion_doublons`) — de 0 à 10 Md€, défaut 0 : Mutualisation des sièges région/département, agences et opérateurs : économies de structure sans fermer de guichet.
+- **Simplification administrative (choc de simplification)** (`simplification`) — de 0 à 8 Md€, défaut 0 : Suppression des normes redondantes, des commissions et des doublons de contrôle ; gain de temps pour les agents et les entreprises.
+
+### Dépenses et investissements (−) — `depenses`
+
+À quoi sert l'argent engagé ? Mesures qui engagent de l'argent public : services publics, transferts aux ménages, investissement, réarmement — et aussi les baisses de prélèvements, qui coûtent au budget en rendant du pouvoir d'achat. Le curseur règle le montant annuel.
+
+- **Adaptation au changement climatique** (`adaptation_climat`) — de 0 à 15 Md€, défaut 0 : Sécheresse, inondations, littoral, forêts, eau : le levier poursuit les politiques d'adaptation. Sur dix ans (P17), un proxy de pertes climatiques annualisées et de dommages évités est affiché séparément du budget APU ; il n'est pas assimilé à une dépense publique ni à une prévision annuelle.
+- **Aide alimentaire et lutte contre la pauvreté** (`aide_alimentaire`) — de 0 à 4 Md€, défaut 0 : Renforcement des dispositifs d'aide alimentaire et de première nécessité (le recours aux distributions a augmenté de 30 % depuis 2022).
+- **Aide publique au développement & climat** (`cooperation_internationale`) — de -3 à 8 Md€, défaut 0 : Aide internationale (0,55 % du PIB aujourd'hui, cible ONU 0,7 %) et financement climat des pays vulnérables.
+- **Aides personnelles au logement (APL/ALS)** (`aide_logement`) — de -4 à 5 Md€, défaut 0 : Réduction ou hausse des aides au logement. Une baisse de 3 Md€ transfère la charge sur les locataires modestes (−0,6 pt de pouvoir d'achat).
+- **Autonomie & grand âge (APA, EHPAD)** (`dependance_grand_age`) — de 0 à 12 Md€, défaut 0 : Réponse à la perte d'autonomie : tarification des EHPAD, aide à domicile, revalorisation des métiers du care.
+- **Budget de l'Éducation nationale** (`budget_education`) — de -8 à 20 Md€, défaut 0 : Moyens supplémentaires pour l'école primaire et le secondaire (dédoublement, soutien, remplacement) : priorité documentée du dossier.
+- **Budget de la justice** (`budget_justice`) — de -2 à 10 Md€, défaut 0 : Moyens judiciaires (magistrats, greffes, numérique), dans le cadre de la programmation 2023-2027. Part du budget dans le PIB et comparaison avec l'Allemagne : non vérifiées.
+- **Capital humain : éducation & formation** (`capital_humain`) — de 0 à 15 Md€, défaut 0 : Investissement additionnel d'éducation et de formation. Le coût est immédiat ; le modèle suit la cohorte comme arrivée à maturité après un délai exploratoire de huit ans. Aucun taux de rendement PIB n'est présumé : le stock mature est affiché séparément.
+- **Chèque énergie — revalorisation** (`cheque_energie`) — de 0 à 6 Md€, défaut 0 : Relèvement du chèque énergie pour compenser la fiscalité carbone et la précarité énergétique.
+- **Construction de logements sociaux** (`logement_social`) — de 0 à 120 milliers, défaut 0 : Financement de la construction (en milliers de logements). 1 000 logements ≈ 0,15 Md€/an de subventions + prêts HLM.
+- **Contrôle du travail & lutte contre le travail dissimulé** (`police_sociale_emploi`) — de 0 à 3 Md€, défaut 0 : Effectifs d'inspection (1 700 agents aujourd'hui) et ciblage des secteurs à forte fraude : recettes + protection des salariés.
+- **Convention citoyenne permanente** (`convention_citoyenne`) : Institutionnalisation d'une convention citoyenne tirée au sort sur les grandes réformes (climat, fin de vie, dette).
+- **Cyber-résilience (NIS 2, ANSSI, OIV)** (`cyber_resilience`) — de 0 à 6 Md€, défaut 0 : Mise en conformité des opérateurs d'importance vitale et des communes, protections anti-rançongiciels.
+- **Dotation globale de fonctionnement (DGF)** (`dgf_delta`) — de -15 à 15 Md€, défaut 0 : Hausse ou baisse de la DGF versée aux communes, départements et régions. Une baisse se répercute sur la taxe foncière (règle d'or CGCT).
+- **Effectifs de l'État (variation nette)** (`effectifs_etat`) — de -60 à 40 milliers, défaut 0 : Créations ou suppressions nettes de postes (milliers) : 1 000 ETP ≈ 45 M€/an. Les coupes non ciblées dégradent le service.
+- **Effectifs police & gendarmerie** (`effectifs_securite`) — de -20 à 30 milliers, défaut 0 : Création ou suppression de postes (en milliers). 1 000 postes ≈ 60 M€/an ; effet direct sur la présence territoriale.
+- **Effort de défense (% du PIB)** (`effort_defense_pct_pib`) : Trajectoire de la loi de programmation militaire et cible OTAN de La Haye (3,5 % du PIB en 2035). Chaque point de PIB ≈ 30 Md€/an.
+- **Encadrement des loyers** (`encadrement_loyers`) : Activation de l'encadrement des loyers (dispositif expérimental de l'article 140 de la loi ELAN) dans les territoires qui en font la demande : loyer de référence, majoré de 20 % et minoré de 30 %. Effet sur le pouvoir d'achat des locataires et sur l'offre locative.
+- **Entretien du capital public (dette technique)** (`entretien_capital_public`) — de 0 à 15 Md€, défaut 0 : Effort de maintenance et de rattrapage du patrimoine public : bâtiments, ponts, rail, écoles et hôpitaux. Le simulateur compare cet effort à une annualisation exploratoire des 140-150 Md€ de besoins d'investissement estimés par la Cour des comptes à l'horizon 2050. Le stock non couvert est un proxy de scénario, pas…
+- **Exonérations de cotisations — bas salaires** (`cotisations_bas_salaires`) — de -8 à 4 Md€, défaut 0 : Allègement ou suppression des réductions générales sur les bas salaires (≈ 12 Md€). Effet emploi de premier ordre.
+- **Flat tax du capital — suppression** (`flat_tax_suppression`) : Retour au barème progressif pour les revenus du capital (coût ≈ 4 Md€ de recettes en moins, gain d'équité).
+- **Formation professionnelle & apprentissage** (`formation_professionnelle`) — de 0 à 12 Md€, défaut 0 : Financement de la requalification des travailleurs exposés aux transitions (IA, énergie, industrie).
+- **Gratuité de la restauration scolaire** (`cantine_gratuite`) — de 0 à 5 Md€, défaut 0 : Repas scolaire gratuit ou à tarif très modulé : effet direct sur la pauvreté des enfants et l'alimentation.
+- **Hôpital public — investissement et emplois** (`hopital_public`) — de -5 à 15 Md€, défaut 0 : Financement de l'hôpital (lits, urgences, personnels soignants) et de la reconstruction des bâtiments.
+- **Intégration des nouveaux arrivants (langue, emploi)** (`integration_accueil`) — de 0 à 6 Md€, défaut 0 : Moyens d'apprentissage du français, de reconnaissance des diplômes et d'accès à l'emploi : accélère l'intégration économique.
+- **Intégration européenne (budget, dette commune, défense)** (`integration_europeenne`) — de 0 à 100 %, défaut 0 : Position française : de la simple coordination à la mutualisation des dettes communes et à la défense européenne intégrée.
+- **Investissements à cycle long (rendement différé)** (`investissements_cycle_long`) — de 0 à 20 Md€, défaut 0 : EPR2, lois de programmation militaire, France 2030, prévention santé, recherche : le coût est payé immédiatement (courbe en J), le rendement n'arrive qu'au-delà de cinq ans — les fruits de la première mandature sont récoltés pendant la seconde.
+- **Lutte contre les déserts médicaux** (`deserts_medicaux`) — de 0 à 8 Md€, défaut 0 : Financement de maisons de santé, régulation de l'installation des médecins et télémédecine dans les territoires carencés.
+- **Lutte contre les trafics & criminalité organisée** (`lutte_criminalite_organisee`) — de 0 à 5 Md€, défaut 0 : Moyens d'enquête contre les trafics de stupéfiants, d'armes et la cybercriminalité (dont rançongiciels).
+- **Maîtrise des flux migratoires** (`maitrise_flux_migratoires`) : Contrôle des frontières, lutte contre les passeurs, accords de retour : effet sur les flux réguliers comme irréguliers.
+- **Minima sociaux — coup de pouce** (`revalorisation_minima_sociaux`) — de 0 à 8 Md€, défaut 0 : Revalorisation coordonnée du RSA, de l'AAH, de l'APA et des minimas retraite. 1 Md€ ≈ +1,7 % de pouvoir d'achat pour 2 millions de ménages.
+- **Montée en capacité de défense (BITD)** (`montee_capacite_defense`) — de 0 à 20 Md€, défaut 0 : Investissement additionnel dans la base industrielle et technologique de défense. Le coût est immédiat ; le modèle suit le stock comme opérationnel après six ans (fenêtre LPM 2024-2030, proxy de scénario). Aucun effet automatique sur les spreads n'est présumé : le stock mature est affiché séparément.
+- **Moyens anticorruption & justice financière** (`lutte_contre_la_corruption`) — de 0 à 3 Md€, défaut 0 : Renforcement du PNF, de l'AFA et des contrôles sur les marchés publics.
+- **Nouveaux réacteurs nucléaires (EPR2)** (`nucleaire_reacteurs`) — de 0 à 8 nb, défaut 0 : Lancement de la construction en série (coût ≈ 3,5 Md€ par paire d'EPR2, étalé sur 10 ans). Effet climat et prix de l'électricité de long terme.
+- **Nouvelle étape de décentralisation** (`decentralisation`) : Transfert de compétences et de fiscalité aux collectivités, différenciation territoriale, fin des doublons d'administration centrale.
+- **ONDAM — évolution de l'objectif de dépenses d'assurance maladie** (`ondam_variation`) — de -2 à 3 pts, défaut 0 : Variation en points de l'ONDAM. ONDAM 2026 : 274,4 Md€ (+3,1 %) selon la LFSS pour 2026 ; 1 point ≈ 2,7 Md€ (1 % de l'ONDAM 2025 de 265,9 Md€). Un ONDAM sous 2 %/an dégrade la qualité de prise en charge : appréciation, non sourcée.
+- **Partage de la valeur (intéressement, dividendes)** (`partage_valeur`) — de 0 à 8 Md€, défaut 0 : Accord de partage de la valeur obligatoire et encadrement des rachats d'actions pour les entreprises aidées : relève la part salariale.
+- **Plan semi-conducteurs (Chips Act France)** (`plan_semiconducteurs`) — de 0 à 12 Md€, défaut 0 : Soutien à la production de puces (Croix, Grenoble, Rousset) : réduit la vulnérabilité aux blocus de Taïwan.
+- **Production de médicaments sur le territoire** (`medicaments_souverainete`) — de 0 à 7 Md€, défaut 0 : Plan de relocalisation des principes actifs (pénuries de 2022-2024) et constitution de stocks stratégiques.
+- **Protection de l'enfance & jeunesse** (`aide_enfance_jeunesse`) — de 0 à 6 Md€, défaut 0 : Moyens supplémentaires pour l'ASE, la PMI et la politique de la jeunesse (délais de prise en charge, places en crèche).
+- **Précarité énergétique — bouclier ciblé** (`precarite_energetique`) — de 0 à 5 Md€, défaut 0 : Extension du chèque énergie et des dispositifs d'effacement de dettes d'énergie : ciblage des ménages sous le seuil de pauvreté.
+- **Prévention & santé publique** (`prevention_sante`) — de 0 à 6 Md€, défaut 0 : Vaccination, dépistage, santé mentale, éducation à la santé, lutte contre les addictions.
+- **Recherche & innovation (ANR, CNRS, universités)** (`budget_recherche`) — de 0 à 15 Md€, défaut 0 : Effort public de recherche visant 1,2 % du PIB (contre ~0,8 % hors crédit d'impôt). Effet de long terme sur la productivité.
+- **Relocalisations industrielles** (`relocalisation_industrie`) — de 0 à 20 Md€, défaut 0 : Soutien aux relocalisations (santé, énergie, agroalimentaire, matériaux) : effet emploi industriel et balance commerciale.
+- **Renouvelables (éolien, solaire, biogaz)** (`renouvelables`) — de 0 à 20 Md€, défaut 0 : Accélération des appels d'offres et de la planification (loi APER). Ratio 1 Md€/an ≈ +1 point de part renouvelable : non vérifié.
+- **Revalorisation des enseignants** (`revalorisation_enseignants`) — de 0 à 8 Md€, défaut 0 : Hausse indemnitaire et de grille : attraction et fidélisation des professeurs (1 Md€ ≈ 250 € nets annuels par agent).
+- **Revalorisation des retraites (au-delà de l'inflation)** (`revalorisation_retraites`) — de -2 à 3 pts, défaut 0 : Point supplémentaire de revalorisation annuelle. Coût ≈ 4,5 Md€ par point (masse des pensions ≈ 380 Md€).
+- **Rénovation thermique des bâtiments** (`renovation_thermique`) — de 0 à 15 Md€, défaut 0 : MaPrimeRénov' et rénovation des bâtiments publics : effet JOBS, facture énergétique et climat. 1 Md€ ≈ 12 000 rénovations complètes.
+- **Réserve et préparation nationale (sécurité civile)** (`reserve_securite_nationale`) — de 0 à 6 Md€, défaut 0 : Montée en puissance de la réserve opérationnelle et des moyens de sécurité civile (feux, inondations, pandémies).
+- **Scrutin proportionnel à l'Assemblée** (`reforme_proportionnelle`) — de 0 à 100 %, défaut 0 : Part de proportionnelle dans le mode de scrutin : représentation des minorités politiques contre stabilité majoritaire.
+- **Second dividende : charge de la dette réinvestie** (`dividende_dette_reinvesti`) — de 0 à 15 Md€, défaut 0 : La maturité moyenne de la dette négociable est de 8,5 ans : sur deux mandatures, le stock est intégralement refinancé aux taux détendus par la trajectoire de désendettement. Les économies d'intérêts sont réinvesties en pouvoir d'achat et services publics — une dépense gagée, sans déficit supplémentaire. Ce dividende…
+- **Services publics numériques (FranceConnect, IA administrative)** (`service_public_numerique`) — de 0 à 6 Md€, défaut 0 : Dématérialisation et simplification de bout en bout : gain de temps pour les usagers et économies de fonctionnement.
+- **SMIC — coup de pouce annuel** (`smic_revalorisation`) — de 0 à 6 pts, défaut 0 : Revalorisation annuelle au-delà de l'inflation. Effet double : pouvoir d'achat des salariés modestes et coût pour les TPE.
+- **Souveraineté agricole & alimentaire** (`agriculture_souverainete`) — de 0 à 10 Md€, défaut 0 : Plan de souveraineté agricole (élevage, fruits et légumes, protéines) et transition agroécologique.
+- **Souveraineté numérique & IA** (`souverainete_numerique_ia`) — de 0 à 12 Md€, défaut 0 : Cloud souverain, modèles d'IA ouverts, données de santé et calcul scientifique (effet direct sur l'innovation et la cyberdéfense).
+- **Temps de travail (semaine / heures supplémentaires)** (`temps_de_travail`) — de -3 à 3 h, défaut 0 : Débat 32 h ↔ 39 h : le curseur retranche ou ajoute des heures hebdomadaires. Effet simulé sur l'activité et la santé au travail.
+- **Transports publics & mobilités (TER, RER, vélo)** (`transports_publics`) — de 0 à 18 Md€, défaut 0 : Investissement dans les réseaux du quotidien et les infrastructures cyclables ; effet pouvoir d'achat et climat.
+- **TVA sur l'énergie à 5,5 %** (`tva_energie_5_5`) : Rétablit le taux réduit de 5,5 % sur les abonnements d'électricité et de gaz. Ce taux a été supprimé par l'article 20 de la loi n° 2025-127 du 14 février 2025 pour les périodes débutant à compter du 1er août 2025 (taux normal de 20 % depuis). Le taux réduit ne visait que l'abonnement, non la consommation : le…
+- **Valeur du point d'indice (fonction publique)** (`point_indice`) — de -1 à 4 %, défaut 0 : Gel ou revalorisation du point : 1 % ≈ 2,4 Md€ de masse salariale. Sans revalorisation, le pouvoir d'achat des agents baisse avec l'inflation.
+- **Zéro artificialisation nette — mise en œuvre** (`moratoire_artificialisation`) : Application effective du ZAN : protège les sols agricoles et naturels, contraint la construction neuve en périphérie.
+
+### Règles du jeu (§) — `regles`
+
+Qui décide, qui contrôle, et dans quel délai ? Réformes institutionnelles et réglages de contre-pouvoir : motion de censure, référendum, parquet, délais, transparence. Ces leviers ne figurent sur aucune ligne budgétaire du modèle : ils changent la manière de décider, pas le montant dépensé.
+
+- **Action de groupe devant le juge administratif** (`reglage_action_de_groupe_administratif`) : Élargit aux juridictions administratives l'action de groupe : le référé-liberté devient utilisable par une collectivité ou une association pour un groupe de situations individuelles.
+- **Ancrer une réforme dans le droit dérivé de l'Union** (`reglage_ancre_ue_reforms`) — de 0 à 100 % du champ concerné, défaut 0 : Écrire la réforme comme une transposition large (sur-transposition) : la règle échappe alors à l'abrogation unilatérale, parce que la défaire devient une infraction.
+- **Années de stabilité garantie d'une règle structurante** (`reglage_stabilite_normative_annees`) — de 0 à 10 années, défaut 0 : Pendant la durée fixée, une règle fiscale ou normative ne peut être modifiée que par une loi de même nature, avec étude d'impact chiffrée : achète de la visibilité en échange de la liberté de demain.
+- **Anti-pantouflage & transparence des lobbys** (`reforme_anti_pantouflage`) : Interdiction de pantouflage renforcée (article 432-13 du Code pénal : trois ans), registre public des représentants d'intérêts, transparence des rendez-vous ministériels.
+- **Appel possible du filtre de non-renvoi d'une QPC** (`reglage_appel_qpc`) : Le filtre de la juridiction du fond devient contrôlable par une formation dédiée : la QPC cesse d'être un droit mort-né au premier étage.
+- **Assiette de la motion de censure** (`reglage_censure_assiette`) : Le seuil de censure est calculé sur les membres composant l'Assemblée (statu quo : 289 voix, l'abstention protège le Gouvernement), sur les suffrages exprimés (l'abstention devient neutre), ou avec un quorum de présence à trois cinquièmes.
+- **Audit obligatoire avant toute réforme structurelle** (`reglage_audit_obligatoire_prealable`) : Aucun projet de réforme des institutions ou de la fiscalité n'est déposé sans un avis public de la Cour des comptes, rendu avant la navette.
+- **Audit public des algorithmes à fort impact** (`reglage_algorithmes_transparents`) : Ouvre le code, les données d'entraînement et les critères des algorithmes utilisés par une autorité publique ou une plateforme de rang légal.
+- **Baisse du seuil de constitution des groupes** (`reglage_seuil_groupes`) — de 0 à 10 sièges, défaut 0 : Quinze députés, dix sénateurs aujourd'hui. Chaque point retiré ouvre les droits de groupe (niche, commission d'enquête, temps de parole) à des representations plus petites.
+- **Casier B2 vierge obligatoire pour les candidats** (`reforme_casier_b2`) : Condition d'éligibilité : casier judiciaire vierge pour toute candidature à un mandat national ou local.
+- **Chambre de la durée, membres tirés au sort** (`reglage_chambre_tiree_au_sort`) — de 0 à 200 membres, défaut 0 : Nombre de membres d'une troisième chambre tirée au sort, à veto suspensif sur les textes engageant les générations futures : zéro = pas de chambre.
+- **Clauses de revoyure & évaluation systématique** (`clause_revoyure_evaluation`) : Chaque réforme majeure est évaluée à date fixe (LOLF, Cour des comptes) avec clause de revoyure : prolongation, ajustement ou abrogation documentée. Condition de pilotage de la seconde mandature et d'apaisement des années électorales.
+- **Collectivités autorisées à déroger à titre expérimental** (`reglage_differentiation_pilotes`) — de 0 à 30 collectivités, défaut 0 : Nombre de collectivités entrant dans le régime d'expérimentation territoriale : multiplie les laboratoires et la complexité lisible du droit applicable.
+- **Compter les trois cinquièmes sur les membres au Congrès** (`reglage_congres_assiette_membres`) : Bascule l'assiette du Congrès des suffrages exprimés aux membres composant (617 voix sur 925 au lieu de 555) : supprime l'avantage arithmétique de l'abstention.
+- **Comptes de campagne publiés en temps réel** (`reglage_comptes_temps_reel`) : Les recettes et dépenses sont déclarées hebdomadairement pendant la campagne et publiées par la CNCCFP, au lieu du dépôt après le scrutin.
+- **Congrès des outre-mer permanent, avec droit d'initiative** (`reglage_outre_mer_congres_permament`) : Instance de proposition permanente : ses textes doivent être inscrits à l'ordre du jour, ce qui transforme une consultation en procédure.
+- **Consultation préalable obligatoire du CESE sur les programmations** (`reglage_cee_consultation_prealable`) — de 0 à 30 jours, défaut 0 : Le CESE est consulté pour avis sur les projets de loi de programme et de programmation, mais son avis n'oblige personne. Rendre la consultation préalable au dépôt et la réponse motivée obligatoire, c'est transformer un ornement en procédure.
+- **Contrôle de constitutionnalité des lois référendaires** (`reglage_controle_loi_referendaire`) : Ouvre la loi adoptée par référendum au contrôle du Conseil constitutionnel, alors que la décision du 6 novembre 1962 s'en est reconnue incompétente et que la révision de 2008 a écarté la proposition.
+- **Contrôle juridictionnel intégral en régime d'exception** (`reglage_controle_juge_exception`) : Lever l'immunité de fait des mesures de police prises pendant l'état d'urgence : le juge statue en quarante-huit heures, sans sursis possible.
+- **Deux commissions d'enquête garanties par groupe et par session** (`reglage_commission_enquete_droit_de_bloc`) : Le règlement garantit déjà une commission d'enquête par groupe et par session. En garantir deux, c'est désarmer la négociation politique qui éteint la moitié des demandes avant leur dépôt.
+- **Droit d'amendement garanti, irrecevabilité 40 bornée** (`reglage_droit_amendement`) : Le juge (ou la conférence) contrôle la qualification financière au lieu du président de séance ; l'amendement de repli devient recevable de droit.
+- **Durée maximale totale d'un état d'urgence** (`reglage_plafond_etat_urgence`) — de 0 à 24 mois, défaut 0 : Au-delà du plafond, l'état d'urgence cesse de plein droit sans nouvelle loi : la fin devient automatique au lieu d'être politique.
+- **Délai contraignant d'exécution des arrêts CEDH** (`reglage_execution_cedh`) — de 0 à 720 jours, défaut 0 : Le juge interne peut assortir d'une astreinte le refus d'exécuter un arrêt définitif, et rouvrir le procès sur simple demande.
+- **Délai de décision sur une irrecevabilité de compétence** (`reglage_declassification_legislative`) — de 0 à 30 jours, défaut 0 : Le gouvernement peut opposer l'article 41, et le Premier ministre demander au Conseil de déclassifier un article : les huit jours laissés au Conseil sont le seuil qui sépare le domaine de la loi de celui du règlement. Les allonger prolonge l'incertitude sur le texte.
+- **Délai plancher avant délibération en procédure accélérée** (`reglage_procedure_acceleree_encadree`) — de 0 à 45 jours, défaut 0 : La procédure accélérée abaisse de six à quatre semaines le délai entre le dépôt et la discussion. Chaque jour ajouté au plancher rend le texte discutable, et retarde d'autant la navette.
+- **Fin des régimes de retraite spéciaux** (`reforme_regimes_speciaux`) : Alignement progressif des régimes dérogatoires sur le régime général (équité interprofessionnelle).
+- **Grandes réformes menées de front** (`charge_reformes_simultanees`) — de 0 à 16 réformes simultanées, défaut 0 : Charge de mise en œuvre choisie pour le stress-test : nombre de grands chantiers simultanés (et non nombre automatique de curseurs ou d'interrupteurs activés). Au-delà de huit, un coût de saturation administrative exploratoire s'applique à la confiance et à la tension. Le seuil et les coefficients sont hypothétiques…
+- **Haute Cour composée de juges non parlementaires** (`reglage_haute_cour_non_parlementaire`) : La Haute Cour est aujourd'hui une assemblée de parlementaires qui juge ses propres membres, à la majorité des deux tiers des deux chambres. La confier à un collège de juges fait disparaître le vote politique préalable.
+- **Heures ajoutées au délai de motion contre un 49.3** (`reglage_delai_motion_49_3`) — de 0 à 72 heures, défaut 0 : La motion de censure doit être déposée dans les vingt-quatre heures qui suivent l'engagement de responsabilité. Chaque heure ajoutée est du temps de réunion de signatures, et du temps de crise en plus.
+- **Interdiction constitutionnelle de la rétroactivité in minus** (`reglage_non_retroactivite_in_minus`) : Inscrit à l'article 34 la règle dégagée par le juge : nulle loi nouvelle ne peut aggraver la répression d'actes commis avant son entrée en vigueur.
+- **Interdiction du 49.3 hors loi de finances** (`reglage_49_3_interdiction`) : La Constitution ne permet qu'un usage par session pour un texte ordinaire, hors projets de finances et de financement de la sécurité sociale. Ce réglage supprime même cet usage : tout texte doit être voté.
+- **Jours ajoutés au délai avant le vote de censure** (`reglage_delai_motion_censure`) — de 0 à 15 jours, défaut 0 : Le délai constitutionnel est de deux jours francs. Chaque jour ajouté laisse le temps de la négociation — et du retrait des signataires.
+- **Jours ajoutés au délai du Sénat sur le budget** (`reglage_delai_senat_budget`) — de 0 à 15 jours, défaut 0 : Le Sénat dispose de quinze jours. Les porter à trente lui rend un pouvoir d'amendement utile sur les recettes, sans toucher au dernier mot de l'Assemblée.
+- **Jours retirés au délai de l'Assemblée sur le budget** (`reglage_delai_budget_retraite`) — de 0 à 20 jours, défaut 0 : L'article 47 donne quarante jours à l'Assemblée nationale. Les réduire accélère la loi de finances et comprime d'autant l'examen des recettes.
+- **Mandat unique non renouvelable pour les autorités indépendantes** (`reglage_mandat_unique_instances`) : Coupe le lien de dépendance né d'une perspective de renouvellement ; réduit aussi l'influence des autorités, faute de carrière commune.
+- **Marge de déficit inscrite dans la Constitution** (`reglage_or_du_deficit`) — de 0 à 3 % PIB, défaut 0 : Plafond de déficit structurel constitutionnalisé, avec clause de sortie automatique en récession : verrouille la trajectoire mais retire au Parlement le droit de décider de l'effort.
+- **Matières transférées aux collectivités d'outre-mer** (`reglage_outre_mer_competences`) — de 0 à 20 matières, défaut 0 : Étend la liste des matières dont une collectivité peut fixer elle-même les règles : chaque point est un déplacement de compétence, pas une expérimentation temporaire.
+- **Non-cumul des mandats étendu** (`reforme_non_cumul`) : Extension du non-cumul et limitation à trois mandats successifs pour les fonctions exécutives locales et nationales.
+- **Parquet nommé sur avis conforme du CSM** (`reglage_parquet_independant`) : Aligne le parquet sur le siège : l'avis devient conforme, donc une nomination sans lui est illégale plutôt que simplement contestable.
+- **Part de l'ordre du jour laissée au Parlement** (`reglage_ordre_du_jour_partage`) — de 0 à 50 %, défaut 0 : La Constitution réserve une semaine sur quatre au contrôle et un jour par mois à l'opposition. Ce curseur étend la part parlementaire, au prix de la capacité du Gouvernement à tenir son calendrier.
+- **Plancher constitutionnel de dotation locale** (`reglage_autonomie_financiere_garantie`) — de 0 à 30 %, défaut 0 : Garantit en pourcentage la part des ressources locales dans le produit fiscal national : protège l'investissement local du ciseau budgétaire.
+- **Publication des avis du Conseil d'État sur les projets de loi** (`reglage_publication_avis_ce`) : L'avis, aujourd'hui confidentiel, devient public : les arbitrages du gouvernement sur un texte sont lisibles avant le vote.
+- **Quorum ajouté au Congrès** (`reglage_congres_quorum`) — de 0 à 60 %, défaut 0 : Part des membres du Congrès qui doivent voter pour que la révision soit valablement adoptée (0 = aucun quorum, ce que la Constitution ne prévoit pas) : le seuil de 555 voix cesse alors de dépendre du nombre de votants.
+- **Recours automatique devant la CJUE sur avis de subsidiarité** (`reglage_subsidiarite_recours`) : Rends le recours de droit dès qu'une assemblée nationale motive un avis, au lieu de le subordonner à soixante signatures : le carton jaune devient justiciable.
+- **Recours collectif contre une irrecevabilité** (`reglage_recours_irrecevabilite`) : Aujourd'hui, seul le président de l'assemblée peut déférer au Conseil constitutionnel l'irrecevabilité qu'il a lui-même prononcée. Ouvrir ce recours à soixante membres ferme un droit sans juge.
+- **Recours à l'article 49.3** (`usage_49_3`) — de 0 à 10 nb, défaut 0 : Nombre d'utilisations par an : accélère l'adoption des lois mais nourrit la défiance et le risque de motion de censure.
+- **Registre public nominatif des amendements** (`reglage_registre_amendements`) : Chaque amendement est publié avec son porteur, son financeur éventuel et sa sort : la fabrique du texte devient vérifiable pendant la navette, pas six mois après.
+- **Référendum d'initiative citoyenne (RIC)** (`reforme_ric`) : RIC constituant, législatif, abrogatoire et révocatoire dans des conditions de seuils encadrées : apaisement démocratique documenté.
+- **Référendum local automatique au-delà d'un seuil de pétition** (`reglage_referendum_local_automatique`) : La consultation a lieu de plein droit quand le seuil est atteint, sans délibération d'opportunité de l'assemblée : le droit de vote ne dépend plus de ceux qui le convoquent.
+- **Référendum révocatoire local et national** (`reglage_revocation_elue`) : Une pétition atteignant le seuil déclenche la révocation de l'élu ou de l'assemblée : rend la redevabilité continue, déstabilise la majorité de seuil.
+- **Saisine directe du Défenseur des droits** (`reglage_defenseur_saisine_directe`) : Le Défenseur des droits peut être saisi directement par la personne concernée, ou par un intermédiaire. Ouvrir la saisine sans condition de filtre, c'est multiplier les dossiers — et rendre l'autorité réellement comptable de ses recommandations.
+- **Scrutin public nominal obligatoire sur tout texte structurant** (`reglage_vote_nominal_obligatoire`) : Chaque vote est publié nominativement, sans délégation de vote : l'abstention devient aussi coûteuse à cacher qu'un vote contraire.
+- **Seuil de la pétition locale, en pourcentage des inscrits** (`reglage_petition_locale_seuil`) — de 0 à 20 %, défaut 0 : Fixe nationalement le seuil qui, faute de loi organique, est laissé au règlement local : 0 = chaque assemblée garde la main, un chiffre élevé rend le droit théorique.
+- **Seuil de saisine du Conseil constitutionnel** (`reglage_seuil_saisine_conseil`) : Soixante députés ou soixante sénateurs aujourd'hui. Abaisser le seuil ouvre le contrôle a priori à l'opposition minoritaire ; le supprimer en fait un contrôle systématique.
+- **Supprimer le droit de nouvelle délibération** (`reglage_nouvelle_deliberation_supprimee`) : Le Président peut demander une nouvelle délibération de la loi votée, sans que cette demande puisse être refusée. La supprimer accélère la promulgation et retire au chef de l'État son seul arbitrage sur un texte déjà voté.
+- **Sénat élu au suffrage universel direct** (`reglage_senat_suffrage_direct`) : Remplace le corps électoral restreint : le Sénat cesse d'être la chambre des collectivités pour devenir une seconde chambre de légitimité populaire, avec un veto éventuel à redéfinir.
+- **Verrou constitutionnel des réformes** (`verrouillage_irreversibilite`) : Ancrage constitutionnel des réformes adoptées en première mandature (révision par Congrès aux 3/5 ou référendum) : une alternance ne peut plus les abroger d'un trait de plume. Divise par trois la prime de risque électorale sur le spread souverain.
+- **Verrouiller une réforme par un engagement international** (`reglage_verrou_par_engagement_international`) : Ancre la règle dans un traité ou un accord : la défaire devient une violation internationale, contrôlable par un juge qui n'est pas français.
+- **Verrouiller une réforme par une loi organique** (`reglage_verrou_par_loi_organique`) : Fait passer le texte du statut de loi ordinaire à celui de loi organique : saisine obligatoire du Conseil constitutionnel et abrogation seulement par le même étage.
+- **Verrouiller une réforme par une révision constitutionnelle** (`reglage_verrou_par_revision`) : Inscrit la réforme dans la Constitution : elle survit à l'alternance législative, mais exige trois cinquièmes des suffrages exprimés au Congrès — ou une voie référendaire.
+- **Veto suspensif d'une convention citoyenne** (`reglage_convention_veto_suspensif`) : Une convention tirée au sort peut renvoyer une fois un texte au Parlement ; la seconde lecture obligatoire à main levée nommée met fin au blocage.
+- **Vote blanc invalidant** (`reforme_vote_blanc`) : Le vote blanc compte dans les suffrages exprimés : en cas de majorité de blancs, l'élection est annulée avec délai de carence de 12 mois.
+- **Vote par programme et fongibilité assumée** (`reglage_vote_par_programme`) : Vote de la mission avant le programme, amendement de majoration de recette autorisé hors plafond : le Parlement retrouve la main sur l'allocation sans casser la règle d'équilibre.
+- **Vote préalable du Parlement sur un acte délégué européen** (`reglage_vote_prealable_actes_ue`) : Aucune position française en Conseil n'est engagée sur un acte délégué sans résolution préalable : retarde, mais rend la négociation contrôlable.
+- **Élection au suffrage direct des intercommunalités** (`reglage_epci_suffrage_direct`) : Les conseillers métropolitains et communautaires sont élus directement : l'intercommunalité cesse d'être une chambre d'enregistrement des communes.
+
+### Monde subi (≈) — `monde`
+
+Qu'est-ce qui vient de l'extérieur ? Chocs extérieurs : pétrole, taux, change, tensions, blocus, cyberattaque. Ce ne sont pas des décisions de politique publique mais des hypothèses de contexte, utiles pour éprouver un plan — jamais pour vanter un résultat.
+
+- **Choc de change EUR/USD** (`choc_change`) — de -0.25 à 0.25 $ par €, défaut 0 : Variation exogène de la parité euro-dollar (base = taux du jour).
+- **Choc de taux (Fed / BCE)** (`choc_taux_fed`) — de -150 à 250 bps, défaut 0 : Variation des taux directeurs mondiaux en points de base : se transmet aux taux longs, au change et au crédit.
+- **Choc pétrolier (variation du Brent)** (`choc_petrole`) — de -40 à 60 $/baril, défaut 0 : Variation exogène du baril de Brent par rapport au cours du jour (base issue de la donnée live).
+- **Clause de sauvegarde nationale (défense)** (`clause_sauvegarde_defense`) : Activation de la dérogation « défense » du Pacte de stabilité : les dépenses militaires sortent du calcul du déficit PDE.
+- **Commerce mondial (fragmentation / accord)** (`commerce_mondial`) — de -50 à 100 %, défaut 0 : Degré de fragmentation géoéconomique : de la coopération rétablie au découplage total (blocs fermés).
+- **Cyberattaque systémique majeure** (`cyberattaque_systemique`) : Attaque coordonnée d'opérateurs d'importance vitale (hôpitaux, énergie, transports, collectivités).
+- **Discours de mobilisation / économie de guerre** (`mobilisation_guerre`) : Passage à une logique d'économie de guerre : cadences industrielles, réquisitions, contrôle des chaînes critiques.
+- **Fermeture du détroit d'Hormuz** (`fermeture_hormuz`) — de 0 à 1 0-1, défaut 0 : Franchissement de seuil : coupure ou forte réduction du trafic (0 = aucune, 1 = fermeture totale).
+- **Franchissement du seuil nucléaire tactique** (`escalade_nucleaire`) : Scénario extrême : usage d'arme nucléaire tactique, dégradation de notation, fermeture des marchés longs.
+- **Guerre en Ukraine / relation OTAN-Russie** (`tension_ukraine`) : Intensité du conflit ukrainien et de l'affrontement avec la Russie.
+- **Intensité d'un blocus de Taïwan** (`blocus_taiwan`) : Franchissement de seuil : coupure de la fourniture de composants (0 = aucune, 1 = blocus total).
+- **Tension au détroit d'Hormuz** (`tension_hormuz`) : Le détroit d'Hormuz fait passer ~20 % du pétrole mondial.
+- **Tension autour de Taïwan** (`tension_taiwan`) : Vivacité du théâtre taïwanais (0-100). Taïwan concentre ~60 % de la production mondiale de semi-conducteurs avancés.
+
+## Les domaines d'impact
+
+- **Économie & croissance** (`economie`) : Activité, investissement, productivité, balance commerciale.
+- **Budget, dette & marchés** (`budget`) : Déficit, dette, charge d'intérêts, notation, spread OAT-Bund.
+- **Fiscalité & prélèvements** (`fiscalite`) : Niveau et progressivité des prélèvements, recettes nouvelles.
+- **Emploi & travail** (`emploi`) : Chômage, emplois, qualité de l'emploi, salaires.
+- **Pouvoir d'achat & niveau de vie** (`pouvoir_achat`) : Pouvoir d'achat des ménages, par décile, inflation subie.
+- **Pauvreté & inégalités** (`pauvrete`) : Taux de pauvreté, Gini, recours aux minima sociaux.
+- **Santé** (`sante`) : Moyens, accès aux soins, prévention, espérance de vie.
+- **Éducation & jeunesse** (`education`) : Moyens par élève, réussite, précarité des jeunes, petite enfance.
+- **Recherche & innovation** (`recherche`) : Effort de R&D, brevets, diffusion technologique.
+- **Sécurité & justice** (`securite`) : Effectifs, taux d'élucidation, délais judiciaires, sentiment de sécurité.
+- **Défense & souveraineté** (`defense`) : Effort de défense, industrie d'armement, dépendances critiques.
+- **Énergie & climat** (`energie_climat`) : Émissions, production décarbonée, facture énergétique, adaptation.
+- **Industrie & commerce extérieur** (`industrie`) : Part industrielle, relocalisations, solde commercial, dépendances.
+- **Numérique & IA** (`numerique`) : Souveraineté numérique, cyber-résilience, administration numérique.
+- **Logement & territoires** (`logement`) : Construction, logement social, loyers, services de proximité.
+- **Agriculture & alimentation** (`agriculture`) : Souveraineté alimentaire, revenus agricoles, agroécologie.
+- **Démocratie & institutions** (`democratie`) : Confiance, participation, transparence, réformes institutionnelles.
+- **Solidarité & cohésion** (`social`) : Protection sociale, dépendance, intégration, cohésion nationale.
+- **Europe & monde** (`europe_monde`) : Intégration européenne, aide internationale, migrations, alliances.
+- **Résilience & risques systémiques** (`resilience`) : Capacité à encaisser les chocs : énergie, alimentation, santé, cyber.
+
+## Les scénarios types
+
+- **Austérité brute** (`austerite`) : Coupes territoriales et fronde fiscale.
+- **Choc mondial (stagflation)** (`choc_mondial`) : Pétrole en hausse, resserrement Fed, commerce fragilisé.
+- **Convergence Chine-Russie-Iran** (`convergence_ww3`) : Guerre mondiale, blocs fermés, économie de guerre.
+- **Crise de Taïwan** (`crise_taiwan`) : Blocus, semi-conducteurs, Chips Act souverain.
+- **Deux mandatures consécutives (2027-2037)** (`double_mandature`) : Dix ans : verrou constitutionnel des réformes, second dividende de la dette réinvesti, investissements à cycle long.
+- **Escalade nucléaire tactique** (`escalade_nucleaire`) : OTAN-Russie : franchissement du seuil, marchés fermés.
+- **Fermeture d'Hormuz** (`hormuz`) : 20 % du pétrole mondial coupé, Brent au-delà de 150 $.
+- **Plan de mandature républicaine** (`mandature`) : Réformes structurelles, fraude, niches : déficit sous 3 % en année 5.
+- **Résilience républicaine** (`resilience`) : Mandature + réarmement OTAN à 3,5 % du PIB.
+- **Statu quo** (`statut_quo`) : Immobilisme politique et dérive budgétaire.
+- **Stress-test : alternance 2032** (`alternance_2032`) : Deux mandatures sans verrou constitutionnel : réformes révocables, usure maximale du capital politique.
+
+## Ce que l'outil ne fait pas
+
+- il ne prédit ni élection ni croissance : c'est un modèle, donc une simplification assumée ;
+- il ne remplace ni l'expertise des services publics ni le débat démocratique ;
+- il ne demande ni compte ni identité ; les requêtes de données passent par son propre serveur.
+
+## Sources
+
+Les observations réelles viennent de sources publiques (Eurostat, Banque centrale
+européenne, Banque mondiale, Frankfurter, Opendatasoft, Yahoo, Stooq), chacune avec sa
+période, sa licence et sa date de relevé.
+
+[Registre des sources, de l'auditabilité et du modèle](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/13_REGISTRE_DES_SOURCES_AUDITABILITE_ET_MODELE_SOCIO_MONDIAL.md)
+
+[Méthodologie du modèle](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/METHODOLOGIE.md)

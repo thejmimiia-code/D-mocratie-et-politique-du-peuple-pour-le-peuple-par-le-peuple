@@ -29,9 +29,19 @@ aucun CDN) qui contient :
 
 Le JavaScript est volontairement sans framework : la page doit rester lisible
 et auditables par des non-informaticiens, conformément à l'esprit du projet.
+
+La page reste **un seul fichier** : ce qui l'identifie pour les moteurs de
+recherche et pour les lecteurs automatiques — description, adresse canonique,
+icônes, données structurées — est injecté au chargement du module par
+`simulateur/surface_publique.py`, qui produit aussi `/robots.txt`,
+`/sitemap.xml`, `/llms.txt` et `/llms-full.txt`. Les icônes y sont écrites en
+`data:` : aucun fichier à charger, donc rien qui casse hors ligne ou dans la
+copie du site M.R.S.C, qui vit dans un sous-dossier.
 """
 
 from __future__ import annotations
+
+from simulateur.surface_publique import entete_html
 
 #: ⚠️ Le placeholder `===SCENARIOS_JSON===` est remplacé à la volée par le
 #: catalogue des scénarios historiques (nom, description, couleur) — il doit
@@ -42,6 +52,14 @@ HTML_PAGE = r"""<!DOCTYPE html>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulateur Macro-Politique — Démocratie et politique du peuple</title>
+<!-- L'en-tête public (description, adresse canonique, icônes, données
+     structurées) est posé ici au chargement du module par
+     `surface_publique.entete_html()`, la même source que `robots.txt`,
+     `sitemap.xml` et `llms.txt`. Recopier ces balises à la main serait le
+     moyen le plus sûr de les voir diverger d'un fichier à l'autre. La ligne
+     suivante est un jeton, remplacé avant toute publication ; il doit rester
+     seul sur sa ligne, hors de tout commentaire. -->
+===ENTETE_PUBLIQUE===
 <style>
 :root{
   --bg:#0b1220; --panel:#131c2f; --panel-2:#1a2540; --border:#26324d;
@@ -5562,3 +5580,8 @@ async function chargerObjections(filtre){
 </body>
 </html>
 """
+
+#: L'en-tête public, écrit une fois pour toutes au chargement : la page servie
+#: (Vercel, Render) et la page recopiée dans `simulateur/` par le site M.R.S.C
+#: portent donc exactement les mêmes balises, sans que personne ait à y penser.
+HTML_PAGE = HTML_PAGE.replace("===ENTETE_PUBLIQUE===", entete_html())

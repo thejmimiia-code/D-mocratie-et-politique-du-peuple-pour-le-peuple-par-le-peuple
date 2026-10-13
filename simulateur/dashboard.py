@@ -71,6 +71,7 @@ import sys
 import traceback
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 from threading import Lock
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -79,6 +80,12 @@ from simulateur.bulles import DETAILS, bulle_levier, bulles_catalogue
 from simulateur.clarte import lecture_claire
 from simulateur.cli import CATALOGUE_SCENARIOS, SCENARIOS_DISPONIBLES, executer_scenario
 from simulateur.compression import EN_TETE_VARY, repondre
+
+#: Empêche un navigateur de deviner le type d'un contenu servi : c'est le
+#: type annoncé qui fait foi. Sans lui, un fichierservi en texte ou en image
+#: peut être interprété comme du HTML — donc exécuté. Le site M.R.S.C impose
+#: déjà ce contrôle ; le moteur le fait maintenant pour lui-même et pour les
+#: fichiers qu'il publie (robots.txt, plan, icônes).
 from simulateur.conseil import conseil_mouvement
 from simulateur.donnees_live import (
     INDICATEURS,
@@ -102,6 +109,9 @@ from simulateur.moteur_parametrique import (
 from simulateur.observatoire import observatoire_public
 from simulateur.parametres import PRESETS
 from simulateur.seuils import bareme_public
+from simulateur.surface_publique import IMAGES, TEXTES
+from simulateur.surface_publique import chemin_image as chemin_image_publique
+from simulateur.surface_publique import texte as texte_public
 
 #: Catalogue des scénarios historiques : clé → (fabrique de décisions, nom,
 #: description, couleur). `fn` est exposé pour la compatibilité des tests.
@@ -342,11 +352,60 @@ class DashboardHandler(BaseHTTPRequestHandler):
         charge, encodage = self._preparer_charge(contenu.encode("utf-8"))
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Length", str(len(charge)))
         self.send_header("Vary", EN_TETE_VARY)
         if encodage:
             self.send_header("Content-Encoding", encodage)
         self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        if not self._tete_seulement:
+            self.wfile.write(charge)
+
+    def _send_texte(self, contenu: str, type_mime: str,
+                    cache: str = "public, max-age=3600") -> None:
+        """Envoie un des fichiers que lisent les robots (voir surface_publique).
+
+        Ils changent quand le dépôt change, pas à chaque requête : ils sont
+        donc compressibles et cacheables, contrairement à la page elle-même
+        (`no-store`, parce qu'elle sert un outil qui vit).
+        """
+        charge, encodage = self._preparer_charge(contenu.encode("utf-8"))
+        self.send_response(200)
+        self.send_header("Content-Type", type_mime)
+        self.send_header("Content-Length", str(len(charge)))
+        self.send_header("Vary", EN_TETE_VARY)
+        self.send_header("X-Content-Type-Options", "nosniff")
+        if encodage:
+            self.send_header("Content-Encoding", encodage)
+        self.send_header("Cache-Control", cache)
+        self.end_headers()
+        if not self._tete_seulement:
+            self.wfile.write(charge)
+
+    def _send_ressource(self, chemin: Path, type_mime: str,
+                        cache: str = "public, max-age=604800") -> None:
+        """Envoie une ressource publique de la page (icône, aperçu), lue du disque.
+
+        Le chemin vient d'une liste blanche (``surface_publique.IMAGES``) : il
+        ne peut désigner que ces quelques fichiers-là. Sur Vercel, c'est
+        l'hébergeur qui les sert ; ici, personne ne le ferait à notre place.
+
+        Elle ne s'appelle pas ``_send_fichier`` : ce nom est déjà pris par
+        l'export de l'ancien serveur, qui écrit un fichier temporaire. Deux
+        méthodes portant le même nom se remplaceraient selon l'ordre des
+        définitions — le genre de panne qui n'apparaît qu'en production.
+        """
+        try:
+            charge = chemin.read_bytes()
+        except OSError:
+            self._send_json({"error": f"image absente : {chemin.name}"}, status=404)
+            return
+        self.send_response(200)
+        self.send_header("Content-Type", type_mime)
+        self.send_header("Content-Length", str(len(charge)))
+        self.send_header("Cache-Control", cache)
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.end_headers()
         if not self._tete_seulement:
             self.wfile.write(charge)
@@ -357,6 +416,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         )
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Length", str(len(charge)))
         self.send_header("Vary", EN_TETE_VARY)
         if encodage:
@@ -369,6 +429,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         """Envoie un fichier construit en mémoire, sans jamais passer par le disque."""
         self.send_response(200)
         self.send_header("Content-Type", type_mime)
+        self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("Content-Disposition", f'attachment; filename="{nom_fichier}"')
         self.send_header("Content-Length", str(len(donnees)))
         self.end_headers()
@@ -514,6 +575,19 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_html(HTML_PAGE.replace("===SCENARIOS_JSON===", scenarios_json))
             except Exception:
                 self._send_json({"error": traceback.format_exc(), "route": chemin})
+
+        elif chemin in TEXTES:
+            # Ce que lisent les robots : même texte que les fichiers de la racine
+            # (Vercel les sert tels quels), mais servi ici par le routeur, pour
+            # que les deux hébergeurs disent exactement la même chose.
+            self._send_texte(texte_public(chemin) or "", TEXTES[chemin])
+
+        elif chemin in IMAGES:
+            image = chemin_image_publique(chemin)
+            if image is None:                    # pragma: no cover - liste blanche
+                self._send_json({"error": f"chemin inconnu : {chemin}"}, status=404)
+            else:
+                self._send_ressource(image, IMAGES[chemin])
 
         elif chemin == "/api/catalogue":
             self._send_json(catalogue_complet())

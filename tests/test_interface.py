@@ -53,10 +53,33 @@ class TestStructureDeLaPage(unittest.TestCase):
         cls.script = _script(cls.page)
 
     def test_page_unique_sans_dependance_externe(self):
-        """Aucune ressource distante : la page doit vivre hors ligne."""
+        """Aucune ressource à charger : la page doit vivre hors ligne, en un fichier.
+
+        Deux `<link>` sont admis, et aucun ne charge quoi que ce soit :
+
+        * `rel="canonical"` — une adresse, pas un fichier. C'est le seul moyen de
+          dire à un moteur de recherche laquelle des copies identiques fait foi
+          (la page est servie par deux hébergeurs, et le site M.R.S.C en propose
+          une troisième, dans un sous-dossier) ;
+        * les icônes, écrites en `data:` — l'onglet reste reconnaissable sans
+          qu'un fichier soit servi à côté, donc aussi hors ligne, dans la copie
+          embarragée et dans un sous-dossier quelconque.
+
+        Tout le reste reste interdit : un lien de feuille de style, une police,
+        un `@import`, un script distant remettraient la page à la merci d'un
+        autre serveur.
+        """
         self.assertNotIn("<script src=", self.page)
-        self.assertNotIn("<link ", self.page)
         self.assertNotIn("@import", self.page)
+        self.assertIsNone(re.search(r'url\(\s*["\']?https?://', self.page))
+        for balise in re.findall(r"<link\b[^>]*>", self.page):
+            with self.subTest(balise=balise[:60]):
+                self.assertTrue('rel="canonical"' in balise or "data:" in balise,
+                                "seules les métadonnées et les icônes en data: sont admises")
+        self.assertNotRegex(
+            self.page,
+            r'<link\b[^>]*rel="(?:stylesheet|preload|preconnect|dns-prefetch|modulepreload)"',
+        )
         self.assertGreater(len(self.page), 20_000)
 
     def test_balises_div_equilibrees(self):
