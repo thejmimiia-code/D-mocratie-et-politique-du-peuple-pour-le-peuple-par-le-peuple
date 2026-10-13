@@ -72,8 +72,11 @@ HTML_PAGE = r"""<!DOCTYPE html>
      réglages d'agrandissement du texte (125 %, 150 %) continuent de
      fonctionner au-dessus du plancher. */
   --t-min:12.5px;
-  /* Palette : une couleur se déclare ici, jamais dans une règle. */
-  --panel-3:var(--panel-3);
+  /* Palette : une couleur se déclare ici, jamais dans une règle. Un troisième
+     palier de panneau, pour les fonds survolés et les pistes de jauge —
+     `--panel-3:var(--panel-3)` se définissait lui-même : la valeur était
+     invalide, donc transparente, et le survol des cartes ne se voyait pas. */
+  --panel-3:#1f2a45;
   /* Hauteur de la barre haute collante : les ancres s'en décalent d'autant. */
   --collant:0px;
   /* ── Plans d'empilement ───────────────────────────────────────────────────
@@ -712,12 +715,35 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .note-impression{display:none}
 html.impression-plan .bandeau-impression{display:flex}
 html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){display:none}
+/* ── Les deux plateaux, en proportion, au sommet ───────────────────────────
+   Les montants sont quatre nombres ; ils ne disent pas dans quelle proportion
+   les deux plateaux se répondent. Une barre par plateau le montre tout de
+   suite, sans descendre jusqu'à la balance — et les parts viennent de
+   `partsDesPlateaux`, la même fonction que les jauges de la balance : les deux
+   visuels ne peuvent pas diverger. La couleur ne porte rien seule : chaque côté
+   a son mot, sa part écrite en clair et son motif. */
+.resume-balance{display:grid;gap:7px;margin:12px 0 2px}
+.resume-balance .cote{display:grid;gap:4px}
+.resume-balance .cote-titre{display:flex;justify-content:space-between;align-items:baseline;
+  gap:10px;font-size:max(var(--t-min),.74rem);color:var(--texte-dim)}
+.resume-balance .cote.entrees .cote-titre{color:var(--classe-recettes)}
+.resume-balance .cote.sorties .cote-titre{color:var(--classe-depenses)}
+.resume-balance .cote-titre b{color:var(--texte);font-variant-numeric:tabular-nums}
+.resume-balance .piste{display:block;height:13px;border:1px solid var(--border);border-radius:999px;
+  background:var(--panel-3);overflow:hidden}
+.resume-balance .piste span{display:block;height:100%;width:0;transition:width .25s ease}
+.resume-balance .cote.entrees .piste span{background-color:var(--classe-recettes);
+  background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.18) 0 5px,transparent 5px 10px)}
+.resume-balance .cote.sorties .piste span{background-color:var(--classe-depenses);
+  background-image:radial-gradient(rgba(0,0,0,.22) 1px,transparent 1.6px);background-size:7px 7px}
+.resume-balance .part-note{font-size:max(var(--t-min),.68rem);color:var(--texte-dim)}
 /* L'interaction répond au geste, sans jamais devenir un feu d'artifice. */
 .resume .metric{transition:transform .15s ease,border-color .15s ease}
 .resume .metric:hover{border-color:var(--accent);transform:translateY(-1px)}
 .cascade-piste .barre,.balance-cote .jauge-classe span{transition:width .25s ease,left .25s ease}
 @media (prefers-reduced-motion:reduce){
-  .resume .metric,.cascade-piste .barre,.balance-cote .jauge-classe span{transition:none}
+  .resume .metric,.cascade-piste .barre,.balance-cote .jauge-classe span,
+  .resume-balance .piste span{transition:none}
   .resume .metric:hover{transform:none}
 }
 /* ── Les chapitres : quatre temps dans une page de vingt sections ─────────
@@ -886,6 +912,10 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   html.impression-plan .conteneur > #resume{display:block !important}
   html.impression-plan .conteneur > .pied.credit{display:block !important}
   html.impression-plan #resume{background:#fff !important;border-color:#000 !important}
+  /* Les barres du résumé gardent leur remplissage sur papier : les parts sont
+     aussi écrites en clair, donc l'information survit même si le navigateur
+     refuse d'imprimer les fonds. */
+  .resume-balance .piste span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
 </style>
 <script>
@@ -946,6 +976,19 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
       <div class="carte metric"><div class="libelle">Par ménage</div>
         <div class="valeur" id="resume-menage">—</div><div class="delta neutre" id="resume-menage-note">ordre de grandeur</div></div>
     </div>
+    <div class="resume-balance" id="resume-balance" role="group"
+         aria-label="Les deux plateaux du plan, en proportion">
+      <div class="cote entrees">
+        <span class="cote-titre">Recettes + économies <b id="resume-part-entrees">—</b></span>
+        <span class="piste" aria-hidden="true"><span id="resume-barre-entrees"></span></span>
+      </div>
+      <div class="cote sorties">
+        <span class="cote-titre">Dépenses engagées <b id="resume-part-sorties">—</b></span>
+        <span class="piste" aria-hidden="true"><span id="resume-barre-sorties"></span></span>
+      </div>
+      <p class="part-note">Part de chaque plateau dans le total des deux — les montants sont au-dessus.</p>
+    </div>
+
     <div class="resume-actions">
       <button class="primaire" type="button" onclick="allerAuxLeviers()">Régler les leviers</button>
       <a href="#section-classes">Voir la balance et les cinq classes</a>
@@ -2438,6 +2481,20 @@ function renderFiltresClasses(){
    les valeurs viennent des mêmes fonctions que la balance (`classeAnneeAffichee`,
    `fmtSigne`, `fmtMenage`) et la phrase est celle du verdict de la balance,
    reprise mot pour mot : le résumé ne raconte pas autre chose que la page. */
+/* Les deux parts du total, en pourcentage entier, calculées une seule fois :
+   la balance et le résumé de tête lisent cette fonction, donc les jauges et les
+   barres du sommet ne peuvent pas diverger — la règle du résumé est qu'il ne
+   calcule rien lui-même. Les deux parts somment toujours à 100 : la seconde est
+   le complément de la première, jamais un arrondi séparé. */
+function partsDesPlateaux(annee){
+  const entrees = Math.abs(Number(annee && annee.entrees_mde) || 0);
+  const sorties = Math.abs(Number(annee && annee.sorties_mde) || 0);
+  const total = entrees + sorties;
+  if (!(total > 0)) return {entrees: 0, sorties: 0};
+  const part = Math.round(100 * entrees / total);
+  return {entrees: part, sorties: 100 - part};
+}
+
 function renderResume(){
   const solde = document.getElementById('resume-solde');
   if (!solde) return;
@@ -2450,6 +2507,14 @@ function renderResume(){
   const phrase = document.getElementById('resume-phrase');
   const annee = classeAnneeAffichee();
   if (!annee){
+    for (const identifiant of ['resume-barre-entrees', 'resume-barre-sorties']){
+      const barre = document.getElementById(identifiant);
+      if (barre && barre.style) barre.style.width = '0%';
+    }
+    for (const identifiant of ['resume-part-entrees', 'resume-part-sorties']){
+      const part = document.getElementById(identifiant);
+      if (part) part.textContent = '—';
+    }
     if (phrase) phrase.textContent = "Déplacez un curseur : le plan se pèse ici, en milliards d'euros par an.";
     return;
   }
@@ -2466,6 +2531,15 @@ function renderResume(){
     : 'dépenses engagées';
   if (menage) menage.textContent = fmtMenage(montant);
   if (menageNote) menageNote.textContent = 'solde du plan « ' + statutDiviseur() + ' »';
+  const parts = partsDesPlateaux(annee);
+  const barreEntrees = document.getElementById('resume-barre-entrees');
+  const barreSorties = document.getElementById('resume-barre-sorties');
+  const partEntrees = document.getElementById('resume-part-entrees');
+  const partSorties = document.getElementById('resume-part-sorties');
+  if (barreEntrees && barreEntrees.style) barreEntrees.style.width = parts.entrees + '%';
+  if (barreSorties && barreSorties.style) barreSorties.style.width = parts.sorties + '%';
+  if (partEntrees) partEntrees.textContent = parts.entrees + ' %';
+  if (partSorties) partSorties.textContent = parts.sorties + ' %';
   const verdict = document.getElementById('balance-verdict');
   if (phrase && verdict) phrase.textContent = verdict.textContent;
   const net = document.getElementById('balance-net');
@@ -2495,7 +2569,7 @@ function renderBalance(){
     renderResume();
     return;
   }
-  const total = Math.abs(annee.entrees_mde) + Math.abs(annee.sorties_mde);
+  const parts = partsDesPlateaux(annee);
   const coupes = annee.sorties_mde < 0;
   if (entrees) entrees.textContent = `${fmtSigne(annee.entrees_mde, 1)} Md€/an`;
   if (sorties) sorties.textContent = `${fmtSigne(annee.sorties_mde, 1)} Md€/an`;
@@ -2503,8 +2577,8 @@ function renderBalance(){
   if (sortiesMenage) sortiesMenage.textContent = coupes
     ? `${fmtMenage(annee.sorties_mde)} — budgets en baisse : c'est une coupe, pas une dépense`
     : `${fmtMenage(annee.sorties_mde)} — dépenses engagées`;
-  if (jaugeE) jaugeE.style.width = `${total > 0 ? Math.round(100 * Math.abs(annee.entrees_mde) / total) : 0}%`;
-  if (jaugeS) jaugeS.style.width = `${total > 0 ? Math.round(100 * Math.abs(annee.sorties_mde) / total) : 0}%`;
+  if (jaugeE) jaugeE.style.width = `${parts.entrees}%`;
+  if (jaugeS) jaugeS.style.width = `${parts.sorties}%`;
   if (net){
     const solde = annee.solde_mde;
     net.className = 'net ' + (Math.abs(solde) < 0.05 ? 'neutre' : (solde > 0 ? 'gain' : 'cout'));

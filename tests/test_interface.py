@@ -860,6 +860,20 @@ class TestSocleResponsive(unittest.TestCase):
         self.assertIn("--panel-3:", self.css)
         self.assertNotIn("#22304f", self.css)
 
+    def test_aucune_variable_ne_se_definit_elle_meme(self):
+        """`--panel-3:var(--panel-3)` était une boucle.
+
+        Une propriété qui se prend pour valeur est invalide au calcul : tout ce
+        qui l'utilise retombait sur « transparent », sans erreur ni message. Le
+        survol des cartes de scénario ne se voyait donc pas, et les pistes de
+        jauge n'avaient pas de fond. Le nom est le même, la valeur est écrite.
+        """
+        for nom, valeur in re.findall(r"(--[a-z0-9-]+)\s*:\s*([^;}]+)",
+                                      re.sub(r"/\*.*?\*/", "", self.css, flags=re.S)):
+            self.assertNotIn(f"var({nom})", valeur,
+                             f"{nom} se définit par lui-même : la valeur serait invalide")
+        self.assertRegex(self.css, r"--panel-3:#[0-9a-fA-F]{3,8}")
+
 
 class TestResumeDeTeteEtChapitres(unittest.TestCase):
     """Comprendre sans faire défiler vingt sections.
@@ -1102,3 +1116,74 @@ class TestEmpilementEtRenduDiffere(unittest.TestCase):
 
     def test_les_titres_ne_se_cassent_plus_sur_un_mot_orphelin(self):
         self.assertIn("h1,h2,h3{text-wrap:balance}", self.css)
+
+
+class TestLePlanSeVoit(unittest.TestCase):
+    """Le plan en proportion, au sommet de la page.
+
+    Les quatre chiffres du résumé disent combien ; ils ne disent pas dans quelle
+    proportion les deux plateaux se répondent. Une barre par plateau le montre
+    sans descendre jusqu'à la balance — et les parts viennent de la même
+    fonction que les jauges de la balance, donc les deux visuels ne peuvent pas
+    raconter deux choses différentes.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
+        cls.script = _script(cls.page)
+        cls.resume = cls.page[cls.page.index('id="resume"'):
+                              cls.page.index('<nav class="sommaire"')]
+
+    def test_les_deux_plateaux_ont_leur_barre_dans_le_resume(self):
+        for identifiant in ("resume-balance", "resume-barre-entrees", "resume-barre-sorties",
+                            "resume-part-entrees", "resume-part-sorties"):
+            self.assertIn(f'id="{identifiant}"', self.resume)
+        # Le visuel vient après les montants et avant les boutons du résumé.
+        self.assertLess(self.resume.index('id="resume-solde"'), self.resume.index('id="resume-balance"'))
+        self.assertLess(self.resume.index('id="resume-balance"'),
+                        self.resume.index('class="resume-actions"'))
+
+    def test_la_couleur_ne_porte_pas_seule_l_information(self):
+        """Chaque plateau a son mot, sa part écrite en clair, et un motif."""
+        self.assertIn("Recettes + économies", self.resume)
+        self.assertIn("Dépenses engagées", self.resume)
+        self.assertIn("Part de chaque plateau", self.resume)
+        self.assertEqual(self.resume.count('<span class="piste" aria-hidden="true">'), 2,
+                         "les barres sont décoratives : la part est écrite à côté")
+        for motif in ("repeating-linear-gradient(45deg,rgba(0,0,0,.18)",
+                      "radial-gradient(rgba(0,0,0,.22)"):
+            self.assertIn(motif, self.css, "les deux plateaux se distinguent aussi par le motif")
+
+    def test_les_parts_viennent_d_une_seule_fonction(self):
+        self.assertIn("function partsDesPlateaux(", self.script)
+        self.assertEqual(self.script.count("partsDesPlateaux(annee)"), 3,
+                         "la définition, puis un appel dans la balance et un dans le résumé")
+        # Le résumé ne recalcule rien : il lit les parts de la balance.
+        self.assertIn("barreEntrees.style.width = parts.entrees", self.script)
+        self.assertIn("jaugeE.style.width = `${parts.entrees}%`", self.script)
+        # Les deux parts somment à 100 : la seconde est le complément, jamais un
+        # arrondi séparé qui donnerait 99 % ou 101 %.
+        self.assertIn("return {entrees: part, sorties: 100 - part};", self.script)
+
+    def test_sans_simulation_aucune_barre_n_est_a_moitie_remplie(self):
+        depart = self.script[self.script.index("function renderResume("):]
+        depart = depart[:depart.index("function renderBalance(")]
+        self.assertIn("resume-barre-entrees", depart)
+        self.assertIn("barre.style.width = '0%'", depart)
+        self.assertIn("part.textContent = '—'", depart)
+
+    def test_le_mouvement_des_barres_s_arrete_sur_demande(self):
+        """Les deux blocs de mouvement réduit de la page couvrent les barres."""
+        for bloc in re.findall(r"@media \(prefers-reduced-motion:reduce\)\{[^@]*?\n\}",
+                               self.css, re.S):
+            if "cascade-piste" in bloc:
+                self.assertIn(".resume-balance .piste span{transition:none}", bloc)
+                break
+        else:
+            self.fail("le bloc de mouvement réduit des barres est absent")
+
+    def test_les_barres_gardent_leur_remplissage_sur_papier(self):
+        bloc = self.css[self.css.rindex("@media print"):]
+        self.assertIn("print-color-adjust:exact", bloc)

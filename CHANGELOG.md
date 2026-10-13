@@ -6,6 +6,13 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Le plan en proportion au sommet de la page, et une variable qui n'existait pas
+
+- **Les deux plateaux, en proportion** : `#resume-balance` (dans le résumé de tête) montre la part de chaque plateau dans le total des deux, en barres. La couleur ne porte rien seule — chaque côté a son mot, sa part écrite en clair (`87 %`) et son motif (hachures pour les recettes et économies, pointillés pour les dépenses). Les barres sont décoratives (`aria-hidden="true"`) : la part est écrite à côté.
+- **Une seule fonction pour les deux visuels** : `partsDesPlateaux(annee)` calcule les parts une fois, et la balance comme le résumé la lisent — le résumé ne calcule toujours rien lui-même. Les deux parts somment à 100 : la seconde est le complément de la première, jamais un arrondi séparé. Sans simulation, les barres restent à zéro et les parts affichent `—`. Le harnais vérifie que les parts du résumé sont **exactement** celles des jauges de la balance, et qu'elles suivent le changement d'année.
+- **`--panel-3` réparée** : la variable se définissait elle-même (`--panel-3:var(--panel-3)`) — valeur invalide au calcul, donc transparente, sans erreur ni message. Le survol et l'état actif des cartes de scénario ne changeaient donc pas de fond, et les pistes de jauge n'en avaient pas. Elle reçoit une vraie valeur, et un test refuse désormais toute propriété personnalisée qui se définirait elle-même.
+- **Détails** : transition des barres coupée par `prefers-reduced-motion`, remplissage conservé à l'impression (`print-color-adjust:exact`).
+
 ### Imprimer son plan, plans d'empilement nommés, rendu différé des sections basses
 
 - **« 🖨️ Imprimer mon plan »** : un bouton dans les actions du résumé pose `html.impression-plan`. Le mode se voit à l'écran — la page ne montre plus que le résumé, **donc on voit ce qui s'imprimera** — et le bandeau qui l'annonce propose de lancer l'impression ou de revenir à la page entière. Sur papier, il ne reste que le résumé et le crédit du mouvement ; la ligne d'attribution (adresse publique) s'imprime avec. La classe reste posée après `window.print()` — bloquant chez certains navigateurs, asynchrone chez d'autres — : c'est le bandeau, jamais un minuteur, qui ramène la page entière, et le focus revient au bouton déclencheur. Garde-fous : `TestImpressionDuPlan` dans `tests/test_interface.py`, et `tests/test_impression_plan.py`, qui exécute les trois fonctions sous Node.

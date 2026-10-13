@@ -188,6 +188,38 @@ Décisions :
   réellement visible (`max-height:74vh;max-height:74dvh`) — sur un téléphone,
   `vh` compte la barre d'adresse, `dvh` non.
 
+## Cinquième incrément — le plan se voit, et une couleur qui n'existait pas
+
+Deux manques, trouvés à la lecture du thème plutôt qu'à l'écran.
+
+| Constat | Mesure | Conséquence |
+|---|---|---|
+| Les montants sans leur proportion | le résumé de tête donnait quatre nombres ; la balance, quinze sections plus bas, était le seul endroit où l'on voyait les deux plateaux se répondre | Pour savoir si le plan pèse plutôt sur les recettes ou sur les dépenses, il fallait descendre |
+| `--panel-3:var(--panel-3)` | la variable se définissait **elle-même** : invalide au calcul, donc transparente, sans erreur ni message | Le survol des cartes de scénario ne changeait rien et les pistes de jauge n'avaient pas de fond — deux défauts invisibles à la lecture comme à l'écran |
+
+Décisions :
+
+- **Une barre par plateau, au sommet** : `#resume-balance` montre la part de
+  chaque plateau dans le total des deux, juste après les montants et avant les
+  boutons. La couleur ne porte rien seule : chaque côté a son mot (« Recettes +
+  économies », « Dépenses engagées »), sa part écrite en clair (`87 %`) et son
+  motif — hachures pour l'un, pointillés pour l'autre.
+- **Une seule fonction pour les deux visuels** : `partsDesPlateaux(annee)`
+  calcule les parts une fois, et la balance comme le résumé la lisent — la règle
+  du résumé reste qu'il ne calcule rien lui-même. Les deux parts somment
+  toujours à 100 : la seconde est le complément de la première, jamais un
+  arrondi séparé qui donnerait 99 ou 101.
+- **Sans simulation, rien à moitié rempli** : le retour « aucune année » remet
+  les deux barres à zéro et les parts à `—`.
+- **Le mouvement s'arrête avec les autres** : la transition des barres est
+  coupée par `prefers-reduced-motion`, et sur papier elles gardent leur
+  remplissage (`print-color-adjust:exact`) — les parts étant écrites en clair,
+  l'information survit même si le navigateur refuse d'imprimer les fonds.
+- **La variable réparée** : `--panel-3` reçoit une vraie valeur, et un test
+  refuse désormais toute propriété personnalisée qui se définirait elle-même.
+  C'est le genre de faute qui ne se voit pas : aucune erreur, aucune alerte —
+  simplement une couleur qui n'arrive jamais.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -211,7 +243,12 @@ quelqu'un réintroduit les défauts mesurés plus haut.
 - échelle de plans déclarée dans `:root`, aucun `z-index` numérique dans une
   règle, tout `var(--z-…)` employé déclaré ;
 - encoches sur les quatre bords **avec valeur de repli**, sections basses en
-  rendu différé et différé levé à l'impression, modale en `dvh`.
+  rendu différé et différé levé à l'impression, modale en `dvh` ;
+- le plan en proportion : les deux barres du résumé, leurs parts écrites en
+  clair, un motif de chaque côté, et une seule fonction partagée avec les jauges
+  de la balance ; sans simulation, les barres restent à zéro ;
+- aucune propriété personnalisée ne se définit elle-même — `--panel-3` portait
+  sa propre boucle, donc une couleur qui n'arrivait jamais.
 
 Quatre fichiers de tests **exécutent** le code, ils ne le relisent pas :
 
@@ -225,7 +262,10 @@ Quatre fichiers de tests **exécutent** le code, ils ne le relisent pas :
   quels, et que le sommaire ouvert se referme en annonçant son état ;
 - `tests/navigateur_interface.mjs` demande au parcours réel que le résumé de
   tête porte **le solde de la balance** (comparaison de texte), que sa phrase
-  soit celle du verdict, et qu'un changement d'année relise le résumé ;
+  soit celle du verdict, qu'un changement d'année relise le résumé, et que les
+  proportions affichées soient **exactement** celles des jauges de la balance
+  (`87 % / 13 %` sur le préréglage de référence) — la preuve qu'une seule
+  fonction alimente les deux visuels ;
 - `tests/test_impression_plan.py` ouvre le mode d'impression sur un DOM
   minimal : `window.print()` part **une fois par demande** (jamais au
   chargement), le bandeau relance le tirage sans quitter le mode, le retour

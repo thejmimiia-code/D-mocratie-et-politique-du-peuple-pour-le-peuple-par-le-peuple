@@ -317,6 +317,26 @@ noter("le résumé porte les deux plateaux et l'ordre de grandeur par ménage",
       && /Md€\/an/.test(elements.get("resume-sorties")?.textContent || "")
       && /€\/ménage\/an/.test(elements.get("resume-menage")?.textContent || ""),
       `${elements.get("resume-entrees")?.textContent} / ${elements.get("resume-sorties")?.textContent} / ${elements.get("resume-menage")?.textContent}`);
+/* Les deux plateaux, en proportion : les barres du résumé et les jauges de la
+   balance lisent la même fonction, donc les deux visuels doivent donner
+   exactement le même couple de parts — et ces parts doivent sommer à 100. */
+const partEntreesResume = parseInt(elements.get("resume-barre-entrees")?.style?.width || "", 10);
+const partSortiesResume = parseInt(elements.get("resume-barre-sorties")?.style?.width || "", 10);
+noter("le résumé met les deux plateaux en proportion",
+      Number.isFinite(partEntreesResume) && Number.isFinite(partSortiesResume)
+      && partEntreesResume + partSortiesResume === 100,
+      `${partEntreesResume} % / ${partSortiesResume} %`);
+noter("les barres du résumé donnent les mêmes parts que les jauges de la balance",
+      (elements.get("balance-jauge-entrees")?.style?.width || "")
+        === `${partEntreesResume}%`
+      && (elements.get("balance-jauge-sorties")?.style?.width || "")
+        === `${partSortiesResume}%`,
+      `résumé ${partEntreesResume}/${partSortiesResume} · balance `
+      + `${elements.get("balance-jauge-entrees")?.style?.width} / ${elements.get("balance-jauge-sorties")?.style?.width}`);
+noter("chaque part est écrite en clair à côté de sa barre",
+      /%$/.test(elements.get("resume-part-entrees")?.textContent || "")
+      && /%$/.test(elements.get("resume-part-sorties")?.textContent || ""),
+      `${elements.get("resume-part-entrees")?.textContent} / ${elements.get("resume-part-sorties")?.textContent}`);
 const totauxClasse = apiPage.etat().SORTIE?.classes_annuelles || [];
 noter("les totaux par classe viennent du moteur (pas de la page)",
       totauxClasse.length > 0
@@ -384,6 +404,11 @@ noter("reculer d'un an relit la balance et la cascade",
 noter("reculer d'un an relit aussi le résumé de tête",
       (elements.get("resume-solde")?.textContent || "") !== soldeResumeFinal,
       `${soldeResumeFinal} → ${elements.get("resume-solde")?.textContent}`);
+noter("les proportions suivent l'année relue, et somment toujours à 100",
+      parseInt(elements.get("resume-barre-entrees")?.style?.width || "", 10)
+      + parseInt(elements.get("resume-barre-sorties")?.style?.width || "", 10) === 100,
+      `${elements.get("resume-part-entrees")?.textContent} + `
+      + `${elements.get("resume-part-sorties")?.textContent}`);
 apiPage.changerAnneeClasses(1);   // geste de l'utilisateur : « an suivant › »
 noter("revenir à la dernière année restitue le régime de fin de mandature",
       elements.get("balance-net")?.textContent === soldeNetFinal
