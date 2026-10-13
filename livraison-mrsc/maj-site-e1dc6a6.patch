@@ -1159,7 +1159,7 @@ index ab970b5..7b9dfa1 100644
       try:
           resultat = float(valeur)
 diff --git a/simulateur/PROVENANCE.json b/simulateur/PROVENANCE.json
-index 394421f..96687dd 100644
+index 394421f..5db7f7f 100644
 --- a/simulateur/PROVENANCE.json
 +++ b/simulateur/PROVENANCE.json
 @@ -1,16 +1,16 @@
@@ -1170,10 +1170,10 @@ index 394421f..96687dd 100644
 -  "date_revision": "2026-10-08T18:24:18+02:00",
 -  "sujet": "Merge pull request #21 from thejmimiia-code/arena/5a48d8ab-d-mocratie-et-politique-du-peu",
 -  "copie_le": "2026-10-08",
-+  "revision": "7d600dedc21fb2511489454dd057af4dee59596f",
-+  "revision_courte": "7d600de",
-+  "date_revision": "2026-10-13T17:11:55+02:00",
-+  "sujet": "Merge pull request #37 from thejmimiia-code/arena/24414275-d-mocratie-et-politique-du-peu",
++  "revision": "e1dc6a64765a41104144f1a16bce62214406f380",
++  "revision_courte": "e1dc6a6",
++  "date_revision": "2026-10-13T21:11:45+02:00",
++  "sujet": "Merge pull request #43 from thejmimiia-code/arena/674d6cd2-d-mocratie-et-politique-du-peu",
 +  "copie_le": "2026-10-13",
    "fichiers_ajoutes_par_le_site": [
      "pont_api.py"
@@ -11766,7 +11766,7 @@ index b971e58..496d29b 100644
          if not colonnes or len(set(colonnes)) != len(colonnes) or not CHAMPS <= set(colonnes):
              raise ValueError('En-tête CSV incomplet ou colonnes dupliquées')
 diff --git a/simulateur/index.html b/simulateur/index.html
-index bd34cb6..986d88d 100644
+index bd34cb6..641aa1e 100644
 --- a/simulateur/index.html
 +++ b/simulateur/index.html
 @@ -3,7 +3,7 @@
@@ -11774,7 +11774,7 @@ index bd34cb6..986d88d 100644
    outils/construire-simulateur.py — ne pas modifier à la main.
    Moteur : https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple
 -  révision 99491d8 (2026-10-08), copiée le 2026-10-08.
-+  révision 7d600de (2026-10-13), copiée le 2026-10-13.
++  révision e1dc6a6 (2026-10-13), copiée le 2026-10-13.
    Source de la page : simulateur/interface.py, constante HTML_PAGE.
    Navigation de retour vers le site : ajoutée par ce générateur.
  -->
@@ -13972,7 +13972,7 @@ index bd34cb6..986d88d 100644
    }).join('');
    document.getElementById('leviers-grille').innerHTML = zones
      || '<div class="carte">Aucun levier ne correspond à cette recherche.</div>';
-@@ -3142,10 +4820,305 @@ function initialiserModale(){
+@@ -3142,10 +4820,376 @@ function initialiserModale(){
    });
  }
  
@@ -14157,6 +14157,71 @@ index bd34cb6..986d88d 100644
 +  return true;
 +}
 +
++/* ── Le nom d'une région suit la taille de l'écran ────────────────────────
++   Au-dessus de 640 px, un tableau large défile dans sa région : celle-ci
++   s'appelle « … — faites défiler horizontalement », et elle est atteignable au
++   clavier, parce qu'on y fait défiler aux flèches.
++
++   Sous 640 px, le même tableau devient une pile de cartes : le CSS s'en charge
++   et remet `overflow:visible`. Plus rien ne défile horizontalement. Garder la
++   phrase promettrait un geste qui n'existe pas, et garder `tabindex="0"`
++   ajouterait un arrêt de tabulation qui ne mène nulle part — le même défaut
++   que les vingt-sept arrêts évités sur un ordinateur, mais au doigt.
++
++   Le nom et l'arrêt suivent donc le palier, **dans les deux sens** : un tableau
++   qui garde le défilement (cellules fusionnées) garde son étiquette, et une
++   fenêtre qu'on élargit retrouve la phrase qui décrit ce qu'elle fait. */
++const SUFFIXE_DEFILEMENT = ' — faites défiler horizontalement';
++const SUFFIXE_CARTES = ' — présenté en cartes, une ligne à la fois';
++
++function ecranEtroit(){
++  // La requête est écrite ici telle que le CSS la tranche : deux façons de
++  // poser la même question finiraient par donner deux réponses.
++  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
++    && window.matchMedia('screen and (max-width:640px)').matches === true;
++}
++
++function nommerRegionsTableaux(){
++  if (!document.querySelectorAll) return 0;
++  const regions = document.querySelectorAll('.tableau-defilant');
++  if (!regions || !regions.length || typeof regions.forEach !== 'function') return 0;
++  const etroit = ecranEtroit();
++  let ajustees = 0;
++  regions.forEach(function(region){
++    if (!region.setAttribute || !region.getAttribute) return;
++    const base = region.getAttribute('data-legende') || 'Tableau de résultats';
++    // La bascule se décide **tableau par tableau** : celui dont une cellule
++    // fusionne des colonnes garde le défilement, même dans une poche de 360 px.
++    const enCartes = etroit && typeof region.querySelectorAll === 'function'
++      && region.querySelectorAll('.tableau-cartes').length > 0;
++    const nom = base + (enCartes ? SUFFIXE_CARTES : SUFFIXE_DEFILEMENT);
++    if (region.getAttribute('aria-label') !== nom) region.setAttribute('aria-label', nom);
++    if (enCartes){
++      if (region.hasAttribute && region.hasAttribute('tabindex') && region.removeAttribute){
++        region.removeAttribute('tabindex');
++      }
++    } else if (region.getAttribute('tabindex') !== '0'){
++      region.setAttribute('tabindex', '0');
++    }
++    ajustees += 1;
++  });
++  return ajustees;
++}
++
++/* Le pli de la fenêtre n'est pas un rendu : on renomme les régions quand
++   l'écran change de taille, sans attendre qu'un tableau soit réécrit. Le
++   contrôle est rendu ici pour que la suite puisse l'éprouver sans navigateur. */
++function suivrePliDeLEcran(){
++  if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return false;
++  let attentePli = false;
++  window.addEventListener('resize', function(){
++    if (attentePli) return;
++    attentePli = true;
++    setTimeout(function(){ attentePli = false; nommerRegionsTableaux(); }, 120);
++  });
++  return true;
++}
++
 +function rendreTableauxDefilants(){
 +  if (!document.querySelectorAll || typeof document.createElement !== 'function') return 0;
 +  const tableaux = document.querySelectorAll('table');
@@ -14173,14 +14238,20 @@ index bd34cb6..986d88d 100644
 +    enveloppe.className = 'tableau-defilant';
 +    enveloppe.setAttribute('role', 'region');
 +    enveloppe.setAttribute('tabindex', '0');
-+    const legende = tableau.getAttribute && tableau.getAttribute('data-legende');
-+    enveloppe.setAttribute('aria-label',
-+      (legende ? legende : 'Tableau de résultats') + ' — faites défiler horizontalement');
++    const lue = tableau.getAttribute && tableau.getAttribute('data-legende');
++    // La légende est rangée sur la région : c'est à partir d'elle que le nom se
++    // réécrit quand l'écran change, sans jamais empiler deux suffixes.
++    const legende = lue ? lue : 'Tableau de résultats';
++    enveloppe.setAttribute('data-legende', legende);
++    enveloppe.setAttribute('aria-label', legende + SUFFIXE_DEFILEMENT);
 +    tableau.parentNode.insertBefore(enveloppe, tableau);
 +    enveloppe.appendChild(tableau);
 +    tableauEnCartes(tableau);
 +    poses += 1;
 +  });
++  // Dernier geste de la vague : le nom des régions dit ce qu'elles font à la
++  // taille où on les lit — y compris celles des vagues précédentes.
++  nommerRegionsTableaux();
 +  return poses;
 +}
 +
@@ -14280,7 +14351,7 @@ index bd34cb6..986d88d 100644
  }
  
  /* ── Lecture en clair ─────────────────────────────────────────────────────
-@@ -3196,6 +5169,7 @@ async function simuler(avecImpacts){
+@@ -3196,6 +5240,7 @@ async function simuler(avecImpacts){
      const donnees = await reponse.json();
      if (donnees.error){ alert('Erreur de simulation : ' + donnees.error); return; }
      SORTIE = donnees;
@@ -14288,7 +14359,7 @@ index bd34cb6..986d88d 100644
      renderImpact(donnees);
      renderLecture(donnees);
      renderBilanIntergenerationnel(donnees);
-@@ -3215,6 +5189,7 @@ async function simuler(avecImpacts){
+@@ -3215,6 +5260,7 @@ async function simuler(avecImpacts){
                                 {parametres: parametresEnvoyes, sortie: donnees});
      majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
      majConseilTempsReel(parametresEnvoyes);
@@ -14296,7 +14367,7 @@ index bd34cb6..986d88d 100644
      SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees, horizon: horizon};
      // La grille est reconstruite avec ses puces d'impact — sauf pendant qu'un
      // curseur est manipulé, pour ne pas le remplacer sous les doigts.
-@@ -3283,6 +5258,29 @@ function renderCoutGlobal(donnees){
+@@ -3283,6 +5329,29 @@ function renderCoutGlobal(donnees){
  function classeNiveau(niveau){ return 'niveau-' + (niveau || 'inconnu'); }
  function etiquetteNiveau(niveau){ return LIBELLES_NIVEAUX[niveau] || niveau || 'non mesuré'; }
  
@@ -14326,7 +14397,7 @@ index bd34cb6..986d88d 100644
  function renderConsole(donnees){
    const diagnostic = donnees.diagnostic;
    const verdictBoite = document.getElementById('console-verdict');
-@@ -3291,6 +5289,7 @@ function renderConsole(donnees){
+@@ -3291,6 +5360,7 @@ function renderConsole(donnees){
      bloc.className = 'bloc console';
      verdictBoite.className = 'console-verdict';
      verdictBoite.textContent = 'Diagnostic indisponible (serveur antérieur ?).';
@@ -14334,7 +14405,7 @@ index bd34cb6..986d88d 100644
      return;
    }
    const verdict = diagnostic.verdict || {};
-@@ -3314,6 +5313,7 @@ function renderConsole(donnees){
+@@ -3314,6 +5384,7 @@ function renderConsole(donnees){
      document.getElementById('ruban-population').innerHTML =
        `risque population <b class="${classeNiveau((diagnostic.population || {}).niveau)}">${fmt(risque, 0)}/100</b>`;
    }
@@ -14342,7 +14413,7 @@ index bd34cb6..986d88d 100644
  
    // Bandeau d'alerte rouge : ce qui est déjà hors-sol.
    const horsSol = (diagnostic.indicateurs || []).filter(ind => ind.niveau === 'hors_sol');
-@@ -3838,10 +5838,11 @@ function auditLeviersHtml(){
+@@ -3838,10 +5909,11 @@ function auditLeviersHtml(){
        return `<tr><td>${echapperTexte(levier.libelle)} <span class="source-note">(${echapperTexte(levier.type)})</span></td>
          <td>${echapperTexte(levier.champ || '')} ${echapperTexte(levier.ligne || '')}</td>
          <td>${effets}</td>
@@ -14356,7 +14427,7 @@ index bd34cb6..986d88d 100644
        <tbody>${leviers}</tbody></table>`;
      return `<div style="margin-bottom:12px"><b class="audit-domain-title" style="--audit-accent:${couleurHexSure(famille.couleur)}">${echapperTexte(nom)}</b>
        ${tableauAuditDefilant(tableau, `Leviers et effets déclarés — ${nom}`)}</div>`;
-@@ -3868,6 +5869,10 @@ function auditMethodesHtml(){
+@@ -3868,6 +5940,10 @@ function auditMethodesHtml(){
    const nbLeviers = (((CATALOGUE || {}).parametres || {}).defauts
                       ? Object.keys(CATALOGUE.parametres.defauts).length : 0);
    const nbDomaines = ((CATALOGUE || {}).domaines || []).length;
@@ -14367,7 +14438,7 @@ index bd34cb6..986d88d 100644
    const nbIndicateurs = ((CATALOGUE || {}).domaines || [])
      .reduce((somme, domaine) => somme + (domaine.indicateurs || []).length, 0);
    return `<ul style="margin-left:16px;line-height:1.7">
-@@ -3883,7 +5888,7 @@ function auditMethodesHtml(){
+@@ -3883,7 +5959,7 @@ function auditMethodesHtml(){
        compris.</li>
      <li><b>Périmètre chiffré :</b> ${nbLeviers} leviers, ${nbDomaines} domaines,
        ${nbIndicateurs} indicateurs (formule + source), 31 garde-fous (26 absolus + 5 en écart),
@@ -14376,7 +14447,7 @@ index bd34cb6..986d88d 100644
      <li><b>Hypothèses P16-P21 (scénarios, pas observations) :</b> patrimoine : 145/24 = 6,04 Md€/an,
        annualisation exploratoire des 140-150 Md€ de besoins à 2050 ; climat : 143/30 = 4,77 Md€/an
        de pertes moyennes (hors budget APU), avec le ratio Barnier 8/30 annualisé uniquement comme
-@@ -3926,6 +5931,115 @@ async function chargerAudit(){
+@@ -3926,6 +6002,115 @@ async function chargerAudit(){
    }
  }
  
@@ -14492,7 +14563,7 @@ index bd34cb6..986d88d 100644
  (async function demarrer(){
    await chargerCatalogue();
    initialiserInfobulles();
-@@ -3933,6 +6047,9 @@ async function chargerAudit(){
+@@ -3933,6 +6118,9 @@ async function chargerAudit(){
    renderScenarios();
    await chargerContexte(false);
    chargerAudit();
@@ -14502,7 +14573,7 @@ index bd34cb6..986d88d 100644
    // Le lexique se charge en tâche de fond : les termes soulignés apparaissent
    // dès la première simulation, sans rien retarder.
    chargerLexique();
-@@ -3948,6 +6065,31 @@ async function chargerAudit(){
+@@ -3948,6 +6136,35 @@ async function chargerAudit(){
      ouvrirGuide();
      marquerGuideVu();
    }
@@ -14511,6 +14582,10 @@ index bd34cb6..986d88d 100644
 +  // de rendu précis — la page reste lisible même sans observateur.
 +  rendreTableauxDefilants();
 +  rendreAidesFocalisables();
++  // Le palier de 640 px change la façon dont les régions défilantes se
++  // présentent : leur nom et leur arrêt de tabulation suivent la taille de
++  // l'écran, sans attendre un rendu. Un pli de fenêtre n'est pas un rendu.
++  suivrePliDeLEcran();
 +  // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
 +  // a cliqué pour la dernière fois.
 +  observerLecture();
@@ -17177,7 +17252,7 @@ index 0000000..79b2654
 +
 +FILTRES_NORMALISATION = _normaliser()
 diff --git a/simulateur/interface.py b/simulateur/interface.py
-index d827b78..d04c65a 100644
+index d827b78..a1512f6 100644
 --- a/simulateur/interface.py
 +++ b/simulateur/interface.py
 @@ -16,6 +16,10 @@ aucun CDN) qui contient :
@@ -19328,7 +19403,7 @@ index d827b78..d04c65a 100644
    }).join('');
    document.getElementById('leviers-grille').innerHTML = zones
      || '<div class="carte">Aucun levier ne correspond à cette recherche.</div>';
-@@ -2660,10 +4287,305 @@ function initialiserModale(){
+@@ -2660,10 +4287,376 @@ function initialiserModale(){
    });
  }
  
@@ -19513,6 +19588,71 @@ index d827b78..d04c65a 100644
 +  return true;
 +}
 +
++/* ── Le nom d'une région suit la taille de l'écran ────────────────────────
++   Au-dessus de 640 px, un tableau large défile dans sa région : celle-ci
++   s'appelle « … — faites défiler horizontalement », et elle est atteignable au
++   clavier, parce qu'on y fait défiler aux flèches.
++
++   Sous 640 px, le même tableau devient une pile de cartes : le CSS s'en charge
++   et remet `overflow:visible`. Plus rien ne défile horizontalement. Garder la
++   phrase promettrait un geste qui n'existe pas, et garder `tabindex="0"`
++   ajouterait un arrêt de tabulation qui ne mène nulle part — le même défaut
++   que les vingt-sept arrêts évités sur un ordinateur, mais au doigt.
++
++   Le nom et l'arrêt suivent donc le palier, **dans les deux sens** : un tableau
++   qui garde le défilement (cellules fusionnées) garde son étiquette, et une
++   fenêtre qu'on élargit retrouve la phrase qui décrit ce qu'elle fait. */
++const SUFFIXE_DEFILEMENT = ' — faites défiler horizontalement';
++const SUFFIXE_CARTES = ' — présenté en cartes, une ligne à la fois';
++
++function ecranEtroit(){
++  // La requête est écrite ici telle que le CSS la tranche : deux façons de
++  // poser la même question finiraient par donner deux réponses.
++  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
++    && window.matchMedia('screen and (max-width:640px)').matches === true;
++}
++
++function nommerRegionsTableaux(){
++  if (!document.querySelectorAll) return 0;
++  const regions = document.querySelectorAll('.tableau-defilant');
++  if (!regions || !regions.length || typeof regions.forEach !== 'function') return 0;
++  const etroit = ecranEtroit();
++  let ajustees = 0;
++  regions.forEach(function(region){
++    if (!region.setAttribute || !region.getAttribute) return;
++    const base = region.getAttribute('data-legende') || 'Tableau de résultats';
++    // La bascule se décide **tableau par tableau** : celui dont une cellule
++    // fusionne des colonnes garde le défilement, même dans une poche de 360 px.
++    const enCartes = etroit && typeof region.querySelectorAll === 'function'
++      && region.querySelectorAll('.tableau-cartes').length > 0;
++    const nom = base + (enCartes ? SUFFIXE_CARTES : SUFFIXE_DEFILEMENT);
++    if (region.getAttribute('aria-label') !== nom) region.setAttribute('aria-label', nom);
++    if (enCartes){
++      if (region.hasAttribute && region.hasAttribute('tabindex') && region.removeAttribute){
++        region.removeAttribute('tabindex');
++      }
++    } else if (region.getAttribute('tabindex') !== '0'){
++      region.setAttribute('tabindex', '0');
++    }
++    ajustees += 1;
++  });
++  return ajustees;
++}
++
++/* Le pli de la fenêtre n'est pas un rendu : on renomme les régions quand
++   l'écran change de taille, sans attendre qu'un tableau soit réécrit. Le
++   contrôle est rendu ici pour que la suite puisse l'éprouver sans navigateur. */
++function suivrePliDeLEcran(){
++  if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return false;
++  let attentePli = false;
++  window.addEventListener('resize', function(){
++    if (attentePli) return;
++    attentePli = true;
++    setTimeout(function(){ attentePli = false; nommerRegionsTableaux(); }, 120);
++  });
++  return true;
++}
++
 +function rendreTableauxDefilants(){
 +  if (!document.querySelectorAll || typeof document.createElement !== 'function') return 0;
 +  const tableaux = document.querySelectorAll('table');
@@ -19529,14 +19669,20 @@ index d827b78..d04c65a 100644
 +    enveloppe.className = 'tableau-defilant';
 +    enveloppe.setAttribute('role', 'region');
 +    enveloppe.setAttribute('tabindex', '0');
-+    const legende = tableau.getAttribute && tableau.getAttribute('data-legende');
-+    enveloppe.setAttribute('aria-label',
-+      (legende ? legende : 'Tableau de résultats') + ' — faites défiler horizontalement');
++    const lue = tableau.getAttribute && tableau.getAttribute('data-legende');
++    // La légende est rangée sur la région : c'est à partir d'elle que le nom se
++    // réécrit quand l'écran change, sans jamais empiler deux suffixes.
++    const legende = lue ? lue : 'Tableau de résultats';
++    enveloppe.setAttribute('data-legende', legende);
++    enveloppe.setAttribute('aria-label', legende + SUFFIXE_DEFILEMENT);
 +    tableau.parentNode.insertBefore(enveloppe, tableau);
 +    enveloppe.appendChild(tableau);
 +    tableauEnCartes(tableau);
 +    poses += 1;
 +  });
++  // Dernier geste de la vague : le nom des régions dit ce qu'elles font à la
++  // taille où on les lit — y compris celles des vagues précédentes.
++  nommerRegionsTableaux();
 +  return poses;
 +}
 +
@@ -19636,7 +19782,7 @@ index d827b78..d04c65a 100644
  }
  
  /* ── Lecture en clair ─────────────────────────────────────────────────────
-@@ -2714,6 +4636,7 @@ async function simuler(avecImpacts){
+@@ -2714,6 +4707,7 @@ async function simuler(avecImpacts){
      const donnees = await reponse.json();
      if (donnees.error){ alert('Erreur de simulation : ' + donnees.error); return; }
      SORTIE = donnees;
@@ -19644,7 +19790,7 @@ index d827b78..d04c65a 100644
      renderImpact(donnees);
      renderLecture(donnees);
      renderBilanIntergenerationnel(donnees);
-@@ -2733,6 +4656,7 @@ async function simuler(avecImpacts){
+@@ -2733,6 +4727,7 @@ async function simuler(avecImpacts){
                                 {parametres: parametresEnvoyes, sortie: donnees});
      majEffetsParLevier(donnees, SIMULATION_PRECEDENTE, parametresEnvoyes);
      majConseilTempsReel(parametresEnvoyes);
@@ -19652,7 +19798,7 @@ index d827b78..d04c65a 100644
      SIMULATION_PRECEDENTE = {parametres: parametresEnvoyes, sortie: donnees, horizon: horizon};
      // La grille est reconstruite avec ses puces d'impact — sauf pendant qu'un
      // curseur est manipulé, pour ne pas le remplacer sous les doigts.
-@@ -2801,6 +4725,29 @@ function renderCoutGlobal(donnees){
+@@ -2801,6 +4796,29 @@ function renderCoutGlobal(donnees){
  function classeNiveau(niveau){ return 'niveau-' + (niveau || 'inconnu'); }
  function etiquetteNiveau(niveau){ return LIBELLES_NIVEAUX[niveau] || niveau || 'non mesuré'; }
  
@@ -19682,7 +19828,7 @@ index d827b78..d04c65a 100644
  function renderConsole(donnees){
    const diagnostic = donnees.diagnostic;
    const verdictBoite = document.getElementById('console-verdict');
-@@ -2809,6 +4756,7 @@ function renderConsole(donnees){
+@@ -2809,6 +4827,7 @@ function renderConsole(donnees){
      bloc.className = 'bloc console';
      verdictBoite.className = 'console-verdict';
      verdictBoite.textContent = 'Diagnostic indisponible (serveur antérieur ?).';
@@ -19690,7 +19836,7 @@ index d827b78..d04c65a 100644
      return;
    }
    const verdict = diagnostic.verdict || {};
-@@ -2832,6 +4780,7 @@ function renderConsole(donnees){
+@@ -2832,6 +4851,7 @@ function renderConsole(donnees){
      document.getElementById('ruban-population').innerHTML =
        `risque population <b class="${classeNiveau((diagnostic.population || {}).niveau)}">${fmt(risque, 0)}/100</b>`;
    }
@@ -19698,7 +19844,7 @@ index d827b78..d04c65a 100644
  
    // Bandeau d'alerte rouge : ce qui est déjà hors-sol.
    const horsSol = (diagnostic.indicateurs || []).filter(ind => ind.niveau === 'hors_sol');
-@@ -3356,10 +5305,11 @@ function auditLeviersHtml(){
+@@ -3356,10 +5376,11 @@ function auditLeviersHtml(){
        return `<tr><td>${echapperTexte(levier.libelle)} <span class="source-note">(${echapperTexte(levier.type)})</span></td>
          <td>${echapperTexte(levier.champ || '')} ${echapperTexte(levier.ligne || '')}</td>
          <td>${effets}</td>
@@ -19712,7 +19858,7 @@ index d827b78..d04c65a 100644
        <tbody>${leviers}</tbody></table>`;
      return `<div style="margin-bottom:12px"><b class="audit-domain-title" style="--audit-accent:${couleurHexSure(famille.couleur)}">${echapperTexte(nom)}</b>
        ${tableauAuditDefilant(tableau, `Leviers et effets déclarés — ${nom}`)}</div>`;
-@@ -3386,6 +5336,10 @@ function auditMethodesHtml(){
+@@ -3386,6 +5407,10 @@ function auditMethodesHtml(){
    const nbLeviers = (((CATALOGUE || {}).parametres || {}).defauts
                       ? Object.keys(CATALOGUE.parametres.defauts).length : 0);
    const nbDomaines = ((CATALOGUE || {}).domaines || []).length;
@@ -19723,7 +19869,7 @@ index d827b78..d04c65a 100644
    const nbIndicateurs = ((CATALOGUE || {}).domaines || [])
      .reduce((somme, domaine) => somme + (domaine.indicateurs || []).length, 0);
    return `<ul style="margin-left:16px;line-height:1.7">
-@@ -3401,7 +5355,7 @@ function auditMethodesHtml(){
+@@ -3401,7 +5426,7 @@ function auditMethodesHtml(){
        compris.</li>
      <li><b>Périmètre chiffré :</b> ${nbLeviers} leviers, ${nbDomaines} domaines,
        ${nbIndicateurs} indicateurs (formule + source), 31 garde-fous (26 absolus + 5 en écart),
@@ -19732,7 +19878,7 @@ index d827b78..d04c65a 100644
      <li><b>Hypothèses P16-P21 (scénarios, pas observations) :</b> patrimoine : 145/24 = 6,04 Md€/an,
        annualisation exploratoire des 140-150 Md€ de besoins à 2050 ; climat : 143/30 = 4,77 Md€/an
        de pertes moyennes (hors budget APU), avec le ratio Barnier 8/30 annualisé uniquement comme
-@@ -3444,6 +5398,115 @@ async function chargerAudit(){
+@@ -3444,6 +5469,115 @@ async function chargerAudit(){
    }
  }
  
@@ -19848,7 +19994,7 @@ index d827b78..d04c65a 100644
  (async function demarrer(){
    await chargerCatalogue();
    initialiserInfobulles();
-@@ -3451,6 +5514,9 @@ async function chargerAudit(){
+@@ -3451,6 +5585,9 @@ async function chargerAudit(){
    renderScenarios();
    await chargerContexte(false);
    chargerAudit();
@@ -19858,7 +20004,7 @@ index d827b78..d04c65a 100644
    // Le lexique se charge en tâche de fond : les termes soulignés apparaissent
    // dès la première simulation, sans rien retarder.
    chargerLexique();
-@@ -3466,8 +5532,38 @@ async function chargerAudit(){
+@@ -3466,8 +5603,42 @@ async function chargerAudit(){
      ouvrirGuide();
      marquerGuideVu();
    }
@@ -19867,6 +20013,10 @@ index d827b78..d04c65a 100644
 +  // de rendu précis — la page reste lisible même sans observateur.
 +  rendreTableauxDefilants();
 +  rendreAidesFocalisables();
++  // Le palier de 640 px change la façon dont les régions défilantes se
++  // présentent : leur nom et leur arrêt de tabulation suivent la taille de
++  // l'écran, sans attendre un rendu. Un pli de fenêtre n'est pas un rendu.
++  suivrePliDeLEcran();
 +  // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
 +  // a cliqué pour la dernière fois.
 +  observerLecture();
@@ -27162,10 +27312,10 @@ index 0000000..d1a0794
 +    return [s.to_dict() for s in REGISTRE_SOURCES_OFFICIELLES.values()]
 diff --git a/simulateur/surface_publique.py b/simulateur/surface_publique.py
 new file mode 100644
-index 0000000..e254157
+index 0000000..21c6a1f
 --- /dev/null
 +++ b/simulateur/surface_publique.py
-@@ -0,0 +1,549 @@
+@@ -0,0 +1,604 @@
 +"""simulateur/surface_publique.py — ce que la page dit d'elle-même aux robots.
 +
 +Pourquoi ce module
@@ -27286,8 +27436,62 @@ index 0000000..e254157
 +PAGE_MRSC = SITE_MRSC + "simulateur.html"
 +LOGO_MRSC = SITE_MRSC + "assets/images/logo-mrsc.jpg"
 +ORGANISATION = "Mouvement Représentatif de la Société Civile (M.R.S.C)"
-+LICENCE = "MIT"
++#: Les licences qu'on sait reconnaître dans le fichier `LICENSE`, et ce qui les
++#: distingue. L'ordre compte : les variantes AGPL et LGPL portent, elles aussi,
++#: les mots « GENERAL PUBLIC LICENSE », donc elles se testent avant la GPL.
++SIGNATURES_LICENCES: tuple[tuple[str, tuple[str, ...]], ...] = (
++    ("AGPL-3.0", ("GNU AFFERO GENERAL PUBLIC LICENSE", "VERSION 3")),
++    ("LGPL-3.0", ("GNU LESSER GENERAL PUBLIC LICENSE", "VERSION 3")),
++    ("GPL-3.0", ("GNU GENERAL PUBLIC LICENSE", "VERSION 3")),
++    ("GPL-2.0", ("GNU GENERAL PUBLIC LICENSE", "VERSION 2")),
++    ("Apache-2.0", ("APACHE LICENSE", "VERSION 2.0")),
++    ("BSD-3-Clause", ("BSD 3-CLAUSE LICENSE",)),
++    ("MIT", ("MIT LICENSE", "PERMISSION IS HEREBY GRANTED")),
++)
++
++
++def licence_du_depot(racine: Path = RACINE) -> str:
++    """L'identifiant de la licence du dépôt, **lu** dans le fichier `LICENSE`.
++
++    Cette fonction existe à cause d'une erreur réelle : le nom de la licence
++    était recopié ici (`« MIT »`), et n'a pas suivi le passage du dépôt à la
++    GPL-3.0. Trois fichiers servis aux robots — `robots.txt`, `llms.txt`,
++    `llms-full.txt` — ont donc annoncé, pendant des semaines, une licence qui
++    n'était plus la leur (« MIT »), à
++    des moteurs et à des lecteurs automatiques, alors que le fichier `LICENSE`,
++    le classificateur de `pyproject.toml`, `package.json` et le `README.md`
++    disaient GPL-3.0. Une licence fausse n'est pas une coquille : c'est une
++    affirmation juridique, et elle était fausse **sur ce qui est publié**.
++
++    Elle rend `""` si le fichier est absent ou la licence non reconnue : dans ce
++    cas on renvoie au fichier au lieu d'annoncer un nom. Deviner serait refaire
++    l'erreur qu'on répare.
++    """
++    try:
++        texte = (racine / "LICENSE").read_text(encoding="utf-8", errors="replace")
++    except OSError:
++        return ""
++    tete = texte[:4000].upper()
++    for identifiant, indices in SIGNATURES_LICENCES:
++        if all(indice in tete for indice in indices):
++            return identifiant
++    return ""
++
++
++#: La licence du dépôt, telle qu'elle est écrite dans `LICENSE`. Ne pas la
++#: remplacer par un nom recopié : un contrôle refuse un nom qui ne serait pas
++#: celui du fichier (voir `tests/test_licence_du_depot.py`).
++LICENCE = licence_du_depot()
 +LICENCE_URL = DEPOT + "/blob/main/LICENSE"
++
++
++def mention_licence() -> str:
++    """La licence telle qu'on l'écrit dans un texte publié.
++
++    Avec un fichier reconnu : « licence GPL-3.0 ». Sans lui : un renvoi au
++    fichier, jamais un nom inventé.
++    """
++    return f"licence {LICENCE}" if LICENCE else "licence indiquée dans le fichier LICENSE"
 +LANGUE = "fr"
 +
 +#: Images de la page. Les chemins sont **relatifs** au document : la même page
@@ -27352,7 +27556,8 @@ index 0000000..e254157
 +
 +# Convention « Content Signals » (contentsignals.org), lue par les robots qui
 +# la connaissent et ignorée par les autres : recherche, réponse assistée et
-+# entraînement sont autorisés, la licence MIT l'autorise déjà.
++# entraînement sont autorisés. Les textes publiés ici sont faits pour être lus
++# et cités ; le code du dépôt est sous {mention_licence()}.
 +Content-Signal: search=yes, ai-input=yes, ai-train=yes
 +
 +Allow: /
@@ -27418,7 +27623,7 @@ index 0000000..e254157
 +- [Copie de secours, même page]({HOTE_SECOURS}) : autre hébergeur, même moteur, si le premier ne répond pas.
 +- [Présentation du M.R.S.C]({PAGE_MRSC}) : ce que l'outil fait et ne fait pas, en clair, sans JavaScript.
 +- [Le contenu complet en un fichier]({URL_CANONIQUE}llms-full.txt) : le catalogue des leviers, les domaines, les scénarios, les sources — tout en texte.
-+- [Code source du moteur]({DEPOT}) : licence {LICENCE}, historique complet, tests.
++- [Code source du moteur]({DEPOT}) : {mention_licence()}, historique complet, tests.
 +
 +## La méthode, les données et les limites
 +
@@ -27482,7 +27687,7 @@ index 0000000..e254157
 +        f"> {DESCRIPTION}",
 +        "",
 +        f"Adresse canonique : <{URL_CANONIQUE}>",
-+        f"Code source (licence {LICENCE}) : [dépôt du simulateur]({DEPOT})",
++        f"Code source ({mention_licence()}) : [dépôt du simulateur]({DEPOT})",
 +        f"Présentation par le M.R.S.C : [page du site]({PAGE_MRSC})",
 +        "",
 +        "Ce fichier est engendré par `simulateur/surface_publique.py` à partir du",

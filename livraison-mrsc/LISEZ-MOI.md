@@ -3,9 +3,22 @@
 Le site M.R.S.C (`thejmimiia-code/MRSC`, publié sur
 [`thejmimiia-code.github.io/MRSC/`](https://thejmimiia-code.github.io/MRSC/))
 n'appelle pas le simulateur : il **embarque une copie datée de son moteur**. Sa
-copie venait du 8 octobre (`99491d8`) ; celle-ci vient du 13 octobre, indexation
-comprise : la page du site se décrit enfin aux moteurs, aux aperçus de partage et
-aux lecteurs automatiques.
+copie venait du 8 octobre (`99491d8`) ; celle-ci vient du **13 octobre au soir**
+(`e1dc6a6`, sommet de `main`) : indexation comprise — la page du site se décrit
+enfin aux moteurs, aux aperçus de partage et aux lecteurs automatiques —, plus
+les deux correctifs du soir :
+
+- le **nom d'une région défilante suit la taille de l'écran** (`interface.py`) :
+  sous 640 px, un tableau devient une pile de cartes, et sa région annonçait
+  encore « faites défiler horizontalement » en gardant un arrêt qui ne menait
+  nulle part ;
+- la **licence est lue dans `LICENSE`**, plus recopiée (`surface_publique.py`) :
+  le moteur annonçait une autre licence que la sienne, dans ce qu'il publie.
+
+Le colis précédent était bâti sur `7d600de` ; ces deux fichiers ont bougé depuis,
+et un colis figé les aurait laissés de côté. Ce colis-ci est **rejoué sur le
+sommet de `main`** : la copie, les contrôles et le diff datent du 13 octobre au
+soir.
 
 Ce dossier est un **colis de transport** : une fois le site publié, il peut être
 supprimé sans dommage — le correctif vit alors dans le dépôt du site, à
@@ -60,7 +73,11 @@ point que cet atelier n'a pas : son jeton GitHub y est refusé
 vérifié ici.
 
 Une fois la demande de fusion acceptée, `deploy-pages.yml` publie le site tout
-seul. La page affiche ensuite la révision copiée **d'elle-même** : elle lit
+seul. **Le rebasage du correctif n'a pas eu à être refait cette fois** : sa
+version (empreinte `58bc2a21…`) s'applique toujours au moteur du jour, avec des
+décalages de lignes dans `interface.py` et aucun conflit — c'est pourtant le
+fichier où les deux chantiers se croisent, l'amont y ayant ajouté le nom des
+régions défilantes et le site y gardant ses durcissements. La page affiche ensuite la révision copiée **d'elle-même** : elle lit
 `simulateur/PROVENANCE.json` au chargement (attribut `data-simulateur-revision`
 de `simulateur.html`), il n'y a donc aucun texte de version à réécrire à la main.
 
@@ -81,7 +98,7 @@ Le script rejoue tout cela, et échoue si un point ne tient plus :
   `LECTURES_NAVIGATEUR`, `LIMITE_JSON_SOURCE_NAVIGATEUR`,
   `SIMULATEUR_LOG_ERREURS`, `nosniff`.
 - **Aucun marqueur de conflit** dans la copie.
-- **La page reconstruite** (`simulateur/index.html`, 371 160 caractères) relue
+- **La page reconstruite** (`simulateur/index.html`, 374 967 caractères) relue
   **script par script** avec `node --check` ; ses données structurées sont
   décodées comme du JSON, et non comme du JavaScript (les confondre faisait
   échouer `node --check` sur du JSON parfaitement valide — vu en vrai à ce
@@ -112,22 +129,24 @@ C'est le cas de cet atelier : le `push` est refusé
 by integration` côté API). `publier-mrsc.sh` s'arrête donc **après** avoir tout
 vérifié, et écrit le diff complet de la branche dans
 `maj-site-<révision>.patch` — c'est ce qu'il a fait ici :
-`maj-site-7d600de.patch` (2,1 Mo, 42 fichiers).
+`maj-site-e1dc6a6.patch` (2,1 Mo, 42 fichiers, empreinte SHA-256
+`8afe241ad3f900f7ba34db47b318d0be5804fb9b8fe61384453de1fc88914fd7`).
 
 Depuis un compte autorisé :
 
 ```bash
 git clone https://github.com/thejmimiia-code/MRSC.git site
 cd site
-git checkout -b maj-moteur-7d600de
-git apply ../maj-site-7d600de.patch
+git checkout -b maj-moteur-e1dc6a6
+git apply ../maj-site-e1dc6a6.patch
 git add -A
 git commit -F ../corps-de-pr.md
-git push -u origin maj-moteur-7d600de
+git push -u origin maj-moteur-e1dc6a6
 ```
 
-**Vérifié** : ce diff s'applique sur un clone neuf du site (`main` = `556b902`,
-l'état réel publié), et après application la CI du site est verte —
+**Vérifié deux fois plutôt qu'une** : ce diff s'applique sur un clone neuf du site
+(`main` = `3f1c6ec`, l'état réel publié au 13 octobre au soir), et après
+application la CI du site est verte —
 `py_compile`, `construire-simulateur --verifier`, `verifier-site-statique`,
 `verifier-securite`, `verifier-integration`. Le patch du moteur
 (`simulateur-securite-mrsc.patch`) est un sous-ensemble de ce diff : les deux
