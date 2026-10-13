@@ -886,3 +886,67 @@ class TestResumeDeTeteEtChapitres(unittest.TestCase):
         self.assertIn(".cascade-piste .barre,.balance-cote .jauge-classe span{transition:", self.page)
         bloc = self.page[self.page.index("@media (prefers-reduced-motion:reduce){"):]
         self.assertIn("transition:none", bloc[:400])
+
+
+class TestOptimisationsDaffichage(unittest.TestCase):
+    """Deuxième passe de la R&D visuelle : ce qui restait à optimiser.
+
+    Trois défauts mesurés, trois familles de règles : l'impression coupait les
+    tableaux à hauteur plafonnée, le graphique se déformait sur téléphone, et
+    les aides n'existaient qu'au survol — donc pas au doigt.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
+        cls.script = _script(cls.page)
+
+    def test_l_impression_ne_coupe_plus_les_tableaux(self):
+        """À l'écran le plafond de hauteur est confortable ; sur papier, il
+        supprimerait des lignes en silence."""
+        bloc = self.css[self.css.rindex("@media print"):]
+        for conteneur in (".defilable", ".journal", ".provenance", ".tableau-strate",
+                          ".bourse-table", ".tableau-defilant", ".graphique"):
+            with self.subTest(conteneur=conteneur):
+                self.assertIn(conteneur, bloc)
+        self.assertIn("max-height:none;overflow:visible", bloc)
+        self.assertIn(".sommaire,.ruban-veille{position:static", bloc)
+
+    def test_le_graphique_garde_son_echelle(self):
+        """900 unités écrasées dans 350 px : les libellés deviennent illisibles."""
+        self.assertIn('class="graphique"', self.page)
+        self.assertIn(".graphique{overflow-x:auto", self.css)
+        self.assertIn(".graphique .svg-chart{min-width:640px}", self.css)
+        # Un graphique sans nom n'existe pas pour un lecteur d'écran.
+        self.assertIn('role="img"', self.page)
+        self.assertIn('aria-label="Courbes des trajectoires clés', self.page)
+
+    def test_les_aides_sont_utilisables_au_doigt(self):
+        self.assertIn("function pointerGrossier(", self.script)
+        self.assertIn("function rendreAidesFocalisables(", self.script)
+        self.assertIn("(pointer:coarse)", self.script)
+        self.assertIn("rendreAidesFocalisables();", self.script)
+
+    def test_le_contraste_renforce_est_honore(self):
+        self.assertIn("@media screen and (prefers-contrast:more)", self.css)
+        bloc = self.css[self.css.index("(prefers-contrast:more)"):]
+        self.assertIn("--border:", bloc[:120])
+        self.assertIn("--texte-dim:", bloc[:120])
+
+    def test_les_tres_petits_ecrans_ont_leur_propre_grille(self):
+        """Quatre chiffres en deux colonnes : chaque nombre garde sa place."""
+        bloc = self.css[self.css.index("@media screen and (max-width:480px)"):]
+        bloc = bloc[:bloc.index("}") + 2]
+        self.assertIn("grid-template-columns:repeat(2,minmax(0,1fr))", bloc)
+
+    def test_un_sommaire_ouvert_ne_mange_pas_l_ecran(self):
+        self.assertIn(".sommaire.ouverte .sommaire-liste{max-height:46vh", self.css)
+
+    def test_les_mots_longs_ne_font_pas_deborder(self):
+        self.assertIn("overflow-wrap:break-word", self.css)
+
+    def test_la_tablette_n_a_plus_de_panneau_etrique(self):
+        """Deux panneaux de 330 px dans 700 px se lisent mal."""
+        bloc = self.css[self.css.index("@media screen and (max-width:900px)"):]
+        self.assertIn(".console-corps{grid-template-columns:minmax(0,1fr)}", bloc[:600])
