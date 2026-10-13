@@ -6,6 +6,10 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Crédit du mouvement, cliquable, en bas de page
+
+- **Pied de page** : la page se ferme sur « © 2026 Mouvement Représentatif de la Société Civile (M.R.S.C) », le nom du mouvement portant lui-même le lien vers <https://thejmimiia-code.github.io/MRSC/> (nouvel onglet, `rel="noopener noreferrer"`). Il suit l'attribution et la bannière, s'en distingue par `.pied.credit` (padding haut annulé, lien en gras) et reste le dernier texte balisé de la page, avant les scripts. `tests/test_interface.py::TestDonneesPubliquesDansLaPage::test_credit_du_mouvement_en_bas_de_page` verrouille le texte exact, la cible, la position en bas de page et la classe de style — trois choses qui peuvent se perdre sans bruit.
+
 ### R&D Fusion globale — toutes les optimisations et branches fusionnées proprement
 
 - **Audit d'intégration exhaustive** (12 octobre 2026, branche `arena/2f4374f1…`) : les 14 branches `arena/*` distantes et les 4 branches `resolution/*` sont toutes **ancêtres de `main`** — `git merge-base --is-ancestor` vert pour chacune, aucune divergente ; la vérification par `git merge-tree` confirme l'absence de conflit résiduel et la parité fichier-par-fichier (`git diff --name-only` vide entre chaque tête de branche et `main` pour ses fichiers touchés). Le plan en 12 commits parallèles (géopolitique annuelle + mensuelle, 93→156 leviers, 48→55 réglages institutionnels, 7 réglages neufs, constitution fichée, Vercel unifiée, calibrage ménage, optimisation fluidité, contradiction) a été rejoué dans l'ordre chronologique et tient sans régression.
