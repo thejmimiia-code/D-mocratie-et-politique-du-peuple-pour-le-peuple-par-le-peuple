@@ -312,3 +312,52 @@ plus tard dans les résultats de recherche, quand tout est déjà indexé.
 page que Vercel à une adresse technique ; la faire concourir avec la référence
 diviserait les signaux pour aucun gain. La variable est là le jour où l'usage
 change.
+
+---
+
+## 13. Ce qui est publié est vérifié publié
+
+Rien, dans un dépôt, ne dit ce que les hébergeurs servent réellement : un fichier
+peut être présent et jamais déployé, une route ajoutée au moteur et absente des
+fonctions serverless, une réécriture d'hébergeur peut avaler un chemin. La suite
+de tests s'arrête au bord du réseau — et c'est heureux, un test qui interroge
+Internet devient rouge pour des raisons qui ne regardent pas le dépôt.
+
+`outils/verifier-surface-en-ligne.py` comble ce trou, et le comble **au
+caractère** : le texte servi doit être égal à celui que `surface_publique.py`
+engendre ici, l'image servie égale au fichier versionné. Comparer à une
+photographie ne dirait rien des jours suivants — le module et les fichiers
+publiés ne peuvent pas diverger sans que la veille le voie.
+
+Les 68 épreuves, sur les deux adresses :
+
+| Famille | Ce qui est exigé |
+| --- | --- |
+| La page | 200 en `text/html`, canonique, description, aperçu absolu, directives, données structurées |
+| Les textes | `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt` **égaux** au texte engendré |
+| Les images | type annoncé, et octets identiques au fichier versionné |
+| Les routes GET | seize routes, 200 en JSON exploitable |
+| Les routes GET paramétrées | `run?scenario=mandature`, `bulle?levier=…` |
+| Les routes POST | `simuler`, `donnees`, `conseil`, `nuances` — la page les appelle en direct |
+| Les refus | route inconnue, proxy sans cible, POST sur une route qui n'existe pas |
+
+**Le piège de la copie de secours.** Elle s'endort quand personne ne l'appelle,
+puis répond **200 avec une page qui raconte qu'elle démarre**. Prendre cette page
+pour une réponse serait le pire des silences : la veille dirait que tout va bien
+au moment précis où rien ne répond. Elle insiste donc, en le disant, et refuse
+cette page comme une réponse.
+
+**Ce que la veille ne peut pas faire**, et qui reste manuel : elle constate
+qu'une adresse répond, pas qu'un moteur l'a indexée. Les gestes de Search
+Console et de Bing Webmaster Tools (§ 10) restent des gestes humains.
+
+Le workflow `.github/workflows/veille-en-ligne.yml` l'exécute à la demande et
+une fois par semaine — jamais à chaque poussée : une panne d'hébergeur ne doit
+pas faire rougir la contribution de quelqu'un d'autre. Le rapport s'écrit dans le
+résumé du run : un journal de job se télécharge, une page de run se lit. La
+veille tourne aussi à la main, sur n'importe quel poste :
+
+```bash
+python3 outils/verifier-surface-en-ligne.py                # les deux hôtes
+python3 outils/verifier-surface-en-ligne.py --hote secours # la copie de secours seule
+```

@@ -11,8 +11,6 @@ name: Veille en ligne
 # donc cinq fois, en le disant, au lieu de confondre un réveil avec une panne.
 
 on:
-  push:
-    branches: ["arena/**"]      # provisoire : essai de la veille sur cette branche
   workflow_dispatch:
   schedule:
     - cron: "17 6 * * 1"

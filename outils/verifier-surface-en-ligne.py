@@ -337,6 +337,44 @@ def sonder(hote: str, base: str, essais: int, attente: float) -> list[Verdict]:
     return verdicts
 
 
+def rapporter(verdicts: list[Verdict], hotes: list[str]) -> None:
+    """Écrit le rapport dans la page du run, quand GitHub le demande.
+
+    Un journal de job se télécharge ; la page du run, elle, se lit. Sans cela,
+    la seule trace lisible de cette veille serait un `curl` dans un terminal —
+    c'est-à-dire rien pour qui ouvre le dépôt par son navigateur. GitHub appelle
+    cela le *résumé de l'étape* : le script s'y conforme sans dépendre de quoi
+    que ce soit d'autre que la variable d'environnement.
+    """
+    import os
+
+    chemin = os.environ.get("GITHUB_STEP_SUMMARY")
+    if not chemin:
+        return
+    rates = [verdict for verdict in verdicts if not verdict.reussi]
+    lignes = [
+        f"## Veille en ligne — {'tout répond' if not rates else f'{len(rates)} échec(s)'}",
+        "",
+        f"{len(verdicts)} épreuves sur " + ", ".join(HOTES[nom] for nom in hotes) + ".",
+        "",
+    ]
+    if rates:
+        lignes += ["### Ce qui ne répond pas", ""]
+        lignes += [f"- **{verdict.hote}** `{verdict.cible}` — {verdict.detail}"
+                   for verdict in rates]
+        lignes += [""]
+    lignes += ["<details><summary>Le détail, épreuve par épreuve</summary>", "",
+               "| hôte | cible | statut | résultat |", "| --- | --- | --- | --- |"]
+    for verdict in verdicts:
+        marque = "✓" if verdict.reussi else "✗"
+        detail = verdict.detail.replace("|", "\\|")
+        statut = verdict.statut or "—"
+        lignes.append(f"| {marque} {verdict.hote} | `{verdict.cible}` | {statut} | {detail} |")
+    lignes += ["", "</details>", ""]
+    with Path(chemin).open("a", encoding="utf-8") as rapport:
+        rapport.write("\n".join(lignes) + "\n")
+
+
 def main() -> int:
     analyseur = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     analyseur.add_argument("--hote", choices=sorted(HOTES), action="append",
@@ -357,6 +395,7 @@ def main() -> int:
             print(verdict.ligne())
         verdicts += trouves
 
+    rapporter(verdicts, hotes)
     rates = [verdict for verdict in verdicts if not verdict.reussi]
     print()
     if rates:
