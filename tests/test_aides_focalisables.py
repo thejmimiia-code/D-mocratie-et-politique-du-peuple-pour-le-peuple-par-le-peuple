@@ -175,3 +175,65 @@ class TestSommaireQuiSeReferme(_EssaiNode):
     def test_un_sommaire_deja_referme_n_est_pas_touche(self):
         self.assertTrue(self.rapport["resteFermee"])
         self.assertEqual(self.rapport["annonceInchangee"], "false")
+
+
+class TestRepereDeLecture(_EssaiNode):
+    """Le sommaire dit où l'on **est**, pas où l'on a cliqué.
+
+    Sur une page de vingt-quatre sections, un repère qui ne bouge plus dès qu'on
+    fait défiler est pire que pas de repère : il affirme une position fausse. La
+    marque est posée par un seul endroit (`marquerLecture`), appelé aussi bien
+    par le clic que par l'observateur de défilement.
+    """
+
+    programme = r"""
+const nav = document.createElement("nav");
+nav.className = "sommaire";
+const liens = ["section-contexte", "section-clair", "section-leviers"].map(cible => {
+  const ancre = document.createElement("a");
+  ancre.setAttribute("href", "#" + cible);
+  nav.appendChild(ancre);
+  return ancre;
+});
+document.body.appendChild(nav);
+const actifs = () => liens.map(ancre => ancre.classList.contains("actif"));
+const annonces = () => liens.map(ancre => ancre.getAttribute("aria-current"));
+
+const rapport = { depart: actifs() };
+rapport.marque = marquerLecture("section-clair");
+rapport.actifs = actifs();
+rapport.annonces = annonces();
+// Un identifiant qui ne correspond à aucune entrée retire la marque au lieu
+// d'en laisser une fausse.
+rapport.inconnu = marquerLecture("section-absente");
+rapport.actifsApres = actifs();
+rapport.annoncesApres = annonces();
+// Repasser sur une section réelle repose la marque, et une seule.
+rapport.marque2 = marquerLecture("section-leviers");
+rapport.finales = annonces();
+rapport.finaux = actifs();
+console.log(JSON.stringify(rapport));
+"""
+
+    def test_le_script_tourne_sans_erreur(self):
+        self.assertEqual(self.retour.returncode, 0, self.retour.stdout + self.retour.stderr)
+        self.assertIsNotNone(self.rapport, self.retour.stdout + self.retour.stderr)
+
+    def test_aucune_entree_n_est_marquee_au_chargement(self):
+        self.assertEqual(self.rapport["depart"], [False, False, False])
+
+    def test_la_section_lue_est_marquee_et_annoncee(self):
+        self.assertTrue(self.rapport["marque"])
+        self.assertEqual(self.rapport["actifs"], [False, True, False])
+        self.assertEqual(self.rapport["annonces"], [None, "location", None],
+                         "la marque est annoncée, pas seulement colorée")
+
+    def test_une_section_inconnue_retire_la_marque(self):
+        self.assertFalse(self.rapport["inconnu"])
+        self.assertEqual(self.rapport["actifsApres"], [False, False, False])
+        self.assertEqual(self.rapport["annoncesApres"], [None, None, None])
+
+    def test_une_seule_entree_porte_la_marque(self):
+        self.assertTrue(self.rapport["marque2"])
+        self.assertEqual(self.rapport["finaux"], [False, False, True])
+        self.assertEqual(self.rapport["finales"], [None, None, "location"])

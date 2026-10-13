@@ -20,10 +20,18 @@ export class ClassList {
   add(classe) { this.valeurs.add(classe); this.element._classes = this.valeur; }
   remove(classe) { this.valeurs.delete(classe); this.element._classes = this.valeur; }
   contains(classe) { return this.valeurs.has(classe); }
-  toggle(classe) {
-    if (this.valeurs.has(classe)) { this.remove(classe); return false; }
-    this.add(classe);
-    return true;
+  toggle(classe, force) {
+    // Le second argument de `classList.toggle` est standard : sans lui,
+    // `toggle(classe, false)` ajoutait la classe au lieu de la retirer, et le
+    // contrôle passait sur une doublure qui ne ressemblait plus au navigateur.
+    if (force === undefined) {
+      if (this.valeurs.has(classe)) { this.remove(classe); return false; }
+      this.add(classe);
+      return true;
+    }
+    if (force) { this.add(classe); return true; }
+    this.remove(classe);
+    return false;
   }
 }
 
@@ -79,16 +87,32 @@ export class Element {
     return this.enfants.flatMap(enfant => [enfant, ...enfant.descendants()]);
   }
 
+  /** Un morceau simple : `tag`, `.classe`, `[attribut]`, dans n'importe quel ordre. */
+  correspondSimple(morceau) {
+    let reste = morceau;
+    const balise = (reste.match(/^[a-zA-Z][\w-]*/) || [null])[0];
+    if (balise) reste = reste.slice(balise.length);
+    const attribut = (reste.match(/^\[([\w-]+)\]/) || [null, null])[1];
+    const classe = (reste.match(/^\.([\w-]+)/) || [null, null])[1];
+    if (balise && this.tagName !== balise.toUpperCase()) return false;
+    if (attribut && !this.hasAttribute(attribut)) return false;
+    if (classe && !this.classList.contains(classe)) return false;
+    return true;
+  }
+
   correspond(selecteur) {
     return String(selecteur).split(",").map(partie => partie.trim()).filter(Boolean).some(brut => {
-      let reste = brut;
-      const balise = (reste.match(/^[a-zA-Z][\w-]*/) || [null])[0];
-      if (balise) reste = reste.slice(balise.length);
-      const attribut = (reste.match(/^\[([\w-]+)\]/) || [null, null])[1];
-      const classe = (reste.match(/^\.([\w-]+)/) || [null, null])[1];
-      if (balise && this.tagName !== balise.toUpperCase()) return false;
-      if (attribut && !this.hasAttribute(attribut)) return false;
-      if (classe && !this.classList.contains(classe)) return false;
+      const morceaux = brut.split(/\s+/).filter(Boolean);
+      if (!morceaux.length) return false;
+      // Un sélecteur descendant (« .sommaire a ») se lit de droite à gauche :
+      // le dernier morceau décrit l'élément, les précédents ses ancêtres.
+      if (!this.correspondSimple(morceaux[morceaux.length - 1])) return false;
+      let ancetre = this.parentElement;
+      for (let rang = morceaux.length - 2; rang >= 0; rang -= 1) {
+        while (ancetre && !ancetre.correspondSimple(morceaux[rang])) ancetre = ancetre.parentElement;
+        if (!ancetre) return false;
+        ancetre = ancetre.parentElement;
+      }
       return true;
     });
   }
