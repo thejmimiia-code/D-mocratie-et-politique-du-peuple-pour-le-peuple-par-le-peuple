@@ -2661,14 +2661,32 @@ def normaliser(parametres: dict[str, Any] | None) -> dict[str, float]:
 
 
 def catalogue_public() -> dict[str, Any]:
-    """Vue sérialisable complète : familles, leviers, préréglages."""
+    """Vue sérialisable complète : familles, leviers, préréglages, classes.
+
+    Les classes (recettes / économies / dépenses / règles / monde) sont
+    ajoutées ici plutôt que dans ``Levier.en_dict`` : un levier ne se classe pas
+    lui-même, il est classé par la lecture croisée du catalogue (``ligne``,
+    ``champ``, famille) que porte ``simulateur/classes_leviers.py``. L'import
+    est local pour que le catalogue reste utilisable même sans la couche de
+    présentation.
+    """
+    from simulateur.classes_leviers import classe_de, catalogue_classes, motif_classe
+
+    def levier_public(levier) -> dict[str, Any]:
+        charge = levier.en_dict()
+        charge["classe"] = classe_de(levier.cle)
+        charge["classe_motif"] = motif_classe(levier.cle)
+        return charge
+
     return {
         "familles": [
-            {"cle": cle, **meta, "leviers": [lev.en_dict() for lev in leviers_par_famille().get(cle, [])]}
+            {"cle": cle, **meta,
+             "leviers": [levier_public(lev) for lev in leviers_par_famille().get(cle, [])]}
             for cle, meta in FAMILLES.items()
         ],
         "presets": PRESETS,
         "defauts": valeurs_par_defaut(),
+        "classes": catalogue_classes(),
     }
 
 

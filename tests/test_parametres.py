@@ -202,9 +202,28 @@ class TestCataloguePublic(unittest.TestCase):
 
     def test_structure(self):
         catalogue = catalogue_public()
-        self.assertEqual(set(catalogue), {"familles", "presets", "defauts"})
+        self.assertEqual(set(catalogue), {"familles", "presets", "defauts", "classes"})
         self.assertEqual(len(catalogue["presets"]), len(PRESETS))
         self.assertEqual(set(catalogue["defauts"]), set(LEVIERS))
+
+    def test_chaque_levier_public_porte_sa_classe(self):
+        # La page colore et filtre les leviers par classe : la classe doit
+        # voyager avec chaque levier du catalogue, jamais être redevinnée
+        # côté navigateur.
+        catalogue = catalogue_public()
+        vus = 0
+        for famille in catalogue["familles"]:
+            for levier in famille["leviers"]:
+                with self.subTest(levier=levier["cle"]):
+                    self.assertIn(levier["classe"], catalogue["classes"]["ordre"])
+                    self.assertTrue(levier["classe_motif"].strip())
+                vus += 1
+        self.assertEqual(vus, len(LEVIERS))
+
+    def test_la_vue_des_classes_est_servie_avec_le_catalogue(self):
+        classes = catalogue_public()["classes"]
+        self.assertEqual(len(classes["classes"]), len(classes["ordre"]))
+        self.assertEqual(sum(fiche["nb_leviers"] for fiche in classes["classes"]), len(LEVIERS))
 
     def test_tous_les_leviers_sont_dans_les_familles(self):
         catalogue = catalogue_public()

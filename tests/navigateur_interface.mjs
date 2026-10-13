@@ -240,7 +240,13 @@ const programme = `
                        'reglagesModifies','lienReglages','reglagesDepuisLien','appliquerLien',
                        'partagerReglages','avisLien',
                        'renderLecture','marquerSommaire','contenuOngletStrate','rendreOngletStrate',
-                       'modifierProfilMenage','modifierModeCalibrageMenage','depenseBaseProfil']) {
+                       'modifierProfilMenage','modifierModeCalibrageMenage','depenseBaseProfil',
+                       'chargerClasses','renderClasses','renderBalance','renderFiltresClasses',
+                       'calculerClasses','classeDe','basculerClasse','basculerClasseSeules',
+                       'fmtSigne','eurosParMenage','fmtMenage','chipsHorsBudget',
+                       'renderCascade','marchesCascade','monetaireDe',
+                       'renderRythme','changerAnneeClasses',
+                       'classeAnneeAffichee','classeReferenceAffichee']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
@@ -275,6 +281,95 @@ const leviersComplets = (contenu("leviers-grille").match(/class="levier[ "]/g) |
 noter("charge le catalogue des leviers", leviersComplets > 50, `${leviersComplets} cartes`);
 noter("affiche les 16 préréglages", (elements.get("preset-grid")?.children.length || 0) === 16,
       `${elements.get("preset-grid")?.children.length} cartes`);
+/* Les 5 classes de leviers : la page ne reclasse rien, elle affiche la classe
+   livrée avec chaque levier du catalogue et les totaux calculés par le moteur. */
+const cartesClasses = (contenu("grille-classes").match(/class="classe-carte/g) || []).length;
+noter("rend les cinq classes de leviers", cartesClasses === 5, `${cartesClasses} carte(s)`);
+const grilleLeviers = contenu("leviers-grille");
+noter("chaque carte de levier porte sa classe",
+      (grilleLeviers.match(/data-classe="/g) || []).length >= 100,
+      `${(grilleLeviers.match(/data-classe="/g) || []).length} carte(s) classée(s)`);
+noter("la légende des classes permet de filtrer",
+      (contenu("classes-legende").match(/aria-pressed=/g) || []).length === 5,
+      `${(contenu("classes-legende").match(/aria-pressed=/g) || []).length} pastille(s)`);
+noter("la balance affiche les deux plateaux et un solde signé",
+      /Md€\/an/.test(elements.get("balance-entrees-montant")?.textContent || "")
+      && /Md€\/an/.test(elements.get("balance-sorties-montant")?.textContent || "")
+      && /solde des classes/.test(elements.get("balance-net")?.textContent || ""),
+      `${elements.get("balance-entrees-montant")?.textContent} / ${elements.get("balance-sorties-montant")?.textContent} / ${elements.get("balance-net")?.textContent}`);
+noter("la balance explique l'écart entre les deux lectures du budget",
+      /recettes nouvelles/.test(contenu("balance-detail"))
+      && /drapeaux/i.test(contenu("balance-detail")),
+      contenu("balance-detail").slice(0, 140));
+const totauxClasse = apiPage.etat().SORTIE?.classes_annuelles || [];
+noter("les totaux par classe viennent du moteur (pas de la page)",
+      totauxClasse.length > 0
+      && Math.abs((totauxClasse[totauxClasse.length - 1].solde_mde || 0)
+                  - (apiPage.etat().SORTIE?.classes_annuelles?.slice(-1)[0]?.solde_mde || 0)) < 1e-9,
+      `${totauxClasse.length} année(s) classée(s)`);
+noter("le filtre par classe restreint la grille",
+      (() => {
+        apiPage.basculerClasse("recettes");
+        const recettes = (contenu("leviers-grille").match(/data-classe="recettes"/g) || []).length;
+        const autres = (contenu("leviers-grille").match(/data-classe="(?!recettes)/g) || []).length;
+        apiPage.basculerClasse("");   // retour à toutes les classes
+        return recettes > 0 && autres === 0;
+      })(),
+      "filtre recettes appliqué puis retiré");
+noter("les classes « règles » et « monde » n'affichent pas de faux euros",
+      !/règles[\s\S]{0,400}?€\/ménage/.test(contenu("grille-classes"))
+      || !/monde[\s\S]{0,400}?€\/ménage/.test(contenu("grille-classes")),
+      "unités listées, non converties");
+/* La cascade : l'ordre dans lequel le plan se construit. Trois classes
+   monétaires déplacent le cumul, l'escalier se referme sur le solde, et les
+   unités non monétaires restent explicitement dehors. */
+const versNombre = (texte) => Number(String(texte).replace(/[\u202f\u00a0\s]/g, "")
+  .replace("−", "-").replace(",", "."));
+const montantsCascade = [...contenu("cascade-marches").matchAll(/cascade-montant">([^<]+)</g)]
+  .map((m) => versNombre(m[1]));
+const marches = (contenu("cascade-marches").match(/class="cascade-marche/g) || []).length;
+noter("la cascade déroule le plan marche par marche",
+      marches === 4 && contenu("cascade-marches").includes("Solde des classes"),
+      `${marches} marche(s) : trois classes monétaires + le solde`);
+const annClassee = (apiPage.etat().SORTIE?.classes_annuelles || []).slice(-1)[0] || {};
+noter("la cascade se referme sur le solde des classes",
+      montantsCascade.length === 4
+      && Math.abs(montantsCascade.slice(0, 3).reduce((a, b) => a + b, 0) - montantsCascade[3]) < 0.02
+      && Math.abs(montantsCascade[3] - (annClassee.solde_mde || 0)) < 0.02,
+      `${montantsCascade.slice(0, 3).join(" + ")} = ${montantsCascade[3]} (moteur : ${annClassee.solde_mde})`);
+noter("chaque marche nomme les leviers qui la déplacent",
+      contenu("cascade-marches").includes("data-aide-levier=")
+      && (contenu("cascade-marches").match(/cascade-detail/g) || []).length === 4,
+      `${(contenu("cascade-marches").match(/cascade-detail/g) || []).length} détail(s)`);
+noter("la cascade dessine une barre par marche sur un axe commun",
+      (contenu("cascade-marches").match(/class="barre/g) || []).length === 4
+      && (contenu("cascade-marches").match(/cascade-piste/g) || []).length === 4,
+      `${(contenu("cascade-marches").match(/class="barre/g) || []).length} barre(s)`);
+noter("la cascade dit ce qu'elle laisse hors budget",
+      /Hors cascade/.test(contenu("cascade-note"))
+      && /règles/.test(contenu("cascade-note")) && /monde/.test(contenu("cascade-note")),
+      contenu("cascade-note").slice(0, 120));
+/* Le rythme : la même lecture année par année. On recule d'un an, puis on
+   revient à la dernière année — les contrôles suivants portent sur elle. */
+const soldeNetFinal = elements.get("balance-net")?.textContent;
+noter("les classes se lisent année par année",
+      /an \d+ \/ \d+/.test(elements.get("classe-annee-courante")?.textContent || "")
+      && /%/.test(contenu("classe-rythme")),
+      `${elements.get("classe-annee-courante")?.textContent} — ${contenu("classe-rythme").slice(0, 90)}`);
+const anneeFinaleAffichee = elements.get("classe-annee-courante")?.textContent;
+apiPage.changerAnneeClasses(-1);
+noter("reculer d'un an relit la balance et la cascade",
+      (elements.get("classe-annee-courante")?.textContent || "") !== anneeFinaleAffichee
+      && elements.get("balance-net")?.textContent !== soldeNetFinal
+      && /solde des classes/.test(elements.get("balance-net")?.textContent || "")
+      && contenu("cascade-marches").includes("Solde des classes"),
+      `an lu : ${elements.get("classe-annee-courante")?.textContent} · ${elements.get("balance-net")?.textContent}`);
+apiPage.changerAnneeClasses(1);   // geste de l'utilisateur : « an suivant › »
+noter("revenir à la dernière année restitue le régime de fin de mandature",
+      elements.get("balance-net")?.textContent === soldeNetFinal
+      && elements.get("classe-annee-suiv")?.disabled === true
+      && elements.get("classe-annee-prec")?.disabled === false,
+      `an lu : ${elements.get("classe-annee-courante")?.textContent}`);
 // La couche « nuances institutionnelles » doit être visible dans la page, pas seulement
 // dans les modules : seuils recalculés, fentes, strates et garde-fous.
 noter("rend la section des nuances institutionnelles",
@@ -735,6 +830,16 @@ noter("la strate locale signale la tension sociale",
       /tension/i.test(contenu("console-alertes")), contenu("console-alertes").slice(0, 120));
 noter("au moins une strate est marquée hors-sol",
       (contenu("console-strates").match(/niveau-hors_sol/g) || []).length >= 1);
+/* La cascade d'un plan d'austérité : les coupes font remonter le cumul, et la
+   marche « dépenses » le dit en toutes lettres — sinon une coupe passerait
+   pour une dépense. */
+const montantsAusterite = [...contenu("cascade-marches").matchAll(/cascade-montant">([^<]+)</g)]
+  .map((m) => versNombre(m[1]));
+noter("la cascade d'une austérité compte les coupes comme une rentrée",
+      montantsAusterite.length === 4 && montantsAusterite[2] > 0
+      && /coupe, pas une dépense/.test(contenu("cascade-marches"))
+      && Math.abs(montantsAusterite.slice(0, 3).reduce((a, b) => a + b, 0) - montantsAusterite[3]) < 0.02,
+      `dépenses ${montantsAusterite[2]} → solde ${montantsAusterite[3]}`);
 
 /* 4. Les scénarios du dépôt rejouent le moteur d'origine (chemin historique). */
 await apiPage.runScenario("choc_mondial", null);
