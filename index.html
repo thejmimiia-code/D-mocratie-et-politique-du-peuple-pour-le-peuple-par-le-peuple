@@ -618,6 +618,19 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   border:1px solid var(--border);border-radius:999px;padding:3px 10px;white-space:nowrap}
 .sommaire a:hover{border-color:var(--accent);color:var(--texte)}
 .sommaire a.actif{border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,.12)}
+/* La pastille de veille de la barre : le verdict du ruban en trois mots, pour
+   les largeurs qui n'ont de place que pour une barre collante. Elle reste
+   cachée tant qu'aucun diagnostic n'est connu (`hidden`, posé dans la page),
+   et au large : là, le ruban entier est collant et la pastille ferait doublon.
+   La couleur ne porte rien seule : le niveau est écrit en toutes lettres. */
+.sommaire-veille{display:none;align-items:center;justify-content:center;gap:6px;
+  flex:0 1 auto;min-width:0;max-width:56%;padding:3px 10px;border:1px solid var(--border);
+  border-radius:999px;background:var(--panel-2);color:var(--texte-dim);
+  font-size:max(var(--t-min),.72rem);font-weight:600;white-space:normal;text-align:center;
+  line-height:1.15;overflow:hidden}
+.sommaire-veille.niveau-favorable,.sommaire-veille.niveau-tolerable{border-color:var(--vert);color:var(--vert)}
+.sommaire-veille.niveau-vigilance{border-color:var(--ambre);color:var(--ambre)}
+.sommaire-veille.niveau-risque,.sommaire-veille.niveau-hors_sol{border-color:var(--rouge);color:var(--rouge)}
 .sommaire .etape{font-size:max(var(--t-min),.66rem);color:var(--texte-dim);padding:0 4px}
 /* ── Lecture en clair ─────────────────────────────────────────────────────
    Les chiffres du moteur sont justes ; la section « lire le résultat » les
@@ -792,7 +805,10 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
 /* Le sommaire tient sur une ligne et accompagne la lecture. Vingt sections sans
    repère, c'est vingt fois « où suis-je ? » : le bandeau reste en haut. */
 @media screen and (min-width:641px){
-  :root{--collant:50px}
+  /* Valeur de repli : la hauteur réelle de la barre est mesurée à l'exécution
+     (`mesurerCollant`). Cinquante pixels annonçaient une barre qui en fait
+     quarante-quatre, et les ancres atterrissaient sous la barre. */
+  :root{--collant:44px}
   .sommaire{position:sticky;top:0;z-index:var(--z-sommaire);flex-wrap:nowrap;overflow-x:auto;
     box-shadow:0 8px 20px rgba(0,0,0,.28)}
   .sommaire-liste{display:flex;flex-wrap:nowrap;align-items:center;gap:6px}
@@ -802,9 +818,20 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .sommaire .titre-sommaire{display:none}
   .sommaire-liste{overflow-x:auto}
 }
+/* ══ Une seule barre collante sous 901 px ═════════════════════════════════
+   Deux barres collantes se disputaient le haut de l'écran : le sommaire, et le
+   ruban de veille qui, à 44 px du bord… alors que le sommaire en fait 44 :
+   le ruban se collait par-dessus, ou laissait passer une fente par laquelle on
+   voyait défiler la page. Quand la fenêtre se comprime, il n'y a de place que
+   pour une barre : c'est le sommaire, qui porte la navigation — et la veille y
+   garde la parole par sa pastille. Le ruban reprend sa place dans le flux,
+   au-dessus, en carte lisible. */
 @media screen and (max-width:900px){
   .cascade-ligne{grid-template-columns:minmax(96px,1.1fr) minmax(72px,2.2fr) auto}
   .sommaire{box-shadow:none}
+  .ruban-veille{position:static}
+  .sommaire-liste{flex:1;min-width:0}
+  .sommaire-veille:not([hidden]){display:inline-flex}
 }
 @media screen and (max-width:900px){
   /* Deux panneaux de 330 px dans 700 px se lisent mal : un seul, large. */
@@ -813,7 +840,9 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .onglets-strates button{flex:0 0 auto}
 }
 @media screen and (max-width:640px){
-  :root{--collant:44px}
+  /* Idem : la barre du petit écran est celle du sommaire, bouton de 44 px
+     compris — soixante-quatorze pixels mesurés, cinquante-huit annoncés. */
+  :root{--collant:58px}
   .sommaire{position:sticky;top:0;z-index:var(--z-sommaire);gap:7px;padding:6px;flex-wrap:nowrap}
   .sommaire-bascule{display:inline-flex;align-items:center;gap:7px;min-height:44px;
     border-color:var(--accent);color:var(--texte)}
@@ -831,6 +860,22 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .resume .metric .valeur{font-size:1.2rem}
   .pastille{white-space:normal}
   .tableau-defilant table{font-size:max(var(--t-min),.76rem)}
+}
+/* ── Le ruban de veille, en carte, sur un écran étroit ────────────────────
+   Il n'est plus collant : plus de course avec le sommaire. Il se lit alors
+   comme une carte — titre, verdict en clair sur toute la largeur (il n'a plus
+   à être tronqué, c'est lui qui porte le message), puis les quatre commandes
+   en deux colonnes égales, chacune assez haute pour le doigt. */
+@media screen and (max-width:640px){
+  .ruban-veille{padding:9px 11px;gap:7px;align-items:flex-start}
+  .ruban-veille .ruban-titre{width:100%}
+  .ruban-veille .console-verdict{max-width:100%;flex:1 1 100%;white-space:normal;
+    overflow:visible;text-overflow:clip;padding:3px 0}
+  .ruban-pop{flex:1 1 auto}
+  .ruban-veille .ruban-actions{margin-left:0;width:100%;display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+  .ruban-veille .ruban-actions button{width:100%;min-height:44px;padding:8px 6px;
+    white-space:normal;line-height:1.2}
 }
 /* ── Le même tableau, en cartes, sur un écran étroit ──────────────────────
    Neuf colonnes ne se lisent pas dans 360 px : on fait glisser la ligne, et
@@ -910,7 +955,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     max-height:none;overflow:visible;box-shadow:none;border-color:#000}
   .graphique .svg-chart{min-width:0;height:auto}
   .sommaire,.ruban-veille{position:static;box-shadow:none}
-  .sommaire-bascule,.lien-evitement,.resume-actions,.infobulle,.overlay{display:none}
+  .sommaire-bascule,.sommaire-veille,.lien-evitement,.resume-actions,.infobulle,.overlay{display:none}
   .resume,.chapitre{background:#fff !important;border-color:#000 !important;box-shadow:none}
   .chapitre-num{background:#fff !important;color:#000 !important;border:1px solid #000}
   tr,li{page-break-inside:avoid}
@@ -1023,6 +1068,9 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     <button type="button" class="sommaire-bascule" id="sommaire-bascule"
       aria-expanded="false" aria-controls="sommaire-liste"
       onclick="basculerSommaire()">☰ Sommaire</button>
+    <button type="button" class="sommaire-veille" id="sommaire-veille" hidden
+      onclick="allerAuConsole()"
+      data-aide="<b>Veille permanente</b>Le niveau mesuré par la console de veille, en trois mots — il vient de la même source que le ruban. Cliquez pour le détail des seuils, strate par strate."></button>
     <div class="sommaire-liste" id="sommaire-liste">
     <span class="titre-sommaire">Lire dans l'ordre</span>
     <a href="#section-contexte" onclick="marquerSommaire(this)">1. Où en est-on</a>
@@ -4222,6 +4270,49 @@ function basculerSommaire(){
   if (!nav || !nav.classList || !bouton) return;
   const ouverte = nav.classList.toggle('ouverte');
   if (bouton.setAttribute) bouton.setAttribute('aria-expanded', ouverte ? 'true' : 'false');
+  // Le sommaire ouvert est plus haut : la mesure suit tout de suite.
+  mesurerCollant();
+}
+
+/* ── La barre dit sa hauteur, la page s'y range ───────────────────────────
+   `--collant` valait cinquante pixels au large et quarante-quatre en petit
+   écran, écrits à la main. La barre en fait quarante-quatre ici et cinquante-
+   huit là : les ancres atterrissaient donc sous la barre — le titre de la
+   section visée restait caché —, et le ruban de veille se collait à la
+   mauvaise distance, laissant une fente par laquelle on voyait défiler la
+   page. La mesure remplace la devinette.
+
+   Elle suit les changements : l'observateur de taille rappelle la mesure quand
+   la barre change de hauteur — ouverture du sommaire, rotation du téléphone,
+   zoom du texte. Sans `ResizeObserver`, la valeur de repli du CSS reste en
+   place : rien ne casse, on perd seulement la précision. */
+function mesurerCollant(){
+  const barre = document.getElementById('sommaire');
+  if (!barre || typeof barre.getBoundingClientRect !== 'function') return 0;
+  const racine = document.documentElement;
+  if (!racine || !racine.style || typeof racine.style.setProperty !== 'function') return 0;
+  const rect = barre.getBoundingClientRect();
+  const hauteur = Math.round((rect && rect.height) || 0);
+  if (hauteur <= 0) return 0;
+  racine.style.setProperty('--collant', hauteur + 'px');
+  return hauteur;
+}
+
+function surveillerCollant(){
+  mesurerCollant();
+  const barre = document.getElementById('sommaire');
+  if (!barre || typeof ResizeObserver !== 'function') return false;
+  const observateur = new ResizeObserver(function(){ mesurerCollant(); });
+  observateur.observe(barre);
+  return true;
+}
+
+/* ── Où mène la pastille de veille ────────────────────────────────────────
+   La même destination que la console : le détail des seuils, strate par
+   strate. */
+function allerAuConsole(){
+  const section = document.getElementById('console-pilotage');
+  if (section && section.scrollIntoView) section.scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 /* ── Les aides atteignables au doigt ──────────────────────────────────────
@@ -4606,6 +4697,29 @@ function renderCoutGlobal(donnees){
 function classeNiveau(niveau){ return 'niveau-' + (niveau || 'inconnu'); }
 function etiquetteNiveau(niveau){ return LIBELLES_NIVEAUX[niveau] || niveau || 'non mesuré'; }
 
+/* ── Ce que la veille a à dire, dans la barre ─────────────────────────────
+   Sous 901 px, il n'y a de place que pour une barre collante : le sommaire.
+   La veille n'y perd pas la parole — son verdict y tient en trois mots, et il
+   vient de la même source que le ruban (`classeNiveau`, `etiquetteNiveau`),
+   donc les deux ne peuvent pas se contredire. Avant le premier diagnostic,
+   `hidden` la tient hors de l'écran comme du clavier. */
+function peindreVeilleCourte(diagnostic){
+  const pastille = document.getElementById('sommaire-veille');
+  if (!pastille) return false;
+  if (!diagnostic){
+    pastille.hidden = true;
+    return false;
+  }
+  const verdict = diagnostic.verdict || {};
+  const alertes = verdict.nombre_alertes || 0;
+  pastille.className = 'sommaire-veille ' + classeNiveau(diagnostic.niveau_global);
+  pastille.textContent = `${etiquetteNiveau(diagnostic.niveau_global)} · ${alertes} alerte(s)`;
+  pastille.title = `Veille permanente : ${etiquetteNiveau(diagnostic.niveau_global)}`
+    + `, ${alertes} seuil(s) en alerte — cliquez pour le détail des seuils.`;
+  pastille.hidden = false;
+  return true;
+}
+
 function renderConsole(donnees){
   const diagnostic = donnees.diagnostic;
   const verdictBoite = document.getElementById('console-verdict');
@@ -4614,6 +4728,7 @@ function renderConsole(donnees){
     bloc.className = 'bloc console';
     verdictBoite.className = 'console-verdict';
     verdictBoite.textContent = 'Diagnostic indisponible (serveur antérieur ?).';
+    peindreVeilleCourte(null);
     return;
   }
   const verdict = diagnostic.verdict || {};
@@ -4637,6 +4752,7 @@ function renderConsole(donnees){
     document.getElementById('ruban-population').innerHTML =
       `risque population <b class="${classeNiveau((diagnostic.population || {}).niveau)}">${fmt(risque, 0)}/100</b>`;
   }
+  peindreVeilleCourte(diagnostic);
 
   // Bandeau d'alerte rouge : ce qui est déjà hors-sol.
   const horsSol = (diagnostic.indicateurs || []).filter(ind => ind.niveau === 'hors_sol');
@@ -5386,6 +5502,9 @@ async function chargerObjections(filtre){
   // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
   // a cliqué pour la dernière fois.
   observerLecture();
+  // La barre collante annonce sa hauteur : les ancres s'y rangent au lieu de
+  // passer dessous, et le ruban de veille se colle exactement sous elle.
+  surveillerCollant();
   if (typeof MutationObserver === 'function' && document.body){
     let enAttente = false;
     const observateur = new MutationObserver(function(){
