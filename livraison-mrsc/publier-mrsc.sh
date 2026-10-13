@@ -264,8 +264,25 @@ git checkout --quiet -b "$BRANCHE"
 git add -A
 git commit --quiet -F "$ICI/corps-de-pr.md"
 bilan "commit $(git rev-parse --short HEAD)"
-git push -u origin "$BRANCHE"
-bilan "branche $BRANCHE poussée"
+if git push -u origin "$BRANCHE"; then
+  bilan "branche $BRANCHE poussée"
+else
+  # Le seul point que cet atelier n'a pas : l'écriture dans le dépôt du site.
+  # La copie, elle, est faite et vérifiée : on la rend donc applicable.
+  DIFF="$ATELIER/maj-site-$REVISION_COURTE.patch"
+  git diff --binary main "$BRANCHE" > "$DIFF"
+  printf '\n  ! Poussée refusée : le compte de cet atelier ne peut pas écrire dans %s.\n' "$SITE"
+  printf '    La copie est faite, vérifiée, et committée ici (%s) :\n' "$(git rev-parse --short HEAD)"
+  printf '    son diff complet est écrit dans\n\n      %s\n\n' "$DIFF"
+  printf '    Depuis un compte autorisé, deux voies :\n'
+  printf '      1. pousser la branche telle quelle :\n'
+  printf '         cd %s && git push -u origin %s\n' "$PWD" "$BRANCHE"
+  printf '      2. ou rejouer le diff sur un clone neuf :\n'
+  printf '         git clone %s site && cd site\n' "$SITE"
+  printf '         git checkout -b %s && git apply %s\n' "$BRANCHE" "$DIFF"
+  printf '         git add -A && git commit -F %s && git push -u origin %s\n' "$ICI/corps-de-pr.md" "$BRANCHE"
+  exit 1
+fi
 
 LIEN="https://github.com/thejmimiia-code/MRSC/compare/main...$BRANCHE?expand=1"
 echo

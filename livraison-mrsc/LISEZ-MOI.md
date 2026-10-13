@@ -104,3 +104,36 @@ balises à la main. Seule l'adresse change, et le site la déclare lui-même —
 posée dans le bloc d'adaptation du correctif. C'est la porte
 `verifier-site-statique.py` du site qui a révélé le besoin : elle refusait une
 canonique venue d'ailleurs, à raison.
+
+## Si le compte ne peut pas écrire dans le dépôt du site
+
+C'est le cas de cet atelier : le `push` est refusé
+(`Permission to thejmimiia-code/MRSC.git denied`, puis `Resource not accessible
+by integration` côté API). `publier-mrsc.sh` s'arrête donc **après** avoir tout
+vérifié, et écrit le diff complet de la branche dans
+`maj-site-<révision>.patch` — c'est ce qu'il a fait ici :
+`maj-site-7d600de.patch` (2,1 Mo, 42 fichiers).
+
+Depuis un compte autorisé :
+
+```bash
+git clone https://github.com/thejmimiia-code/MRSC.git site
+cd site
+git checkout -b maj-moteur-7d600de
+git apply ../maj-site-7d600de.patch
+git add -A
+git commit -F ../corps-de-pr.md
+git push -u origin maj-moteur-7d600de
+```
+
+**Vérifié** : ce diff s'applique sur un clone neuf du site (`main` = `556b902`,
+l'état réel publié), et après application la CI du site est verte —
+`py_compile`, `construire-simulateur --verifier`, `verifier-site-statique`,
+`verifier-securite`, `verifier-integration`. Le patch du moteur
+(`simulateur-securite-mrsc.patch`) est un sous-ensemble de ce diff : les deux
+voies publient exactement le même résultat.
+
+Un `git bundle` a été essayé d'abord, puis abandonné : `publier-mrsc.sh` clone en
+profondeur 1, et un bundle tiré d'un clone superficiel ne contient pas les objets
+parents — il ne se clone pas (`remote did not send all necessary objects`). Le
+diff, lui, ne dépend pas de l'historique.
