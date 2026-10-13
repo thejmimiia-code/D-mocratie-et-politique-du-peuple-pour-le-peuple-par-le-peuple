@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Plan du site : une seule page publique, la page interactive.
+     Les vues (scénario, scène, onglet) ne sont pas des adresses : elles ne
+     sont pas listées ici, et la page les canonicalise vers cette adresse. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://d-mocratie-et-politique-du-peuple-p.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+  </url>
+</urlset>

@@ -4,6 +4,95 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Simulateur Macro-Politique — Démocratie et politique du peuple</title>
+<!-- L'en-tête public (description, adresse canonique, icônes, données
+     structurées) est posé ici au chargement du module par
+     `surface_publique.entete_html()`, la même source que `robots.txt`,
+     `sitemap.xml` et `llms.txt`. Recopier ces balises à la main serait le
+     moyen le plus sûr de les voir diverger d'un fichier à l'autre. La ligne
+     suivante est un jeton, remplacé avant toute publication ; il doit rester
+     seul sur sa ligne, hors de tout commentaire. -->
+<meta name="description" content="Modèle systémique ouvert : réglez les leviers de politique publique et voyez, échelon par échelon, l'effet sur les budgets, la dette et les services publics.">
+<meta name="theme-color" content="#0b1220">
+<link rel="canonical" href="https://d-mocratie-et-politique-du-peuple-p.vercel.app/">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%20role%3D%22img%22%20aria-label%3D%22Simulateur%20macro-politique%20%E2%80%94%20M.R.S.C.%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214.08%22%20fill%3D%22%231d3268%22%2F%3E%3Crect%20x%3D%2212.8%22%20y%3D%2210.24%22%20width%3D%2238.4%22%20height%3D%223.84%22%20rx%3D%221.92%22%20fill%3D%22%2338bdf8%22%2F%3E%3Crect%20x%3D%2212.8%22%20y%3D%2235.84%22%20width%3D%2210.24%22%20height%3D%2214.08%22%20rx%3D%223.2%22%20fill%3D%22%239bc77a%22%2F%3E%3Crect%20x%3D%2226.88%22%20y%3D%2228.16%22%20width%3D%2210.24%22%20height%3D%2221.76%22%20rx%3D%223.2%22%20fill%3D%22%2391b2e6%22%2F%3E%3Crect%20x%3D%2240.96%22%20y%3D%2220.48%22%20width%3D%2210.24%22%20height%3D%2229.44%22%20rx%3D%223.2%22%20fill%3D%22%23f2c15f%22%2F%3E%3C%2Fsvg%3E%0A">
+<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAADd0lEQVR42u3csUqbYRTH4e99cXHtWrwCN69K6FLBriG4VrBLIVeVzSsIXbs6xj1Uar4kb845eZ7dJJiff44BbVMAN3f324n0NutVO/draAKmUuBNxFSKu4mYSnE3IVMp7C5mKn0Y0IRMpbXuYqbSWjchU2mtu5iptNZdzFSKuouZSlF3MVMp6i5mKkXdxUylqLuYqRR1922ikm6dqbTSXcxUitrJQf2TwzqTdaW7mKkUtZODuieHdSb7Slto6v9SCOmDdm5Q4eyw0JRyFf0Ffv35y7sUzJ8f38O+thb13BCysPe1Wa9ayJNDzDlEfJ/c0JTS/dRT6f3qPq6jipu7+62TAycHCPqTIn/GSfz3y0Jjoa00Ud+nFv1TDh/jCblU0OCGRtAgaBA0CBoEjaBB0CBoEDQIGkGDoEHQIGgQNIKGZK58Cy7D68vb7K+9fbgWNPlD3n2MDGELWsilwnZDiznc4wsaBG2dK660oLHQXPY6R15pQWOhQdAgaBA0ggZBg6BB0CBoBA2CBkHDSfgTrCN5XC5mf+3z8sk3UND5Q959DGELOnXIwnZDl4155OMLGgRtna20oEHQ1dbZSgsaBI2gQdAgaBA0ggZBg6BB0CBoBA2CBkHD6aT6m8LF7y+zv/bp21/vtqDzh7z7GMIWdOqQhe2GLhvzyMdH0FAz6FHraaUFDYKOvJpWWtAgaBA0CBpBg6BB0CBoEDSCBkGDoEHQIGgEDYIGQYOgQdAIGgQNggZBg6ARNAh6vtH/5naf53tePg19bfs+3+3D9dDXN/r5LDQW+pJWes7zjFrpuc8zajUjrrOFxkJXWelDHv/UK33o4596PaOu8zRNU7u5u99G/6k75r+8PfYPyuNyESbkf3l9ebuIkFMFfYywT734h4Q94i4/JOwMIacMGvxSiKBB0CBoEDR8HPRmvWq+DVSwWa+ahcbJAYKGUUG7o6lwP1tonByQImhnB9nPDQuNkwPSBO3sIPO5YaGpf3JYabKu84cLLWoyxuzkoP7JYaXJus7/XWhRkylmJweXc3JYabKt86cXWtRkiHmvk0PURI957xta1ESOedYvhaImasyzghY1UWOeHbSoiRjzNE3TUaL0L3k5d8gHL7S1JlrMR1toa02UMezRXyBiPutCW2vOOXrD1lTcIh7xPGc5D8Qt4lJBC1zAp/IO3DBIfwrw0zkAAAAASUVORK5CYII=">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Simulateur Macro-Politique — M.R.S.C.">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:title" content="Simulateur Macro-Politique — Démocratie et politique du peuple">
+<meta property="og:description" content="Régler un plan et voir ce qu'il change, échelon par échelon — sans compte ni profil.">
+<meta property="og:url" content="https://d-mocratie-et-politique-du-peuple-p.vercel.app/">
+<meta property="og:image" content="https://d-mocratie-et-politique-du-peuple-p.vercel.app/og-image.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Aperçu de l'outil : titre, quatre chiffres clés et ruban de veille permanente.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Simulateur Macro-Politique — Démocratie et politique du peuple">
+<meta name="twitter:description" content="Régler un plan et voir ce qu'il change, échelon par échelon — sans compte ni profil.">
+<meta name="twitter:image" content="https://d-mocratie-et-politique-du-peuple-p.vercel.app/og-image.png">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": "https://thejmimiia-code.github.io/MRSC/#organisation",
+      "name": "Mouvement Représentatif de la Société Civile (M.R.S.C)",
+      "url": "https://thejmimiia-code.github.io/MRSC/",
+      "logo": "https://thejmimiia-code.github.io/MRSC/assets/images/logo-mrsc.jpg",
+      "sameAs": [
+        "https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://d-mocratie-et-politique-du-peuple-p.vercel.app/#site",
+      "url": "https://d-mocratie-et-politique-du-peuple-p.vercel.app/",
+      "name": "Simulateur Macro-Politique — Démocratie et politique du peuple",
+      "description": "Modèle systémique ouvert : réglez les leviers de politique publique et voyez, échelon par échelon, l'effet sur les budgets, la dette et les services publics.",
+      "inLanguage": "fr",
+      "publisher": {
+        "@id": "https://thejmimiia-code.github.io/MRSC/#organisation"
+      }
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://d-mocratie-et-politique-du-peuple-p.vercel.app/#outil",
+      "name": "Simulateur Macro-Politique — Démocratie et politique du peuple",
+      "url": "https://d-mocratie-et-politique-du-peuple-p.vercel.app/",
+      "description": "Modèle systémique ouvert : réglez les leviers de politique publique et voyez, échelon par échelon, l'effet sur les budgets, la dette et les services publics.",
+      "applicationCategory": "GovernmentApplication",
+      "operatingSystem": "Web",
+      "browserRequirements": "JavaScript activé pour la simulation ; la page reste lisible sans lui.",
+      "inLanguage": "fr",
+      "isAccessibleForFree": true,
+      "license": "https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/LICENSE",
+      "codeRepository": "https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple",
+      "featureList": [
+        "Régler les leviers de politique publique et lire l'effet, échelon par échelon",
+        "Comparer des scénarios types, année par année",
+        "Auditer chaque réglage : plage, effet déclaré, source",
+        "Croiser les mesures avec les domaines d'impact notés de 0 à 100",
+        "Exporter la simulation en JSON ou CSV"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "EUR"
+      },
+      "publisher": {
+        "@id": "https://thejmimiia-code.github.io/MRSC/#organisation"
+      },
+      "isPartOf": {
+        "@id": "https://d-mocratie-et-politique-du-peuple-p.vercel.app/#site"
+      }
+    }
+  ]
+}
+</script>
+
 <style>
 :root{
   --bg:#0b1220; --panel:#131c2f; --panel-2:#1a2540; --border:#26324d;

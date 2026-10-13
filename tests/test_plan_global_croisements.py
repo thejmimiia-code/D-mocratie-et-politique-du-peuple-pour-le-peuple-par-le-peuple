@@ -320,7 +320,10 @@ class TestFraicheurDesDocuments(unittest.TestCase):
     def setUpClass(cls):
         cls.scripts = ["outils/generer-doc-nuances.py", "outils/generer-page-verification.py",
                        "outils/generer-index-simulateur.py", "outils/generer-fonctions-api.py",
-                       "outils/generer-objections.py", "outils/generer-registre-engagements.py"]
+                       "outils/generer-objections.py", "outils/generer-registre-engagements.py",
+                       # Ce que lisent les robots : les fichiers de la racine et les
+                       # images publiées doivent correspondre au module et au catalogue.
+                       "outils/generer-surface-publique.py", "outils/apercu_social.py"]
 
     def test_les_generateurs_ne_prennent_pas_de_retard(self):
         for script in self.scripts:

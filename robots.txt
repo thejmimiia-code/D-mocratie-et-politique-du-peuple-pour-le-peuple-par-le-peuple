@@ -1,0 +1,25 @@
+# robots.txt — Simulateur macro-politique — M.R.S.C.
+#
+# Tout ce qui est publié ici est fait pour être lu, cité et analysé : c'est un
+# outil citoyen à code ouvert, financé par personne et discuté publiquement.
+# Les moteurs de recherche, les moteurs de réponse et les assistants qui lisent
+# les contenus pour répondre à une question y sont donc les bienvenus.
+#
+# Une seule fermeture : /api/. Ce sont des points de calcul, pas des pages :
+# les indexer ne remplit les résultats que de pages vides, et chaque visite
+# déclenche une simulation complète.
+
+User-agent: *
+
+# Convention « Content Signals » (contentsignals.org), lue par les robots qui
+# la connaissent et ignorée par les autres : recherche, réponse assistée et
+# entraînement sont autorisés, la licence MIT l'autorise déjà.
+Content-Signal: search=yes, ai-input=yes, ai-train=yes
+
+Allow: /
+Disallow: /api/
+
+# Adresses
+Sitemap: https://d-mocratie-et-politique-du-peuple-p.vercel.app/sitemap.xml
+# Résumé en clair pour les lecteurs automatiques : https://d-mocratie-et-politique-du-peuple-p.vercel.app/llms.txt
+# Contenu complet, sans JavaScript : https://d-mocratie-et-politique-du-peuple-p.vercel.app/llms-full.txt
