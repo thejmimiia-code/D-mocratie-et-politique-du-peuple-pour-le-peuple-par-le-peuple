@@ -23,7 +23,7 @@ FIXTURE = Path(__file__).parent / 'fixtures' / 'observations_synthetiques.jsonl'
 def observation(**changements):
     base = {'identifiant': 'A:2020-01', 'unite': 'A', 'mois': '2020-01', 'revision': 1,
                 'cible': CIBLE, 'valeur': 1, 'couverture': 'complete', 'nature': 'synthetique',
-                'source': 'synthetic://test', 'version_source': '1', 'licence': 'MIT',
+                'source': 'synthetic://test', 'version_source': '1', 'licence': 'GPL-3.0',
                 'preuve_disponibilite': 'synthetic://preuve', 'publication': '2020-02-01',
                 'disponibilite': '2020-02-01', 'ingestion': '2020-02-01'}
     return Observation(**{**base, **changements})

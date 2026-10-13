@@ -146,7 +146,80 @@ taille d'image recopiée (une taille vieillit : le renvoi au fichier suffit). Un
 septième vérifie que le JavaScript de la page se compile (`node --check`) — la
 page n'est utile que si elle s'exécute.
 
-## 6. Ce qui reste, et ce que ces contrôles ne font pas
+## 6. La licence : lue, jamais recopiée
+
+**Le défaut, publié.** `simulateur/surface_publique.py` portait `LICENCE = "MIT"`
+sous un commentaire qui parlait encore de MIT. Le dépôt, lui, est sous
+**GPL-3.0** — son fichier `LICENSE`, le classificateur de `pyproject.toml`,
+`package.json` et la section « Licence » du `README.md` le disent tous, et l'API
+GitHub l'annonce (`gpl-3.0`). Trois fichiers **servis en ligne** annonçaient donc
+« licence MIT » <!-- citation historique : licence corrigée --> à des moteurs de recherche et à des lecteurs
+automatiques :
+
+| Fichier | Ce qu'il annonçait | Où |
+|---|---|---|
+| `robots.txt` | « la licence MIT l'autorise déjà » <!-- citation historique : licence corrigée --> | servi aux robots |
+| `llms.txt` | « licence MIT, historique complet, tests » <!-- citation historique : licence corrigée --> | lu par les agents |
+| `llms-full.txt` | « Code source (licence MIT) » <!-- citation historique : licence corrigée --> | lu par les agents |
+
+Une licence fausse n'est pas une coquille : c'est une **affirmation juridique**,
+et elle portait sur ce qui est publié. Le même « MIT » traînait dans le
+`README.md`, `docs/RD_INDEXATION.md`, `docs/RD_IMPORT_UCDP.md`,
+`tests/fixtures/README.md` et `docs/RD_VALIDATION_TEMPORELLE.md` — et dans les
+**données** de fixtures (74 enregistrements `"licence": "MIT"` <!-- citation historique : licence corrigée --> et un
+contrat), qui se déclaraient sous une licence que le dépôt n'a pas.
+
+**Le marqueur des citations.** Les documents qui **racontent** l'erreur — le
+`CHANGELOG`, cette page — portent en fin de ligne
+`<!-- citation historique : licence corrigée -->` : un commentaire invisible à la
+lecture, que le balayage des tests voit. Sans lui, dire ce qui a été corrigé
+serait impossible ; avec lui, l'exemption est un geste conscient. Trois garde-fous
+l'encadrent : son nombre est borné (`PLAFOND_CITATIONS`), le plafond doit rester
+petit, et **un marqueur posé sur une ligne qui ne cite rien est refusé** — sans
+quoi marquer large reviendrait à éteindre le contrôle sans le dire.
+
+**La correction, et sa règle.** Le nom n'est plus écrit : il est **lu**.
+`licence_du_depot()` reconnaît ce que dit le fichier `LICENSE` parmi les
+licences courantes (AGPL, LGPL et GPL se testent dans cet ordre : elles portent
+toutes les mots « GENERAL PUBLIC LICENSE »), et rend `""` — un simple renvoi au
+fichier — quand il ne reconnaît rien. *Deviner serait refaire l'erreur qu'on
+répare.* Un texte publié écrit désormais « licence GPL-3.0 » par
+`mention_licence()`, depuis cette source unique.
+
+**Le contrôle, et ce qu'il a fallu lui ajouter.** `tests/test_licence_du_depot.py`
+(23 contrôles) vérifie trois choses : la reconnaissance du fichier (avec un cas
+négatif — une mention **partielle** ne suffit pas à nommer une licence), l'accord
+de toutes les déclarations (`LICENSE`, `pyproject.toml`, `package.json`,
+`README.md`, textes publiés, fichiers statiques de la racine), et un **balayage**
+qui refuse toute ligne attribuant au projet un autre nom de licence.
+
+La première version du balayage avait trois trous — trois sabotages posés sur
+cinq ont survécu :
+
+1. **une signature élargie** (« GENERAL PUBLIC LICENSE » sans « GNU ») restait
+   invisible : les variantes se testant dans l'ordre, l'AGPL passait avant. D'où
+   le cas négatif ;
+2. **réduire la liste des extensions surveillées** ne faisait rien échouer : le
+   balayage est devenu une fonction qu'on éprouve sur un **faux dépôt** où
+   chaque extension surveillée porte une mention fautive ;
+3. **sauter tous les fichiers** rendait le contrôle central vert — il n'avait
+   plus rien à examiner. D'où un contrôle qui exige que le balayage voie des
+   fichiers nommés (`README.md`, `simulateur/surface_publique.py`, `robots.txt`,
+   `index.html`…) et plus de cent en tout.
+
+**Quinze sabotages après correction, quinze attrapés** — dont deux qui ont
+montré que le mécanisme de citation lui-même pouvait être contourné (marqueur
+retiré d'une ligne qui cite ; plafond relevé à dix mille). Une **seule**
+exemption, écrite, et un contrôle qui vérifie qu'elle reste la seule : ce fichier
+de test **construit** des textes de licence pour éprouver la reconnaissance, donc
+il cite les noms qu'il pourchasse.
+
+**Ce que ce contrôle ne fait pas.** Il ne juge pas le choix de licence : il
+vérifie que toutes les déclarations **disent la même chose que le fichier**. Un
+changement de licence se fait donc en remplaçant `LICENSE` — le reste suit, et
+si un texte recopié résiste, la suite échoue en le nommant.
+
+## 7. Ce qui reste, et ce que ces contrôles ne font pas
 
 - **Le bloc « About » n'est toujours pas appliqué dans GitHub.** Le jeton
   disponible ici est un jeton d'intégration sans droit d'administration :

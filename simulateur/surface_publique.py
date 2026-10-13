@@ -118,8 +118,62 @@ SITE_MRSC = "https://thejmimiia-code.github.io/MRSC/"
 PAGE_MRSC = SITE_MRSC + "simulateur.html"
 LOGO_MRSC = SITE_MRSC + "assets/images/logo-mrsc.jpg"
 ORGANISATION = "Mouvement Représentatif de la Société Civile (M.R.S.C)"
-LICENCE = "MIT"
+#: Les licences qu'on sait reconnaître dans le fichier `LICENSE`, et ce qui les
+#: distingue. L'ordre compte : les variantes AGPL et LGPL portent, elles aussi,
+#: les mots « GENERAL PUBLIC LICENSE », donc elles se testent avant la GPL.
+SIGNATURES_LICENCES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("AGPL-3.0", ("GNU AFFERO GENERAL PUBLIC LICENSE", "VERSION 3")),
+    ("LGPL-3.0", ("GNU LESSER GENERAL PUBLIC LICENSE", "VERSION 3")),
+    ("GPL-3.0", ("GNU GENERAL PUBLIC LICENSE", "VERSION 3")),
+    ("GPL-2.0", ("GNU GENERAL PUBLIC LICENSE", "VERSION 2")),
+    ("Apache-2.0", ("APACHE LICENSE", "VERSION 2.0")),
+    ("BSD-3-Clause", ("BSD 3-CLAUSE LICENSE",)),
+    ("MIT", ("MIT LICENSE", "PERMISSION IS HEREBY GRANTED")),
+)
+
+
+def licence_du_depot(racine: Path = RACINE) -> str:
+    """L'identifiant de la licence du dépôt, **lu** dans le fichier `LICENSE`.
+
+    Cette fonction existe à cause d'une erreur réelle : le nom de la licence
+    était recopié ici (`« MIT »`), et n'a pas suivi le passage du dépôt à la
+    GPL-3.0. Trois fichiers servis aux robots — `robots.txt`, `llms.txt`,
+    `llms-full.txt` — ont donc annoncé, pendant des semaines, une licence qui
+    n'était plus la leur (« MIT »), à
+    des moteurs et à des lecteurs automatiques, alors que le fichier `LICENSE`,
+    le classificateur de `pyproject.toml`, `package.json` et le `README.md`
+    disaient GPL-3.0. Une licence fausse n'est pas une coquille : c'est une
+    affirmation juridique, et elle était fausse **sur ce qui est publié**.
+
+    Elle rend `""` si le fichier est absent ou la licence non reconnue : dans ce
+    cas on renvoie au fichier au lieu d'annoncer un nom. Deviner serait refaire
+    l'erreur qu'on répare.
+    """
+    try:
+        texte = (racine / "LICENSE").read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return ""
+    tete = texte[:4000].upper()
+    for identifiant, indices in SIGNATURES_LICENCES:
+        if all(indice in tete for indice in indices):
+            return identifiant
+    return ""
+
+
+#: La licence du dépôt, telle qu'elle est écrite dans `LICENSE`. Ne pas la
+#: remplacer par un nom recopié : un contrôle refuse un nom qui ne serait pas
+#: celui du fichier (voir `tests/test_licence_du_depot.py`).
+LICENCE = licence_du_depot()
 LICENCE_URL = DEPOT + "/blob/main/LICENSE"
+
+
+def mention_licence() -> str:
+    """La licence telle qu'on l'écrit dans un texte publié.
+
+    Avec un fichier reconnu : « licence GPL-3.0 ». Sans lui : un renvoi au
+    fichier, jamais un nom inventé.
+    """
+    return f"licence {LICENCE}" if LICENCE else "licence indiquée dans le fichier LICENSE"
 LANGUE = "fr"
 
 #: Images de la page. Les chemins sont **relatifs** au document : la même page
@@ -184,7 +238,8 @@ User-agent: *
 
 # Convention « Content Signals » (contentsignals.org), lue par les robots qui
 # la connaissent et ignorée par les autres : recherche, réponse assistée et
-# entraînement sont autorisés, la licence MIT l'autorise déjà.
+# entraînement sont autorisés. Les textes publiés ici sont faits pour être lus
+# et cités ; le code du dépôt est sous {mention_licence()}.
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
 
 Allow: /
@@ -250,7 +305,7 @@ page, et le site du M.R.S.C en propose une troisième, présentée à la main.
 - [Copie de secours, même page]({HOTE_SECOURS}) : autre hébergeur, même moteur, si le premier ne répond pas.
 - [Présentation du M.R.S.C]({PAGE_MRSC}) : ce que l'outil fait et ne fait pas, en clair, sans JavaScript.
 - [Le contenu complet en un fichier]({URL_CANONIQUE}llms-full.txt) : le catalogue des leviers, les domaines, les scénarios, les sources — tout en texte.
-- [Code source du moteur]({DEPOT}) : licence {LICENCE}, historique complet, tests.
+- [Code source du moteur]({DEPOT}) : {mention_licence()}, historique complet, tests.
 
 ## La méthode, les données et les limites
 
@@ -314,7 +369,7 @@ def llms_complet() -> str:
         f"> {DESCRIPTION}",
         "",
         f"Adresse canonique : <{URL_CANONIQUE}>",
-        f"Code source (licence {LICENCE}) : [dépôt du simulateur]({DEPOT})",
+        f"Code source ({mention_licence()}) : [dépôt du simulateur]({DEPOT})",
         f"Présentation par le M.R.S.C : [page du site]({PAGE_MRSC})",
         "",
         "Ce fichier est engendré par `simulateur/surface_publique.py` à partir du",

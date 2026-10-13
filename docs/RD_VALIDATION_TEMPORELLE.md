@@ -43,7 +43,7 @@ d'autres bases sans travail supplémentaire.
 Exemple d'une ligne JSONL :
 
 ```json
-{"identifiant":"FICTIF_A:2020-01","unite":"FICTIF_A","mois":"2020-01","revision":1,"cible":"presence_affrontement_organise_v1","valeur":0,"couverture":"complete","nature":"synthetique","source":"synthetic://fixture-v1","version_source":"1","licence":"MIT","preuve_disponibilite":"synthetic://calendrier-impose","publication":"2020-02-01","disponibilite":"2020-02-01","ingestion":"2020-02-01"}
+{"identifiant":"FICTIF_A:2020-01","unite":"FICTIF_A","mois":"2020-01","revision":1,"cible":"presence_affrontement_organise_v1","valeur":0,"couverture":"complete","nature":"synthetique","source":"synthetic://fixture-v1","version_source":"1","licence":"GPL-3.0","preuve_disponibilite":"synthetic://calendrier-impose","publication":"2020-02-01","disponibilite":"2020-02-01","ingestion":"2020-02-01"}
 ```
 
 | Champ / règle | Rôle |

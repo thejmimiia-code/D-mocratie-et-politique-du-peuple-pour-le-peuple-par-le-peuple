@@ -2,7 +2,7 @@
   "version_source": "26.1",
   "nature": "synthetique",
   "source": "synthetic://ged-schema-test",
-  "licence": "MIT",
+  "licence": "GPL-3.0",
   "publication": "2026-10-03",
   "disponibilite": "2026-10-03",
   "ingestion": "2026-10-03",

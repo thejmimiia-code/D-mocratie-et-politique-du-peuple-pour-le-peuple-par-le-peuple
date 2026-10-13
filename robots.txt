@@ -13,7 +13,8 @@ User-agent: *
 
 # Convention « Content Signals » (contentsignals.org), lue par les robots qui
 # la connaissent et ignorée par les autres : recherche, réponse assistée et
-# entraînement sont autorisés, la licence MIT l'autorise déjà.
+# entraînement sont autorisés. Les textes publiés ici sont faits pour être lus
+# et cités ; le code du dépôt est sous licence GPL-3.0.
 Content-Signal: search=yes, ai-input=yes, ai-train=yes
 
 Allow: /

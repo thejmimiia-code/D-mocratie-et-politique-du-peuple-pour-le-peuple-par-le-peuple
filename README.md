@@ -242,7 +242,8 @@ lecteurs automatiques — depuis une **source unique**, `simulateur/surface_publ
 
 - `/robots.txt` — tout est ouvert, sauf `/api/` (des points de calcul, pas des
   pages) ; la convention `Content-Signal` autorise explicitement la recherche, la
-  lecture pour réponse assistée et l'entraînement, ce que la licence MIT dit déjà ;
+  lecture pour réponse assistée et l'entraînement — le dépôt est ouvert (GPL-3.0)
+  et ses textes sont faits pour être lus et cités ;
 - `/sitemap.xml` — une seule adresse, sans `lastmod` inventé ;
 - `/llms.txt` et `/llms-full.txt` — la page se calcule en JavaScript : un agent
   qui ne l'exécute pas n'y verrait qu'une coquille. `llms-full.txt` (45 Ko) lui
