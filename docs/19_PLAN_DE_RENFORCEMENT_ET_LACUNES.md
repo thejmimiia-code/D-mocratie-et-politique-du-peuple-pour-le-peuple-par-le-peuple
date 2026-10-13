@@ -148,6 +148,17 @@ la suite est verte, les huit documents engendrés sont à jour, aucun module du 
 n'est orphelin de documentation, les garde-fous annoncés existent, et la page servie est
 réellement parcourue par un harnais Node qui simule les gestes de l'utilisateur.
 
+  > **Suite, 14 octobre 2026.** L'audit avait regardé les documents, les compteurs,
+  > les tests et la CI — pas la **couverture de l'interface**. Un contrôle neuf
+  > (`tests/test_couverture_des_routes.py`) a posé la question qui manquait : chaque
+  > route servie par le moteur est-elle mise en œuvre par la page, ou excusée par
+  > écrit ? Il a trouvé trois registres servis **sans aucun écran**
+  > (`/api/contrepouvoirs`, `/api/dynamiques`, `/api/instances`, 229 097 octets à eux
+  > trois). Les deux premiers sont désormais affichés dans la section « Contre-pouvoirs,
+  > en chiffres » ; le troisième est excusé, avec sa raison, parce qu'il est la vue
+  > courte du second. Le trou n'était pas dans un document : il était dans ce que
+  > personne ne regardait.
+
 ---
 
 ## 3. Ce qui a été ajouté dans cette passe

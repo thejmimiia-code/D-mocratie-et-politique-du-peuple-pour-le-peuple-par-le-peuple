@@ -252,7 +252,9 @@ const programme = `
                        'fmtSigne','eurosParMenage','fmtMenage','chipsHorsBudget',
                        'renderCascade','marchesCascade','monetaireDe',
                        'renderRythme','changerAnneeClasses',
-                       'classeAnneeAffichee','classeReferenceAffichee']) {
+                       'classeAnneeAffichee','classeReferenceAffichee',
+                       'chargerContrepouvoirs','rendreContrepouvoirs',
+                       'filtrerContrepouvoirs','basculerGroupeParlementaire']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
@@ -1017,6 +1019,101 @@ noter("l'adresse partagée est reprise à l'ouverture de la page",
       && (elements.get("avis-lien")?.textContent || "").includes("levier"),
       `appliqué : ${applique} · valeur ${apiPage.etat().PARAMS[cleLevier]} · avis « ${elements.get("avis-lien")?.textContent || ""} »`);
 globalThis.location.search = "";
+
+/* 11. Contre-pouvoirs : l'arithmétique affichée est celle que le serveur sert. */
+const arithmetique = api["GET /api/contrepouvoirs"];
+const tempsProcedures = api["GET /api/dynamiques"];
+await apiPage.chargerContrepouvoirs();
+const corpsRegistre = contenu("contrepouvoirs-corps");
+const sansEspaces = corpsRegistre.replace(/[\u202f\u00a0\s]/g, "");
+const fichesMecanismes = (corpsRegistre.match(/class="cp-mecanisme"/g) || []).length;
+noter("affiche chaque manœuvre servie par le registre des contre-pouvoirs",
+      fichesMecanismes === (arithmetique?.mecanismes || []).length && fichesMecanismes > 0,
+      `${fichesMecanismes} fiche(s) sur ${(arithmetique?.mecanismes || []).length}`);
+noter("affiche les familles du registre",
+      (corpsRegistre.match(/class="cp-famille"/g) || []).length === (arithmetique?.familles || []).length
+      && (arithmetique?.familles || []).length > 0,
+      `${(corpsRegistre.match(/class="cp-famille"/g) || []).length} famille(s)`);
+const formationsAttendues =
+  Object.keys(arithmetique?.assemblees?.assemblee_nationale?.groupes || {}).length
+  + Object.keys(arithmetique?.assemblees?.senat?.groupes || {}).length;
+noter("affiche les deux chambres et leurs formations",
+      (corpsRegistre.match(/class="cp-chambre"/g) || []).length === 2
+      && (corpsRegistre.match(/class="cp-groupe"/g) || []).length === formationsAttendues,
+      `${(corpsRegistre.match(/class="cp-chambre"/g) || []).length} chambre(s), `
+      + `${(corpsRegistre.match(/class="cp-groupe"/g) || []).length} formation(s) sur ${formationsAttendues}`);
+const detailsAttendus = (tempsProcedures?.trajets || []).length + (tempsProcedures?.fentes || []).length
+  + (tempsProcedures?.strategies || []).length + (tempsProcedures?.instances || []).length
+  + (tempsProcedures?.boucles_de_controle || []).length;
+noter("affiche le temps des procédures, trajet par trajet",
+      (corpsRegistre.match(/class="cp-details"/g) || []).length === detailsAttendus
+      && detailsAttendus > 0,
+      `${(corpsRegistre.match(/class="cp-details"/g) || []).length} fiche(s) sur ${detailsAttendus}`);
+const joursAvancer = tempsProcedures?.rapport_de_temps?.par_sens?.avancer?.jours;
+noter("les jours de rigueur affichés sont ceux que le serveur a calculés",
+      joursAvancer !== undefined && sansEspaces.includes(String(joursAvancer)),
+      `${joursAvancer} jour(s) attendus`);
+
+/* La coalition : la page additionne les sièges reçus, rien de plus. */
+const chambreAn = arithmetique?.assemblees?.assemblee_nationale || {};
+const groupesAn = chambreAn.groupes || {};
+const choisies = ["RN", "EPR", "SOC", "LFI-NFP"].filter((nom) => groupesAn[nom] !== undefined);
+for (const nom of choisies) apiPage.basculerGroupeParlementaire("assemblee_nationale", nom);
+const totalCoalition = choisies.reduce((somme, nom) => somme + groupesAn[nom], 0);
+const corpsCoalition = contenu("contrepouvoirs-corps");
+const apresCoalition = corpsCoalition.replace(/[\u202f\u00a0\s]/g, "");
+noter("la coalition additionne les sièges servis par le serveur",
+      choisies.length > 0 && totalCoalition > 0 && apresCoalition.includes(String(totalCoalition)),
+      `${choisies.join(" + ")} = ${totalCoalition} siège(s)`);
+noter("la coalition annonce la majorité absolue quand le total l'atteint",
+      (totalCoalition >= chambreAn.majorite_absolue) === corpsCoalition.includes("la majorité absolue"),
+      `total ${totalCoalition}, seuil ${chambreAn.majorite_absolue}`);
+noter("la coalition annonce les trois cinquièmes quand le total l'atteint",
+      (totalCoalition >= chambreAn.majorite_qualifiee_3_5)
+        === corpsCoalition.includes("les trois cinquièmes"),
+      `total ${totalCoalition}, seuil ${chambreAn.majorite_qualifiee_3_5}`);
+noter("la coalition annonce ce qui manque quand un seuil n'est pas atteint",
+      totalCoalition < chambreAn.majorite_2_3 ? corpsCoalition.includes("Il manque") : true,
+      `total ${totalCoalition}, deux tiers ${chambreAn.majorite_2_3}`);
+
+/* Le filtre par famille : la fiche reste, le reste part. */
+const familleTest = (arithmetique?.familles || []).find((famille) => (famille.mecanismes || []).length > 1);
+apiPage.filtrerContrepouvoirs(familleTest.nom);
+const apresFiltre = contenu("contrepouvoirs-corps");
+noter("le filtre par famille ne montre que sa famille",
+      (apresFiltre.match(/class="cp-mecanisme"/g) || []).length === (familleTest.mecanismes || []).length,
+      `${familleTest.nom} : ${(apresFiltre.match(/class="cp-mecanisme"/g) || []).length} `
+      + `fiche(s) sur ${familleTest.mecanismes.length}`);
+noter("le filtre se voit dans la pastille de la famille",
+      (apresFiltre.match(/class="cp-famille"[^>]*aria-pressed="true"/g) || []).length === 1,
+      `${(apresFiltre.match(/class="cp-famille"[^>]*aria-pressed="true"/g) || []).length} pastille(s)`);
+noter("le filtre de famille ne défait pas la coalition composée",
+      (apresFiltre.match(/class="cp-groupe"[^>]*aria-pressed="true"/g) || []).length === choisies.length,
+      `${(apresFiltre.match(/class="cp-groupe"[^>]*aria-pressed="true"/g) || []).length} `
+      + `formation(s) cochée(s) sur ${choisies.length}`);
+apiPage.filtrerContrepouvoirs(familleTest.nom);       // le filtre se retire
+
+/* 12. Échappement : un registre hostile ne peut pas injecter une balise. */
+const arithmetiqueServie = api["GET /api/contrepouvoirs"];
+api["GET /api/contrepouvoirs"] = {
+  ...arithmetiqueServie,
+  familles: [{ nom: "renverser<script>", mecanismes: ["hostile"] }],
+  mecanismes: [{
+    cle: "hostile", nom: "<img src=x onerror=alert(1)>", famille: "renverser",
+    resume: "<script>alert(2)</script>", articles: ["49<script>"],
+    acteurs: "<svg onload=alert(3)>", declenche: ["<em>"], empeche_par: ["<strong>"],
+    seuils: [{ cle: "s", nom: "<b>gras</b>", regle: "<i>", base: 577, seuil: 289, unite: "<u>" }],
+  }],
+};
+await apiPage.chargerContrepouvoirs();
+const zoneHostile = contenu("contrepouvoirs-corps");
+const baliseOuverte = (zoneHostile.match(/<(img|script|svg)\b[^>]*>/g) || [])[0] || "";
+noter("un registre hostile est échappé, jamais interprété",
+      baliseOuverte === "" && zoneHostile.includes("&lt;img") && zoneHostile.includes("&lt;script&gt;"),
+      baliseOuverte ? "balise ouverte dans le rendu : " + baliseOuverte.slice(0, 60)
+                    : "les balises du registre restent du texte");
+api["GET /api/contrepouvoirs"] = arithmetiqueServie;
+await apiPage.chargerContrepouvoirs();
 
 /* ── Rapport ────────────────────────────────────────────────────────────── */
 rapport.elements = Object.fromEntries(

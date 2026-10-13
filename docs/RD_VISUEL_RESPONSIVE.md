@@ -435,6 +435,38 @@ mordent :
 
 ---
 
+## Onzième incrément — les contre-pouvoirs en chiffres
+
+Le registre des contre-pouvoirs et celui du temps des procédures n'avaient aucun
+écran. Ils en ont un : deux blocs dans une section neuve, juste après les
+verrous, dont voici ce qui relève de l'affichage — le contenu et le contrôle
+sont décrits dans [`RD_CONTREPOUVOIRS_EN_PAGE.md`](RD_CONTREPOUVOIRS_EN_PAGE.md).
+
+- **Une barre de sièges par chambre, une part par formation.** La largeur est
+  une proportion (`width:…%`), la teinte est **calculée** par rang
+  (`hsl(var(--teinte) 58% 52%)`, `--teinte` posée en style en ligne) : douze
+  groupes se distinguent sans qu'aucune couleur ne soit écrite à la main. Une
+  palette recopiée aurait survécu à trois remaniements sans être relue.
+- **Les seuils de la chambre en pastilles**, les manœuvres en dépliants
+  (`<details>`) : la section fait deux mille signes de haut, pas douze. Un
+  lecteur qui cherche une manœuvre ouvre la sienne ; les autres restent des
+  titres.
+- **Les filtres sont des boutons pressables**, avec `aria-pressed` : l'état d'un
+  filtre ne se lit pas seulement à la couleur. Même règle pour les formations
+  cochées — la coalition se compose au clavier comme à la souris.
+- **Les nombres sont tous tabulaires** (`ui-monospace`, `font-variant-numeric` là
+  où la page en a déjà) : des colonnes de sièges et de jours ne dansent pas d'une
+  ligne à l'autre.
+- **Le plancher de lisibilité s'applique comme ailleurs** : tout ce qui descend
+  sous 12,5 px passe par `max(var(--t-min), …)`, comme le reste de la page — et
+  pour les réglages d'agrandissement du site (125 %, 150 %), ces `rem` suivent.
+- **Un palier de 640 px pour la section** : les deux chambres se rangent l'une
+  sous l'autre (`grid-template-columns:1fr`), la barre de sièges s'amincit de
+  16 à 12 px, et les résumés de dépliants reprennent la taille du corps.
+- **Ce qui n'a pas été touché** : la palette M.R.S.C, les quatre paliers du
+  socle, la densité des tableaux d'audit. Une section neuve se range dans les
+  règles existantes ; elle n'en invente pas.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
