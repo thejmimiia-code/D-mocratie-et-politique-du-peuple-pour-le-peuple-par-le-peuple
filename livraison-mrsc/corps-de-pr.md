@@ -1,4 +1,4 @@
-Moteur embarqué mis à jour vers le moteur du 13 octobre, correctif du site rebasé
+Moteur embarqué mis à jour vers le moteur du 13 octobre (`e1dc6a6`)
 
 La copie embarquée du moteur datait du 8 octobre (99491d8). Depuis, l'amont a
 gagné la fluidité (compression, cache du catalogue), la lecture en clair, le
@@ -8,9 +8,18 @@ passe « visuel » entière : plancher de lisibilité, quatre paliers d'écran,
 tableaux en cartes sur téléphone, une seule barre collante, surfaces natives
 sombres.
 
-Le correctif du site refusait de s'appliquer : l'amont avait bougé sous lui, et
-`outils/mettre-a-jour-simulateur.py` a donc eu raison de s'arrêter sans rien
-remplacer. `outils/patchs/simulateur-securite-mrsc.patch` est **rebasé** sur le
+Deux correctifs sont arrivés depuis, et la copie les emporte :
+
+- **le nom d'une région défilante suit la taille de l'écran** : sous 640 px, un
+  tableau devient une pile de cartes et sa région annonçait encore « faites
+  défiler horizontalement », en gardant un arrêt clavier qui ne menait nulle
+  part ;
+- **la licence du dépôt est lue dans son fichier `LICENSE`**, plus recopiée :
+  trois fichiers servis aux robots annonçaient une autre licence que la sienne.
+
+Le correctif du site refusait de s'appliquer au moment du rebasage : l'amont
+avait bougé sous lui, et `outils/mettre-a-jour-simulateur.py` a donc eu raison de
+s'arrêter sans rien remplacer. `outils/patchs/simulateur-securite-mrsc.patch` est **rebasé** sur le
 moteur du jour — réunion à trois branches
 (`git merge-file` : moteur neuf, moteur d'origine du correctif, copie du site),
 **sans conflit cette fois** : la base choisie était celle du correctif, pas une
@@ -48,7 +57,7 @@ Trois ajustements d'intégration :
   refusait (« canonique attendue … reçue […] »), et c'est ce contrôle qui a
   révélé le besoin.
 
-La page reconstruite ne contient plus de marqueur de conflit — 371 160
+La page reconstruite ne contient plus de marqueur de conflit — 374 967
 caractères — et ses **scripts JavaScript** passent `node --check` ; ses données
 structurées sont un JSON valide (`Organization`, `WebSite`, `WebApplication`),
 et le contrôle de publication les distingue désormais du JavaScript : les

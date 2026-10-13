@@ -6,6 +6,14 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Le colis M.R.S.C rejoué sur le moteur du soir
+
+- **Le colis était figé sur `7d600de`** alors que le moteur avait bougé de deux fichiers utiles à la copie du site : `simulateur/interface.py` (le nom des régions défilantes suit la taille de l'écran) et `simulateur/surface_publique.py` (la licence lue dans `LICENSE`). Appliqué tel quel, le site aurait reçu un moteur amputé de ces deux correctifs — sans que rien ne le signale, puisque le reste des 42 fichiers était identique.
+- **Rejoué en entier sur le sommet de `main`** (`e1dc6a6`) : copie du moteur, application du correctif du site, reconstruction de la page et des fonctions `api/`, rejeu de la CI du site, contrôles de la copie publiée. Tout est vert : les **16 protections** du site sont présentes, aucun marqueur de conflit, la page reconstruite fait **374 967 caractères** (contre 371 160), ses trois scripts JavaScript passent `node --check` et ses données structurées sont du JSON valide.
+- **Le rebasage du correctif n'a pas eu à être refait** : sa version (`58bc2a21…`) s'applique toujours au moteur du jour — avec des décalages de lignes dans `interface.py`, aucun conflit. C'est pourtant le fichier où les deux chantiers se croisent : l'amont y a ajouté le nom des régions défilantes, le site y garde ses durcissements.
+- **Le nouveau diff de repli**, `maj-site-e1dc6a6.patch` (2,1 Mo, 42 fichiers, SHA-256 `8afe241a…`), a été **vérifié sur un clone neuf du site** (`main` = `3f1c6ec`) : il s'applique, et après application `py_compile`, `construire-simulateur --verifier`, `verifier-site-statique`, `verifier-securite` et `verifier-integration` sont verts.
+- **Reste la dernière marche, qui n'appartient pas à cet atelier** : le compte d'ici ne peut pas écrire dans `thejmimiia-code/MRSC` (`403`). La copie est faite, vérifiée et committée ; il faut la pousser depuis un compte autorisé — une commande, décrite dans `livraison-mrsc/LISEZ-MOI.md`.
+
 ### La documentation et les détails du dépôt remis à jour
 
 - **Les documents cessaient d'être vrais à deux endroits**, et c'est le plus coûteux : `docs/AUDIT_PR_CORRECTIONS.md` affirmait que `LICENSE` et le classificateur MIT (l'inverse est vrai — GPL-3.0), et `docs/19_PLAN_DE_RENFORCEMENT_ET_LACUNES.md` ouvrait sa lacune 2.4 au présent en annonçant une description « 4 échelons » et une adresse Vercel morte. Les deux portent désormais une **suite datée** au lieu d'une réécriture silencieuse : un audit daté reste un audit daté.
