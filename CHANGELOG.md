@@ -6,6 +6,14 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### La documentation et les détails du dépôt remis à jour
+
+- **Les documents cessaient d'être vrais à deux endroits**, et c'est le plus coûteux : `docs/AUDIT_PR_CORRECTIONS.md` affirmait que `LICENSE` et le classificateur MIT (l'inverse est vrai — GPL-3.0), et `docs/19_PLAN_DE_RENFORCEMENT_ET_LACUNES.md` ouvrait sa lacune 2.4 au présent en annonçant une description « 4 échelons » et une adresse Vercel morte. Les deux portent désormais une **suite datée** au lieu d'une réécriture silencieuse : un audit daté reste un audit daté.
+- **`docs/REPOSITORY_DETAILS.md` gagne un § 0 « État constaté »** (13 octobre 2026) : description ✅, site web ✅, **topics ❌ encore vides**, aperçu social ❓ non exposé par l'API. Et un § 4 bis : ce que le dépôt annonce de lui-même sans passer par GitHub — `robots.txt`, `llms*.txt`, les données structurées —, où la licence est **lue** dans `LICENSE`.
+- **Le pas à pas est précisé là où il échouait** : les *topics* se posent **un par un** (chaque mot devient une pastille bleue à la validation par Entrée). Coller la liste entière d'un coup laisse le champ vide — c'est l'explication la plus probable de son état actuel.
+- **`NOTE_POUR_CLAUDE.md`** indique sous son tableau historique où en sont les quatre champs aujourd'hui ; le `README.md` dit, dans sa section Licence, d'où vient le nom partout ailleurs.
+- Le jeton disponible ici reste un jeton d'intégration sans droit d'administration : `--appliquer` se fait refuser (`403`). L'outil le dit et affiche le bloc à coller, plutôt que de faire semblant.
+
 ### La licence du dépôt est **lue**, plus recopiée — et elle était fausse en ligne
 
 - **Trois fichiers servis aux robots annonçaient une licence qui n'est plus la leur** — « MIT » — (`robots.txt`, `llms.txt`, `llms-full.txt`) alors que le dépôt est sous **GPL-3.0** : son fichier `LICENSE`, le classificateur de `pyproject.toml`, `package.json`, la section « Licence » du `README.md` et l'API GitHub (qui annonce `gpl-3.0`) disaient tous l'inverse. Le défaut venait d'une constante recopiée sous un commentaire resté à l'ancienne licence. Une licence fausse n'est pas une coquille : c'est une affirmation **juridique**, et elle portait sur ce qui est publié.

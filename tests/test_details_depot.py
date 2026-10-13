@@ -202,6 +202,65 @@ class TestEtatDuDepot(unittest.TestCase):
         self.assertNotIn("Déjà à jour", self.executer(self.etat(description="autre chose")))
 
 
+class TestCeQuiResteAPoser(unittest.TestCase):
+    """`manques()` : la liste des champs non posés, déduite de l'état lu.
+
+    Trois documents racontaient ce qui restait à faire, chacun à sa façon — et
+    aucun ne pouvait savoir si c'était encore vrai. L'outil le calcule
+    maintenant à chaque exécution ; ces contrôles vérifient qu'il le fait dans
+    l'ordre de la fenêtre GitHub, et qu'il n'oublie pas l'aperçu social, qui est
+    le seul champ qu'aucune API ne pose.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.outil = charger_outil()
+
+    def etat(self, **remplacements: object) -> dict:
+        etat = {"description": self.outil.DESCRIPTION,
+                "homepage": self.outil.SITE_WEB,
+                "topics": list(self.outil.SUJETS)}
+        etat.update(remplacements)
+        return etat
+
+    def test_un_depot_complet_ne_laisse_que_l_apercu_social(self):
+        reste = self.outil.manques(self.etat())
+        self.assertEqual(len(reste), 1, reste)
+        self.assertIn("aperçu social", reste[0])
+        self.assertIn("à la main", reste[0])
+
+    def test_les_sujets_vides_sont_nommes(self):
+        reste = self.outil.manques(self.etat(topics=[]))
+        self.assertTrue(any("sujets" in manque for manque in reste), reste)
+        self.assertIn("20", " ".join(reste), "le compte attendu doit être dit")
+
+    def test_un_seul_sujet_manquant_suffit_a_signaler_la_liste(self):
+        incomplets = list(self.outil.SUJETS)[:-1]
+        self.assertTrue(any("sujets" in manque for manque in self.outil.manques(self.etat(topics=incomplets))))
+
+    def test_l_ordre_est_celui_de_la_fenetre(self):
+        """La liste suit la fenêtre GitHub : description, site web, sujets, aperçu."""
+        reste = self.outil.manques(self.etat(topics=[], description="autre chose", homepage=""))
+        self.assertIn("description", reste[0])
+        self.assertIn("site web", reste[1])
+        self.assertTrue(any("sujets" in manque for manque in reste[2:]), reste)
+        self.assertIn("aperçu social", reste[-1])
+
+    def test_un_etat_illisible_est_dit_tel_quel(self):
+        reste = self.outil.manques(None)
+        self.assertEqual(len(reste), 1, reste)
+        self.assertIn("pas pu être lu", reste[0])
+
+    def test_le_rapport_affiche_la_liste(self):
+        outil = charger_outil()
+        outil.etat_actuel = lambda: self.etat(topics=[])
+        with contextlib.redirect_stdout(io.StringIO()) as sortie:
+            outil.sys.argv = ["details_depot.py", "--sans-reseau"]
+            outil.main()
+        self.assertIn("reste à poser", sortie.getvalue())
+        self.assertIn("sujets", sortie.getvalue())
+
+
 class TestLeDocumentDesReglages(unittest.TestCase):
     """`docs/REPOSITORY_DETAILS.md` recopie des valeurs : qu'elles soient justes.
 
@@ -256,6 +315,46 @@ class TestLeDocumentDesReglages(unittest.TestCase):
             with self.subTest(sujet=sujet):
                 self.assertIn(sujet, self.texte)
         self.assertIn(f"## 3. Sujets ({len(self.outil.SUJETS)} / 20)", self.texte)
+
+    #: « 13 octobre 2026 » en tête du § 0 — le reste du titre est libre.
+    DATE_ETAT = re.compile(r"^## 0\. État constaté \((\d{1,2} [a-zéûîôàç]+ 20\d{2})", re.M)
+
+    def date_de_l_etat(self) -> str:
+        bloc = self.DATE_ETAT.search(self.texte)
+        self.assertIsNotNone(bloc, "le § 0 « État constaté » a disparu de la référence")
+        return bloc.group(1)
+
+    def test_l_etat_constate_porte_une_date(self):
+        """Un état sans date ne peut pas vieillir : il reste faux pour toujours.
+
+        C'est la leçon des deux documents qui annonçaient encore, au présent, une
+        description « 4 échelons » et une adresse morte. Une affirmation datée
+        se juge ; une affirmation sans date se croit.
+        """
+        mois = ("janvier|février|mars|avril|mai|juin|juillet|août|septembre|"
+                "octobre|novembre|décembre")
+        self.assertRegex(self.date_de_l_etat(), rf"^\d{{1,2}} ({mois}) 20\d{{2}}$",
+                         "la date doit être écrite en toutes lettres (jour, mois, année)")
+
+    def test_la_date_de_l_etat_n_est_pas_dans_l_avenir(self):
+        import datetime
+
+        jour, mois, annee = self.date_de_l_etat().split()
+        mois_numero = ("janvier février mars avril mai juin juillet août septembre "
+                       "octobre novembre décembre").split().index(mois) + 1
+        date = datetime.date(int(annee), mois_numero, int(jour))
+        self.assertLessEqual(date, datetime.date.today(),
+                             "un état constaté ne peut pas être daté dans l'avenir")
+
+    def test_le_document_et_l_outil_s_accordent_sur_ce_qui_reste(self):
+        """Les deux endroits qui disent « ce qui reste » nomment les mêmes champs."""
+        reste = charger_outil().manques({"description": self.outil.DESCRIPTION,
+                                         "homepage": self.outil.SITE_WEB, "topics": []})
+        for manque in reste:
+            mot = "Topics" if "sujets" in manque else "aperçu social"
+            with self.subTest(manque=manque):
+                self.assertIn(mot, self.texte,
+                              f"le document ne dit rien de « {mot} », que l'outil signale")
 
     def test_l_adresse_publiee_est_au_document(self):
         self.assertIn(self.outil.SITE_WEB, self.texte)

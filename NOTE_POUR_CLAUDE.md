@@ -60,6 +60,12 @@ faut le rendre fidèle à ce que le dépôt fait aujourd'hui.
 | **Topics** | *aucun* | les 20 sujets du § 2 |
 | **Social preview** | aucune image | `docs/apercu_social.png` (1280 × 640) |
 
+**Où en est ce tableau au 13 octobre 2026** (constaté par l'API GitHub) : la
+**description** et le **site web** sont appliqués ; les **sujets** restent vides
+et l'**aperçu social** reste à téléverser — GitHub n'accepte l'aperçu que par
+l'interface web. L'état courant, qui fait foi, est dans
+[`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md).
+
 Pourquoi c'est important : la description annonce **4 échelons** alors que le
 moteur en compte **5** (la strate géopolitique a été ajoutée), et elle ne dit
 rien des 156 leviers, des 20 domaines d'impact, des données publiques en direct

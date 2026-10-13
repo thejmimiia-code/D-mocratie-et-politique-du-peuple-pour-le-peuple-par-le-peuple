@@ -69,6 +69,16 @@ publication, selon les autorisations Actions du dépôt.
 - Pas d'archivage append-only ni de transaction multi-fichiers pour les exports.
 - Les coefficients économiques et géopolitiques restent exploratoires.
 - Les métadonnées de licence du projet contiennent une description « Loi 1901 —
-  Open-Source et Privé », alors que `LICENSE` et le classificateur indiquent MIT.
-  Cette incohérence préexistante nécessite une confirmation du propriétaire ;
+  Open-Source et Privé », et l'audit croyait alors que `LICENSE` et le
+  classificateur annonçaient « licence MIT ». <!-- citation historique : licence corrigée -->
+  Cette incohérence préexistante nécessitait une confirmation du propriétaire ;
   l'audit ne modifie pas de lui-même les conditions juridiques du projet.
+
+  > **Suite, 13 octobre 2026.** La contradiction a été tranchée, dans l'autre sens
+  > que ce paragraphe ne le croyait : le dépôt est sous **GPL-3.0**. `LICENSE`,
+  > le classificateur de `pyproject.toml`, `package.json` et la section
+  > « Licence » du `README.md` le disent ; l'API GitHub annonce `gpl-3.0`. Ce qui
+  > restait faux, en revanche, était publié : `robots.txt`, `llms.txt` et
+  > `llms-full.txt` annonçaient une autre licence, recopiée dans le code. Le nom
+  > n'est plus écrit : il est **lu** dans `LICENSE` — voir
+  > `RD_PREUVE_ET_OUTILLAGE.md`, § 6.

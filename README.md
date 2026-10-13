@@ -483,6 +483,16 @@ Ce projet est mis à disposition sous licence **[GNU General Public License v3.0
 
 La licence GPLv3 garantit que toute modification redistribuée reste libre et ouverte — mais **la paternité du fondateur reste inaliénable** et doit figurer dans toute version dérivée, conformément aux termes de la licence et du droit moral de l'auteur (Code de la propriété intellectuelle, Art. L. 121-1).
 
+**Le nom de cette licence n'est écrit qu'ici, à la main.** Partout où le projet
+l'annonce — `robots.txt`, `llms.txt`, `llms-full.txt`, les données structurées de
+la page — il est **lu** dans le fichier [`LICENSE`](LICENSE) par
+`simulateur/surface_publique.py`. C'est une correction, pas un excès de zèle :
+trois fichiers servis aux moteurs annonçaient « MIT » quand le dépôt est sous
+GPL-3.0, parce que le nom avait été recopié. `tests/test_licence_du_depot.py`
+refuse désormais toute ligne du dépôt qui attribuerait au projet une autre
+licence que celle de son fichier — donc changer de licence se fait en remplaçant
+`LICENSE`, et tout texte resté en arrière est nommé à la première exécution.
+
 ### Preuve d'antériorité
 
 | Élément | Date | Preuve |

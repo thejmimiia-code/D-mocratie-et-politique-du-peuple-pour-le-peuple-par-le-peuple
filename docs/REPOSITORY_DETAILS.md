@@ -11,6 +11,25 @@ avec le jeton d'intégration utilisé par l'environnement d'automatisation
 > [`NOTE_POUR_CLAUDE.md`](../NOTE_POUR_CLAUDE.md), à l'attention de l'agent qui
 > reprendra le dépôt avec des droits d'administration.
 
+## 0. État constaté (13 octobre 2026, par l'API GitHub)
+
+| Champ | État | Qui peut le poser |
+|---|---|---|
+| **Description** | ✅ appliquée — 5 échelons, 156 leviers, données publiques en direct | fait |
+| **Website** | ✅ appliqué — l'application répond (Vercel) | fait |
+| **Topics** | ❌ **vide** — c'est le champ où il faut **taper chaque mot puis valider**, un par un | à la main, ou jeton d'administration |
+| **Social preview** | ❓ non exposée par l'API | **à la main, obligatoirement** |
+
+Le jeton dont dispose l'espace de travail est un jeton d'intégration sans droit
+d'administration : `python3 outils/details_depot.py --appliquer` se fait refuser
+(`403 Resource not accessible by integration`) et affiche le bloc à coller.
+Depuis le 13 octobre 2026, ce bloc **dit ce qui a été constaté** au lieu
+d'affirmer : l'outil interroge l'adresse publiée à chaque exécution, et écrit
+« l'adresse n'a pas pu être vérifiée » quand le réseau manque — jamais « elle est
+morte ». Voir [`RD_PREUVE_ET_OUTILLAGE.md`](RD_PREUVE_ET_OUTILLAGE.md), § 3.
+
+---
+
 Les quatre régions marquées `<!-- engendre:… -->` sont **écrites par
 `outils/details_depot.py`** : elles recopient la description, les sujets,
 l'adresse publiée et l'empreinte de l'aperçu social depuis leurs sources. Le
@@ -109,6 +128,23 @@ téléversé dans *Social preview* :
 | SHA-256 (base64) | `SHA256:LsulsbctarY3LrPxranG5L2bTvPP74JCV+r2+apxTr0=` |
 <!-- /engendre:apercu -->
 
+## 4 bis. Ce que le dépôt annonce de lui-même (et qui n'est pas un réglage GitHub)
+
+À côté de l'encadré « About », trois surfaces publiques décrivent le projet — et
+elles sont, elles, **versionnées** :
+
+- `/robots.txt`, `/llms.txt`, `/llms-full.txt` : règles de visite, résumé et
+  contenu en texte pour les robots et les lecteurs automatiques. Ils annoncent la
+  **licence du dépôt**, et ce nom n'y est pas recopié : il est **lu** dans le
+  fichier `LICENSE` (`simulateur/surface_publique.py`). Cette correction vient
+  d'une erreur réelle — ces fichiers annonçaient une autre licence que celle du
+  dépôt (voir [`RD_PREUVE_ET_OUTILLAGE.md`](RD_PREUVE_ET_OUTILLAGE.md), § 6) ;
+- les **données structurées** de la page (`WebApplication`) portent
+  `license: …/blob/main/LICENSE` : l'adresse du fichier, jamais un nom qui
+  pourrait vieillir ;
+- `tests/test_licence_du_depot.py` refuse toute ligne du dépôt qui attribuerait
+  au projet une autre licence que celle de son fichier.
+
 ## 5. Autres cases de la même page
 
 | Réglage | Recommandation |
@@ -134,12 +170,18 @@ le jeton ne quitte pas votre navigateur, il n'est ni enregistré ni transmis.
 
 1. Sur la page du dépôt, cliquez sur la roue dentée **⚙** à côté de « About »
    (ou *Settings → General → Edit repository details*).
-2. **Description** : coller le texte du § 1 (270 caractères).
-3. **Website** : coller l'adresse de l'application (§ 2).
-4. **Topics** : coller les vingt sujets du § 3.
+2. **Description** : coller le texte du § 1 — déjà appliquée au 13 octobre 2026,
+   à recoller seulement si elle a bougé.
+3. **Website** : coller l'adresse de l'application (§ 2) — déjà appliqué.
+4. **Topics** : taper les vingt sujets du § 3 **un par un** — chaque mot devient
+   une pastille bleue quand on valide par Entrée. Coller la liste entière d'un
+   coup laisse le champ vide : c'est le piège de ce champ, et la raison la plus
+   probable pour laquelle il est encore vide.
 5. *Save changes*, puis **Social preview → Edit → Upload an image** et choisir
-   `docs/apercu_social.png` (§ 4) — l'aperçu social n'a pas d'API, c'est le seul
-   champ qui reste nécessairement manuel.
+   `docs/apercu_social.png` (§ 4) — l'aperçu social n'a pas d'API : c'est le seul
+   champ qui **reste** nécessairement manuel, même avec tous les droits. Vérifier
+   ensuite que le champ « Topics » a bien gardé ses pastilles (un enregistrement
+   sans effet ne se voit qu'en rechargeant la page).
 
 ### c. API GitHub, si un jeton administrateur est disponible
 
@@ -148,7 +190,9 @@ GH_TOKEN=<jeton administration> python3 outils/details_depot.py --appliquer
 python3 outils/details_depot.py            # vérifie ensuite l'état du dépôt
 ```
 
-L'aperçu social reste manuel même par cette voie.
+L'aperçu social reste manuel même par cette voie — GitHub ne l'expose par aucune
+API. Contrôle de l'effet : `python3 outils/details_depot.py` relit l'état et
+compare le champ *Website* à l'adresse que la page déclare aux moteurs.
 
 ---
 
