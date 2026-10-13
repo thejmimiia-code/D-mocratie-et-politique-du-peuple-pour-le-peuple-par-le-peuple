@@ -91,8 +91,7 @@ PLAFOND_CITATIONS = 15
 EXEMPTIONS = {"tests/" + Path(__file__).name: "le contrôle lui-même"}
 
 #: Les extensions lues par le balayage : ce qui se publie, se documente ou se
-#: configure. Les fichiers de correctif (`livraison-mrsc/*.patch`) sont des
-#: diffs d'un autre dépôt : ils ne sont pas lus ici.
+#: configure.
 EXTENSIONS = (".md", ".py", ".html", ".json", ".toml", ".txt", ".yml", ".yaml")
 
 #: Ce qui n'est pas du texte du dépôt : dépôt Git, caches, dépendances.
@@ -191,8 +190,6 @@ def fichiers_surveilles(racine: Path = RACINE) -> list[Path]:
             continue
         if str(relatif) in EXEMPTIONS:
             continue
-        if relatif.parts and relatif.parts[0] == "livraison-mrsc":
-            continue                            # diffs d'un autre dépôt, non publiés ici
         fichiers.append(chemin)
     return fichiers
 

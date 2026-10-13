@@ -6,6 +6,14 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Le colis M.R.S.C sort du dépôt (13 octobre 2026)
+
+- **Ce dépôt est le simulateur ; il n'est pas le site de l'association.** Le dossier `livraison-mrsc/` (2,2 Mo, 5 fichiers) n'était qu'une **enveloppe de transport** vers `thejmimiia-code/MRSC` — un autre dépôt, avec ses propres permissions et son propre atelier. Rien ici n'en dépendait : ni le code, ni l'API, ni la CI, ni les tests ; le balayage de licence l'excluait même explicitement (« diffs d'un autre dépôt »). Il est retiré.
+- **Ce qui part, nommément** : le correctif du site (`simulateur-securite-mrsc.patch`), le diff de repli `maj-site-e1dc6a6.patch` (2,1 Mo), le script `publier-mrsc.sh`, le mode d'emploi et le message de fusion.
+- **Ce qui reste, et qui n'était pas visé** : l'**identité du projet** — le sigle M.R.S.C, le logo, le lien vers le site, la mention « valeur citoyenne non vérifiée par le M.R.S.C », l'attribution des crédits. Une quinzaine de fichiers la portent ; aucun n'est touché. C'est la signature du simulateur, pas une pièce de transport.
+- **Rien n'est perdu** : le dossier reste dans l'historique Git, récupérable à tout moment à l'octet près — `git show 4b15284:livraison-mrsc/LISEZ-MOI.md`.
+- **Le contrôle de licence s'allège d'autant** : `tests/test_licence_du_depot.py` portait une exemption (« ne pas lire les correctifs du colis ») devenue sans objet ; elle est retirée, la suite reste verte.
+
 ### Le colis M.R.S.C rejoué sur le moteur du soir
 
 - **Le colis était figé sur `7d600de`** alors que le moteur avait bougé de deux fichiers utiles à la copie du site : `simulateur/interface.py` (le nom des régions défilantes suit la taille de l'écran) et `simulateur/surface_publique.py` (la licence lue dans `LICENSE`). Appliqué tel quel, le site aurait reçu un moteur amputé de ces deux correctifs — sans que rien ne le signale, puisque le reste des 42 fichiers était identique.
@@ -13,6 +21,10 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 - **Le rebasage du correctif n'a pas eu à être refait** : sa version (`58bc2a21…`) s'applique toujours au moteur du jour — avec des décalages de lignes dans `interface.py`, aucun conflit. C'est pourtant le fichier où les deux chantiers se croisent : l'amont y a ajouté le nom des régions défilantes, le site y garde ses durcissements.
 - **Le nouveau diff de repli**, `maj-site-e1dc6a6.patch` (2,1 Mo, 42 fichiers, SHA-256 `8afe241a…`), a été **vérifié sur un clone neuf du site** (`main` = `3f1c6ec`) : il s'applique, et après application `py_compile`, `construire-simulateur --verifier`, `verifier-site-statique`, `verifier-securite` et `verifier-integration` sont verts.
 - **Reste la dernière marche, qui n'appartient pas à cet atelier** : le compte d'ici ne peut pas écrire dans `thejmimiia-code/MRSC` (`403`). La copie est faite, vérifiée et committée ; il faut la pousser depuis un compte autorisé — une commande, décrite dans `livraison-mrsc/LISEZ-MOI.md`.
+
+> **Suite, 13 octobre 2026.** Le dossier `livraison-mrsc/` n'est plus dans le
+> dépôt (entrée du même jour, plus haut) : les chemins cités ici ne s'y trouvent
+> plus, et ne sont plus à suivre.
 
 ### La documentation et les détails du dépôt remis à jour
 
@@ -80,6 +92,10 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 - **La page reconstruite est relue script par script** (`node --check`) : une fusion de HTML en conflit casse le JavaScript sans le dire, et `py_compile` ne voit pas les marqueurs de conflit dans les chaînes Python.
 - **Deux ajustements d'intégration** : six routes servies par le moteur et absentes de l'API du site (`constitution`, `contrepouvoirs`, `dynamiques`, `instances`, `nuances`, `objections`), et retrait de la balise d'analytique Vercel de la copie embarquée — cette ressource n'existe pas sur le site, qui est autonome.
 - **La publication reste à faire** : le jeton GitHub de cet atelier n'a pas le droit d'écrire dans `thejmimiia-code/MRSC` (403, « Resource not accessible by integration »), alors que celui du simulateur, lui, pousse normalement. `bash livraison-mrsc/publier-mrsc.sh` fait tout le reste en une commande — il copie le sommet de `main`, rejoue la CI du site, et refuse de pousser si un contrôle échoue — puis `deploy-pages.yml` publie le site. La page affiche la révision copiée d'elle-même, en lisant `PROVENANCE.json`.
+
+> **Suite, 13 octobre 2026.** Le dossier `livraison-mrsc/` n'est plus dans le
+> dépôt (entrée du même jour, plus haut) : les chemins cités ici ne s'y trouvent
+> plus, et ne sont plus à suivre.
 
 ### Une seule barre collante quand l'écran se rétrécit, et la veille reste au courant
 
