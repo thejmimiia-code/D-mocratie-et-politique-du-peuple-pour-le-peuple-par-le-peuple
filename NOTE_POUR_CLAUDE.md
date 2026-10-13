@@ -189,6 +189,7 @@ remplacé par un **simulateur paramétrable**.
 | `simulateur/conseil.py` | conseiller temps réel (« effet papillon ») : chaque mouvement rejoué avant/après, directs + ricochets, garde-fous, compensations |
 | `simulateur/interface.py` | page unique : ruban de veille, 156 leviers, 20 domaines, exports |
 | `simulateur/dashboard.py` | API JSON : `/api/catalogue`, `/contexte`, `/simuler`, `/comparer`, `/conseil`, `/garde_fous`, `/presets`, `/proxy`, `/donnees` |
+| `simulateur/surface_publique.py` | ce que la page dit d'elle-même aux robots : `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt` (engendré depuis le catalogue) et l'en-tête de la page (canonique, aperçu de partage, données structurées, icônes en `data:`) |
 | `simulateur/wsgi.py` | pont WSGI : branche le handler ci-dessus sur une requête d'hébergeur, sans dupliquer le routeur |
 | `Procfile`, `requirements.txt`, `runtime.txt`, `render.yaml`, `Dockerfile` | publication en ligne : hébergeur Python, bouton Render, image Docker (GHCR) |
 | `tests/` | suite unittest verte (`discover -s tests`), dont un harnais Node qui exécute réellement la page |

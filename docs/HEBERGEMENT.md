@@ -117,6 +117,8 @@ python3 -m simulateur.dashboard --host 0.0.0.0 --port 8080
 |---|---|
 | `simulateur/wsgi.py` | **Le pont.** Présente chaque requête WSGI au handler HTTP existant. C'est le seul point d'entrée utilisé en ligne. |
 | `api/[...path].py` | Fonction Vercel unique : sert toutes les routes du moteur (section 4). |
+| `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt` | Ce que lisent les robots. Fichiers écrits à la racine (Vercel les sert tels quels) **et** routes du serveur Python (Render n'a que le routeur pour les servir). Les deux textes viennent de `simulateur/surface_publique.py` : voir [`RD_INDEXATION.md`](RD_INDEXATION.md). |
+| `og-image.png`, `favicon.ico`, `favicon.svg`, `apple-touch-icon.png` | Images publiques, engendrées par `outils/apercu_social.py`. Vercel les sert comme fichiers ; le serveur Python les sert par une liste blanche (`surface_publique.IMAGES`) — les icônes de l'onglet voyagent en `data:` dans la page, et `favicon.ico` reste servi à la racine pour ce qui le demande sans lire la page. |
 | `Procfile` | Commande de démarrage pour les plateformes qui le détectent. |
 | `requirements.txt` | `gunicorn`, et rien d'autre — dépendance **d'hébergement**, pas d'exécution. |
 | `runtime.txt` | Version de Python (`3.11.9`). Render et Heroku le lisent. |

@@ -235,6 +235,36 @@ Ce principe n'est pas une punition. C'est le fondement même du contrat social t
 
 ### Ce que le simulateur démontre
 
+### Être trouvé : ce que la page dit d'elle-même
+
+La page se décrit aux moteurs de recherche, aux aperçus de partage et aux
+lecteurs automatiques — depuis une **source unique**, `simulateur/surface_publique.py` :
+
+- `/robots.txt` — tout est ouvert, sauf `/api/` (des points de calcul, pas des
+  pages) ; la convention `Content-Signal` autorise explicitement la recherche, la
+  lecture pour réponse assistée et l'entraînement, ce que la licence MIT dit déjà ;
+- `/sitemap.xml` — une seule adresse, sans `lastmod` inventé ;
+- `/llms.txt` et `/llms-full.txt` — la page se calcule en JavaScript : un agent
+  qui ne l'exécute pas n'y verrait qu'une coquille. `llms-full.txt` (45 Ko) lui
+  donne le contenu en texte, **engendré depuis le catalogue** : les comptes
+  annoncés sont ceux de l'outil publié, pas une photographie ;
+- l'en-tête de la page — description (sans aucun chiffre : elle a déjà annoncé
+  « 93 leviers » après qu'ils étaient faux), adresse canonique, directives
+  d'indexation, aperçu de partage 1200 × 630, données structurées, icônes en
+  `data:` pour que la page reste **un fichier unique** ;
+- `og-image.png`, `favicon.svg`, `favicon.ico`, `apple-touch-icon.png` —
+  versionnés, engendrés par `outils/apercu_social.py`, qui **lit** les comptes du
+  catalogue au moment du dessin.
+
+`outils/generer-surface-publique.py --verifier` refuse la divergence entre le
+module et les fichiers publiés ; `tests/test_indexation.py` (35 contrôles)
+refuse tout le reste — ressource distante, adresse canonique en double, données
+structurées malhonnêtes (`aggregateRating`, `review`… que les moteurs
+sanctionnent), lien mort, image à la mauvaise taille, icône `data:` qui ne
+correspond plus à son fichier. Le raisonnement complet, ce qui a été essayé puis
+retiré, et les gestes manuels restants (Search Console, Bing) sont dans
+[`docs/RD_INDEXATION.md`](docs/RD_INDEXATION.md).
+
 Le module multi-agents (`simulateur/modele_multi_agents.py`) modélise **100 agents hétérogènes** (ménages, entreprises, collectivités) avec :
 - Un **barème progressif d'impôt sur le revenu** fidèle au CGI (article 197)
 - Un **IS à 25 %** (CGI, article 219) et une **règle d'or budgétaire** (CGCT L. 1612-4, article 2)
