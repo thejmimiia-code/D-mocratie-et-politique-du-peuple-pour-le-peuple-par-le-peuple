@@ -6,6 +6,15 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Le site M.R.S.C reçoit le moteur à jour : correctif rebasé, publication prête
+
+- **Le site M.R.S.C embarque une copie du moteur, pas un appel au service.** Sa copie venait du 8 octobre (`99491d8`) ; elle passe au 13 octobre (`22957da`) : fluidité, lecture en clair, lexique, nuances institutionnelles, Constitution analysée, dynamiques croisées, contrepouvoir, objections — et la passe « visuel » entière.
+- **Le correctif du site refusait de s'appliquer** : l'amont avait bougé sous lui, et `outils/mettre-a-jour-simulateur.py` a eu raison de s'arrêter sans rien remplacer. Il est **rebasé** dans `livraison-mrsc/simulateur-securite-mrsc.patch` — dix conflits résolus un par un dans `interface.py`, l'amont gagnant pour la typographie et ses nouvelles fonctions, le site gardant ses durcissements.
+- **Rien ne se perd en silence** : les 16 protections du site absentes de l'amont sont nommées une par une, et la publication échoue si l'une d'elles disparaît. Le correctif rebasé s'applique et se retire proprement sur un clone neuf de l'amont, et les cinq fichiers obtenus sont identiques à l'octet à la copie publiée.
+- **La page reconstruite est relue script par script** (`node --check`) : une fusion de HTML en conflit casse le JavaScript sans le dire, et `py_compile` ne voit pas les marqueurs de conflit dans les chaînes Python.
+- **Deux ajustements d'intégration** : six routes servies par le moteur et absentes de l'API du site (`constitution`, `contrepouvoirs`, `dynamiques`, `instances`, `nuances`, `objections`), et retrait de la balise d'analytique Vercel de la copie embarquée — cette ressource n'existe pas sur le site, qui est autonome.
+- **La publication reste à faire** : le jeton GitHub de cet atelier n'a pas le droit d'écrire dans `thejmimiia-code/MRSC`. `bash livraison-mrsc/publier-mrsc.sh` fait tout le reste en une commande, portes comprises, puis `deploy-pages.yml` publie le site.
+
 ### Une seule barre collante quand l'écran se rétrécit, et la veille reste au courant
 
 - **Deux barres se disputaient le haut de l'écran.** Le sommaire était collant à toutes les largeurs, le ruban de veille aussi (`top:0`) : sur un téléphone, la veille passait par-dessus le menu (z-index 60 contre 56) et le masquait. Sous **901 px**, il n'y a plus qu'une barre collante — le sommaire, qui porte la navigation ; le ruban reprend sa place dans le flux, en carte lisible.
