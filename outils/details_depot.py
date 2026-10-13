@@ -295,6 +295,31 @@ def reecrire_document(chemin: Path = DOCUMENT) -> int:
     return 0
 
 
+def manques(etat: dict | None) -> list[str]:
+    """Ce qui reste à poser dans les réglages du dépôt, nommé.
+
+    Cette liste existe parce que trois documents racontaient, chacun à sa façon,
+    ce qui restait à faire — et qu'aucun ne pouvait savoir si c'était encore
+    vrai. Ici, elle est **déduite de l'état lu à l'instant** : ce qui est
+    appliqué n'y figure pas, ce qui manque y figure, et l'aperçu social y figure
+    toujours puisqu'aucune API ne le pose.
+
+    L'ordre est celui de la fenêtre *Edit repository details* : description,
+    site web, sujets, aperçu social.
+    """
+    if not etat:
+        return ["l'état du dépôt n'a pas pu être lu — relancer avec le réseau"]
+    reste: list[str] = []
+    if (etat.get("description") or "").strip() != DESCRIPTION:
+        reste.append("la description")
+    if (etat.get("homepage") or "").rstrip("/") != SITE_WEB:
+        reste.append("l'adresse du site web")
+    if set(etat.get("topics") or []) != set(SUJETS):
+        reste.append(f"les {len(SUJETS)} sujets (un par un : chaque mot validé par Entrée)")
+    reste.append("l'aperçu social — à la main, GitHub ne l'expose par aucune API")
+    return reste
+
+
 def _gh(*arguments: str) -> tuple[int, str]:
     gh = shutil.which("gh")
     if gh is None:
@@ -366,6 +391,9 @@ def main() -> int:
         print(f"  description : {etat.get('description')}")
         print(f"  website     : {etat.get('homepage') or '(vide)'}")
         print(f"  topics      : {etat.get('topics') or '(aucun)'}")
+        print("  reste à poser :")
+        for manque in manques(etat):
+            print(f"    · {manque}")
         print()
         if (etat.get("description") == DESCRIPTION
                 and (etat.get("homepage") or "") .rstrip("/") == SITE_WEB

@@ -115,9 +115,10 @@ par variable d'environnement.
 
 ### 2.4 Le dépôt GitHub annonce encore l'ancien monde
 
-La description du dépôt dit toujours « Modèle gigogne à 4 échelons », l'adresse du site
-pointe vers une instance Vercel qui renvoie 404, et aucun sujet n'est défini :
-`python3 outils/details_depot.py` affiche l'état constaté et le bloc à coller.
+*Ce que l'audit relevait (5 octobre 2026)* : la description du dépôt disait « Modèle
+gigogne à 4 échelons », l'adresse du site pointait vers une instance Vercel qui renvoyait
+404, et aucun sujet n'était défini. `python3 outils/details_depot.py` affiche l'état
+constaté et le bloc à coller.
 
 *État au 13 octobre 2026 : à moitié corrigé, et le reste bloqué à dessein.*
 
@@ -128,11 +129,17 @@ pointe vers une instance Vercel qui renvoie 404, et aucun sujet n'est défini :
   réseau manque. La page `outils/reglages_depot.html` porte enfin des contrôles : elle
   proposait de vider le champ, et visait un nom de dépôt tronqué — donc un dépôt inexistant.
   Voir `docs/RD_PREUVE_ET_OUTILLAGE.md`.
-- **Toujours à faire par un humain** : coller le bloc affiché dans
-  *Settings → General → Edit repository details*, et téléverser l'aperçu social. Le jeton
-  disponible dans l'espace de travail est un jeton d'intégration sans droit d'administration :
-  l'API refuse (`403 Resource not accessible by integration`), et l'outil le dit au lieu de
-  faire semblant. Cette limite est écrite ici parce qu'elle ne dépend pas du code.
+- **Appliqué par le propriétaire (constaté le 13 octobre 2026, par l'API GitHub)** : la
+  **description** et le **site web** du dépôt sont à jour — la description annonce les
+  5 échelons et les 156 leviers, et le champ *Website* porte l'adresse de l'application.
+- **Reste à faire** : les **sujets** (`topics` est toujours vide — c'est le champ où il faut
+  taper chaque mot puis valider, un par un) et l'**aperçu social**, que GitHub n'accepte
+  qu'à la main. Le bloc exact est affiché par `python3 outils/details_depot.py` ; l'état est
+  tenu à jour dans `docs/REPOSITORY_DETAILS.md`.
+- **Pourquoi je ne l'applique pas moi-même** : le jeton dont dispose l'espace de travail est
+  un jeton d'intégration sans droit d'administration — l'API refuse
+  (`403 Resource not accessible by integration`), et l'outil le dit au lieu de faire
+  semblant. Cette limite ne dépend pas du code.
 
 ### 2.5 Ce que l'audit n'a pas trouvé
 
