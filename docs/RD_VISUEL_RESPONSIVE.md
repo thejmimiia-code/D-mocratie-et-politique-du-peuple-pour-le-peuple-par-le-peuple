@@ -334,6 +334,47 @@ Décisions :
   rattrapée : un premier jet qui range `.modale-fond`, une classe qui n'existe
   pas, ne prouve rien.
 
+## Neuvième incrément — une seule barre collante, et une veille qui reste au courant
+
+Signalé depuis un téléphone, et vérifiable dans la feuille : **deux barres se
+disputaient le haut de l'écran**.
+
+| Constat | Mesure | Conséquence |
+|---|---|---|
+| Deux barres collantes, au même endroit | `.sommaire{position:sticky;top:0}` **et** `.ruban-veille{position:sticky;top:0}` — le ruban ne recevait `top:var(--collant)` qu'au-dessus de 641 px, et le sommaire est collant à toutes les largeurs | sur un téléphone, le ruban passait **par-dessus** le sommaire (z-index 60 contre 56) : le menu disparaissait sous la veille |
+| La hauteur de la barre était **écrite à la main** | `--collant:50px` au large et `44px` en petit écran, pour une barre qui en fait 44 et 58 | les ancres atterrissaient sous la barre (le titre de la section visée restait caché), et le ruban se collait 6 px trop bas : par la fente, on voyait défiler la page |
+| Le ruban, une fois qu'il n'est plus collant, se lit mal | titre, verdict tronqué à une ligne, cinq strates, population, coût et quatre boutons dans une même rangée | en fenêtre comprimée, la rangée se replie en un bloc confus ; en téléphone, les boutons s'empilent de travers |
+
+Décisions :
+
+- **Une seule barre collante sous 901 px** : c'est le sommaire, qui porte la
+  navigation. Le ruban reprend sa place dans le flux, en carte lisible. Il n'y a
+  donc plus deux choses à faire tenir dans la même bande de 44 px.
+- **La veille ne perd pas la parole** : une pastille dans la barre
+  (`#sommaire-veille`) écrit le niveau en trois mots — « vigilance · 3
+  alerte(s) » —, colorée **et** écrite, et qui mène d'un geste au détail des
+  seuils. Son texte vient de `classeNiveau` et `etiquetteNiveau`, les mêmes
+  fonctions que le ruban : les deux ne peuvent pas raconter deux choses
+  différentes. Avant le premier diagnostic, l'attribut `hidden` la tient hors de
+  l'écran comme du clavier ; un diagnostic qui disparaît l'efface au lieu de
+  laisser un verdict périmé.
+- **Un bouton, pas un lien** : la pastille n'entre pas dans le mécanisme de
+  marque du sommaire (`marquerLecture` suit `.sommaire a`) — sans quoi la
+  position de lecture aurait marqué la veille à la place de la section lue.
+- **La hauteur de la barre se mesure** : `mesurerCollant()` écrit la hauteur
+  réelle dans `--collant`, et `surveillerCollant()` la remesure à chaque
+  changement — ouverture du sommaire, rotation, zoom du texte. La même variable
+  sert au décalage des ancres (`scroll-margin-top`) et à la colle du ruban :
+  les deux barres se touchent exactement, sans fente ni recouvrement. Le repli
+  du CSS dit maintenant la vérité (44 px et 58 px) pour les navigateurs sans
+  JavaScript, et une barre non mesurable — absente, masquée — n'écrase rien.
+- **Le ruban devient une carte sur un téléphone** : titre d'abord, verdict en
+  clair sur toute la largeur (il n'a plus à être tronqué, c'est lui qui porte le
+  message), puis les quatre commandes en deux colonnes égales, chacune assez
+  haute pour le doigt.
+- **La pastille ne s'imprime pas** : la barre du téléphone n'a rien à faire sur
+  une feuille, où le ruban dit déjà tout.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -366,6 +407,11 @@ quelqu'un réintroduit les défauts mesurés plus haut.
 - ce que le navigateur décidait seul : `color-scheme:dark` déclaré une fois et
   aucun `prefers-color-scheme`, `text-size-adjust:100%`, zoom laissé libre, et
   **toute** surface déclarant un défilement qui retient son geste ;
+- la barre de commande : une seule barre collante sous 901 px, la pastille dans
+  la barre (et non dans la liste qui défile), un bouton et non un lien, cachée
+  sans diagnostic, son texte pris aux mêmes fonctions que le ruban, la hauteur
+  mesurée et suivie, le repli du CSS qui dit la vraie hauteur, le ruban en carte
+  sous 640 px, et rien de tout cela sur papier ;
 - le repère de lecture : `marquerLecture` appelée par le clic **et** par
   l'observateur, `aria-current` posé avec la classe, un identifiant inconnu qui
   efface la marque au lieu de la laisser ;
@@ -375,7 +421,7 @@ quelqu'un réintroduit les défauts mesurés plus haut.
   précède toute écriture ;
 - aucune règle de carte dans les blocs d'impression (le papier garde un tableau) ;
 
-Cinq fichiers de tests **exécutent** le code, ils ne le relisent pas :
+Six fichiers de tests **exécutent** le code, ils ne le relisent pas :
 
 - `tests/test_defilement_tableaux.py` fait tourner l'enveloppement des tableaux
   sur un DOM minimal et vérifie qu'un seul tableau est enveloppé, que la région
@@ -405,7 +451,13 @@ et un tableau devenu incohérent rend sa marque. Un sabotage volontaire du
 script (l'étiquette refusée ignorée) a été posé puis retiré pour vérifier que ces
 contrôles mordent.
 
-Le DOM minuscule commun à trois de ces fichiers vit dans `tests/dom_minimal.mjs` :
+`tests/test_barre_commande.py` exécute la barre : une hauteur mesurable est
+écrite dans `--collant`, une hauteur nulle laisse la valeur de repli en place,
+l'observateur suit bien la barre et rappelle la mesure quand elle grandit, la
+pastille dit le niveau en toutes lettres (« hors-sol · 12 alerte(s) »), un
+diagnostic disparu l'efface et une pastille absente ne fait rien jeter.
+
+Le DOM minuscule commun à quatre de ces fichiers vit dans `tests/dom_minimal.mjs` :
 il fournit classes, attributs, enfants et ordre du document, et rien d'autre.
 
 
@@ -429,3 +481,7 @@ il fournit classes, attributs, enfants et ordre du document, et rien d'autre.
 - **`:has()`** : les quatre règles qui rendent la place supposent `:has()`. Sans
   lui, les cartes s'affichent quand même, dans une boîte qui garde son plafond de
   hauteur — une dégradation, pas une rupture.
+
+- **La pastille est un résumé** : elle dit le niveau et le nombre d'alertes, pas
+  lesquelles. Le détail reste dans la console, à un geste de là — et en dessous
+  de 901 px, la feuille de style n'affirme plus que la veille soit collante.

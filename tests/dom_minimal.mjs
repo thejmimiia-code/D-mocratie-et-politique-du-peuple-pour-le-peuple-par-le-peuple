@@ -53,6 +53,27 @@ export class Element {
     this.classList.valeurs = new Set(String(valeur).split(/\s+/).filter(Boolean));
   }
 
+  /** `hidden` est un attribut, pas un simple drapeau : on le tient synchronisé. */
+  get hidden() { return this.hasAttribute("hidden"); }
+  set hidden(valeur) {
+    if (valeur) this.setAttribute("hidden", "");
+    else this.removeAttribute("hidden");
+  }
+
+  /** Le style en ligne : seules les propriétés personnalisées sont écrites ici. */
+  get style() {
+    if (!this._style) {
+      this._style = {
+        valeurs: {},
+        setProperty(nom, valeur) { this.valeurs[nom] = String(valeur); },
+        getPropertyValue(nom) {
+          return Object.prototype.hasOwnProperty.call(this.valeurs, nom) ? this.valeurs[nom] : "";
+        },
+      };
+    }
+    return this._style;
+  }
+
   setAttribute(nom, valeur) { this.attributs[nom] = String(valeur); }
   getAttribute(nom) {
     return Object.prototype.hasOwnProperty.call(this.attributs, nom) ? this.attributs[nom] : null;
@@ -126,7 +147,12 @@ export class Document {
   constructor() {
     this.body = new Element("body");
     this.racine = this.body;
+    this.documentElement = new Element("html");
   }
   createElement(balise) { return new Element(balise); }
   querySelectorAll(selecteur) { return this.racine.querySelectorAll(selecteur); }
+  getElementById(identifiant) {
+    return this.racine.descendants().find(noeud => noeud.getAttribute("id") === String(identifiant))
+      || null;
+  }
 }

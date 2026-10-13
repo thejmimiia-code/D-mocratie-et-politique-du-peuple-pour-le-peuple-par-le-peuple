@@ -1347,3 +1347,147 @@ class TestCeQueLeNavigateurDecideToutSeul(unittest.TestCase):
                 with self.subTest(selecteur=morceau.strip()):
                     self.assertTrue([c for c in classes if c in couvertes],
                                     f"{morceau.strip()} défile sans retenir son geste")
+
+
+def blocs_de_media(css):
+    """Découpe la feuille en blocs `@media` : requête, contenu, position.
+
+    Un `@media` se termine à son accolade fermante, pas à la première ligne
+    `}` : quatre blocs portent la même requête de 640 px, et chercher la
+    première occurrence d'une règle ne dit pas dans quel bloc on est tombé.
+    """
+    blocs = []
+    for trouve in re.finditer(r"@media[^{]*\{", css):
+        creux, rang = 1, trouve.end()
+        while creux and rang < len(css):
+            if css[rang] == "{":
+                creux += 1
+            elif css[rang] == "}":
+                creux -= 1
+            rang += 1
+        blocs.append((trouve.group(0)[:-1].strip(), css[trouve.end():rang - 1], trouve.start()))
+    return blocs
+
+
+class TestLaBarreDeCommande(unittest.TestCase):
+    """Une seule barre collante quand l'écran se rétrécit, et la veille y reste.
+
+    Deux barres se disputaient le haut de la page : le sommaire et le ruban de
+    veille, collés tous les deux à quarante-quatre pixels du bord — l'un
+    par-dessus l'autre, ou avec une fente par laquelle on voyait défiler le
+    fond. Sous 901 px il n'y a de place que pour une barre : c'est le sommaire,
+    qui porte la navigation, et la veille y garde la parole par sa pastille.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
+        cls.script = _script(cls.page)
+        cls.entete = cls.page[cls.page.index('<nav class="sommaire"'):cls.page.index('</nav>')]
+        cls.blocs = blocs_de_media(cls.css)
+
+    def _regle(self, requete, motif):
+        """Le contenu du bloc `@media` qui porte cette requête **et** ce motif."""
+        trouves = [contenu for nom, contenu, _ in self.blocs
+                   if requete in nom and motif in contenu]
+        self.assertEqual(len(trouves), 1,
+                         f"aucun bloc « {requete} » ne porte « {motif} » (ou plusieurs le portent)")
+        return trouves[0]
+
+    def test_la_pastille_est_dans_la_barre_et_hors_de_la_liste(self):
+        nav = self.entete
+        self.assertIn('class="sommaire-veille"', nav)
+        self.assertIn('id="sommaire-veille"', nav)
+        # Avant la liste : la barre la garde à l'écran même liste refermée, et
+        # elle ne défile pas avec les liens quand ils débordent.
+        self.assertLess(nav.index('id="sommaire-veille"'), nav.index('class="sommaire-liste"'))
+        self.assertNotIn('id="sommaire-veille"', nav[nav.index('class="sommaire-liste"'):])
+
+    def test_la_pastille_est_un_bouton_et_non_un_lien(self):
+        depart = self.entete.index('id="sommaire-veille"')
+        morceau = self.entete[depart - 200:depart]
+        self.assertIn("<button", morceau)
+        fin = self.entete.index(">", depart)
+        self.assertIn('onclick="allerAuConsole()"', self.entete[depart:fin],
+                      "un bouton, pas un lien : il ne doit pas prendre la marque du sommaire")
+        self.assertIn("data-aide=", self.entete[depart:fin])
+        self.assertIn("hidden", self.entete[depart:fin], "rien à dire avant le premier diagnostic")
+
+    def test_la_pastille_reste_cachee_sans_diagnostic_ni_au_large(self):
+        self.assertIn(".sommaire-veille{display:none;", self.css)
+        bloc = self._regle("max-width:900px", "display:inline-flex")
+        self.assertIn(".sommaire-veille:not([hidden])", bloc)
+
+    def test_une_seule_barre_collante_sous_901_px(self):
+        bloc = self._regle("max-width:900px", ".ruban-veille{position:static}")
+        self.assertIn(".sommaire-liste{flex:1;min-width:0}", bloc)
+        # Au large, le ruban se colle exactement sous la barre : même variable
+        # pour la mesure et pour la colle, donc pas de fente entre les deux.
+        large = self._regle("min-width:641px", ".ruban-veille{top:var(--collant)}")
+        self.assertIn(".sommaire{position:sticky", large)
+
+    def test_le_repli_de_la_variable_dit_la_vraie_hauteur(self):
+        """Sans JavaScript, la valeur de repli ne doit pas être une devinette.
+
+        La barre fait 44 px au large (un lien est la seule hauteur) et 58 px en
+        petit écran (bouton tactile de 44 px plus les marges). Cinquante et
+        quarante-quatre annonçaient autre chose : les ancres atterrissaient sous
+        la barre, et le ruban se collait à la mauvaise distance.
+        """
+        for requete, valeur in (("min-width:641px", "44px"), ("max-width:640px", "58px")):
+            with self.subTest(requete=requete):
+                bloc = self._regle(requete, f":root{{--collant:{valeur}}}")
+                self.assertIn(f":root{{--collant:{valeur}}}", bloc)
+        self.assertIn("scroll-margin-top:calc(var(--collant) + 10px)", self.css)
+
+    def test_la_hauteur_de_la_barre_se_mesure_et_se_suit(self):
+        self.assertIn("function mesurerCollant(", self.script)
+        self.assertIn("setProperty('--collant', hauteur + 'px')", self.script)
+        self.assertIn("function surveillerCollant(", self.script)
+        self.assertIn("new ResizeObserver(function(){ mesurerCollant(); })", self.script)
+        self.assertIn("observateur.observe(barre);", self.script)
+        self.assertIn("surveillerCollant();", self.script)
+        bascule = self.script[self.script.index("function basculerSommaire("):]
+        bascule = bascule[:bascule.index("\nfunction ")]
+        self.assertIn("mesurerCollant();", bascule,
+                      "le sommaire ouvert est plus haut : la mesure doit suivre")
+
+    def test_la_mesure_ne_casse_rien_quand_elle_n_a_pas_de_barre(self):
+        debut = self.script.index("function mesurerCollant(")
+        corps = self.script[debut:self.script.index("\nfunction ", debut + 1)]
+        self.assertIn("typeof barre.getBoundingClientRect !== 'function'", corps)
+        self.assertIn("if (hauteur <= 0) return 0;", corps,
+                      "une barre masquée ne remet pas la variable à zéro")
+        self.assertIn("typeof ResizeObserver !== 'function'", self.script,
+                      "sans observateur, la valeur de repli du CSS reste en place")
+
+    def test_la_veille_dit_la_meme_chose_dans_la_barre_et_dans_le_ruban(self):
+        debut = self.script.index("function peindreVeilleCourte(")
+        corps = self.script[debut:self.script.index("\nfunction ", debut + 1)]
+        self.assertIn("classeNiveau(diagnostic.niveau_global)", corps)
+        # Le mot du niveau vient de la même table que le ruban : une pastille
+        # qui écrirait son niveau en dur finirait par contredire la console.
+        self.assertIn(
+            "pastille.textContent = `${etiquetteNiveau(diagnostic.niveau_global)} · ${alertes}"
+            " alerte(s)`;",
+            corps)
+        self.assertIn("pastille.hidden = true;", corps,
+                      "un diagnostic disparu efface la pastille au lieu de laisser un ancien verdict")
+        console = self.script[self.script.index("function renderConsole("):]
+        console = console[:console.index("\nfunction ", 1)]
+        self.assertEqual(console.count("peindreVeilleCourte("), 2,
+                         "appelée avec le diagnostic, et sans lui quand il n'y en a pas")
+
+    def test_le_ruban_devient_une_carte_lisible_sur_un_telephone(self):
+        bloc = self._regle("max-width:640px", ".ruban-veille .ruban-actions{")
+        self.assertIn("grid-template-columns:repeat(2,minmax(0,1fr))", bloc)
+        self.assertIn("min-height:44px", bloc, "quatre commandes, quatre cibles au doigt")
+        self.assertIn("white-space:normal", bloc,
+                      "le verdict porte le message : il ne se tronque plus")
+
+    def test_la_pastille_ne_s_imprime_pas(self):
+        zones = [contenu for nom, contenu, _ in self.blocs if "print" in nom]
+        self.assertTrue(zones, "aucun bloc d'impression")
+        self.assertTrue(any(".sommaire-veille" in zone and "display:none" in zone for zone in zones),
+                        "la barre du téléphone n'a rien à faire sur la feuille")

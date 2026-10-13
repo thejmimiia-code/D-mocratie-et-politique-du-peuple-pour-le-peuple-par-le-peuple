@@ -6,6 +6,14 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Une seule barre collante quand l'écran se rétrécit, et la veille reste au courant
+
+- **Deux barres se disputaient le haut de l'écran.** Le sommaire était collant à toutes les largeurs, le ruban de veille aussi (`top:0`) : sur un téléphone, la veille passait par-dessus le menu (z-index 60 contre 56) et le masquait. Sous **901 px**, il n'y a plus qu'une barre collante — le sommaire, qui porte la navigation ; le ruban reprend sa place dans le flux, en carte lisible.
+- **La veille garde la parole dans la barre** : `#sommaire-veille` écrit le niveau en trois mots (« vigilance · 3 alerte(s) »), coloré **et** écrit, et mène d'un geste au détail des seuils. Son texte vient de `classeNiveau` et `etiquetteNiveau` — les mêmes fonctions que le ruban — donc les deux ne peuvent pas diverger ; `hidden` la tient hors de l'écran et du clavier tant qu'aucun diagnostic n'est connu, et un diagnostic disparu l'efface au lieu de laisser un verdict périmé. C'est un bouton, pas un lien : la marque de lecture du sommaire (`marquerLecture` suit `.sommaire a`) ne la prend jamais pour la section courante.
+- **La hauteur de la barre se mesure au lieu de s'écrire.** `--collant` valait 50 px au large et 44 px en petit écran ; la barre en fait 44 et 58. Les ancres atterrissaient **sous** la barre — le titre de la section visée restait caché — et le ruban se collait 6 px trop bas, laissant une fente par laquelle on voyait défiler la page. `mesurerCollant()` écrit la hauteur réelle, `surveillerCollant()` la suit (ouverture du sommaire, rotation, zoom), et la même variable sert au décalage des ancres et à la colle du ruban : les deux barres se touchent exactement. Le repli du CSS dit désormais la vérité (44 px / 58 px) pour les navigateurs sans JavaScript, et une barre non mesurable n'écrase rien.
+- **Le ruban devient une carte sur un téléphone** : titre d'abord, verdict en clair sur toute la largeur — il n'est plus tronqué, c'est lui qui porte le message —, puis les quatre commandes en deux colonnes égales de 44 px. Sur papier, la pastille de la barre ne s'imprime pas.
+- **Garde-fous** : `tests/test_interface.py::TestLaBarreDeCommande` (10 contrôles statiques, dont le découpage des blocs `@media` par accolades équilibrées) et `tests/test_barre_commande.py` (10 contrôles exécutés sous Node). Un sabotage volontaire — le niveau écrit en dur dans la pastille — a été posé puis retiré : les deux harnais l'attrapent.
+
 ### Ce que le navigateur décidait à sa façon : surfaces natives, taille du texte, geste au bord
 
 - **`color-scheme:dark`** déclaré une fois dans `:root` : barres de défilement, curseurs, cases, menus natifs et le fond derrière la page passent en sombre — jusqu'ici le navigateur les peignait en clair. La page ne suit pas le réglage du système (la palette M.R.S.C. est la seule) et un test refuse l'arrivée d'un second thème.
