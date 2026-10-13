@@ -3,7 +3,7 @@
 `observations_synthetiques.jsonl` sert uniquement aux tests du registre temporel.
 Les noms FICTIF_A/B/C, dates, sources `synthetic://` et étiquettes sont inventés.
 Aucun événement réel, bilan humain, pays ou probabilité de guerre n'est représenté.
-Licence : MIT, comme le dépôt. Protocole : `docs/RD_VALIDATION_TEMPORELLE.md`.
+Licence : GPL-3.0, comme le dépôt. Protocole : `docs/RD_VALIDATION_TEMPORELLE.md`.
 
 Construction déterministe, indice `i` de 0 à 23 pour janvier 2020 à décembre 2021 :
 
@@ -22,7 +22,8 @@ Ce jeu ne doit jamais être intégré à une étude de performance empirique ré
 ## Fixture du schéma GED
 
 `ged_schema_synthetique.csv` et `contrat_ged_synthetique.json` sont également
-entièrement inventés sous licence MIT. Les identifiants numériques et noms ne
+entièrement inventés, couverts par la licence du dépôt (GPL-3.0). Les
+identifiants numériques et noms ne
 représentent pas des événements UCDP. La mention 26.1 désigne le schéma testé,
 pas une provenance du contenu. Cas couverts : date exacte, intervalle ambigu,
 violence de type 3, doublon, événement hors périmètre et mois sans enregistrement.

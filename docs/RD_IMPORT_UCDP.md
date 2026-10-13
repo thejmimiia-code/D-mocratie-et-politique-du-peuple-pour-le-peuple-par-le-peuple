@@ -151,7 +151,7 @@ preuve d'exhaustivité. La période doit être clôturée avant la publication d
 Pour `nature=observee`, la licence attendue est `CC-BY-4.0` et la source doit être
 HTTPS. Cela ne certifie ni le domaine ni le contenu : un opérateur doit vérifier
 la provenance. Les fixtures emploient `synthetique`, une source `synthetic://` et
-la licence MIT du dépôt, **jamais une fausse attribution de données à UCDP**.
+la licence du dépôt (GPL-3.0), **jamais une fausse attribution de données à UCDP**.
 
 Le rapport contient :
 

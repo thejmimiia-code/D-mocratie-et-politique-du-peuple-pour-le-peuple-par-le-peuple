@@ -3,7 +3,7 @@
 > Modèle systémique ouvert : réglez les leviers de politique publique et voyez, échelon par échelon, l'effet sur les budgets, la dette et les services publics.
 
 Adresse canonique : <https://d-mocratie-et-politique-du-peuple-p.vercel.app/>
-Code source (licence MIT) : [dépôt du simulateur](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple)
+Code source (licence GPL-3.0) : [dépôt du simulateur](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple)
 Présentation par le M.R.S.C : [page du site](https://thejmimiia-code.github.io/MRSC/simulateur.html)
 
 Ce fichier est engendré par `simulateur/surface_publique.py` à partir du

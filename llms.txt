@@ -17,7 +17,7 @@ page, et le site du M.R.S.C en propose une troisième, présentée à la main.
 - [Copie de secours, même page](https://simulateur-macro-politique.onrender.com/) : autre hébergeur, même moteur, si le premier ne répond pas.
 - [Présentation du M.R.S.C](https://thejmimiia-code.github.io/MRSC/simulateur.html) : ce que l'outil fait et ne fait pas, en clair, sans JavaScript.
 - [Le contenu complet en un fichier](https://d-mocratie-et-politique-du-peuple-p.vercel.app/llms-full.txt) : le catalogue des leviers, les domaines, les scénarios, les sources — tout en texte.
-- [Code source du moteur](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple) : licence MIT, historique complet, tests.
+- [Code source du moteur](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple) : licence GPL-3.0, historique complet, tests.
 
 ## La méthode, les données et les limites
 

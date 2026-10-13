@@ -79,8 +79,11 @@ code ouvert, financé par personne, que de tenir une liste à jour.
 
 **`Content-Signal`** (contentsignals.org) est écrit explicitement : c'est la
 convention émergente lue par les robots qui la connaissent. Recherche, lecture
-pour réponse assistée et entraînement sont autorisés — la licence MIT le dit
-déjà, l'écrire ne coûte rien et évite un doute.
+pour réponse assistée et entraînement sont autorisés — le dépôt est ouvert
+(GPL-3.0) et ses textes sont faits pour être lus. L'écrire ne coûte rien et
+évite un doute. Le nom de cette licence n'est pas recopié : il est **lu** dans
+le fichier `LICENSE` (`simulateur/surface_publique.py`), parce qu'il avait été
+recopié faux — voir `RD_PREUVE_ET_OUTILLAGE.md`, § 6.
 
 **`/api/` est fermé, et c'est le seul.** Ce sont des points de calcul, pas des
 pages : indexer `/api/simuler` ne remplit les résultats que de pages vides, et
