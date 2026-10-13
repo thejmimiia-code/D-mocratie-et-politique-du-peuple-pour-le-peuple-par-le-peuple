@@ -27,6 +27,7 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from simulateur.classes_leviers import serie_classes
 from simulateur.domaines import (
     DOMAINES,
     SPECS,
@@ -401,6 +402,11 @@ class SortieSimulation:
     flux_annuels: list[dict[str, Any]] = field(default_factory=list)
     flux_reference: list[dict[str, Any]] = field(default_factory=list)
     domaines_reference: list[dict[str, Any]] = field(default_factory=list)
+    #: Totaux par classe de leviers (recettes, économies, dépenses, règles,
+    #: monde) année par année, calculés ici et non dans la page : l'interface
+    #: affiche la lecture du moteur, elle ne la refait pas.
+    classes_annuelles: list[dict[str, Any]] = field(default_factory=list)
+    classes_reference: list[dict[str, Any]] = field(default_factory=list)
 
     def en_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -571,6 +577,10 @@ def simuler(parametres: dict[str, float] | None = None,
         flux_annuels=[{"annee": i + 1, **flux} for i, flux in enumerate(flux_annee)],
         flux_reference=[{"annee": i + 1, **flux} for i, flux in enumerate(flux_ref)],
         domaines_reference=[d.en_dict() for d in domaines_ref],
+        classes_annuelles=serie_classes(
+            [{"annee": i + 1, **flux} for i, flux in enumerate(flux_annee)]),
+        classes_reference=serie_classes(
+            [{"annee": i + 1, **flux} for i, flux in enumerate(flux_ref)]),
     )
 
 

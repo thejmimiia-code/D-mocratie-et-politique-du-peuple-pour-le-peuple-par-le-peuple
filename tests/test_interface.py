@@ -220,6 +220,98 @@ class TestCascadeDesCinqEchelons(unittest.TestCase):
         self.assertIn("renderStrates", HTML_PAGE)
 
 
+class TestClassesEtCascadeDuPlan(unittest.TestCase):
+    """La carte des classes et la cascade : ce que la page promet, en clair."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.script = _script(HTML_PAGE)
+
+    def test_les_classes_sont_expliquees_avant_les_curseurs(self):
+        """On lit d'abord où va l'argent, ensuite on règle les leviers."""
+        self.assertIn('id="section-classes"', self.page)
+        self.assertLess(self.page.index('id="section-classes"'),
+                        self.page.index('id="section-leviers"'))
+
+    def test_la_legende_la_balance_et_la_cascade_sont_dans_la_page(self):
+        for identifiant in ("classes-legende", "classes-filtres", "balance-classes",
+                            "grille-classes", "classes-note",
+                            "cascade-classes", "cascade-marches", "cascade-note"):
+            with self.subTest(identifiant=identifiant):
+                self.assertIn(f'id="{identifiant}"', self.page)
+
+    def test_la_cascade_dessine_les_marches_et_se_referme_sur_le_solde(self):
+        self.assertIn("function renderCascade", self.script)
+        self.assertIn("function marchesCascade", self.script)
+        self.assertIn("function contributionClasse", self.script)
+        # Le solde de la cascade est celui du moteur : la page n'additionne pas
+        # un total parallèle.
+        self.assertIn("renderCascade();", self.script)
+        self.assertIn("cascade-marches", self.script)
+        self.assertIn("cascade-montant", self.script)
+
+    def test_la_page_n_entre_jamais_les_unites_dans_le_solde(self):
+        """Les classes non monétaires viennent du catalogue, pas d'une liste cachée."""
+        self.assertIn("function monetaireDe", self.script)
+        self.assertIn("fiche.monetaire", self.script)
+        self.assertIn("montant_hors_budget_mde", self.script)
+
+    def test_l_annee_lue_se_choisit_sans_relancer_la_simulation(self):
+        """Changer d'année relit la section : la simulation, elle, ne bouge pas."""
+        for identifiant in ("classe-annee-prec", "classe-annee-courante",
+                            "classe-annee-suiv", "classe-rythme"):
+            with self.subTest(identifiant=identifiant):
+                self.assertIn(f'id="{identifiant}"', self.page)
+        for fonction in ("function changerAnneeClasses", "function renderRythme",
+                         "function classeAnneeAffichee", "function classeReferenceAffichee"):
+            with self.subTest(fonction=fonction):
+                self.assertIn(fonction, self.script)
+        corps = self.script[self.script.index("function changerAnneeClasses"):]
+        self.assertIn("renderClasses();", corps[:400])
+        self.assertNotIn("simuler(", corps[:400])
+
+    def test_aucune_teinte_de_classe_n_est_peinte_hors_variable(self):
+        """Une couleur de classe se déclare une fois, puis se lit par variable.
+
+        La page est intégrée au site M.R.S.C., dont la feuille surcharge la
+        palette : une teinte écrite en dur dans une règle de classe resterait
+        accrochée à l'ancienne palette au lieu de suivre celle du site.
+        """
+        debut = self.page.index("/* ══ Classes de leviers")
+        region = self.page[debut:self.page.index("@media print", debut)]
+        # On retire les usages de variables (et les replis écrits dedans) : il ne
+        # doit rester aucune couleur, sauf les voiles neutres blancs/noirs.
+        sans_variables = re.sub(r"var\((?:[^()]|\([^()]*\))*\)", "var()", region)
+        sans_variables = re.sub(r"color-mix\((?:[^()]|\([^()]*\))*\)", "color-mix()", sans_variables)
+        for couleur in re.findall(r"#[0-9a-fA-F]{3,8}\b|rgba?\([^)]*\)", sans_variables):
+            with self.subTest(couleur=couleur):
+                composantes = re.findall(r"\d+", couleur)
+                if couleur.startswith("#"):
+                    self.fail(f"teinte écrite en dur dans les règles de classes : {couleur}")
+                self.assertLessEqual(
+                    len(set(composantes[:3])), 1,
+                    f"seuls les voiles neutres sont admis ici, pas {couleur}")
+
+    def test_les_plateaux_de_la_balance_suivent_la_variable_de_classe(self):
+        for variable in ("--classe-recettes-fond", "--classe-depenses-fond"):
+            with self.subTest(variable=variable):
+                self.assertIn(f"{variable}:", self.page)
+        for cote in ("entrees", "sorties"):
+            with self.subTest(cote=cote):
+                self.assertRegex(
+                    self.page,
+                    rf"\.balance-cote\.{cote}\{{[^}}]*color-mix\(in srgb,var\(--classe-")
+
+    def test_les_barres_de_la_cascade_restent_visibles_sans_couleur(self):
+        """Impression et contrastes forcés : un contour remplace la teinte."""
+        forces = self.page[self.page.index("@media (forced-colors:active)"):]
+        forces = forces[:forces.index("@media print")]
+        self.assertIn(".cascade-piste .barre", forces)
+        impression = self.page[self.page.index("@media print"):]
+        self.assertIn(".cascade-piste .barre", impression[:2000])
+
+
 class TestControlesUtilisateur(unittest.TestCase):
     """L'utilisateur doit pouvoir tout piloter lui-même."""
 

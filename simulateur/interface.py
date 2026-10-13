@@ -47,15 +47,35 @@ HTML_PAGE = r"""<!DOCTYPE html>
   --bg:#0b1220; --panel:#131c2f; --panel-2:#1a2540; --border:#26324d;
   --texte:#e6edf7; --texte-dim:#93a3bd; --accent:#38bdf8; --vert:#22c55e;
   --rouge:#ef4444; --ambre:#f59e0b; --violet:#a855f7; --rose:#ec4899;
+  /* Accents M.R.S.C (charte du site : navy #1d3268, bleu #2958a2, vert #456d29,
+     or #e7a126, rouge #e55058). Sur fond sombre, on reprend les variantes
+     éclaircies déjà appliquées par le site à la page intégrée du simulateur :
+     le contraste requis par l'interface sombre est conservé, l'identité aussi. */
+  --mrsc-navy:#1d3268; --mrsc-bleu:#2958a2; --mrsc-vert:#456d29;
+  --mrsc-or:#e7a126; --mrsc-rouge:#e55058;
+  --mrsc-bleu-clair:#91b2e6; --mrsc-vert-clair:#9bc77a;
+  --mrsc-rouge-clair:#ff9295; --mrsc-or-clair:#f2c15f;
+  /* Une couleur ne porte jamais seule une information : chaque classe a aussi
+     un symbole, un libellé écrit et un motif de fond (voir .motif-*). */
+  --classe-recettes:#9bc77a; --classe-economies:#9bc77a;
+  --classe-depenses:#ff9295; --classe-regles:#91b2e6; --classe-monde:#f2c15f;
+  /* Teintes de fond des deux plateaux : déclarées ici, une seule fois, et
+     recalculées à l'usage par `color-mix` sur la variable de classe — pour que
+     la page suive la palette en vigueur (celle du site quand elle est
+     intégrée), sans qu'aucune teinte reste accrochée à l'ancienne. */
+  --classe-recettes-fond:rgba(155,199,122,.12);
+  --classe-depenses-fond:rgba(255,146,149,.12);
 }
+:focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
+
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Roboto,system-ui,sans-serif;background:
   radial-gradient(1200px 600px at 50% -10%,#16233d 0%,var(--bg) 60%);
   color:var(--texte);min-height:100vh;padding:18px;line-height:1.45}
 .conteneur{max-width:1560px;margin:0 auto}
 a{color:var(--accent)}
-header.entete{background:linear-gradient(135deg,#12305c,#2b1e56);border:1px solid var(--border);
-  border-radius:14px;padding:18px 22px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+header.entete{background:linear-gradient(135deg,var(--mrsc-navy),#26375f);border:1px solid var(--border);
+  border-color:#344b79;border-radius:14px;padding:18px 22px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
 header.entete h1{font-size:1.45rem;letter-spacing:.2px}
 header.entete p{color:var(--texte-dim);font-size:.88rem;margin-top:4px}
 .barre-contexte{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
@@ -73,7 +93,7 @@ button{font-family:inherit;font-size:.82rem;cursor:pointer;border-radius:9px;bor
   background:var(--panel-2);color:var(--texte);padding:8px 13px;transition:.15s}
 button:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
 button:disabled{opacity:.45;cursor:not-allowed}
-button.primaire{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#1d4ed8}
+button.primaire{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu)}
 button.discret{background:transparent}
 section.bloc{background:var(--panel);border:1px solid var(--border);border-radius:14px;
   padding:16px;margin-bottom:14px}
@@ -103,6 +123,168 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .leviers-grille{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
 .famille{background:var(--panel-2);border:1px solid var(--border);border-radius:11px;padding:12px}
 .famille h3{font-size:.84rem;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px}
+
+/* ══ Classes de leviers : ce qui entre (vert), ce qui sort (rouge) ══════════
+   Cinq classes, un seul vocabulaire visuel : une couleur M.R.S.C, un symbole,
+   un libellé écrit et un motif de fond. Le motif et le symbole suffisent quand
+   la couleur disparaît (daltonisme, impression noir et blanc, contraste
+   renforcé, couleurs forcées). Aucune information n'est portée par la teinte
+   seule. */
+.motif-uni{background-image:none}
+.motif-hachure,[data-motif="hachure"]{background-image:repeating-linear-gradient(45deg,
+  var(--teinte-motif,rgba(155,199,122,.18)) 0 5px,transparent 5px 11px)}
+.motif-pointille,[data-motif="pointille"]{background-image:radial-gradient(var(--teinte-motif,rgba(145,178,230,.34)) 1px,transparent 1.6px);
+  background-size:9px 9px}
+.classe-pastille{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--couleur-classe,var(--border));
+  border-radius:999px;padding:1px 8px;font-size:.66rem;line-height:1.7;color:var(--couleur-classe,var(--texte));
+  background:var(--fond-classe,transparent);white-space:nowrap}
+.classe-pastille .symbole{font-weight:800;font-size:.72rem;font-variant-numeric:tabular-nums}
+.classe-carte{border:1px solid var(--border);border-left:5px solid var(--couleur-classe);
+  border-radius:12px;padding:12px 13px;background:var(--fond-classe);position:relative;overflow:hidden}
+.classe-carte h3{font-size:.9rem;margin:0 0 2px;display:flex;align-items:center;gap:7px}
+.classe-carte .question{font-size:.76rem;color:var(--texte);font-weight:600;margin:6px 0 4px}
+.classe-carte .definition{font-size:.72rem;color:var(--texte-dim);line-height:1.5}
+.classe-carte .chiffres{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:9px;align-items:baseline}
+.classe-carte .chiffre{font-size:1.05rem;font-weight:700;color:var(--couleur-classe);font-variant-numeric:tabular-nums}
+.classe-carte .chiffre small{display:block;font-size:.64rem;font-weight:400;color:var(--texte-dim)}
+.classe-carte .pied{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;
+  border-top:1px dashed var(--border);padding-top:8px;font-size:.68rem;color:var(--texte-dim)}
+.classe-carte .pied .bouton{font-size:.68rem;padding:4px 9px}
+.classe-carte .motif-legende{position:absolute;inset:0;opacity:.5;pointer-events:none;z-index:0}
+.classe-carte > *{position:relative;z-index:1}
+.balance{margin:12px 0 16px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);padding:12px 14px}
+.balance-titre{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
+.balance-titre b{font-size:.86rem}
+.balance-titre .verdict{font-size:.8rem;font-weight:700}
+.balance-plateau{display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:10px;margin-top:12px}
+.balance-cote{border:1px solid var(--border);border-radius:10px;padding:9px 11px;min-height:96px;
+  display:flex;flex-direction:column;justify-content:flex-end;gap:3px}
+/* Les deux plateaux se teintent de **leur** variable de classe : quand la page
+   est intégrée au site, sa palette (CSS_RETOUR de `outils/construire-simulateur.py`)
+   reprend la main. La première ligne est le repli des navigateurs sans
+   `color-mix` ; la seconde recalcule la teinte sur la variable de classe. */
+.balance-cote.entrees{border-color:var(--classe-recettes);background:var(--classe-recettes-fond);
+  background:color-mix(in srgb,var(--classe-recettes) 14%,transparent)}
+.balance-cote.sorties{border-color:var(--classe-depenses);background:var(--classe-depenses-fond);
+  background:color-mix(in srgb,var(--classe-depenses) 14%,transparent)}
+.balance-cote .etiquette{font-size:.68rem;text-transform:uppercase;letter-spacing:.5px;color:var(--texte-dim)}
+.balance-cote .montant{font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums}
+.balance-cote .menage{font-size:.7rem;color:var(--texte-dim)}
+.balance-cote .jauge-classe{height:9px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;
+  border:1px solid var(--border);margin-top:6px}
+.balance-cote .jauge-classe span{display:block;height:100%}
+.balance-cote.entrees .jauge-classe span{background:var(--classe-recettes)}
+.balance-cote.sorties .jauge-classe span{background:var(--classe-depenses)}
+.balance-axe{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:74px}
+.balance-axe .fleche{font-size:1.5rem;color:var(--texte-dim);line-height:1}
+.balance-axe .net{font-size:.8rem;font-weight:700;text-align:center;font-variant-numeric:tabular-nums}
+.balance-axe .net.gain{color:var(--classe-recettes)}
+.balance-axe .net.cout{color:var(--classe-depenses)}
+.balance-axe .net.neutre{color:var(--texte-dim)}
+.balance-detail{margin-top:10px;font-size:.7rem;color:var(--texte-dim);line-height:1.5}
+/* Le rythme : la même lecture, année par année. On avance d'un an et tout le
+   bloc se relit — balance, cascade, cartes — sans relancer la simulation. */
+.annee-classes{display:inline-flex;align-items:center;gap:7px}
+.annee-classes button{font-size:.68rem;padding:3px 8px}
+.annee-classes .annee-courante{font-size:.74rem;font-weight:700;min-width:86px;text-align:center;
+  font-variant-numeric:tabular-nums}
+.annee-classes button:disabled{opacity:.45;cursor:not-allowed}
+.classe-rythme{margin-top:8px;font-size:.7rem;color:var(--texte-dim);line-height:1.5}
+.classe-rythme b{color:var(--texte)}
+/* ══ La cascade du plan : l'ordre dans lequel le budget se construit ═══════
+   Un seul axe pour toutes les marches : chaque classe part du cumul laissé par
+   la précédente et le déplace de son montant — l'escalier se referme sur le
+   solde. Les classes « règles » et « monde » n'y entrent pas : leurs unités ne
+   sont pas des euros. */
+.cascade{margin-top:12px;border-top:1px dashed var(--border);padding-top:10px}
+.cascade-titre{display:flex;flex-wrap:wrap;gap:3px 12px;align-items:baseline;justify-content:space-between}
+.cascade-titre b{font-size:.8rem}
+.cascade-titre .legende{font-size:.66rem;color:var(--texte-dim);font-style:italic}
+.cascade-marches{list-style:none;margin:9px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.cascade-marche{border-left:3px solid var(--couleur-classe,var(--border));padding-left:8px}
+.cascade-ligne{display:grid;grid-template-columns:minmax(150px,1.15fr) minmax(96px,2.6fr) auto;
+  gap:9px;align-items:center}
+.cascade-nom{display:flex;flex-direction:column;gap:1px;font-size:.75rem;font-weight:600;line-height:1.25}
+.cascade-nom .tete{display:flex;gap:5px;align-items:baseline}
+.cascade-nom .symbole{color:var(--couleur-classe);font-weight:800;font-variant-numeric:tabular-nums}
+.cascade-nom small{font-weight:400;font-size:.64rem;color:var(--texte-dim)}
+.cascade-piste{position:relative;height:17px;border:1px solid var(--border);border-radius:5px;
+  background:rgba(255,255,255,.045);overflow:hidden}
+.cascade-piste i{position:absolute;display:block;border-radius:4px}
+.cascade-piste .zero{top:-2px;bottom:-2px;width:1px;background:var(--texte-dim);opacity:.45;border-radius:0}
+.cascade-piste .barre{top:1px;bottom:1px;background-color:var(--couleur-classe)}
+.cascade-piste .barre.hachure{background-image:repeating-linear-gradient(45deg,
+  var(--teinte-motif,rgba(255,255,255,.35)) 0 4px,transparent 4px 9px)}
+.cascade-piste .barre.pointille{background-image:radial-gradient(var(--teinte-motif,rgba(255,255,255,.35)) 1px,transparent 1.5px);
+  background-size:8px 8px}
+.cascade-montant{display:flex;flex-direction:column;align-items:flex-end;text-align:right;
+  font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--couleur-classe,var(--texte));white-space:nowrap}
+.cascade-montant small{font-weight:400;font-size:.63rem;color:var(--texte-dim)}
+.cascade-detail{margin-top:3px;font-size:.64rem;color:var(--texte-dim);line-height:1.6;
+  display:flex;flex-wrap:wrap;gap:4px 6px;align-items:baseline}
+.cascade-detail .puce-unite{cursor:default}
+.cascade-detail .reste{font-style:italic}
+.cascade-total{margin-top:2px;border-top:1px solid var(--border);border-left-color:var(--texte-dim);padding-top:8px}
+.cascade-note{margin-top:8px;font-size:.68rem;color:var(--texte-dim);line-height:1.5}
+.classes-legende{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.classes-legende button{cursor:pointer}
+.rampe{display:inline-flex;align-items:flex-end;gap:2px;height:22px;vertical-align:middle}
+.rampe i{display:block;width:5px;background:var(--couleur-classe,var(--texte-dim));border-radius:1px;opacity:.85}
+.rampe.vide i{background:var(--border)}
+.rampe-legende{font-size:.64rem;color:var(--texte-dim);margin-left:6px}
+.fiche-menage{margin-top:5px;padding:5px 8px;border:1px dashed var(--border);border-radius:8px;
+  font-size:.68rem;color:var(--texte-dim);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.fiche-menage b{color:var(--texte);font-variant-numeric:tabular-nums}
+.fiche-menage .statut{border:1px solid var(--ambre);border-radius:999px;padding:0 6px;color:var(--ambre);font-size:.62rem}
+.famille.classee{border-left:5px solid var(--couleur-classe);background-color:var(--fond-classe)}
+.famille .tete-famille{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:space-between;
+  border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:8px}
+.famille .tete-famille h3{border:none;padding:0;margin:0}
+.levier[data-classe]{border-left:4px solid var(--couleur-classe);background-color:var(--fond-classe);
+  border-radius:0 9px 9px 0;padding-left:9px}
+.chips-unites{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.puce-unite{border:1px solid var(--border);border-radius:999px;padding:1px 8px;font-size:.64rem;
+  color:var(--texte-dim);background:var(--panel-2);white-space:nowrap;cursor:help}
+.puce-unite b{color:var(--couleur-classe,var(--texte));font-variant-numeric:tabular-nums}
+.levier .classe-ligne{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:5px}
+.levier .classe-motif{font-size:.64rem;color:var(--texte-dim);font-style:italic;line-height:1.45}
+.levier .classe-motif.detail{margin-top:3px}
+.classes-filtres{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:0 0 10px;
+  padding:8px 10px;border:1px solid var(--border);border-radius:11px;background:var(--panel-2)}
+.classes-filtres .titre{font-size:.72rem;color:var(--texte-dim);text-transform:uppercase;letter-spacing:.5px;margin-right:2px}
+.classes-filtres button.actif{box-shadow:0 0 0 2px var(--couleur-classe) inset;background:var(--fond-classe)}
+@media (max-width:640px){
+  .balance-plateau{grid-template-columns:1fr;align-items:stretch}
+  .balance-axe{flex-direction:row;justify-content:center;min-width:0}
+  .cascade-ligne{grid-template-columns:1fr;gap:3px}
+  .cascade-montant{align-items:flex-start;text-align:left}
+  .cascade-nom{font-size:.78rem}
+}
+@media (prefers-reduced-motion:reduce){
+  .classe-carte,.levier[data-classe],.balance{transition:none;animation:none}
+}
+@media (forced-colors:active){
+  .classe-carte,.levier[data-classe],.famille.classee,.balance-cote,.classe-pastille{
+    border-color:CanvasText !important;background-image:none !important;background-color:Canvas !important;color:CanvasText !important}
+  .classe-pastille .symbole{forced-color-adjust:none}
+  /* La cascade garde ses barres visibles sans couleur : un contour suffit à
+     montrer l'ampleur et le sens, le chiffre signé reste écrit à côté. */
+  .cascade-piste{background:Canvas !important;border-color:CanvasText !important}
+  .cascade-piste .barre{background-color:Canvas !important;background-image:none !important;
+    border:2px solid CanvasText !important}
+  .cascade-piste .zero{background:CanvasText !important}
+  .cascade-montant{color:CanvasText !important}
+}
+@media print{
+  .classes-filtres,.balance-axe .fleche{display:none}
+  .classe-carte,.balance,.balance-cote,.levier,.famille{background:#fff !important;color:#000 !important;
+    border-color:#000 !important;box-shadow:none !important}
+  .classe-carte .definition,.classe-carte .pied,.balance-detail,.fiche-menage{color:#000 !important}
+  .cascade-piste{background:#fff !important;border-color:#000 !important}
+  .cascade-piste .barre{background-color:#fff !important;background-image:none !important;border:1px solid #000 !important}
+  .cascade-piste .zero{background:#000 !important}
+  .cascade-montant{color:#000 !important}
+}
 .levier{margin-bottom:11px}
 .levier .ligne{display:flex;justify-content:space-between;gap:8px;font-size:.79rem;align-items:baseline}
 .levier .nom{font-weight:500}
@@ -189,10 +371,10 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .provenance{font-size:.73rem;color:var(--texte-dim);max-height:210px;overflow:auto}
 .provenance div{padding:3px 0;border-bottom:1px dashed rgba(147,163,189,.15)}
 .onglets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.onglets button.actif{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#1d4ed8}
+.onglets button.actif{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu)}
 .onglets-strates{padding:7px;background:#0f172a;border:1px solid var(--border);border-radius:12px}
 .onglets-strates button{flex:1 1 118px;min-height:40px}
-.onglets-strates button[aria-selected="true"]{background:linear-gradient(135deg,#0284c7,#2563eb);border-color:#1d4ed8;color:#fff}
+.onglets-strates button[aria-selected="true"]{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu);color:#fff}
 .panneau-strate{display:none;min-width:0}
 .panneau-strate.actif{display:block}
 .strate-intro{font-size:.78rem;color:var(--texte-dim);line-height:1.6;margin:2px 0 12px}
@@ -516,6 +698,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <span class="etape">›</span>
     <a href="#section-leviers" onclick="marquerSommaire(this)">3. Régler</a>
     <span class="etape">›</span>
+    <a href="#section-classes" onclick="marquerSommaire(this)" data-aide="<b>Les 5 classes de leviers</b>La carte qui manquait : ce qui fait entrer de l'argent (vert), ce qui évite une dépense (vert hachuré), ce qui en engage (rouge), ce qui change les règles (bleu) et ce qui vient de l'extérieur (or).">🧩 Classes</a>
+    <span class="etape">›</span>
     <a href="#section-resultats" onclick="marquerSommaire(this)">4. Mesurer</a>
     <span class="etape">›</span>
     <a href="#section-audit" onclick="marquerSommaire(this)">5. Vérifier</a>
@@ -641,15 +825,64 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="grille scenarios" id="preset-grid"></div>
   </section>
 
+  <section class="bloc" id="section-classes">
+    <h2>🧩 Les 5 classes de leviers <span class="aide">la carte qui manquait : chaque levier porte une seule classe, un symbole, une couleur M.R.S.C et un motif — l'information reste lisible sans la couleur (impression, daltonisme, contraste renforcé)</span></h2>
+    <p class="strate-intro" id="classes-intro">Le catalogue s'organise en <b>5 classes</b> : <b>recettes</b> (ce qui entre), <b>économies d'efficacité</b> (ce qu'on arrête de payer à vide), <b>dépenses et investissements</b> (ce qui sort), <b>règles du jeu</b> (ce qui change la décision, pas les comptes) et <b>monde subi</b> (ce qui vient de l'extérieur). Chaque classe a sa couleur, son symbole, son motif de fond et sa phrase : cliquez une classe pour ne voir que ses leviers.</p>
+    <div class="classes-legende" id="classes-legende" role="group" aria-label="Légende des 5 classes"></div>
+    <div class="balance" id="balance-classes">
+      <div class="balance-titre">
+        <b>⚖️ La balance du plan</b>
+        <div class="annee-classes" role="group" aria-label="Année lue dans les classes">
+          <button type="button" class="discret" id="classe-annee-prec" onclick="changerAnneeClasses(-1)" data-aide="<b>Année précédente</b>Relit la balance, la cascade et les cinq cartes à l'année d'avant : un plan n'arrive pas en une fois, chaque levier a sa montée en charge.">‹ an précédent</button>
+          <span class="annee-courante" id="classe-annee-courante" aria-live="polite">dernière année</span>
+          <button type="button" class="discret" id="classe-annee-suiv" onclick="changerAnneeClasses(1)" data-aide="<b>Année suivante</b>Avance d'un an dans la même simulation : on voit le plan se remplir, levier par levier, jusqu'à son régime de fin de mandature.">an suivant ›</button>
+        </div>
+        <span class="verdict" id="balance-verdict">lancez une simulation pour peser les deux plateaux</span>
+      </div>
+      <div class="balance-plateau">
+        <div class="balance-cote entrees" id="balance-entrees">
+          <span class="etiquette">Ce qui entre <span aria-hidden="true">+</span></span>
+          <span class="montant" id="balance-entrees-montant">—</span>
+          <span class="menage" id="balance-entrees-menage">recettes nouvelles + économies d'efficacité</span>
+          <span class="jauge-classe"><span id="balance-jauge-entrees" style="width:0%"></span></span>
+        </div>
+        <div class="balance-axe" aria-hidden="false">
+          <span class="fleche" aria-hidden="true">⇄</span>
+          <span class="net neutre" id="balance-net">solde : —</span>
+        </div>
+        <div class="balance-cote sorties" id="balance-sorties">
+          <span class="etiquette">Ce qui sort <span aria-hidden="true">−</span></span>
+          <span class="montant" id="balance-sorties-montant">—</span>
+          <span class="menage" id="balance-sorties-menage">dépenses et investissements</span>
+          <span class="jauge-classe"><span id="balance-jauge-sorties" style="width:0%"></span></span>
+        </div>
+      </div>
+      <p class="balance-detail" id="balance-detail">Les montants viennent du moteur : chaque année simulée livre le montant de chaque levier, montée en charge comprise. Aucun total n'est saisi à la main.</p>
+      <p class="classe-rythme" id="classe-rythme">Le rythme du plan — combien d'effet arrive la première année, combien à la fin — s'affiche ici dès la première simulation.</p>
+      <div class="cascade" id="cascade-classes">
+        <div class="cascade-titre">
+          <b>🧭 La cascade du plan, marche par marche</b>
+          <span class="legende">un seul axe pour toutes les marches : chaque classe déplace le cumul, et l'escalier se referme sur le solde — ce qu'aucun total annuel ne montre</span>
+        </div>
+        <ol class="cascade-marches" id="cascade-marches"></ol>
+        <p class="cascade-note" id="cascade-note">La cascade se dessine dès la première simulation : elle montre dans quel ordre le plan se construit, du premier euro qui entre au solde. Les classes « règles » et « monde » en restent dehors : leurs unités ne sont pas des euros.</p>
+      </div>
+    </div>
+    <div class="grille classes" id="grille-classes"></div>
+    <p class="strate-intro" id="classes-note"></p>
+  </section>
+
   <section class="bloc" id="section-leviers">
     <h2>Vos leviers <span class="aide">tous les paramètres du catalogue, visibles et actionnables — chaque geste se répercute en direct ; la section « Nuances institutionnelles », juste en dessous, traduit chaque curseur en seuil et en délai de droit</span></h2>
     <div class="barre-leviers">
       <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre tous les leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
+      <button class="discret" id="btn-classes-seules" onclick="basculerClasseSeules()" data-aide="<b>Mes leviers seulement</b>Masque tout le catalogue sauf les leviers que vous avez déplacés : on relit son propre plan sans se perdre dans les 156 curseurs.">Mes leviers seulement</button>
       <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : le catalogue tient à l'écran tout en restant actionnable en direct.">
         <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> Vue compacte (une ligne par levier)
       </label>
     </div>
+    <div class="classes-filtres" id="classes-filtres" role="group" aria-label="Filtrer les leviers par classe"></div>
     <div class="leviers-grille" id="leviers-grille"></div>
   </section>
 
@@ -783,6 +1016,23 @@ let CATALOGUE = null;
 let CONTEXTE = null;
 let SORTIE = null;
 let PARAMS = {};
+/* Les 5 classes de leviers (recettes, économies, dépenses, règles, monde) :
+   fiches livrées par le catalogue, totaux recalculés depuis les flux du moteur
+   à chaque simulation, et filtre courant. */
+let CLASSES = {};
+let ORDRE_CLASSES = [];
+let DIVISEUR_MENAGES = null;
+let CLASSES_DEFINITION = '';
+let NOTE_SOLDE = '';
+let CLASSES_ANNEES = [];
+let CLASSES_REFERENCE = [];
+//: Année lue dans la section des classes (0 = première). `null` = dernière
+//: année simulée : c'est le régime de fin de mandature que l'on lit par défaut.
+let CLASSES_ANNEE_INDEX = null;
+let CLASSE_FILTRE = '';
+let LEVIERS_MODIFIES_SEULS = false;
+const FICHE_CLASSE_DEFAUT = {couleur:'var(--texte-dim)', couleur_html:'transparent',
+                             motif:'uni', verdict:'', libelle:'', question:'', definition:''};
 let NUANCES = null;   // dernier tableau des nuances institutionnelles
 let MARCHES = null;
 let ONGLET_STRATE_ACTIF = 'local';
@@ -900,7 +1150,9 @@ async function chargerCatalogue(){
   const reponse = await fetch('/api/catalogue');
   CATALOGUE = await reponse.json();
   PARAMS = Object.assign({}, CATALOGUE.parametres.defauts);
+  chargerClasses();
   renderLeviers('');
+  renderClasses();
   renderPresets();
 }
 
@@ -1665,6 +1917,515 @@ async function rafraichirDonnees(){
   if (SORTIE) simuler(false);
 }
 
+/* ══ Les 5 classes de leviers : lire un budget sans être économiste ════════
+   Le classement est décidé côté moteur (`simulateur/classes_leviers.py`) et
+   livré avec le catalogue : la page ne reclasse rien elle-même, elle affiche.
+   Les montants par classe sont recalculés ici à partir des flux annuels du
+   moteur (`flux_annuels`, clés `levier:<cle>`) : ce sont donc les montants du
+   modèle, montée en charge comprise, jamais une addition faite à la main.
+   Règle de lisibilité : couleur + symbole + libellé + motif. La couleur seule
+   ne porte jamais l'information. */
+function chargerClasses(){
+  const bloc = (CATALOGUE && CATALOGUE.parametres && CATALOGUE.parametres.classes) || null;
+  if (!bloc){ CLASSES = {}; ORDRE_CLASSES = []; return; }
+  CLASSES = {};
+  (bloc.classes || []).forEach(fiche => { CLASSES[fiche.cle] = fiche; });
+  ORDRE_CLASSES = bloc.ordre || Object.keys(CLASSES);
+  DIVISEUR_MENAGES = bloc.diviseur_menages || null;
+  CLASSES_DEFINITION = bloc.definition || '';
+  NOTE_SOLDE = bloc.note_solde || '';
+}
+function classeDe(cle){
+  const levier = levierParCle(cle);
+  return (levier && levier.classe) || null;
+}
+function ficheClasse(cle){
+  const nom = CLASSES[cle] ? cle : classeDe(cle);
+  return (nom && CLASSES[nom]) || null;
+}
+function ficheDe(cle){
+  return ficheClasse(cle) || FICHE_CLASSE_DEFAUT;
+}
+/* Un montant en milliards ne dit rien ; en euros par ménage, si. La conversion
+   affiche toujours son diviseur et son statut de vérification. */
+function eurosParMenage(montantMde){
+  const diviseur = (DIVISEUR_MENAGES && DIVISEUR_MENAGES.valeur) || 30000000;
+  return (Number(montantMde) || 0) * 1e9 / diviseur;
+}
+/* Le facteur d'un levier n'est un montant en euros que pour les trois classes
+   monétaires : un dollar de baril (classe « monde ») ou un drapeau 0/1 ne se
+   convertit pas en euros par ménage. La page ne le fait jamais. */
+function montantUnitairePossible(levier){
+  if (!levier) return false;
+  if (!(levier.classe === 'recettes' || levier.classe === 'economies' || levier.classe === 'depenses')) return false;
+  return Number(levier.facteur) !== 0;
+}
+function fmtMenage(montantMde){
+  const valeur = eurosParMenage(montantMde);
+  const arrondi = Math.abs(valeur) >= 100 ? fmt(valeur, 0) : fmt(valeur, 1);
+  return `${arrondi} €/ménage/an`;
+}
+function statutDiviseur(){
+  return (DIVISEUR_MENAGES && DIVISEUR_MENAGES.statut) || 'ordre de grandeur';
+}
+function rampeHtml(profil, couleur){
+  // Montée en charge déclarée au catalogue : une réforme ne produit pas ses
+  // effets dès la première année. Cinq barres, une par année.
+  const valeurs = (profil && profil.length ? profil : [0.4, 0.7, 0.9, 1, 1]);
+  const maxi = Math.max(...valeurs, 0.01);
+  const barres = valeurs.map((valeur, index) =>
+    `<i title="année ${index + 1} : ${Math.round(valeur * 100)} % du régime" `
+    + `style="height:${Math.max(3, Math.round(20 * valeur / maxi))}px"></i>`).join('');
+  return `<span class="rampe" style="--couleur-classe:${couleur || 'var(--texte-dim)'}" `
+    + `role="img" aria-label="montée en charge sur cinq ans : ${valeurs.map(v => Math.round(v * 100) + ' %').join(', ')}">`
+    + `${barres}</span>`;
+}
+/* Un montant signé, écrit comme on le lit : « +12,3 » ou « −12,3 ». Le signe
+   est porté par le chiffre, pas par la phrase : un plan d'austérité a des
+   montants négatifs dans la classe « dépenses », et les afficher en positif
+   ferait passer une coupe pour une dépense. */
+function fmtSigne(montantMde, precision){
+  const valeur = Number(montantMde) || 0;
+  const chiffres = fmt(Math.abs(valeur), precision === undefined ? 2 : precision);
+  return `${valeur < 0 ? '−' : '+'}${chiffres}`;
+}
+function sensDUnMontant(montantMde){
+  if (Math.abs(Number(montantMde) || 0) < 1e-9) return 'nul';
+  return Number(montantMde) > 0 ? 'positif' : 'negatif';
+}
+function rampeSerieHtml(valeurs, couleur, unite){
+  // Même dessin, mais avec les montants réellement calculés par le moteur,
+  // une barre par année simulée : on voit d'un coup d'œil si la mesure monte
+  // ou retombe, ce qu'aucun total annuel ne montre.
+  const serie = (valeurs && valeurs.length) ? valeurs : [0];
+  const maxi = Math.max(...serie.map(valeur => Math.abs(Number(valeur) || 0)), 0.01);
+  const etiquette = serie.map((valeur, index) =>
+    `année ${index + 1} : ${fmt(valeur, 2)} ${unite || 'Md€/an'}`).join(', ');
+  const barres = serie.map((valeur, index) =>
+    `<i title="${etiquette.split(', ')[index]}" `
+    + `style="height:${Math.max(3, Math.round(20 * Math.abs(Number(valeur) || 0) / maxi))}px"></i>`).join('');
+  return `<span class="rampe" style="--couleur-classe:${couleur || 'var(--texte-dim)'}" `
+    + `role="img" aria-label="${etiquette}">${barres}</span>`;
+}
+function pastilleClasse(cle, compacte){
+  const fiche = ficheClasse(cle);
+  if (!fiche) return '';
+  const texte = compacte ? fiche.libelle_court : fiche.libelle;
+  return `<span class="classe-pastille motif-${fiche.motif}" `
+    + `style="--couleur-classe:${fiche.couleur};--fond-classe:${fiche.couleur_html};`
+    + `--teinte-motif:${fiche.couleur_html}" `
+    + `data-aide="<b>Classe : ${fiche.libelle}</b>${fiche.question} ${fiche.verdict}. ${fiche.definition}">`
+    + `<span class="symbole" aria-hidden="true">${fiche.symbole}</span>${echapperTexte(texte)}</span>`;
+}
+/* Totaux par classe : le moteur les calcule (`classes_annuelles`), la page les
+   affiche. Elle ne reclasse aucun levier et n'additionne aucun montant
+   elle-même — ce que dit le solde est donc exactement ce que dit le modèle. */
+function calculerClasses(donnees){
+  CLASSES_ANNEES = (donnees && donnees.classes_annuelles) || [];
+  CLASSES_REFERENCE = (donnees && donnees.classes_reference) || [];
+  // L'année lue est choisie par le lecteur : elle survit à une nouvelle
+  // simulation tant qu'elle existe encore dans l'horizon simulé.
+  if (CLASSES_ANNEE_INDEX === null || CLASSES_ANNEE_INDEX >= CLASSES_ANNEES.length){
+    CLASSES_ANNEE_INDEX = Math.max(0, CLASSES_ANNEES.length - 1);
+  }
+  renderClasses();
+}
+function classeAnneeAffichee(){
+  if (!CLASSES_ANNEES.length) return null;
+  const rang = Math.max(0, Math.min(CLASSES_ANNEE_INDEX === null ? CLASSES_ANNEES.length - 1 : CLASSES_ANNEE_INDEX,
+                                 CLASSES_ANNEES.length - 1));
+  return CLASSES_ANNEES[rang];
+}
+function classeReferenceAffichee(){
+  if (!CLASSES_REFERENCE.length) return null;
+  const rang = CLASSES_ANNEE_INDEX === null ? CLASSES_REFERENCE.length - 1 : CLASSES_ANNEE_INDEX;
+  return CLASSES_REFERENCE[Math.max(0, Math.min(rang, CLASSES_REFERENCE.length - 1))];
+}
+function changerAnneeClasses(delta){
+  if (!CLASSES_ANNEES.length) return;
+  const rangActuel = CLASSES_ANNEE_INDEX === null ? CLASSES_ANNEES.length - 1 : CLASSES_ANNEE_INDEX;
+  CLASSES_ANNEE_INDEX = Math.max(0, Math.min(rangActuel + delta, CLASSES_ANNEES.length - 1));
+  renderClasses();
+}
+
+/* Le rythme : ce qu'un plan ne dit jamais d'un seul chiffre. Combien de son
+   effet arrive dès la première année, combien à la fin, et ce que la montée en
+   charge change entre les deux. Les comparaisons ne sont faites que si elles
+   ont un sens : un solde final nul ou de signe opposé n'a pas de pourcentage. */
+function renderRythme(){
+  const zone = document.getElementById('classe-rythme');
+  const courante = document.getElementById('classe-annee-courante');
+  const precedent = document.getElementById('classe-annee-prec');
+  const suivant = document.getElementById('classe-annee-suiv');
+  const annee = classeAnneeAffichee();
+  const rang = annee ? (CLASSES_ANNEE_INDEX === null ? CLASSES_ANNEES.length - 1 : CLASSES_ANNEE_INDEX) : 0;
+  if (courante) courante.textContent = annee ? `an ${annee.annee} / ${CLASSES_ANNEES.length}` : 'dernière année';
+  if (precedent) precedent.disabled = !annee || rang <= 0;
+  if (suivant) suivant.disabled = !annee || rang >= CLASSES_ANNEES.length - 1;
+  if (!zone) return;
+  if (!annee || !CLASSES_ANNEES.length){
+    zone.textContent = 'Le rythme du plan — combien d\u2019effet arrive la première année, combien à la fin — '
+      + 's\u2019affiche ici dès la première simulation.';
+    return;
+  }
+  const finale = CLASSES_ANNEES[CLASSES_ANNEES.length - 1];
+  const premiere = CLASSES_ANNEES[0];
+  const parts = [];
+  if (CLASSES_ANNEES.length > 1 && Math.abs(finale.solde_mde) > 0.05
+      && Math.sign(finale.solde_mde) === Math.sign(premiere.solde_mde)){
+    const part = Math.round(100 * premiere.solde_mde / finale.solde_mde);
+    parts.push(`l\u2019an 1 porte <b>${part} %</b> du solde de l\u2019an ${finale.annee} `
+      + `(${fmtSigne(premiere.solde_mde, 1)} contre ${fmtSigne(finale.solde_mde, 1)} Md€/an)`);
+  } else if (CLASSES_ANNEES.length > 1){
+    parts.push(`le solde se déplace de ${fmtSigne(premiere.solde_mde, 1)} Md€/an (an 1) à `
+      + `${fmtSigne(finale.solde_mde, 1)} Md€/an (an ${finale.annee}) — le rapport entre les deux `
+      + `n\u2019aurait pas de sens, il n\u2019est donc pas affiché`);
+  }
+  if (annee !== finale){
+    const ecart = annee.solde_mde - finale.solde_mde;
+    parts.push(`année lue : <b>an ${annee.annee}</b>, solde des classes ${fmtSigne(annee.solde_mde, 2)} Md€/an, `
+      + `soit ${fmtSigne(ecart, 2)} Md€/an par rapport au régime de fin de mandature`);
+  }
+  parts.push(`les cinq cartes portent aussi la courbe année par année : c\u2019est la montée en charge `
+    + `déclarée au catalogue, jamais une surprise de calcul`);
+  zone.innerHTML = `Rythme du plan : ${parts.join(' ; ')}.`;
+}
+function renderLegendeClasses(){
+  const zone = document.getElementById('classes-legende');
+  if (!zone) return;
+  zone.innerHTML = ORDRE_CLASSES.map(cle => {
+    const fiche = CLASSES[cle];
+    const actif = CLASSE_FILTRE === cle ? ' actif' : '';
+    return `<button type="button" class="classe-pastille motif-${fiche.motif}${actif}" `
+      + `style="--couleur-classe:${fiche.couleur};--fond-classe:${fiche.couleur_html};`
+      + `--teinte-motif:${fiche.couleur_html}" onclick="basculerClasse('${cle}')" `
+      + `aria-pressed="${CLASSE_FILTRE === cle ? 'true' : 'false'}" `
+      + `data-aide="<b>${fiche.libelle} — ${fiche.verdict}</b>${fiche.question} ${fiche.definition} `
+      + `Filtrer les leviers sur cette classe (re-cliquer pour tout réafficher).">`
+      + `<span class="symbole" aria-hidden="true">${fiche.symbole}</span>${echapperTexte(fiche.libelle)} `
+      + `<span aria-hidden="true">· ${fiche.nb_leviers}</span></button>`;
+  }).join('');
+}
+function renderFiltresClasses(){
+  const zone = document.getElementById('classes-filtres');
+  if (!zone) return;
+  const jetons = ORDRE_CLASSES.map(cle => {
+    const fiche = CLASSES[cle];
+    const actif = CLASSE_FILTRE === cle ? ' actif' : '';
+    return `<button type="button" class="classe-pastille motif-${fiche.motif}${actif}" `
+      + `style="--couleur-classe:${fiche.couleur};--fond-classe:${fiche.couleur_html};`
+      + `--teinte-motif:${fiche.couleur_html}" onclick="basculerClasse('${cle}')" `
+      + `aria-pressed="${CLASSE_FILTRE === cle ? 'true' : 'false'}" `
+      + `data-aide="<b>${fiche.libelle}</b>${fiche.definition}"><span class="symbole" aria-hidden="true">`
+      + `${fiche.symbole}</span>${echapperTexte(fiche.libelle_court)}</button>`;
+  }).join('');
+  const tous = `<button type="button" class="classe-pastille${CLASSE_FILTRE ? '' : ' actif'}" `
+    + `onclick="basculerClasse('${CLASSE_FILTRE}')" data-aide="<b>Toutes les classes</b>Réaffiche `
+    + `les 5 classes et leurs leviers.">Toutes</button>`;
+  zone.innerHTML = `<span class="titre">Filtrer par classe</span>${jetons}${tous}`;
+}
+function renderBalance(){
+  const annee = classeAnneeAffichee();
+  const verdict = document.getElementById('balance-verdict');
+  const net = document.getElementById('balance-net');
+  const detail = document.getElementById('balance-detail');
+  const entrees = document.getElementById('balance-entrees-montant');
+  const sorties = document.getElementById('balance-sorties-montant');
+  const entreesMenage = document.getElementById('balance-entrees-menage');
+  const sortiesMenage = document.getElementById('balance-sorties-menage');
+  const jaugeE = document.getElementById('balance-jauge-entrees');
+  const jaugeS = document.getElementById('balance-jauge-sorties');
+  if (!annee){
+    if (verdict) verdict.textContent = 'lancez une simulation pour peser les deux plateaux';
+    if (entrees) entrees.textContent = '—';
+    if (sorties) sorties.textContent = '—';
+    if (net){ net.textContent = 'solde : —'; net.className = 'net neutre'; }
+    return;
+  }
+  const total = Math.abs(annee.entrees_mde) + Math.abs(annee.sorties_mde);
+  const coupes = annee.sorties_mde < 0;
+  if (entrees) entrees.textContent = `${fmtSigne(annee.entrees_mde, 1)} Md€/an`;
+  if (sorties) sorties.textContent = `${fmtSigne(annee.sorties_mde, 1)} Md€/an`;
+  if (entreesMenage) entreesMenage.textContent = `${fmtMenage(annee.entrees_mde)} — recettes + économies`;
+  if (sortiesMenage) sortiesMenage.textContent = coupes
+    ? `${fmtMenage(annee.sorties_mde)} — budgets en baisse : c'est une coupe, pas une dépense`
+    : `${fmtMenage(annee.sorties_mde)} — dépenses engagées`;
+  if (jaugeE) jaugeE.style.width = `${total > 0 ? Math.round(100 * Math.abs(annee.entrees_mde) / total) : 0}%`;
+  if (jaugeS) jaugeS.style.width = `${total > 0 ? Math.round(100 * Math.abs(annee.sorties_mde) / total) : 0}%`;
+  if (net){
+    const solde = annee.solde_mde;
+    net.className = 'net ' + (Math.abs(solde) < 0.05 ? 'neutre' : (solde > 0 ? 'gain' : 'cout'));
+    net.textContent = `solde des classes : ${fmtSigne(solde, 1)} Md€/an`;
+  }
+  if (verdict){
+    const solde = annee.solde_mde;
+    verdict.textContent = Math.abs(solde) < 0.05
+      ? `année ${annee.annee} : recettes et économies équilibrent les dépenses`
+      : (solde > 0
+        ? `année ${annee.annee} : le plan dégage ${fmt(solde, 1)} Md€/an de marge`
+        : `année ${annee.annee} : le plan consomme ${fmt(Math.abs(solde), 1)} Md€/an de marge`);
+  }
+  if (detail){
+    const ref = classeReferenceAffichee();
+    const refTexte = ref
+      ? `À leviers neutres (trajectoire de référence), ces deux plateaux sont à zéro : tout `
+        + `ce qui est pesé ici est donc bien l'effet du plan, jamais un niveau de départ. `
+      : '';
+    const soldeMoteur = Number(annee.recettes_moteur_mde) - Number(annee.depenses_moteur_mde);
+    detail.innerHTML = `Lecture directe, année ${annee.annee} : recettes `
+      + `<b>${fmt(annee.classes.recettes.montant_mde, 2)}</b> + économies `
+      + `<b>${fmt(annee.classes.economies.montant_mde, 2)}</b> − dépenses `
+      + `<b>${fmt(annee.classes.depenses.montant_mde, 2)}</b> Md€/an = `
+      + `<b>${fmtSigne(annee.solde_mde, 2)}</b> Md€/an. `
+      + refTexte
+      + `Le compte du moteur, lui, range chaque montant par famille : ${fmt(annee.recettes_moteur_mde, 2)} Md€ de `
+      + `« recettes nouvelles » et ${fmt(annee.depenses_moteur_mde, 2)} Md€ de « dépenses nouvelles », soit `
+      + `${fmtSigne(soldeMoteur, 2)} Md€/an. L'écart avec la lecture par classes (`
+      + `${fmtSigne(annee.solde_mde - soldeMoteur, 2)} Md€) a trois causes nommées : une baisse de `
+      + `prélèvements compte comme une recette nouvelle alors qu'elle coûte, une économie d'efficacité compte `
+      + `comme une dépense nouvelle alors qu'elle rapporte, et les drapeaux 0/1 comptent comme des dépenses `
+      + `alors qu'ils ne portent aucun euro. Les deux soldes sont affichés côte à côte, aucun n'est masqué. `
+      + `Les classes « règles » et « monde » portent `
+      + `<b>${fmt(annee.hors_budget_mde, 2)}</b> unité(s) hors budget (drapeaux, hypothèses de contexte) : `
+      + `elles ne sont pas additionnées au solde. `
+      + `${echapperTexte(annee.note_hors_budget || '')} `
+      + `Conversion : ${(DIVISEUR_MENAGES && DIVISEUR_MENAGES.libelle) || 'ordre de grandeur'} `
+      + `(<b>${echapperTexte(statutDiviseur())}</b>).`;
+  }
+}
+/* ── La cascade : le plan déroulé, marche par marche ─────────────────────
+   Ce qu'aucun total annuel ne montre : dans quel ordre le budget se
+   construit. Chaque classe part du cumul laissé par la précédente et le
+   déplace de son montant ; l'escalier se referme sur le solde. Les classes
+   « règles » et « monde » n'y entrent pas — leurs unités (drapeaux 0/1,
+   dollars du baril, points de tension) ne sont pas des euros et les
+   additionner fabriquerait un faux total. */
+function monetaireDe(cle){
+  const fiche = CLASSES[cle];
+  if (fiche && typeof fiche.monetaire === 'boolean') return fiche.monetaire;
+  return cle === 'recettes' || cle === 'economies' || cle === 'depenses';
+}
+/* Ce qu'une classe fait au cumul : le sens de la classe dit comment elle pèse.
+   Une recette ou une économie l'augmente ; une dépense le diminue — et une
+   baisse de budget (montant négatif dans « dépenses ») l'augmente d'autant,
+   puisqu'une coupe n'est pas une dépense. Le total reproduit exactement le
+   solde des classes du moteur (`entrées − sorties`), jamais un total parallèle. */
+function contributionClasse(cle, bloc){
+  const montant = Number(bloc && bloc.montant_mde) || 0;
+  const fiche = CLASSES[cle];
+  return (fiche && fiche.sens === 'sortie') ? -montant : montant;
+}
+function marchesCascade(annee){
+  const etapes = [];
+  let cumul = 0;
+  ORDRE_CLASSES.forEach(cle => {
+    if (!monetaireDe(cle)) return;
+    const bloc = annee.classes[cle];
+    if (!bloc) return;
+    const contribution = contributionClasse(cle, bloc);
+    const debut = cumul;
+    cumul += contribution;
+    etapes.push({cle, fiche: CLASSES[cle], bloc, contribution, debut, fin: cumul});
+  });
+  return {etapes, solde: cumul};
+}
+function renderCascade(){
+  const zone = document.getElementById('cascade-marches');
+  const note = document.getElementById('cascade-note');
+  if (!zone) return;
+  const annee = classeAnneeAffichee();
+  if (!annee){
+    zone.innerHTML = '';
+    if (note) note.textContent = 'La cascade se dessine dès la première simulation : elle montre dans quel '
+      + 'ordre le plan se construit, du premier euro qui entre au solde. Les classes « règles » et « monde » '
+      + 'en restent dehors : leurs unités ne sont pas des euros.';
+    return;
+  }
+  const calcul = marchesCascade(annee);
+  const etapes = calcul.etapes;
+  const solde = calcul.solde;
+  const bas = Math.min(0, solde, ...etapes.map(etape => Math.min(etape.debut, etape.fin)));
+  const haut = Math.max(0, solde, ...etapes.map(etape => Math.max(etape.debut, etape.fin)));
+  const etendue = (haut - bas) || 1;
+  const borne = valeur => Math.max(0, Math.min(100, 100 * (valeur - bas) / etendue));
+  const pisteHtml = (debut, fin, fiche) => {
+    const motif = fiche.motif === 'hachure' ? ' hachure' : (fiche.motif === 'pointille' ? ' pointille' : '');
+    const gauche = borne(Math.min(debut, fin));
+    const largeur = Math.max(0.7, borne(Math.max(debut, fin)) - gauche);
+    return `<span class="cascade-piste" style="--couleur-classe:${fiche.couleur};--teinte-motif:${fiche.couleur_html}" aria-hidden="true">`
+      + `<i class="zero" style="left:${borne(0)}%"></i>`
+      + `<i class="barre${motif}" style="left:${gauche}%;width:${largeur}%"></i></span>`;
+  };
+  /* Les leviers qui pèsent le plus, nommés : la marche dit combien la classe
+     déplace le cumul, les puces disent qui le déplace. */
+  const pucesHtml = (bloc, fiche) => {
+    const plafond = 4;
+    const liste = (bloc.leviers || []);
+    const puces = liste.slice(0, plafond).map(entree => {
+      const levier = levierParCle(entree.cle) || {};
+      const libelle = levier.libelle || entree.cle;
+      return `<span class="puce-unite" data-aide-levier="${entree.cle}" `
+        + `data-aide="<b>${echapperTexte(libelle)}</b>Ce levier déplace le cumul de `
+        + `${fmtSigne(entree.montant_mde, 2)} Md€/an cette année. Classe : `
+        + `${echapperTexte(fiche.libelle)}.">`
+        + `${echapperTexte(libelle)} <b>${fmtSigne(entree.montant_mde, 2)}</b></span>`;
+    }).join('');
+    const reste = liste.length - plafond;
+    return puces + (reste > 0 ? `<span class="reste">+ ${reste} autre(s) levier(s) actif(s)</span>` : '');
+  };
+  const lignes = etapes.map((etape, index) => {
+    const fiche = etape.fiche;
+    const bloc = etape.bloc;
+    const coupe = etape.cle === 'depenses' && bloc.montant_mde < 0;
+    /* La marche affiche ce qu'elle fait au cumul (le grand chiffre) et, quand
+       les deux diffèrent, le montant tel que la classe le lit (les dépenses
+       engagées, ou les budgets coupés). */
+    const lecture = fiche.sens !== 'sortie' ? ''
+      : `<small>${fmt(bloc.montant_mde, 2)} Md€/an de dépenses `
+        + `${coupe ? 'en moins — une coupe, pas une dépense' : 'engagées'}</small>`;
+    return `<li class="cascade-marche" data-classe="${etape.cle}" `
+      + `style="--couleur-classe:${fiche.couleur};--teinte-motif:${fiche.couleur_html}">`
+      + `<div class="cascade-ligne">`
+      + `<span class="cascade-nom"><span class="tete"><span class="symbole" aria-hidden="true">${fiche.symbole}</span>`
+      + `${echapperTexte(fiche.libelle)}</span>`
+      + `<small>marche ${index + 1} · ${bloc.nb_actifs} levier(s) actif(s) sur ${fiche.nb_leviers}</small></span>`
+      + pisteHtml(etape.debut, etape.fin, fiche)
+      + `<span class="cascade-montant">${fmtSigne(etape.contribution, 2)}<small>Md€/an</small>`
+      + `<small>cumul ${fmtSigne(etape.fin, 2)}</small>${lecture}</span>`
+      + `</div>`
+      + `<div class="cascade-detail">`
+      + (coupe ? `<span class="reste">budgets en baisse — c'est une coupe, pas une dépense.</span>` : '')
+      + pucesHtml(bloc, fiche)
+      + `</div></li>`;
+  }).join('');
+  const couleurSolde = Math.abs(solde) < 0.05 ? 'var(--texte-dim)'
+    : (solde > 0 ? 'var(--classe-recettes)' : 'var(--classe-depenses)');
+  const total = `<li class="cascade-marche cascade-total" style="--couleur-classe:${couleurSolde};--teinte-motif:rgba(255,255,255,.35)">`
+    + `<div class="cascade-ligne">`
+    + `<span class="cascade-nom"><span class="tete"><span class="symbole" aria-hidden="true">=</span>Solde des classes</span>`
+    + `<small>recettes + économies − dépenses · année ${annee.annee}</small></span>`
+    + pisteHtml(0, solde, {couleur: couleurSolde, couleur_html: 'rgba(255,255,255,.35)', motif: 'uni'})
+    + `<span class="cascade-montant">${fmtSigne(solde, 2)}<small>Md€/an</small>`
+    + `<small>${fmtMenage(solde)}</small></span>`
+    + `</div>`
+    + `<div class="cascade-detail">`
+    + (Math.abs(solde) < 0.05
+      ? `Le plan se referme à l'équilibre : ce qui entre paie exactement ce qui sort.`
+      : (solde > 0
+        ? `Le plan dégage ${fmt(solde, 2)} Md€/an de marge après avoir payé ses dépenses.`
+        : `Le plan consomme ${fmt(Math.abs(solde), 2)} Md€/an de marge : les dépenses dépassent ce qui entre.`))
+    + `</div></li>`;
+  zone.innerHTML = lignes + total;
+  if (note){
+    const dehors = ORDRE_CLASSES.filter(cle => !monetaireDe(cle)).map(cle => {
+      const bloc = annee.classes[cle];
+      const fiche = CLASSES[cle];
+      if (!fiche) return '';
+      return bloc && bloc.nb_actifs
+        ? `<b>${echapperTexte(fiche.libelle.toLowerCase())}</b> : ${bloc.nb_actifs} unité(s), `
+          + `${fmt(bloc.montant_hors_budget_mde, 2)} hors budget`
+        : `${echapperTexte(fiche.libelle.toLowerCase())} : aucun actif`;
+    }).filter(Boolean).join(' · ');
+    note.innerHTML = `Hors cascade : ${dehors}. Ces unités ne sont pas des euros — les additionner au solde `
+      + `fabriquerait un faux total. ${echapperTexte(annee.note_hors_budget || '')}`;
+  }
+}
+function renderClasses(){
+  renderLegendeClasses();
+  renderFiltresClasses();
+  renderRythme();
+  renderBalance();
+  renderCascade();
+  const zone = document.getElementById('grille-classes');
+  const note = document.getElementById('classes-note');
+  if (!zone) return;
+  const annee = classeAnneeAffichee();
+  zone.innerHTML = ORDRE_CLASSES.map(cle => {
+    const fiche = CLASSES[cle];
+    const bloc = annee ? annee.classes[cle] : null;
+    const montant = bloc ? bloc.montant_mde : 0;
+    const actifs = bloc ? bloc.nb_actifs : 0;
+    const monetaire = monetaireDe(cle);
+    const chiffre = !bloc
+      ? '<span class="chiffre">— <small>lancez une simulation</small></span>'
+      : (monetaire
+        ? `<span class="chiffre">${fmtSigne(montant, 2)} Md€/an`
+          + `<small>${fmtMenage(montant)} · ${actifs} levier(s) actif(s)`
+          + `${sensDUnMontant(montant) === 'negatif' && cle === 'depenses' ? ' · budgets en baisse' : ''}`
+          + `</small></span>`
+        : `<span class="chiffre">${actifs} levier(s)<small>hors budget — des unités, jamais des euros`
+          + `</small></span><span class="chips-unites">${chipsHorsBudget(bloc)}</span>`);
+    const doctrine = String(fiche.doctrine || '').split('/').pop();
+    return `<article class="classe-carte motif-${fiche.motif}" `
+      + `style="--couleur-classe:${fiche.couleur};--fond-classe:${fiche.couleur_html};`
+      + `--teinte-motif:${fiche.couleur_html}" data-classe="${cle}">`
+      + `<h3><span class="symbole" aria-hidden="true">${fiche.symbole}</span> ${echapperTexte(fiche.libelle)} `
+      + `<span class="classe-pastille" style="--couleur-classe:${fiche.couleur}">${fibreLeviers(fiche.nb_leviers)}</span></h3>`
+      + `<p class="question">${echapperTexte(fiche.question)}</p>`
+      + `<p class="definition">${echapperTexte(fiche.definition)}</p>`
+      + `<div class="chiffres">${chiffre}</div>`
+      + `<div class="pied"><span>${fiche.familles_nb} famille(s) · `
+      + rampeSerieHtml(CLASSES_ANNEES.map(anneeClassee => anneeClassee.classes[cle].montant_mde), fiche.couleur)
+      + `<span class="rampe-legende">année par année</span></span>`
+      + `<button type="button" class="bouton" onclick="basculerClasse('${cle}')" `
+      + `data-aide="<b>Voir ces leviers</b>Filtre la grille sur la classe « ${fiche.libelle} ».">`
+      + `Voir ces ${fiche.nb_leviers} leviers</button>`
+      + `<span>Source : <code>${echapperTexte(doctrine)}</code> · ${echapperTexte(fiche.verdict)}</span></div>`
+      + `</article>`;
+  }).join('');
+  if (note){
+    const hors = annee && annee.hors_budget_mde ? ` — dont ${fmt(annee.hors_budget_mde, 2)} unité(s) hors budget.` : '';
+    note.innerHTML = (CLASSES_DEFINITION || '') + (NOTE_SOLDE ? ' ' + NOTE_SOLDE : '') + hors
+      + (DIVISEUR_MENAGES ? ` Conversion en euros par ménage : `
+         + `${echapperTexte(DIVISEUR_MENAGES.libelle)} — `
+         + `<b>${echapperTexte(DIVISEUR_MENAGES.statut)}</b>. ${echapperTexte(DIVISEUR_MENAGES.note || '')}` : '');
+  }
+}
+function fibreLeviers(nombre){
+  return `${nombre} levier${nombre > 1 ? 's' : ''}`;
+}
+/* Classes « règles » et « monde » : leurs valeurs ne sont pas des euros mais
+   des unités (drapeau 0/1, dollars du baril, points de tension). Additionner
+   ces unités entre elles ne veut rien dire : on les liste une par une, avec
+   l'unité du levier telle que le catalogue la déclare. */
+function chipsHorsBudget(bloc, maxi){
+  if (!bloc || !bloc.leviers.length) return '<span class="rampe-legende">aucun actif</span>';
+  const limite = maxi || 6;
+  const affiches = bloc.leviers.slice(0, limite).map(entree => {
+    const levier = levierParCle(entree.cle) || {};
+    const unite = levier.unite && levier.unite !== 'bool' ? ` ${levier.unite}` : '';
+    const libelle = levier.libelle || entree.cle;
+    return `<span class="puce-unite" data-aide-levier="${entree.cle}" `
+      + `data-aide="<b>${echapperTexte(libelle)}</b>Valeur mesurée par le moteur cette année : `
+      + `${fmt(entree.montant_mde, 2)}${echapperTexte(unite)}. Cette unité n'est pas un euro : elle `
+      + `n'entre pas dans le solde.">${echapperTexte(libelle)} `
+      + `<b>${fmt(entree.montant_mde, 2)}${echapperTexte(unite)}</b></span>`;
+  }).join('');
+  const plus = bloc.leviers.length > limite
+    ? `<span class="rampe-legende">+ ${bloc.leviers.length - limite} autre(s)</span>` : '';
+  return affiches + plus;
+}
+function basculerClasse(cle){
+  const cible = (cle === CLASSE_FILTRE) ? '' : cle;
+  CLASSE_FILTRE = (cible && CLASSES[cible]) ? cible : '';
+  renderClasses();
+  renderLeviers(filtreCourant());
+  if (CLASSE_FILTRE){
+    const section = document.getElementById('section-leviers');
+    if (section && section.scrollIntoView) section.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+}
+function basculerClasseSeules(){
+  LEVIERS_MODIFIES_SEULS = !LEVIERS_MODIFIES_SEULS;
+  const bouton = document.getElementById('btn-classes-seules');
+  if (bouton){
+    bouton.textContent = LEVIERS_MODIFIES_SEULS ? 'Tout le catalogue' : 'Mes leviers seulement';
+    bouton.setAttribute('aria-pressed', LEVIERS_MODIFIES_SEULS ? 'true' : 'false');
+    bouton.className = LEVIERS_MODIFIES_SEULS ? 'primaire' : 'discret';
+  }
+  renderLeviers(filtreCourant());
+}
+
 /* ── Leviers : tout le catalogue, visible et actionnable ───────────────── */
 function filtreCourant(){
   const champ = document.getElementById('recherche-levier');
@@ -1731,6 +2492,11 @@ function texteAideLevier(cle){
       + `${fmt(levier.maximum, levier.precision)} ${levier.unite} · pas ${fmt(levier.pas, 2)}`);
   }
   if (levier.description) lignes.push(levier.description);
+  const fiche = ficheClasse(levier.classe);
+  if (fiche){
+    lignes.push(`Classe « ${fiche.libelle} » (${fiche.symbole}) : ${fiche.verdict}`
+      + (levier.classe_motif ? ` — ${levier.classe_motif}` : ''));
+  }
   const declares = Object.entries(levier.effets_directs || {}).slice(0, 4).map(([theme, coefficient]) =>
     `${theme} ${coefficient > 0 ? '+' : ''}${fmt(coefficient, 2)}`);
   if (declares.length) lignes.push(`Effets déclarés : ${declares.join(' ; ')}`);
@@ -2280,10 +3046,35 @@ function placeholderMesure(cle){
   }
   zone.innerHTML = '<div class="cout-live neutre">⏳ Mesure du coût / gain réel de ce mouvement…</div>';
 }
+/* Ce que la bulle explique en plus : la classe du levier, ce qu'elle signifie
+   pour le budget, et pourquoi ce levier est rangé là plutôt qu'ailleurs. */
+function classeBulleHtml(cle){
+  const levier = levierParCle(cle);
+  const fiche = levier ? ficheClasse(levier.classe) : null;
+  if (!fiche) return '';
+  const montant = Math.abs(Number(levier.facteur) || 0);
+  const monetaire = montantUnitairePossible(levier);
+  return `<div class="bulle-section"><span class="bulle-titre">Classe : `
+    + `<span class="classe-pastille motif-${fiche.motif}" style="--couleur-classe:${fiche.couleur};`
+    + `--fond-classe:${fiche.couleur_html};--teinte-motif:${fiche.couleur_html}">`
+    + `<span class="symbole" aria-hidden="true">${fiche.symbole}</span>${echapperTexte(fiche.libelle)}</span></span>`
+    + `<div class="classe-motif">${echapperTexte(fiche.question)} ${echapperTexte(fiche.verdict)}.</div>`
+    + `<div class="classe-motif detail">Pourquoi cette classe : ${echapperTexte(levier.classe_motif || '')}</div>`
+    + (monetaire && montant
+       ? `<div class="classe-motif detail">Ordre de grandeur : <b>${fmtMenage(montant)}</b> `
+         + `par unité réglée (${echapperTexte(statutDiviseur())}).</div>`
+       : `<div class="classe-motif detail">Aucun montant budgétaire direct dans le modèle : `
+         + `ce levier se juge sur ses effets institutionnels, pas sur une ligne de dépense.</div>`)
+    + `<div class="classe-motif detail">Montée en charge déclarée : `
+    + `${rampeHtml(levier.profil, fiche.couleur)}`
+    + `${echapperTexte((levier.profil || []).map(valeur => Math.round(valeur * 100) + ' %').join(' · '))}</div>`
+    + `</div>`;
+}
 function htmlBulle(bulle){
   return `<div class="bulle-levier">`
     + `<div class="bulle-titre">Bulle explicative — ${bulle.libelle} `
     + `(${bulle.famille_libelle}, ${bulle.type})</div>`
+    + classeBulleHtml(bulle.cle)
     + `<div class="bulle-live" id="bulle-live">${bulleLiveHtml(bulle.cle)}</div>`
     + chaineHtml(bulle) + effetsDeclaresHtml(bulle) + mesuresHtml(bulle) + lectureHtml(bulle)
     + (bulle.sans_effet_mesure
@@ -2391,13 +3182,16 @@ function renderLeviers(filtre){
   const recherche = (filtre || '').toLowerCase();
   const zones = CATALOGUE.parametres.familles.map(famille => {
     const leviers = famille.leviers.filter(levier =>
-      !recherche || levier.libelle.toLowerCase().includes(recherche)
-      || levier.description.toLowerCase().includes(recherche)
-      || levier.cle.includes(recherche));
+      (!CLASSE_FILTRE || levier.classe === CLASSE_FILTRE)
+      && (!LEVIERS_MODIFIES_SEULS || LEVIERS_MODIFIES.has(levier.cle))
+      && (!recherche || levier.libelle.toLowerCase().includes(recherche)
+          || levier.description.toLowerCase().includes(recherche)
+          || levier.cle.includes(recherche)));
     if (!leviers.length) return '';
     const contenu = leviers.map(levier => {
       const valeur = PARAMS[levier.cle];
       const modifie = LEVIERS_MODIFIES.has(levier.cle);
+      const fiche = ficheClasse(levier.classe) || FICHE_CLASSE_DEFAUT;
       const valeurTexte = levier.type === 'interrupteur'
         ? (valeur >= 0.5 ? 'activé' : 'désactivé')
         : `${fmt(valeur, levier.precision)} ${levier.unite === 'bool' ? '' : levier.unite}`;
@@ -2422,21 +3216,48 @@ function renderLeviers(filtre){
                onchange="majLevier('${levier.cle}', this.checked ? 1 : 0); terminerReglage()"></label>
              <span class="valeur" data-aide-levier="${levier.cle}">${valeurTexte}</span>${bouton}`
           : curseurCompact;
-        return `<div class="levier compact${modifie ? ' modifie' : ''}${nonVerifie(levier)}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
+        return `<div class="levier compact${modifie ? ' modifie' : ''}${nonVerifie(levier)}" data-cle="${levier.cle}"
+          data-classe="${levier.classe}" data-motif="${fiche.motif}" data-aide-levier="${levier.cle}"
+          style="--couleur-classe:${fiche.couleur};--fond-classe:${fiche.couleur_html};--teinte-motif:${fiche.couleur_html}">
           ${contenuLevier}${badgeVerificationHtml(levier)}${saisieCitoyenneHtml(levier)}${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}</div>`;
       }
       const commande = levier.type === 'interrupteur' ? bascule : curseur;
-      return `<div class="levier${modifie ? ' modifie' : ''}${nonVerifie(levier)}" data-cle="${levier.cle}" data-aide-levier="${levier.cle}">
+      const classeLigne = `<div class="classe-ligne">${pastilleClasse(levier.classe, true)}`
+        + `<span class="rampe-legende">${echapperTexte(fiche.verdict)}</span>`
+        + `${rampeHtml(levier.profil, fiche.couleur)}`
+        + `<span class="rampe-legende">montée en charge</span></div>`;
+      const ficheMenage = montantUnitairePossible(levier)
+        ? `<div class="fiche-menage"><span>Ordre de grandeur : <b>${fmtMenage(Math.abs(Number(levier.facteur) || 0))}</b>`
+          + ` par unité réglée</span><span class="statut">${echapperTexte(statutDiviseur())}</span>`
+          + `<span>${echapperTexte(levier.classe_motif || '')}</span></div>`
+        : `<div class="fiche-menage"><span>${levier.classe === 'monde'
+             ? 'Hypothèse de contexte : ni recette ni dépense décidée ici.'
+             : 'Aucun montant budgétaire direct : ce levier se juge sur ses effets, pas sur une ligne.'}</span>`
+          + `<span>${echapperTexte(levier.classe_motif || '')}</span></div>`;
+      return `<div class="levier${modifie ? ' modifie' : ''}${nonVerifie(levier)}"`
+        + ` data-cle="${levier.cle}" data-classe="${levier.classe}" data-motif="${fiche.motif}"`
+        + ` data-aide-levier="${levier.cle}"`
+        + ` style="--couleur-classe:${fiche.couleur};--fond-classe:${fiche.couleur_html};--teinte-motif:${fiche.couleur_html}">
         ${commande}
+        ${classeLigne}
         <div class="desc">${levier.description}</div>
+        ${ficheMenage}
         ${levier.source ? `<div class="source">Source citée : ${levier.source}</div>` : ''}
         ${articlesHtml(levier)}
         ${badgeVerificationHtml(levier)}${saisieCitoyenneHtml(levier)}
         ${pucesHtml(levier.cle)}${zoneCoutLiveHtml(levier.cle)}${bulleHtml(levier.cle)}
       </div>`;
     }).join('');
-    return `<div class="famille${VUE_COMPACTE ? ' compacte' : ''}">
-      <h3 style="color:${famille.couleur}">${famille.libelle}</h3>${contenu}</div>`;
+    // Les classes présentes dans la famille : une famille peut en contenir
+    // plusieurs (la fiscalité des ménages porte des recettes et des baisses de
+    // prélèvements qui coûtent). On l'affiche au lieu de le cacher.
+    const classesFamille = [];
+    leviers.forEach(levier => { if (classesFamille.indexOf(levier.classe) < 0) classesFamille.push(levier.classe); });
+    const tete = `<div class="tete-famille"><h3 style="color:${famille.couleur}">${famille.libelle}</h3>`
+      + `<span>${classesFamille.map(cle => pastilleClasse(cle, true)).join(' ')}</span></div>`;
+    return `<div class="famille${VUE_COMPACTE ? ' compacte' : ''}${classesFamille.length === 1 ? ' classee motif-' + ficheDe(classesFamille[0]).motif : ''}"`
+      + `${classesFamille.length === 1 ? ` style="--couleur-classe:${ficheDe(classesFamille[0]).couleur};--fond-classe:${ficheDe(classesFamille[0]).couleur_html};--teinte-motif:${ficheDe(classesFamille[0]).couleur_html}"` : ''}>`
+      + `${tete}${contenu}</div>`;
   }).join('');
   document.getElementById('leviers-grille').innerHTML = zones
     || '<div class="carte">Aucun levier ne correspond à cette recherche.</div>';
@@ -2994,6 +3815,7 @@ async function simuler(avecImpacts){
     const donnees = await reponse.json();
     if (donnees.error){ alert('Erreur de simulation : ' + donnees.error); return; }
     SORTIE = donnees;
+    calculerClasses(donnees);
     renderImpact(donnees);
     renderLecture(donnees);
     renderBilanIntergenerationnel(donnees);
