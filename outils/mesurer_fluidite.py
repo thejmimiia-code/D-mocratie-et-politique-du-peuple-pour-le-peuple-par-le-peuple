@@ -15,15 +15,22 @@ choses :
 2. **le temps de réponse**, en particulier l'effet du cache des bulles, dont
    le calcul complet coûtait plusieurs secondes.
 
+`--verifier` confronte ces volumes à la table des plafonds
+(`outils/budgets_fluidite.py`) et sort en code 1 dès qu'une charge franchit son
+budget : c'est l'étape que la CI exécute, et c'est ce qui distingue une mesure
+d'un engagement.
+
 Il n'installe rien et n'écrit rien : bibliothèque standard uniquement, comme le
 reste du dépôt.
 
 Usage
 -----
 
-    python3 outils/mesurer_fluidite.py              # tableau lisible
-    python3 outils/mesurer_fluidite.py --markdown   # tableau pour la doc
+    python3 outils/mesurer_fluidite.py                    # tableau lisible
+    python3 outils/mesurer_fluidite.py --markdown         # tableau pour la doc
     python3 outils/mesurer_fluidite.py --repetitions 7
+    python3 outils/mesurer_fluidite.py --verifier         # plafonds de poids, code de sortie
+    python3 outils/mesurer_fluidite.py --verifier --rapport-fichier mesure.json
 
 Le serveur est lancé en ``SIMULATEUR_HORS_LIGNE=1`` : aucune API publique
 n'est interrogée, les mesures ne dépendent donc pas du réseau.
@@ -47,6 +54,11 @@ from pathlib import Path
 RACINE = Path(__file__).resolve().parents[1]
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
+
+try:                                        # lancé comme script : outils/ est sur le chemin
+    import budgets_fluidite as plafonds
+except ImportError:                         # importé par chemin (tests, autres outils)
+    from outils import budgets_fluidite as plafonds  # type: ignore[no-redef]
 
 os.environ.setdefault("SIMULATEUR_HORS_LIGNE", "1")
 
@@ -123,24 +135,53 @@ def _parametres_depuis_catalogue(serveur: Serveur) -> dict:
     return parametres
 
 
+def plan_de_mesure() -> list[tuple[str, str, str]]:
+    """Ce que la campagne mesure : (clé de budget, méthode, chemin).
+
+    La table des routes vient du budget lui-même (`ROUTES_MESUREES`) ; les deux
+    simulations s'y ajoutent. `tests/test_budgets_fluidite.py` compare ce plan aux
+    plafonds — aucune charge mesurée sans budget, aucun budget sans mesure — et aux
+    routes que la page appelle, pour qu'aucune ne reste sans plafond ni sans motif.
+    """
+    plan = [(cle, "GET", chemin) for chemin, cle in plafonds.ROUTES_MESUREES]
+    plan.append(("simuler_5ans", "POST", "/api/simuler"))
+    plan.append(("simuler_10ans", "POST", "/api/simuler"))
+    return plan
+
+
 def mesurer(repetitions: int = 5) -> dict:
     """Exécute la campagne de mesure et renvoie un rapport structuré."""
     serveur = Serveur()
     try:
         parametres = _parametres_depuis_catalogue(serveur)
 
-        routes_get = ["/", "/api/catalogue", "/api/contexte", "/api/garde_fous",
-                      "/api/lexique", "/api/marches"]
+        # Le cache des bulles se paie au premier appel : on le mesure avant les
+        # volumes, sinon la campagne relèverait un temps chaud et croirait avoir
+        # gagné quelque chose.
+        temps_bulles = [serveur.temps("/api/bulles?detail=resume")
+                        for _ in range(3)]
+
+        mesures: list[plafonds.Mesure] = []
         lignes_get = []
-        for chemin in routes_get:
+        for chemin, cle in plafonds.ROUTES_MESUREES:
             brut = serveur.taille(chemin, None)
             compresse = serveur.taille(chemin, "gzip")
+            provenance = f"GET {chemin} (serveur, gzip {compresse} o)"
+            if cle == "page":
+                # Le fichier publié compte autant que la réponse du serveur : c'est
+                # lui que sert l'hébergeur statique, et c'est le même document.
+                publiee = plafonds.octets_de_la_page_publiee()
+                if publiee > compresse:
+                    compresse = publiee
+                provenance = (f"GET / {brut} o bruts, index.html {publiee} o "
+                              f"compressés (retenu : {compresse} o)")
             lignes_get.append({
                 "route": chemin,
                 "brut": brut,
                 "compresse": compresse,
                 "gain": (1 - compresse / brut) if brut else 0.0,
             })
+            mesures.append(plafonds.Mesure(cle, compresse, provenance))
 
         duree_brute, taille_brute = min(
             serveur.post("/api/simuler",
@@ -163,13 +204,23 @@ def mesurer(repetitions: int = 5) -> dict:
             {"parametres": parametres, "horizon": 10,
              "avec_impacts": True, "max_impacts": 16}, "gzip")[0]
             for _ in range(repetitions)]
+        _, taille_10ans = serveur.post(
+            "/api/simuler",
+            {"parametres": parametres, "horizon": 10,
+             "avec_impacts": True, "max_impacts": 16}, "gzip")
 
-        # Cache du catalogue de bulles : le premier appel paie le calcul.
-        temps_bulles = [serveur.temps("/api/bulles?detail=resume")
-                        for _ in range(3)]
+        mesures.append(plafonds.Mesure("simuler_5ans", taille_gzip,
+                              "POST /api/simuler, horizon 5 (gzip)"))
+        mesures.append(plafonds.Mesure("simuler_10ans", taille_10ans,
+                              "POST /api/simuler, horizon 10 (gzip)"))
 
         return {
             "get": lignes_get,
+            "budgets": [
+                {"cle": mesure.cle, "octets": mesure.octets,
+                 "provenance": mesure.provenance}
+                for mesure in mesures
+            ],
             "simuler": {
                 "brut_octets": taille_brute,
                 "compresse_octets": taille_gzip,
@@ -177,6 +228,7 @@ def mesurer(repetitions: int = 5) -> dict:
                 "min_ms_brut": duree_brute,
                 "mediane_ms_gzip": statistics.median(durees_gzip),
                 "mediane_ms_10ans": statistics.median(durees_10ans),
+                "compresse_10ans_octets": taille_10ans,
             },
             "bulles": {
                 "premier_ms": temps_bulles[0],
@@ -208,7 +260,8 @@ def rapport_texte(resultat: dict) -> str:
     lignes.append("")
     lignes.append(f"Simulation 5 ans  : médiane {simuler['mediane_ms_gzip']:.0f} ms "
                   f"(sans compression : meilleur cas {simuler['min_ms_brut']:.0f} ms)")
-    lignes.append(f"Simulation 10 ans : médiane {simuler['mediane_ms_10ans']:.0f} ms")
+    lignes.append(f"Simulation 10 ans : médiane {simuler['mediane_ms_10ans']:.0f} ms, "
+                  f"{_kio(simuler.get('compresse_10ans_octets', 0))} compressés")
     bulles = resultat["bulles"]
     lignes.append(f"Catalogue de bulles : {bulles['premier_ms']:.0f} ms au premier appel, "
                   f"puis {min(bulles['suivants_ms']):.0f} ms (cache)")
@@ -226,23 +279,56 @@ def rapport_markdown(resultat: dict) -> str:
     return "\n".join(lignes)
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     analyseur = argparse.ArgumentParser(description=__doc__.split("\n")[2])
     analyseur.add_argument("--markdown", action="store_true",
                            help="sortie en tableau Markdown (pour la documentation)")
     analyseur.add_argument("--json", action="store_true", help="sortie JSON brute")
     analyseur.add_argument("--repetitions", type=int, default=5,
                            help="répétitions par mesure (défaut : 5)")
-    arguments = analyseur.parse_args()
+    analyseur.add_argument("--verifier", action="store_true",
+                           help="confronter les volumes aux plafonds de poids "
+                                "(outils/budgets_fluidite.py) et sortir en code 1 "
+                                "si un plafond est franchi")
+    analyseur.add_argument("--rapport-fichier", type=Path, default=None,
+                           help="relire un rapport JSON enregistré au lieu de "
+                                "mesurer (contrôle du contrat de sortie)")
+    arguments = analyseur.parse_args(argv)
 
-    resultat = mesurer(arguments.repetitions)
+    if arguments.rapport_fichier is not None:
+        if not arguments.rapport_fichier.is_file():
+            print(f"Rapport introuvable : {arguments.rapport_fichier}", file=sys.stderr)
+            return 2
+        try:
+            resultat = json.loads(arguments.rapport_fichier.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError) as erreur:
+            print(f"Rapport illisible ({erreur}) : {arguments.rapport_fichier}",
+                  file=sys.stderr)
+            return 2
+    else:
+        resultat = mesurer(arguments.repetitions)
+
+    mesures = [plafonds.Mesure(**entree) for entree in resultat.get("budgets", [])]
+
+    if arguments.verifier:
+        depassements, anomalies = plafonds.verifier(mesures, complet=True)
+        print(plafonds.rapport_texte(mesures, complet=True))
+        print(f"\nAncres du {plafonds.DATE_ANCRAGE} — "
+              f"{len(mesures)} charge(s) mesurée(s), "
+              f"{len(depassements)} dépassement(s), {len(anomalies)} anomalie(s).")
+        if depassements or anomalies:
+            print("Budget de poids non tenu.", file=sys.stderr)
+            return 1
+        return 0
+
     if arguments.json:
         print(json.dumps(resultat, ensure_ascii=False, indent=2))
     elif arguments.markdown:
         print(rapport_markdown(resultat))
     else:
         print(rapport_texte(resultat))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

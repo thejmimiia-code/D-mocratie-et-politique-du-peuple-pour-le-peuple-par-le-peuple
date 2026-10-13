@@ -108,6 +108,13 @@ jobs:
           print("Point d'entrée WSGI OK")
           PY
 
+      - name: Verify the weight budgets (plafonds de poids de la page et des routes)
+        # Ce n'est pas une mesure de confort : c'est l'engagement écrit dans
+        # outils/budgets_fluidite.py, et l'étape échoue dès qu'un plafond est
+        # franchi. Les plafonds portent des octets compressés, jamais des
+        # millisecondes : une durée dépend de la machine qui mesure.
+        run: python3 outils/mesurer_fluidite.py --verifier --repetitions 1
+
       - name: Verify the console endpoints (11 tests that skip without a server)
         run: |
           python3 -m simulateur.web_server 8000 > /tmp/console.log 2>&1 &
