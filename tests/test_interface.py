@@ -982,3 +982,123 @@ class TestOptimisationsDaffichage(unittest.TestCase):
         """Deux panneaux de 330 px dans 700 px se lisent mal."""
         bloc = self.css[self.css.index("@media screen and (max-width:900px)"):]
         self.assertIn(".console-corps{grid-template-columns:minmax(0,1fr)}", bloc[:600])
+
+
+class TestImpressionDuPlan(unittest.TestCase):
+    """Quatrième passe : imprimer son plan, et non vingt-quatre sections.
+
+    La page fait deux mètres de haut sur papier, et rien ne permettait d'en
+    sortir le résumé. Le bouton du résumé entre dans un mode **visible à
+    l'écran** — la page ne montre plus que le plan, donc on voit ce qui
+    s'imprimera — et le mode se relève d'un clic. Ces tests tiennent les trois
+    points que la plus petite retouche de pied de page emporterait : la
+    commande, le mode à l'écran, et ce qui reste sur la feuille.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
+        cls.script = _script(cls.page)
+
+    def test_le_bouton_est_dans_le_resume_et_dit_ce_qu_il_fait(self):
+        self.assertIn('onclick="imprimerPlan()"', self.page)
+        self.assertIn('id="bouton-imprimer-plan"', self.page)
+        actions = self.page[self.page.index('<div class="resume-actions">'):]
+        self.assertIn('id="bouton-imprimer-plan"', actions[:actions.index("</div>")],
+                      "la commande vit dans les actions du résumé, pas ailleurs")
+        self.assertIn('aria-describedby="resume-impression-note"', self.page)
+        self.assertIn('id="resume-impression-note"', self.page)
+
+    def test_les_trois_fonctions_sont_livrees_et_branchees(self):
+        for fonction in ("function imprimerPlan(", "function lancerImpression(",
+                         "function quitterImpressionPlan("):
+            self.assertIn(fonction, self.script)
+        self.assertIn('onclick="lancerImpression()"', self.page)
+        self.assertIn('onclick="quitterImpressionPlan()"', self.page)
+
+    def test_le_mode_se_voit_a_l_ecran(self):
+        self.assertIn("html.impression-plan .bandeau-impression{display:flex}", self.css)
+        self.assertIn("html.impression-plan .conteneur > *:not(.bandeau-impression)"
+                      ":not(#resume){display:none}", self.css)
+        # Le bandeau annonce un changement d'état : il est étiqueté comme tel.
+        self.assertIn('id="bandeau-impression"', self.page)
+        entete = self.page[self.page.index('id="bandeau-impression"') - 200:]
+        self.assertIn('role="region"', entete[:260])
+        self.assertIn("Mode impression", self.page)
+
+    def test_le_papier_ne_recoit_que_le_plan_et_le_credit(self):
+        bloc = self.css[self.css.rindex("@media print"):]
+        self.assertIn("html.impression-plan .conteneur > *{display:none !important}", bloc)
+        self.assertIn("html.impression-plan .conteneur > #resume{display:block !important}", bloc)
+        self.assertIn("html.impression-plan .conteneur > .pied.credit{display:block !important}", bloc)
+
+    def test_le_bandeau_ne_s_imprime_jamais(self):
+        """Il sert à se servir de l'impression : il n'a rien à y faire."""
+        bloc = self.css[self.css.rindex("@media print"):]
+        self.assertIn(".bandeau-impression{display:none !important}", bloc)
+
+    def test_la_ligne_d_attribution_s_imprime_et_situe_la_page(self):
+        self.assertIn(".note-impression{display:none}", self.css, "jamais à l'écran")
+        bloc = self.css[self.css.rindex("@media print"):]
+        self.assertIn(".note-impression{display:block}", bloc)
+        self.assertIn("thejmimiia-code.github.io/MRSC/simulateur.html", self.page,
+                      "sur une feuille détachée, l'adresse doit être écrite")
+
+
+class TestEmpilementEtRenduDiffere(unittest.TestCase):
+    """Les restes de la deuxième passe : plans, encoches, sections différées.
+
+    Sept règles écrivaient leur plan d'empilement en clair (56, 60, 80, 120,
+    200) : pour savoir ce qui passe devant quoi, il fallait les relire toutes.
+    La page ignorait aussi les encoches des téléphones, et mettait en page les
+    dix sections basses — longues, presque toujours hors écran — dès le
+    chargement.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
+        cls.script = _script(cls.page)
+
+    def _racine(self):
+        bloc = self.css[self.css.index(":root{"):]
+        return bloc[:bloc.index("}")]
+
+    def test_les_plans_d_empilement_sont_nommes_et_declares(self):
+        racine = self._racine()
+        for variable in ("--z-fond", "--z-contenu", "--z-sommaire", "--z-ruban",
+                         "--z-evitement", "--z-infobulle", "--z-bandeau", "--z-modale"):
+            self.assertIn(variable + ":", racine, "chaque plan se déclare dans :root")
+        # Ce qui est utilisé est déclaré : une faute de frappe passerait sinon
+        # pour un plan nul, sans le moindre signal.
+        for usage in set(re.findall(r"var\((--z-[a-z]+)\)", self.css)):
+            self.assertIn(usage + ":", racine)
+
+    def test_aucun_plan_n_est_ecrit_en_nombre(self):
+        hors_racine = self.css.replace(self._racine(), "", 1)
+        self.assertEqual(re.findall(r"z-index:\s*\d", hors_racine), [],
+                         "un plan s'écrit par son nom : var(--z-…)")
+
+    def test_les_encoches_des_telephones_sont_respectees(self):
+        for bord in ("top", "right", "bottom", "left"):
+            self.assertIn(f"env(safe-area-inset-{bord},0px)", self.css,
+                          "sans valeur de repli, toute la déclaration est ignorée")
+        self.assertIn("padding:18px", self.css,
+                      "la marge d'origine reste écrite avant, pour les navigateurs sans env()")
+
+    def test_les_sections_basses_se_rendent_a_la_demande(self):
+        self.assertIn("#section-audit{content-visibility:auto;contain-intrinsic-size:auto 620px}",
+                      self.css)
+        for identifiant in ("#section-resultats,", "#section-journal,", "#section-contradiction,"):
+            self.assertIn(identifiant, self.css)
+        bloc = self.css[self.css.rindex("@media print"):]
+        self.assertIn("section.bloc{content-visibility:visible}", bloc,
+                      "ce qu'on n'a jamais approché à l'écran doit quand même s'imprimer")
+
+    def test_la_modale_suit_la_hauteur_visible(self):
+        self.assertIn("max-height:74vh;max-height:74dvh", self.css)
+
+    def test_les_titres_ne_se_cassent_plus_sur_un_mot_orphelin(self):
+        self.assertIn("h1,h2,h3{text-wrap:balance}", self.css)

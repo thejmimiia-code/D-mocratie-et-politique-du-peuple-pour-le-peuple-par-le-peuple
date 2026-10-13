@@ -76,6 +76,13 @@ HTML_PAGE = r"""<!DOCTYPE html>
   --panel-3:var(--panel-3);
   /* Hauteur de la barre haute collante : les ancres s'en décalent d'autant. */
   --collant:0px;
+  /* ── Plans d'empilement ───────────────────────────────────────────────────
+     Une seule échelle, déclarée ici et nulle part ailleurs : ce qui doit passer
+     devant le fait par son nom. Les sept nombres qui traînaient dans sept
+     règles (56, 60, 80, 120, 200) sont désormais rangés du fond vers le
+     premier plan, et le bandeau d'impression a sa place réservée. */
+  --z-fond:0; --z-contenu:1; --z-sommaire:56; --z-ruban:60;
+  --z-evitement:80; --z-infobulle:120; --z-bandeau:160; --z-modale:200;
 }
 :focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
 
@@ -83,6 +90,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
 body{font-family:'Segoe UI',Roboto,system-ui,sans-serif;background:
   radial-gradient(1200px 600px at 50% -10%,#16233d 0%,var(--bg) 60%);
   color:var(--texte);min-height:100vh;padding:18px;line-height:1.45}
+/* Encoches et coins arrondis : en portrait, la marge de 18 px tombe sous la
+   barre d'état ; en paysage, sous l'encoche latérale. Les deux déclarations
+   cohabitent — un navigateur qui ne connaît pas `env()` garde la première, la
+   valeur de repli assure qu'aucune marge ne disparaît. */
+body{padding:max(18px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset-right,0px))
+  max(18px,env(safe-area-inset-bottom,0px)) max(18px,env(safe-area-inset-left,0px))}
+/* Titres en drapeau : un titre ne se casse plus sur un mot orphelin. */
+h1,h2,h3{text-wrap:balance}
+p{text-wrap:pretty}
 .conteneur{max-width:1560px;margin:0 auto}
 a{color:var(--accent)}
 header.entete{background:linear-gradient(135deg,var(--mrsc-navy),#26375f);border:1px solid var(--border);
@@ -161,8 +177,8 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .classe-carte .pied{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;
   border-top:1px dashed var(--border);padding-top:8px;font-size:max(var(--t-min),.68rem);color:var(--texte-dim)}
 .classe-carte .pied .bouton{font-size:max(var(--t-min),.68rem);padding:4px 9px}
-.classe-carte .motif-legende{position:absolute;inset:0;opacity:.5;pointer-events:none;z-index:0}
-.classe-carte > *{position:relative;z-index:1}
+.classe-carte .motif-legende{position:absolute;inset:0;opacity:.5;pointer-events:none;z-index:var(--z-fond)}
+.classe-carte > *{position:relative;z-index:var(--z-contenu)}
 .balance{margin:12px 0 16px;border:1px solid var(--border);border-radius:12px;background:var(--panel-2);padding:12px 14px}
 .balance-titre{display:flex;flex-wrap:wrap;gap:10px;align-items:baseline;justify-content:space-between}
 .balance-titre b{font-size:.86rem}
@@ -320,7 +336,7 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .levier .ligne .bascule{margin-bottom:0}
 /* Infobulle instantanée : tout réglage ou bouton annoté s'explique au survol
    (et au focus clavier), sans jamais recouvrir les leviers durablement. */
-.infobulle{position:fixed;z-index:120;max-width:352px;background:#0d1526;border:1px solid var(--accent);
+.infobulle{position:fixed;z-index:var(--z-infobulle);max-width:352px;background:#0d1526;border:1px solid var(--accent);
   border-radius:11px;padding:9px 11px;font-size:max(var(--t-min),.74rem);line-height:1.5;color:var(--texte);
   box-shadow:0 16px 38px rgba(2,6,23,.6);pointer-events:none;opacity:0;transition:opacity .08s}
 .infobulle.visible{opacity:1}
@@ -416,7 +432,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 /* ── Console de veille permanente ─────────────────────────────────────── */
 .console{border-width:2px}
 /* Ruban de veille : une seule ligne collante, jamais devant les leviers. */
-.ruban-veille{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:10px;
+.ruban-veille{position:sticky;top:0;z-index:var(--z-ruban);display:flex;align-items:center;gap:10px;
   flex-wrap:wrap;background:linear-gradient(135deg,#0e1a30,#141b33);border:1px solid var(--border);
   border-radius:12px;padding:7px 12px;margin-bottom:12px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
 .ruban-veille .ruban-titre{font-size:max(var(--t-min),.68rem);text-transform:uppercase;letter-spacing:.6px;
@@ -643,7 +659,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 /* ── Termes du lexique soulignés dans le texte ──────────────────────────── */
 .terme{border-bottom:1px dotted var(--accent);cursor:help}
 /* ── Modale (lexique et guide) ──────────────────────────────────────────── */
-.overlay{position:fixed;inset:0;z-index:200;background:rgba(2,6,23,.72);display:none;
+.overlay{position:fixed;inset:0;z-index:var(--z-modale);background:rgba(2,6,23,.72);display:none;
   align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
 .overlay.visible{display:flex}
 .modale{background:var(--panel);border:1px solid var(--accent);border-radius:14px;max-width:920px;width:100%;
@@ -651,7 +667,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .modale-entete{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;
   border-bottom:1px solid var(--border)}
 .modale-entete h2{font-size:1rem}
-.modale-corps{padding:14px 18px 18px;max-height:74vh;overflow:auto}
+.modale-corps{padding:14px 18px 18px;max-height:74vh;max-height:74dvh;overflow:auto}
 .lexique-recherche{width:100%;margin-bottom:12px;padding:9px 12px;border-radius:9px;border:1px solid var(--border);
   background:var(--panel-2);color:var(--texte);font:inherit;font-size:.85rem}
 .lexique-categorie{margin-bottom:14px}
@@ -681,6 +697,21 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .resume-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:10px}
 .resume-actions a{font-size:max(var(--t-min),.8rem);color:var(--texte-dim)}
 .resume-actions a:hover{color:var(--texte)}
+/* ── Imprimer son plan : un mode, pas une capture ──────────────────────────
+   Vingt sections sur une feuille, c'est du papier pour rien. Le bouton entre
+   dans un mode visible à l'écran : la page ne montre plus que le résumé, si
+   bien que ce qu'on voit est exactement ce qui s'imprimera. Le bandeau annonce
+   le mode et propose de lancer l'impression ou de revenir — il ne s'imprime
+   jamais lui-même. */
+.bandeau-impression{position:sticky;top:0;z-index:var(--z-bandeau);display:none;
+  gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:10px 13px;
+  border:1px solid var(--accent);border-radius:12px;background:var(--panel);
+  font-size:max(var(--t-min),.8rem)}
+.bandeau-impression b{color:var(--texte)}
+.bandeau-impression .aide{color:var(--texte-dim)}
+.note-impression{display:none}
+html.impression-plan .bandeau-impression{display:flex}
+html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){display:none}
 /* L'interaction répond au geste, sans jamais devenir un feu d'artifice. */
 .resume .metric{transition:transform .15s ease,border-color .15s ease}
 .resume .metric:hover{border-color:var(--accent);transform:translateY(-1px)}
@@ -741,7 +772,9 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   .console-corps{grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr))}
   .audit table,.bourse-table table{font-size:max(var(--t-min),.74rem)}
   section[id],nav[id],h2[id]{scroll-margin-top:calc(var(--collant) + 10px)}
-  .lien-evitement{position:fixed;top:8px;left:8px;z-index:80;transform:translateY(-200%);
+  .lien-evitement{position:fixed;top:max(8px,env(safe-area-inset-top,0px));
+    left:max(8px,env(safe-area-inset-left,0px));z-index:var(--z-evitement);
+    transform:translateY(-200%);
     background:var(--panel-2);border:1px solid var(--mrsc-or);border-radius:9px;
     padding:10px 14px;color:var(--texte);text-decoration:none}
   .lien-evitement:focus-visible{transform:none}
@@ -751,7 +784,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
    repère, c'est vingt fois « où suis-je ? » : le bandeau reste en haut. */
 @media screen and (min-width:641px){
   :root{--collant:50px}
-  .sommaire{position:sticky;top:0;z-index:56;flex-wrap:nowrap;overflow-x:auto;
+  .sommaire{position:sticky;top:0;z-index:var(--z-sommaire);flex-wrap:nowrap;overflow-x:auto;
     box-shadow:0 8px 20px rgba(0,0,0,.28)}
   .sommaire-liste{display:flex;flex-wrap:nowrap;align-items:center;gap:6px}
   .ruban-veille{top:var(--collant)}
@@ -772,7 +805,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 }
 @media screen and (max-width:640px){
   :root{--collant:44px}
-  .sommaire{position:sticky;top:0;z-index:56;gap:7px;padding:6px;flex-wrap:nowrap}
+  .sommaire{position:sticky;top:0;z-index:var(--z-sommaire);gap:7px;padding:6px;flex-wrap:nowrap}
   .sommaire-bascule{display:inline-flex;align-items:center;gap:7px;min-height:44px;
     border-color:var(--accent);color:var(--texte)}
   .sommaire-liste{display:none}
@@ -809,6 +842,19 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   input,select,textarea{font-size:max(16px,1rem)}
   input[type=range]{height:34px}
 }
+/* ══ Rendu différé des sections basses ═════════════════════════════════════
+   Dix des vingt-quatre sections (nuances, verrous, contradiction, résultats
+   année par année, trajectoires, domaines, matrice, journal, provenance,
+   audit) vivent sous la ligne de flottaison : le navigateur n'a pas besoin de
+   les mettre en page tant qu'on ne s'en approche pas. `content-visibility:auto`
+   le lui dit ; `contain-intrinsic-size` lui donne une hauteur de remplacement,
+   sans quoi la barre de défilement sauterait à chaque section atteinte. Rien
+   n'est retiré du document : les ancres, la recherche dans la page et
+   l'impression continuent de tout trouver. */
+#section-nuances,#section-verrous,#section-contradiction,#section-resultats,
+#section-trajectoires,#section-domaines,#section-matrice,#section-journal,
+#section-provenance,#section-audit{content-visibility:auto;contain-intrinsic-size:auto 620px}
+
 /* ══ Impression : tout le contenu, rien de coupé ════════════════════════════
    À l'écran, les grands tableaux défilent dans une région à hauteur plafonnée :
    c'est confortable et ça n'écrase pas la page. Sur papier, ce plafond
@@ -826,6 +872,20 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   .chapitre-num{background:#fff !important;color:#000 !important;border:1px solid #000}
   tr,li{page-break-inside:avoid}
   a[href^="#"]{text-decoration:none;color:#000}
+  /* Le rendu différé est levé : ce qu'on n'a jamais approché à l'écran doit
+     quand même s'imprimer. */
+  section.bloc{content-visibility:visible}
+  /* La ligne d'attribution ne s'imprime qu'ici : sur une feuille détachée, elle
+     dit d'où vient le plan. */
+  .note-impression{display:block}
+  /* Le bandeau sert à se servir de l'impression : il ne s'imprime pas. */
+  .bandeau-impression{display:none !important}
+  /* Mode « mon plan » : seule la page du plan s'imprime, avec le crédit du
+     mouvement en pied — les deux seuls contenus qui aient un sens sur papier. */
+  html.impression-plan .conteneur > *{display:none !important}
+  html.impression-plan .conteneur > #resume{display:block !important}
+  html.impression-plan .conteneur > .pied.credit{display:block !important}
+  html.impression-plan #resume{background:#fff !important;border-color:#000 !important}
 }
 </style>
 <script>
@@ -836,6 +896,14 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 <body>
 <a class="lien-evitement" href="#sommaire">Aller au contenu</a>
 <div class="conteneur">
+
+  <div class="bandeau-impression" id="bandeau-impression" role="region" tabindex="-1"
+       aria-label="Mode impression : seule la page du plan s'imprimera">
+    <b>Mode impression.</b>
+    <span class="aide">La page ne montre plus que votre plan : c'est exactement ce qui sortira sur papier.</span>
+    <button class="primaire" type="button" onclick="lancerImpression()">🖨️ Lancer l'impression</button>
+    <button class="discret" type="button" onclick="quitterImpressionPlan()">Revenir à la page entière</button>
+  </div>
 
   <header class="entete">
     <h1>Simulateur Macro-Politique — Démocratie et politique, du peuple, pour le peuple, par le peuple</h1>
@@ -881,7 +949,10 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="resume-actions">
       <button class="primaire" type="button" onclick="allerAuxLeviers()">Régler les leviers</button>
       <a href="#section-classes">Voir la balance et les cinq classes</a>
+      <button class="discret" type="button" id="bouton-imprimer-plan"
+        onclick="imprimerPlan()" aria-describedby="resume-impression-note">🖨️ Imprimer mon plan</button>
     </div>
+    <p class="aide note-impression" id="resume-impression-note">Simulateur macro-politique — outil citoyen à code ouvert du M.R.S.C. · thejmimiia-code.github.io/MRSC/simulateur.html</p>
   </section>
 
   <nav class="sommaire" id="sommaire" aria-label="Sommaire de la page">
@@ -4141,6 +4212,41 @@ function marquerSommaire(lien){
     nav.classList.remove('ouverte');
     if (bouton && bouton.setAttribute) bouton.setAttribute('aria-expanded', 'false');
   }
+}
+
+/* ── Imprimer son plan ────────────────────────────────────────────────────
+   Le mode vit à l'écran autant que sur le papier : la page ne montre plus que
+   le résumé, donc on voit ce qui s'imprimera avant de lancer l'impression. On
+   ne parie pas sur le moment où le navigateur rend la main — l'appel est
+   bloquant chez certains, asynchrone chez d'autres : la classe reste posée
+   après `window.print()`, et c'est le bandeau qui relance l'impression ou
+   ramène la page entière. */
+function imprimerPlan(){
+  const racine = document.documentElement;
+  if (!racine || !racine.classList) return false;
+  racine.classList.add('impression-plan');
+  return lancerImpression();
+}
+
+function lancerImpression(){
+  if (typeof window.print !== 'function') return false;
+  try {
+    window.print();
+  } catch (erreur) {
+    /* Impression refusée par le navigateur : le mode reste posé, le bandeau
+       propose de réessayer ou de revenir — la page n'est pas abîmée. */
+  }
+  return true;
+}
+
+function quitterImpressionPlan(){
+  const racine = document.documentElement;
+  if (racine && racine.classList) racine.classList.remove('impression-plan');
+  // Retour au bouton qui a ouvert le mode : le focus ne se perd pas dans une
+  // barre qui vient de disparaître.
+  const declencheur = document.getElementById('bouton-imprimer-plan');
+  if (declencheur && typeof declencheur.focus === 'function') declencheur.focus();
+  return true;
 }
 
 /* ── Lecture en clair ─────────────────────────────────────────────────────
