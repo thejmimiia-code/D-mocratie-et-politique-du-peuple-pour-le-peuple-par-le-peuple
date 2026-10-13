@@ -6,6 +6,16 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Le nom d'une région dit ce qu'elle fait, à la taille où on la lit
+
+- **Un défaut écrit dans nos propres limites assumées** : sous 640 px, un tableau devient une pile de cartes et ne défile plus horizontalement — mais sa région continuait d'annoncer « faites défiler horizontalement », et gardait un `tabindex="0"` qui ne menait nulle part. Une personne qui suit l'annonce du lecteur d'écran cherchait un défilement inexistant ; sur une tablette à clavier, on s'arrêtait sur une région inerte.
+- **`nommerRegionsTableaux()`** réécrit le nom **et** l'arrêt à partir de la légende rangée sur la région (`data-legende`), dans les deux sens : au-dessus de 640 px, « … — faites défiler horizontalement » avec l'arrêt, parce qu'on y fait défiler aux flèches ; en dessous, « … — présenté en cartes, une ligne à la fois » sans arrêt.
+- **Un tableau fusionné garde tout** : ses cellules ne s'étiquettent pas, il défile vraiment, même dans 360 px — donc il garde son étiquette et son arrêt. La bascule se décide **tableau par tableau**, jamais à l'échelle de la page.
+- **La question posée est celle du CSS**, mot pour mot (`screen and (max-width:640px)`) : deux façons de poser la même question finiraient par donner deux réponses, et le nom se remettrait à mentir sans qu'aucune porte ne le voie. Un contrôle refuse désormais la divergence entre la requête du CSS et celle du JavaScript.
+- **Le nom ne s'empile pas** : le suffixe est recalculé depuis la légende rangée, jamais ajouté à ce qui précède — sans cela, chaque vague de rendu aurait empilé un suffixe de plus.
+- **Un pli de fenêtre n'est pas un rendu** : `suivrePliDeLEcran()` écoute le redimensionnement (replié à 120 ms, comme le reste de la page) ; une rotation de téléphone n'attend pas qu'un tableau soit réécrit.
+- **`tests/test_regions_defilantes.py`** (13 contrôles) exécute le JavaScript sur le DOM minimal avec une fenêtre simulée : large, étroite, élargie, un pli (deux événements coup sur coup, pour éprouver le repli) et une fenêtre sans écouteur. Quatre sabotages posés et attrapés : nom figé sur le défilement, arrêt jamais retiré, pli non écouté, nom empilé.
+
 ### Tout accessible, vérifié en ligne plutôt que supposé
 
 - **La suite de tests s'arrête au bord du réseau** : elle contrôle ce que le dépôt contient, jamais ce que Vercel ou Render servent. `outils/verifier-surface-en-ligne.py` comble ce trou — il interroge les deux adresses publiques et compare **au caractère** : le texte servi doit être égal à celui que `surface_publique.py` engendre, l'image servie égale au fichier versionné. Comparer à une photographie ne dirait rien des jours suivants.
