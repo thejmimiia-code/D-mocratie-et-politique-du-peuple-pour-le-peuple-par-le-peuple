@@ -3,7 +3,9 @@
 Le site M.R.S.C (`thejmimiia-code/MRSC`, publié sur
 [`thejmimiia-code.github.io/MRSC/`](https://thejmimiia-code.github.io/MRSC/))
 n'appelle pas le simulateur : il **embarque une copie datée de son moteur**. Sa
-copie venait du 8 octobre (`99491d8`) ; celle-ci vient du 13 octobre.
+copie venait du 8 octobre (`99491d8`) ; celle-ci vient du 13 octobre, indexation
+comprise : la page du site se décrit enfin aux moteurs, aux aperçus de partage et
+aux lecteurs automatiques.
 
 Ce dossier est un **colis de transport** : une fois le site publié, il peut être
 supprimé sans dommage — le correctif vit alors dans le dépôt du site, à
@@ -19,18 +21,22 @@ appliquer : il refusait de s'appliquer sur la nouvelle copie, et l'outil officie
 du site a donc eu raison de s'arrêter (`Le correctif local du site n'est plus
 applicable… Aucun fichier du moteur local n'a été remplacé`).
 
-Il a été **rebasé** : réunion à trois branches, puis dix conflits résolus un par
-un dans `interface.py`. La règle suivie : l'amont gagne pour la typographie et
-ses nouvelles fonctions, le site garde ses durcissements. La page reconstruite
-porte **trois scripts en ligne, tous valides** — une fusion de HTML en conflit
-casse le JavaScript sans le dire, et `py_compile` ne voit pas les marqueurs de
-conflit qui vivent dans des chaînes Python.
+Il a été **rebasé** sur le moteur du jour : réunion à trois branches
+(`git merge-file` — moteur neuf, moteur d'origine du correctif, copie du site),
+**sans conflit cette fois**, la base choisie étant celle du correctif et non une
+copie antérieure du moteur. La règle suivie : l'amont gagne pour la typographie
+et ses nouvelles fonctions, le site garde ses durcissements. La page
+reconstruite porte **trois scripts JavaScript en ligne, tous valides**, plus un
+bloc de données structurées — une fusion de HTML en conflit casse le JavaScript
+sans le dire, et `py_compile` ne voit pas les marqueurs de conflit qui vivent
+dans des chaînes Python.
 
 ## Ce que contient ce dossier
 
 | Fichier | Rôle |
 | --- | --- |
-| `simulateur-securite-mrsc.patch` | Le correctif du site, rebasé (1972 lignes, 5 fichiers). Sa cible dans le site est `outils/patchs/simulateur-securite-mrsc.patch`. Son empreinte est déjà celle que le site a enregistrée (`b8bacd4e…`). |
+| `simulateur-securite-mrsc.patch` | Le correctif du site, rebasé sur le moteur du jour (1995 lignes, 5 fichiers, empreinte `58bc2a21…`). Sa cible
+dans le site est `outils/patchs/simulateur-securite-mrsc.patch`. |
 | `publier-mrsc.sh` | La publication, en une commande, dans un dossier jetable. |
 | `corps-de-pr.md` | Le message du commit **et** la description de la demande de fusion. |
 
@@ -75,8 +81,11 @@ Le script rejoue tout cela, et échoue si un point ne tient plus :
   `LECTURES_NAVIGATEUR`, `LIMITE_JSON_SOURCE_NAVIGATEUR`,
   `SIMULATEUR_LOG_ERREURS`, `nosniff`.
 - **Aucun marqueur de conflit** dans la copie.
-- **La page reconstruite** (`simulateur/index.html`, 366 250 caractères) relue
-  **script par script** avec `node --check`.
+- **La page reconstruite** (`simulateur/index.html`, 371 160 caractères) relue
+  **script par script** avec `node --check` ; ses données structurées sont
+  décodées comme du JSON, et non comme du JavaScript (les confondre faisait
+  échouer `node --check` sur du JSON parfaitement valide — vu en vrai à ce
+  rebasage).
 - **La veille** : `verifier-maj-amont` doit dire « à jour » — la copie est le
   sommet de `main`, donc le rendez-vous hebdomadaire du site ne sonne pas pour
   rien. `verifier-source-distante` interroge le réseau : injoignable depuis
@@ -86,6 +95,12 @@ Le script rejoue tout cela, et échoue si un point ne tient plus :
 
 `git apply --check` puis `git apply --reverse --check` sur un clone neuf de
 l'amont : le correctif s'applique et se retire proprement, et les cinq fichiers
-obtenus sont **identiques à l'octet** à la copie publiée ici. Le moteur n'ayant
-pas bougé depuis, le correctif vaut aussi pour le sommet de `main` — un prochain
-`mettre-a-jour-simulateur.py` saura donc constater ce qui est déjà intégré.
+obtenus sont **identiques à l'octet** à la copie publiée ici.
+
+La copie gagne en passant l'**en-tête public** du moteur (description, aperçu de
+partage 1200 × 630, données structurées, icônes) : le site ne recopie plus ces
+balises à la main. Seule l'adresse change, et le site la déclare lui-même —
+`SIMULATEUR_URL_CANONIQUE=https://thejmimiia-code.github.io/MRSC/simulateur/`,
+posée dans le bloc d'adaptation du correctif. C'est la porte
+`verifier-site-statique.py` du site qui a révélé le besoin : elle refusait une
+canonique venue d'ailleurs, à raison.

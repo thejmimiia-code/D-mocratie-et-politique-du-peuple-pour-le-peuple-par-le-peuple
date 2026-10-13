@@ -10,10 +10,16 @@ sombres.
 
 Le correctif du site refusait de s'appliquer : l'amont avait bougé sous lui, et
 `outils/mettre-a-jour-simulateur.py` a donc eu raison de s'arrêter sans rien
-remplacer. `outils/patchs/simulateur-securite-mrsc.patch` est **rebasé** —
-réunion à trois branches, puis dix conflits résolus un par un dans
-`interface.py`. La règle suivie : l'amont gagne pour la typographie et ses
-nouvelles fonctions, le site garde ses durcissements.
+remplacer. `outils/patchs/simulateur-securite-mrsc.patch` est **rebasé** sur le
+moteur du jour — réunion à trois branches
+(`git merge-file` : moteur neuf, moteur d'origine du correctif, copie du site),
+**sans conflit cette fois** : la base choisie était celle du correctif, pas une
+copie antérieure du moteur. La règle suivie : l'amont gagne pour la typographie
+et ses nouvelles fonctions, le site garde ses durcissements.
+
+Le rebasage est vérifié dans les deux sens : `git apply --check` sur le moteur
+du jour, puis `git apply --reverse --check` sur le résultat — et les cinq
+fichiers obtenus sont identiques **à l'octet** à la copie publiée ici.
 
 Ce que le rebasage conserve, nommément : plafonds de corps et de cible HTTP
 (413 et 414), plafonds de réponse (source, cotation), nombre de champs de
@@ -23,7 +29,7 @@ textes, l'exclusion des cibles locales, et les enveloppes défilantes des
 tableaux d'audit — seize protections nommées une par une dans la vérification de
 publication, qui refuse de pousser si l'une disparaît.
 
-Deux ajustements d'intégration :
+Trois ajustements d'intégration :
 
 - **Six routes exposées** (`constitution`, `contrepouvoirs`, `dynamiques`,
   `instances`, `nuances`, `objections`) : le moteur les sert, l'API du site les
@@ -31,11 +37,22 @@ Deux ajustements d'intégration :
 - **Balise d'analytique Vercel retirée** de la copie embarquée : la page du site
   est autonome, cette ressource ne s'y trouve pas (elle fait échouer le contrôle
   des liens locaux).
+- **L'adresse canonique du site, déclarée par le site.** Le moteur décrit sa
+  page depuis une source unique (`simulateur/surface_publique.py` : description,
+  canonique, aperçu de partage, données structurées, icônes). La copie embarquée
+  ne recopie donc plus ces balises à la main : elle **surcharge** l'adresse,
+  `SIMULATEUR_URL_CANONIQUE=https://thejmimiia-code.github.io/MRSC/simulateur/`,
+  posée dans le bloc d'adaptation du correctif. Sans cela, la copie se
+  déclarerait canonique ailleurs et les moteurs consolideraient le sous-dossier
+  vers l'adresse de Vercel — c'est exactement ce que `verifier-site-statique.py`
+  refusait (« canonique attendue … reçue […] »), et c'est ce contrôle qui a
+  révélé le besoin.
 
-La page reconstruite ne contient plus de marqueur de conflit et ses trois
-scripts en ligne passent `node --check` — c'est là qu'une fusion de HTML en
-conflit se casse en silence, `py_compile` ne voyant pas les marqueurs qui vivent
-dans des chaînes Python. La CI du site est rejouée avant la poussée :
+La page reconstruite ne contient plus de marqueur de conflit — 371 160
+caractères — et ses **scripts JavaScript** passent `node --check` ; ses données
+structurées sont un JSON valide (`Organization`, `WebSite`, `WebApplication`),
+et le contrôle de publication les distingue désormais du JavaScript : les
+confondre faisait échouer `node --check` sur du JSON valide. La CI du site est rejouée avant la poussée :
 `py_compile`, `construire-apprentissages --verifier`,
 `construire-simulateur --verifier`, puis `verifier-rd-continue`,
 `verifier-site-statique`, `verifier-securite` et `verifier-integration`.
