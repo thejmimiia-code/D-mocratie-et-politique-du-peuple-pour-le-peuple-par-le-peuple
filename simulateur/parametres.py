@@ -2670,7 +2670,7 @@ def catalogue_public() -> dict[str, Any]:
     est local pour que le catalogue reste utilisable même sans la couche de
     présentation.
     """
-    from simulateur.classes_leviers import classe_de, catalogue_classes, motif_classe
+    from simulateur.classes_leviers import catalogue_classes, classe_de, motif_classe
 
     def levier_public(levier) -> dict[str, Any]:
         charge = levier.en_dict()
