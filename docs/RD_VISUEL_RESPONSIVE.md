@@ -140,6 +140,54 @@ Décisions :
   déborde plus), sommaire ouvert plafonné à 46 % de la hauteur visible, et
   `prefers-contrast:more` honoré (bordures et textes secondaires renforcés).
 
+## Quatrième incrément — imprimer son plan, et les restes de l'empilement
+
+Le troisième incrément avait rendu l'impression **complète** : vingt-quatre
+sections, toutes entières, sur du papier. Complet n'est pas utile. Une mesure de
+plus a trouvé quatre défauts.
+
+| Constat | Mesure | Conséquence |
+|---|---|---|
+| Aucune commande d'impression | `window.print` appelé **0** fois dans la page | Pour ne sortir que son plan, il fallait imprimer les vingt-quatre sections et trier à la main |
+| Les plans d'empilement écrits en clair | **7** règles portaient `z-index:56`, `60`, `80`, `120`, `200` | Savoir ce qui passe devant quoi demandait de relire les sept règles ; une couche nouvelle ne pouvait que deviner sa place |
+| La page ignorait les encoches | `env(safe-area-inset-*)` : **0** usage | La marge de 18 px tombait sous la barre d'état en portrait, sous l'encoche en paysage |
+| Dix sections basses mises en page d'avance | `content-visibility` : **0** usage | Le navigateur calculait la mise en page de l'audit, des matrices et du journal avant qu'on s'en approche |
+
+Décisions :
+
+- **Un mode, pas une capture** : « 🖨️ Imprimer mon plan » (dans les actions du
+  résumé) pose `html.impression-plan` — la page ne montre plus que le résumé,
+  **donc on voit ce qui s'imprimera** — et le bandeau qui l'annonce propose de
+  lancer l'impression ou de revenir à la page entière. Sur papier, il ne reste
+  que le résumé et le crédit du mouvement ; la ligne d'attribution
+  (`thejmimiia-code.github.io/MRSC/simulateur.html`) s'imprime avec, pour
+  qu'une feuille détachée dise d'où elle vient.
+- **Aucun pari sur le moment où le navigateur rend la main** : `window.print()`
+  est bloquant chez certains navigateurs, asynchrone chez d'autres. La classe
+  reste donc posée après l'appel, et c'est le bandeau — pas un minuteur — qui
+  ramène la page entière. Le focus revient sur le bouton déclencheur, jamais
+  dans une barre qui vient de disparaître.
+- **Une seule échelle de plans** : huit variables `--z-…` déclarées dans `:root`,
+  du fond (`--z-fond:0`) à la modale (`--z-modale:200`), avec la place réservée
+  au bandeau (`--z-bandeau:160`). Aucun `z-index` numérique ne subsiste dans une
+  règle, et un test vérifie que tout `var(--z-…)` employé est déclaré : une
+  faute de frappe passerait sinon pour un plan nul, sans le moindre signal.
+- **Les encoches** : la marge du corps passe par
+  `max(18px,env(safe-area-inset-…))` sur les quatre bords, avec valeur de repli
+  (`env(…,0px)`) — sans elle, toute la déclaration serait ignorée en bloc. La
+  marge d'origine reste écrite avant, pour les navigateurs qui ne connaissent
+  pas `env()`. Le lien d'évitement suit (`top`, `left`).
+- **Rendu différé** : dix sections basses portent `content-visibility:auto` et
+  `contain-intrinsic-size:auto 620px` (une hauteur de remplacement, sans quoi la
+  barre de défilement sauterait à chaque section atteinte). Rien n'est retiré du
+  document : les ancres, la recherche dans la page et l'impression trouvent
+  tout — et l'impression lève explicitement le différé
+  (`section.bloc{content-visibility:visible}`).
+- **Finitions typographiques** : `text-wrap:balance` sur les titres,
+  `text-wrap:pretty` sur les paragraphes, et la modale qui suit la hauteur
+  réellement visible (`max-height:74vh;max-height:74dvh`) — sur un téléphone,
+  `vh` compte la barre d'adresse, `dvh` non.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -156,9 +204,16 @@ quelqu'un réintroduit les défauts mesurés plus haut.
 - quatre chapitres, chacun avant la première section qu'il ouvre ;
 - mouvements coupables par `prefers-reduced-motion` ;
 - impression sans plafond de hauteur, graphique nommé et à échelle gardée,
-  aides tactiles, contraste renforcé, grille à deux colonnes sous 480 px.
+  aides tactiles, contraste renforcé, grille à deux colonnes sous 480 px ;
+- impression d'un plan : la commande du résumé, le mode visible à l'écran, le
+  papier qui ne garde que le plan et le crédit, et le bandeau qui ne s'imprime
+  jamais ;
+- échelle de plans déclarée dans `:root`, aucun `z-index` numérique dans une
+  règle, tout `var(--z-…)` employé déclaré ;
+- encoches sur les quatre bords **avec valeur de repli**, sections basses en
+  rendu différé et différé levé à l'impression, modale en `dvh`.
 
-Trois fichiers de tests **exécutent** le code, ils ne le relisent pas :
+Quatre fichiers de tests **exécutent** le code, ils ne le relisent pas :
 
 - `tests/test_defilement_tableaux.py` fait tourner l'enveloppement des tableaux
   sur un DOM minimal et vérifie qu'un seul tableau est enveloppé, que la région
@@ -170,7 +225,12 @@ Trois fichiers de tests **exécutent** le code, ils ne le relisent pas :
   quels, et que le sommaire ouvert se referme en annonçant son état ;
 - `tests/navigateur_interface.mjs` demande au parcours réel que le résumé de
   tête porte **le solde de la balance** (comparaison de texte), que sa phrase
-  soit celle du verdict, et qu'un changement d'année relise le résumé.
+  soit celle du verdict, et qu'un changement d'année relise le résumé ;
+- `tests/test_impression_plan.py` ouvre le mode d'impression sur un DOM
+  minimal : `window.print()` part **une fois par demande** (jamais au
+  chargement), le bandeau relance le tirage sans quitter le mode, le retour
+  ramène la page entière **et le focus sur le bouton**, et une impression
+  refusée ne laisse ni exception ni page amputée.
 
 Le DOM minuscule commun aux deux premiers vit dans `tests/dom_minimal.mjs` : il
 fournit classes, attributs, enfants et ordre du document, et rien d'autre.
