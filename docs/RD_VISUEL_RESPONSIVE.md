@@ -375,6 +375,66 @@ Décisions :
 - **La pastille ne s'imprime pas** : la barre du téléphone n'a rien à faire sur
   une feuille, où le ruban dit déjà tout.
 
+## Dixième incrément — le nom de la région suit la taille de l'écran
+
+Le défaut était écrit noir sur blanc dans les limites assumées de ce rapport :
+sous 640 px, un tableau devient une pile de cartes, `overflow` repasse à
+`visible` — et la région continuait pourtant d'annoncer « faites défiler
+horizontalement ». Deux choses fausses à la fois :
+
+* une personne qui suit l'annonce du lecteur d'écran cherche un défilement qui
+  n'existe pas : au mieux elle perd son temps, au pire elle croit la page
+  cassée ;
+* `tabindex="0"` restait posé sur une région qui ne défile plus : un arrêt de
+  tabulation qui ne mène nulle part. C'est le défaut des « vingt-sept arrêts »
+  évités sur ordinateur, mais au doigt — sur une tablette à clavier, on y passe
+  et rien ne s'y passe.
+
+### Ce qui change
+
+`nommerRegionsTableaux()` réécrit le nom **et** l'arrêt à partir de la légende
+rangée sur la région (`data-legende`), dans les deux sens :
+
+| Palier | Nom | Arrêt de tabulation |
+| --- | --- | --- |
+| Plus de 640 px | « … — faites défiler horizontalement » | `tabindex="0"`, parce qu'on y fait défiler aux flèches |
+| 640 px ou moins, tableau étiquetable | « … — présenté en cartes, une ligne à la fois » | retiré : il n'y a plus rien à faire défiler |
+| 640 px ou moins, tableau **fusionné** | « … — faites défiler horizontalement » | conservé : celui-là défile vraiment |
+
+Trois décisions de détail, qui sont chacune un piège évité :
+
+1. **La question posée est celle du CSS**, mot pour mot :
+   `window.matchMedia('screen and (max-width:640px)')`. C'est le CSS qui bascule
+   en cartes ; deux façons de poser la même question finiraient par donner deux
+   réponses, et le nom se remettrait à mentir sans qu'aucune porte ne le voie.
+2. **La bascule se décide tableau par tableau** : un tableau dont une cellule
+   fusionne des colonnes garde le défilement, donc son étiquette et son arrêt.
+3. **Le nom se réécrit, il ne s'ajoute pas** : le suffixe est recalculé à partir
+   de la légende rangée sur la région. Sans cela, chaque vague de rendu aurait
+   empilé un suffixe de plus — le contrôle serre cela de près (un seul
+   « cartes », zéro « défiler », sur les deux états).
+
+Le renommage ne dépend pas d'un rendu : `suivrePliDeLEcran()` écoute le pli de
+la fenêtre (replié à 120 ms, comme le reste de la page). Un pli n'est pas un
+rendu, et une rotation de téléphone n'attend pas qu'un tableau soit réécrit.
+
+### Ce que le contrôle a demandé, et pourquoi ce n'est pas un détail
+
+Le fragment JavaScript est **exécuté** sur le DOM minimal avec une fenêtre
+simulée : large, étroite, puis élargie, plus un pli de fenêtre réel (deux
+événements coup sur coup, pour éprouver le repli) et une fenêtre sans écouteur.
+Quatre sabotages ont été posés puis retirés pour vérifier que ces contrôles
+mordent :
+
+| Sabotage | Attrapé par |
+| --- | --- |
+| Le nom reste celui du défilement | `test_sur_un_telephone_la_phrase_dit_les_cartes` (et le pli de fenêtre) |
+| L'arrêt de tabulation n'est jamais retiré | `test_sur_un_telephone_l_arret_de_tabulation_disparait` |
+| Le pli de fenêtre n'est plus écouté | `test_un_pli_de_fenetre_renomme_sans_attendre_un_rendu` |
+| Le nom s'empile au lieu de se réécrire | `test_le_nom_ne_s_empile_pas_d_une_vague_a_l_autre` (9 échecs) |
+
+---
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -421,7 +481,7 @@ quelqu'un réintroduit les défauts mesurés plus haut.
   précède toute écriture ;
 - aucune règle de carte dans les blocs d'impression (le papier garde un tableau) ;
 
-Six fichiers de tests **exécutent** le code, ils ne le relisent pas :
+Sept fichiers de tests **exécutent** le code, ils ne le relisent pas :
 
 - `tests/test_defilement_tableaux.py` fait tourner l'enveloppement des tableaux
   sur un DOM minimal et vérifie qu'un seul tableau est enveloppé, que la région
@@ -451,6 +511,11 @@ et un tableau devenu incohérent rend sa marque. Un sabotage volontaire du
 script (l'étiquette refusée ignorée) a été posé puis retiré pour vérifier que ces
 contrôles mordent.
 
+`tests/test_regions_defilantes.py` exécute le nom des régions : large, étroite,
+élargie, avec un pli de fenêtre et sans écouteur — le tableau fusionné garde son
+étiquette et son arrêt, le nom ne s'empile jamais, et le garde-fou qui refuse une
+fenêtre sans écouteur ne casse rien.
+
 `tests/test_barre_commande.py` exécute la barre : une hauteur mesurable est
 écrite dans `--collant`, une hauteur nulle laisse la valeur de repli en place,
 l'observateur suit bien la barre et rappelle la mesure quand elle grandit, la
@@ -474,10 +539,9 @@ il fournit classes, attributs, enfants et ordre du document, et rien d'autre.
 - **La densité des tableaux d'audit reste supérieure à celle du reste** : c'est
   voulu (audit et traçabilité), et le plancher de lisibilité s'y applique.
 
-- **Le nom de la région ne suit pas la bascule** : `aria-label` dit encore
-  « faites défiler horizontalement » sur une région dont le tableau est devenu
-  une pile de cartes. La phrase reste vraie au-dessus de 640 px, où le tableau
-  défile vraiment ; elle est seulement inutile en dessous.
+- ~~**Le nom de la région ne suit pas la bascule**~~ : corrigé au dixième
+  incrément, ci-dessus. Le nom et l'arrêt de tabulation suivent le palier, dans
+  les deux sens, et la question posée au navigateur est celle que le CSS tranche.
 - **`:has()`** : les quatre règles qui rendent la place supposent `:has()`. Sans
   lui, les cartes s'affichent quand même, dans une boîte qui garde son plafond de
   hauteur — une dégradation, pas une rupture.

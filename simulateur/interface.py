@@ -4497,6 +4497,71 @@ function tableauEnCartes(tableau){
   return true;
 }
 
+/* ── Le nom d'une région suit la taille de l'écran ────────────────────────
+   Au-dessus de 640 px, un tableau large défile dans sa région : celle-ci
+   s'appelle « … — faites défiler horizontalement », et elle est atteignable au
+   clavier, parce qu'on y fait défiler aux flèches.
+
+   Sous 640 px, le même tableau devient une pile de cartes : le CSS s'en charge
+   et remet `overflow:visible`. Plus rien ne défile horizontalement. Garder la
+   phrase promettrait un geste qui n'existe pas, et garder `tabindex="0"`
+   ajouterait un arrêt de tabulation qui ne mène nulle part — le même défaut
+   que les vingt-sept arrêts évités sur un ordinateur, mais au doigt.
+
+   Le nom et l'arrêt suivent donc le palier, **dans les deux sens** : un tableau
+   qui garde le défilement (cellules fusionnées) garde son étiquette, et une
+   fenêtre qu'on élargit retrouve la phrase qui décrit ce qu'elle fait. */
+const SUFFIXE_DEFILEMENT = ' — faites défiler horizontalement';
+const SUFFIXE_CARTES = ' — présenté en cartes, une ligne à la fois';
+
+function ecranEtroit(){
+  // La requête est écrite ici telle que le CSS la tranche : deux façons de
+  // poser la même question finiraient par donner deux réponses.
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('screen and (max-width:640px)').matches === true;
+}
+
+function nommerRegionsTableaux(){
+  if (!document.querySelectorAll) return 0;
+  const regions = document.querySelectorAll('.tableau-defilant');
+  if (!regions || !regions.length || typeof regions.forEach !== 'function') return 0;
+  const etroit = ecranEtroit();
+  let ajustees = 0;
+  regions.forEach(function(region){
+    if (!region.setAttribute || !region.getAttribute) return;
+    const base = region.getAttribute('data-legende') || 'Tableau de résultats';
+    // La bascule se décide **tableau par tableau** : celui dont une cellule
+    // fusionne des colonnes garde le défilement, même dans une poche de 360 px.
+    const enCartes = etroit && typeof region.querySelectorAll === 'function'
+      && region.querySelectorAll('.tableau-cartes').length > 0;
+    const nom = base + (enCartes ? SUFFIXE_CARTES : SUFFIXE_DEFILEMENT);
+    if (region.getAttribute('aria-label') !== nom) region.setAttribute('aria-label', nom);
+    if (enCartes){
+      if (region.hasAttribute && region.hasAttribute('tabindex') && region.removeAttribute){
+        region.removeAttribute('tabindex');
+      }
+    } else if (region.getAttribute('tabindex') !== '0'){
+      region.setAttribute('tabindex', '0');
+    }
+    ajustees += 1;
+  });
+  return ajustees;
+}
+
+/* Le pli de la fenêtre n'est pas un rendu : on renomme les régions quand
+   l'écran change de taille, sans attendre qu'un tableau soit réécrit. Le
+   contrôle est rendu ici pour que la suite puisse l'éprouver sans navigateur. */
+function suivrePliDeLEcran(){
+  if (typeof window === 'undefined' || typeof window.addEventListener !== 'function') return false;
+  let attentePli = false;
+  window.addEventListener('resize', function(){
+    if (attentePli) return;
+    attentePli = true;
+    setTimeout(function(){ attentePli = false; nommerRegionsTableaux(); }, 120);
+  });
+  return true;
+}
+
 function rendreTableauxDefilants(){
   if (!document.querySelectorAll || typeof document.createElement !== 'function') return 0;
   const tableaux = document.querySelectorAll('table');
@@ -4513,14 +4578,20 @@ function rendreTableauxDefilants(){
     enveloppe.className = 'tableau-defilant';
     enveloppe.setAttribute('role', 'region');
     enveloppe.setAttribute('tabindex', '0');
-    const legende = tableau.getAttribute && tableau.getAttribute('data-legende');
-    enveloppe.setAttribute('aria-label',
-      (legende ? legende : 'Tableau de résultats') + ' — faites défiler horizontalement');
+    const lue = tableau.getAttribute && tableau.getAttribute('data-legende');
+    // La légende est rangée sur la région : c'est à partir d'elle que le nom se
+    // réécrit quand l'écran change, sans jamais empiler deux suffixes.
+    const legende = lue ? lue : 'Tableau de résultats';
+    enveloppe.setAttribute('data-legende', legende);
+    enveloppe.setAttribute('aria-label', legende + SUFFIXE_DEFILEMENT);
     tableau.parentNode.insertBefore(enveloppe, tableau);
     enveloppe.appendChild(tableau);
     tableauEnCartes(tableau);
     poses += 1;
   });
+  // Dernier geste de la vague : le nom des régions dit ce qu'elles font à la
+  // taille où on les lit — y compris celles des vagues précédentes.
+  nommerRegionsTableaux();
   return poses;
 }
 
@@ -5555,6 +5626,10 @@ async function chargerObjections(filtre){
   // de rendu précis — la page reste lisible même sans observateur.
   rendreTableauxDefilants();
   rendreAidesFocalisables();
+  // Le palier de 640 px change la façon dont les régions défilantes se
+  // présentent : leur nom et leur arrêt de tabulation suivent la taille de
+  // l'écran, sans attendre un rendu. Un pli de fenêtre n'est pas un rendu.
+  suivrePliDeLEcran();
   // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
   // a cliqué pour la dernière fois.
   observerLecture();
