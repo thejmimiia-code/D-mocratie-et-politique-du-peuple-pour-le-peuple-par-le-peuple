@@ -34,7 +34,17 @@ import struct
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+try:
+    from PIL import Image, ImageDraw, ImageFont
+except ImportError:  # Pillow ne sert qu'ici : le simulateur, lui, n'en dépend pas.
+    raise SystemExit(
+        "Pillow est nécessaire pour dessiner l'aperçu de partage.\n"
+        "    python3 -m pip install Pillow\n"
+        "Les images publiées restent versionnées dans le dépôt : ce message ne\n"
+        "signale pas un défaut des fichiers, seulement une dépendance absente."
+        "\n\n(La suite de tests le sait : ce contrôle est sauté sans Pillow, et la\n"
+        "CI l'installe pour qu'il tourne vraiment.)"
+    ) from None
 
 RACINE = Path(__file__).resolve().parent.parent
 if str(RACINE) not in sys.path:      # le script se lance depuis n'importe où
