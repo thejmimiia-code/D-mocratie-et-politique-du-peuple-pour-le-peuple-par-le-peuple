@@ -73,10 +73,16 @@ class Element {
       add: (classe) => this._classes.add(classe),
       remove: (classe) => this._classes.delete(classe),
       contains: (classe) => this._classes.has(classe),
-      toggle: (classe) => {
-        if (this._classes.has(classe)) { this._classes.delete(classe); return false; }
-        this._classes.add(classe);
-        return true;
+      toggle: (classe, force) => {
+        // `classList.toggle(classe, force)` : le second argument est standard.
+        if (force === undefined) {
+          if (this._classes.has(classe)) { this._classes.delete(classe); return false; }
+          this._classes.add(classe);
+          return true;
+        }
+        if (force) { this._classes.add(classe); return true; }
+        this._classes.delete(classe);
+        return false;
       },
     };
   }

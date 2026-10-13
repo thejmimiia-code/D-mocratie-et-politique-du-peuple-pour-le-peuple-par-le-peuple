@@ -783,6 +783,13 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     border:1px solid var(--border);border-radius:9px;background:var(--panel-2);
     box-shadow:inset -14px 0 14px -14px rgba(0,0,0,.55)}
   .tableau-defilant>table{margin:0}
+  /* La première colonne reste visible pendant le défilement horizontal :
+     après trois colonnes, on ne sait plus quelle ligne on lit. Le fond est
+     opaque — sinon les chiffres passeraient dessous — et un filet la détache
+     du reste. */
+  .tableau-defilant th:first-child,.tableau-defilant td:first-child{
+    position:sticky;left:0;background:var(--panel-2);z-index:var(--z-contenu);
+    box-shadow:7px 0 9px -9px rgba(0,0,0,.9)}
   .tableau-defilant:focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
   body{padding:clamp(10px,1.6vw,18px);overflow-wrap:break-word}
   header.entete{padding:clamp(14px,1.6vw,22px)}
@@ -901,6 +908,10 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   /* Le rendu différé est levé : ce qu'on n'a jamais approché à l'écran doit
      quand même s'imprimer. */
   section.bloc{content-visibility:visible}
+  /* La première colonne ne colle plus : sur une feuille, elle resterait
+     décalée par-dessus les premières cellules. */
+  .tableau-defilant th:first-child,.tableau-defilant td:first-child{
+    position:static;box-shadow:none}
   /* La ligne d'attribution ne s'imprime qu'ici : sur une feuille détachée, elle
      dit d'où vient le plan. */
   .note-impression{display:block}
@@ -4274,10 +4285,54 @@ function rendreTableauxDefilants(){
   return poses;
 }
 
+/* ── Où suis-je dans la page ? ────────────────────────────────────────────
+   Le sommaire marquait la dernière entrée **cliquée** : dès qu'on faisait
+   défiler les vingt-quatre sections, le repère mentait. `marquerLecture` est
+   désormais le seul endroit qui pose la marque — le clic et l'observateur
+   l'appellent tous les deux, donc le sommaire ne peut pas dire deux choses à
+   la fois. La marque est aussi annoncée (`aria-current`), pas seulement
+   colorée. */
+function marquerLecture(identifiant){
+  if (!document.querySelectorAll) return false;
+  let marque = false;
+  document.querySelectorAll('.sommaire a').forEach(function(ancre){
+    const cible = (ancre.getAttribute && ancre.getAttribute('href')) || '';
+    const ici = !!identifiant && cible === '#' + identifiant;
+    if (ancre.classList) ancre.classList.toggle('actif', ici);
+    if (ici && ancre.setAttribute) ancre.setAttribute('aria-current', 'location');
+    else if (ancre.removeAttribute) ancre.removeAttribute('aria-current');
+    if (ici) marque = true;
+  });
+  return marque;
+}
+
+function observerLecture(){
+  if (typeof IntersectionObserver !== 'function' || !document.querySelectorAll) return false;
+  const sections = document.querySelectorAll('section.bloc[id]');
+  if (!sections || !sections.length || typeof sections.forEach !== 'function') return false;
+  const observateur = new IntersectionObserver(function(entrees){
+    let choisi = null;
+    entrees.forEach(function(entree){
+      if (!entree.isIntersecting || !entree.target || !entree.target.id) return;
+      const haut = entree.boundingClientRect ? entree.boundingClientRect.top : 0;
+      if (!choisi || haut < choisi.haut) choisi = {id: entree.target.id, haut: haut};
+    });
+    if (choisi) marquerLecture(choisi.id);
+  }, {rootMargin: '0px 0px -70% 0px', threshold: 0});
+  sections.forEach(function(section){ observateur.observe(section); });
+  return true;
+}
+
 function marquerSommaire(lien){
   if (!document.querySelectorAll) return;
-  document.querySelectorAll('.sommaire a').forEach(ancre => ancre.classList.remove('actif'));
-  if (lien && lien.classList) lien.classList.add('actif');
+  document.querySelectorAll('.sommaire a').forEach(ancre => {
+    ancre.classList.remove('actif');
+    if (ancre.removeAttribute) ancre.removeAttribute('aria-current');
+  });
+  if (lien && lien.classList){
+    lien.classList.add('actif');
+    if (lien.setAttribute) lien.setAttribute('aria-current', 'location');
+  }
   // Choisir une destination referme le sommaire ouvert au doigt : la page
   // reste devant, l'utilisateur voit où il arrive.
   const nav = document.getElementById('sommaire');
@@ -5236,6 +5291,9 @@ async function chargerObjections(filtre){
   // de rendu précis — la page reste lisible même sans observateur.
   rendreTableauxDefilants();
   rendreAidesFocalisables();
+  // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
+  // a cliqué pour la dernière fois.
+  observerLecture();
   if (typeof MutationObserver === 'function' && document.body){
     let enAttente = false;
     const observateur = new MutationObserver(function(){
