@@ -732,3 +732,157 @@ class TestReglagesPartageables(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSocleResponsive(unittest.TestCase):
+    """La page tient sur tous les écrans, et le prouve.
+
+    Ces contrôles protègent les mesures de `docs/RD_VISUEL_RESPONSIVE.md` :
+    un texte illisible, un tableau qui déborde ou une cible tactile trop petite
+    doivent faire échouer la suite, pas se découvrir sur un téléphone.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
+        cls.script = _script(cls.page)
+
+    def test_le_plancher_de_lisibilite_est_declare(self):
+        """--t-min est le plancher de lecture : il est écrit une fois, ici."""
+        self.assertIn("--t-min:12.5px", self.css)
+
+    def test_aucune_taille_de_texte_ne_passe_sous_le_plancher(self):
+        """Tout texte sous 12 px est passé par `max(var(--t-min), …)`.
+
+        Pourquoi `max()` : les réglages d'agrandissement du site (125 %, 150 %)
+        agrandissent les `rem`. Un plancher en pixels seul les casserait ; les
+        deux ensemble gardent la lisibilité et l'agrandissement.
+        """
+        fautives = []
+        for regle in re.findall(r"font-size:([^;}\n]+)", self.css):
+            valeur = regle.strip()
+            if "max(var(--t-min)" in valeur:
+                continue
+            mesure = re.fullmatch(r"(\d*\.?\d+)(rem|em|px)", valeur)
+            if not mesure:
+                continue
+            px = float(mesure.group(1)) * (16 if mesure.group(2) in ("rem", "em") else 1)
+            if px < 12:
+                fautives.append(valeur)
+        self.assertEqual(fautives, [], "tailles sous le plancher de lecture : " + ", ".join(fautives))
+
+    def test_quatre_paliers_d_ecran(self):
+        """Téléphone, grand téléphone, tablette, portable : quatre paliers."""
+        for palier in ("max-width:1200px", "max-width:900px", "max-width:640px", "max-width:480px"):
+            with self.subTest(palier=palier):
+                self.assertIn(palier, self.css)
+
+    def test_le_tactile_et_les_champs_ont_leurs_regles(self):
+        """44 px de cible, 16 px dans un champ (sinon iOS zoome au focus)."""
+        self.assertIn("(pointer:coarse)", self.css)
+        bloc = self.css[self.css.index("(pointer:coarse)"):]
+        self.assertIn("min-height:44px", bloc)
+        self.assertIn("font-size:max(16px,1rem)", bloc)
+
+    def test_les_tableaux_larges_defilent_dans_leur_region(self):
+        """Un tableau large défile dans sa région, il ne pousse pas la page."""
+        self.assertIn(".tableau-defilant{", self.css)
+        regle = self.css[self.css.index(".tableau-defilant{"):]
+        self.assertIn("overflow:auto", regle[:120])
+        self.assertIn("max-width:100%", regle[:120])
+        self.assertIn("function rendreTableauxDefilants(", self.script)
+        self.assertIn("function tableauDejaDefilant(", self.script)
+        # La région est nommée et atteignable au clavier.
+        self.assertIn("setAttribute('role', 'region')", self.script)
+        self.assertIn("setAttribute('tabindex', '0')", self.script)
+        self.assertIn("faites défiler horizontalement", self.script)
+        # Les tableaux créés après coup (strates, audit, bourse) sont couverts.
+        self.assertIn("MutationObserver", self.script)
+        self.assertIn("rendreTableauxDefilants();", self.script)
+
+    def test_les_enfants_de_grille_peuvent_retenir(self):
+        """Sans `min-width:0`, un enfant refuse de rétrécir et déborde."""
+        self.assertRegex(self.css, r"\.grille>\*[^{}]*\{[^}]*min-width:0")
+        self.assertRegex(self.css, r"\.leviers-grille>\*[^{}]*\{[^}]*min-width:0")
+
+    def test_le_sommaire_se_replie_et_reste_en_haut(self):
+        """Vingt sections sans repère : le sommaire accompagne la lecture."""
+        self.assertIn('id="sommaire-bascule"', self.page)
+        self.assertIn('aria-controls="sommaire-liste"', self.page)
+        self.assertIn('id="sommaire-liste"', self.page)
+        self.assertIn("function basculerSommaire(", self.script)
+        self.assertIn(".sommaire.ouverte .sommaire-liste{display:flex", self.css)
+        # La règle collante est celle des grands écrans : le sommaire suit la
+        # lecture au lieu de disparaître dès la première section.
+        self.assertIn(".sommaire{position:sticky", self.css)
+
+    def test_le_lien_d_evitement_ouvre_la_page(self):
+        """Premier élément focalisable : on saute l'en-tête au clavier."""
+        self.assertIn('<body>\n<a class="lien-evitement" href="#sommaire">', self.page)
+        self.assertIn(".lien-evitement:focus-visible{transform:none}", self.css)
+
+    def test_le_theme_n_ecrit_plus_ses_teintes_dans_les_regles(self):
+        """Une couleur se déclare dans :root, jamais dans une règle."""
+        self.assertNotIn("#7b8aa5", self.css)
+        self.assertIn("--panel-3:", self.css)
+        self.assertNotIn("#22304f", self.css)
+
+
+class TestResumeDeTeteEtChapitres(unittest.TestCase):
+    """Comprendre sans faire défiler vingt sections.
+
+    Le résumé de tête ne recalcule rien : il relit la balance. Les chapitres
+    donnent quatre temps dans une page qui n'en finissait pas de commencer.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.script = _script(cls.page)
+
+    def test_le_resume_de_tete_est_en_haut_de_page(self):
+        for identifiant in ("resume", "resume-titre", "resume-phrase", "resume-solde",
+                            "resume-entrees", "resume-sorties", "resume-menage"):
+            with self.subTest(identifiant=identifiant):
+                self.assertIn(f'id="{identifiant}"', self.page)
+        # Il se place après l'en-tête, avant la première section de contenu.
+        debut_resume = self.page.index('id="resume"')
+        self.assertLess(self.page.index("</header>"), debut_resume)
+        self.assertLess(debut_resume, self.page.index('id="section-contexte"'))
+
+    def test_le_resume_relit_la_balance_au_lieu_de_recalculer(self):
+        self.assertIn("function renderResume(", self.script)
+        # Les valeurs viennent des mêmes fonctions que la balance…
+        corps = self.script[self.script.index("function renderResume("):]
+        corps = corps[:corps.index("\n}")]
+        for source in ("classeAnneeAffichee()", "fmtSigne(", "fmtMenage(", "statutDiviseur()"):
+            with self.subTest(source=source):
+                self.assertIn(source, corps)
+        # …et la phrase est celle du verdict, reprise telle quelle.
+        self.assertIn("balance-verdict", corps)
+        # La balance appelle le résumé : deux affichages, un seul calcul.
+        balance = self.script[self.script.index("function renderBalance("):]
+        balance = balance[:balance.index("\nfunction ")]   # la fonction seule
+        self.assertIn("renderResume();", balance)
+
+    def test_les_quatre_chapitres_sont_dans_le_deroule(self):
+        for identifiant in ("chapitre-comprendre", "chapitre-mesurer",
+                            "chapitre-regler", "chapitre-verifier"):
+            with self.subTest(identifiant=identifiant):
+                self.assertIn(f'id="{identifiant}"', self.page)
+        # Chaque chapitre précède la première section qu'il ouvre.
+        for chapitre, section in (("chapitre-comprendre", "section-contexte"),
+                                  ("chapitre-mesurer", "section-impact"),
+                                  ("chapitre-regler", "section-scenarios"),
+                                  ("chapitre-verifier", "section-contradiction")):
+            with self.subTest(chapitre=chapitre):
+                self.assertLess(self.page.index(f'id="{chapitre}"'),
+                                self.page.index(f'id="{section}"'))
+
+    def test_les_mouvements_restent_discrets_et_arretables(self):
+        """Le geste reçoit une réponse ; l'utilisateur peut la couper."""
+        self.assertIn(".resume .metric{transition:", self.page)
+        self.assertIn(".cascade-piste .barre,.balance-cote .jauge-classe span{transition:", self.page)
+        bloc = self.page[self.page.index("@media (prefers-reduced-motion:reduce){"):]
+        self.assertIn("transition:none", bloc[:400])
