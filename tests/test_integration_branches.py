@@ -1,6 +1,5 @@
 """Régressions de l'intégration PR #10 / #11 : les deux modèles doivent coexister."""
 
-import importlib.util
 import json
 import subprocess
 import sys
@@ -17,6 +16,10 @@ from simulateur.model import DecisionPolitique
 from simulateur.moteur import MoteurSimulationSystemique
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from outils.chargement_module import charger_module  # noqa: E402
 
 
 class TestIntegrationBranches(unittest.TestCase):
@@ -65,9 +68,7 @@ class TestIntegrationBranches(unittest.TestCase):
         bus = types.ModuleType('eva.extensions.bus')
         bus.EventBus = object
         with patch.dict(sys.modules, {'eva.extensions.bus': bus}):
-            spec = importlib.util.spec_from_file_location('eva_integration_test', ROOT / 'extension_eva/main.py')
-            module = importlib.util.module_from_spec(spec)
-            spec.loader.exec_module(module)
+            module = charger_module('eva_integration_test', ROOT / 'extension_eva/main.py')
             extension = module.ExtensionSimulateurPolitique('test')
             for scenario, (fabrique, _) in CATALOGUE_SCENARIOS.items():
                 with self.subTest(scenario=scenario):

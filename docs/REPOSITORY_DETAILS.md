@@ -1,4 +1,4 @@
-# Réglages du dépôt (*Edit repository details*) — état au 5 octobre 2026
+# Réglages du dépôt (*Edit repository details*) — état au 13 octobre 2026
 
 Ce document est la référence des champs non versionnés du dépôt : description,
 site web, sujets (*topics*) et aperçu social. L'API GitHub refuse de les modifier
@@ -11,6 +11,16 @@ avec le jeton d'intégration utilisé par l'environnement d'automatisation
 > [`NOTE_POUR_CLAUDE.md`](../NOTE_POUR_CLAUDE.md), à l'attention de l'agent qui
 > reprendra le dépôt avec des droits d'administration.
 
+Les quatre régions marquées `<!-- engendre:… -->` sont **écrites par
+`outils/details_depot.py`** : elles recopient la description, les sujets,
+l'adresse publiée et l'empreinte de l'aperçu social depuis leurs sources. Le
+reste du document est de la prose, éditable à la main.
+
+```bash
+python3 outils/details_depot.py --doc           # réécrit les régions engendrées
+python3 outils/details_depot.py --verifier-doc  # refuse une valeur périmée
+```
+
 Deux scripts les tiennent à jour :
 
 ```bash
@@ -21,11 +31,13 @@ python3 outils/details_depot.py --appliquer   # tente la mise à jour par l'API 
 
 ---
 
-## 1. Description (270 / 350 caractères)
+<!-- engendre:description -->
+## 1. Description (271 / 350 caractères)
 
 ```
 Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 156 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
 ```
+<!-- /engendre:description -->
 
 **Pourquoi ce changement.** La description annonçait « Modèle gigogne à
 **4** échelons », alors que le moteur en compte **5** depuis l'ajout de la strate
@@ -36,35 +48,41 @@ sait faire aujourd'hui.
 
 ## 2. Site web
 
-Le site déclaré (`https://d-mocratie-et-politique-du-peuple-p.vercel.app`)
-renvoyait `404 DEPLOYMENT_NOT_FOUND` quand la branche `main` ne contenait ni
-page d'accueil ni fonctions API. La branche de travail ajoute maintenant à la
-racine la vraie interface interactive du simulateur et une fonction Python
-par route du moteur. Après fusion dans `main` et redéploiement Vercel, vérifier
-`/`, `/api/scenarios` et `POST /api/simuler` sur cette même adresse.
+<!-- engendre:site-web -->
+L'application est publiée à **https://d-mocratie-et-politique-du-peuple-p.vercel.app** — c'est elle, le site du dépôt.
+La même page, servie par le même moteur, répond aussi sur la **copie de secours**
+https://simulateur-macro-politique.onrender.com (Render, qui s'endort puis se réveille).
+
+Ce que les robots lisent : `https://d-mocratie-et-politique-du-peuple-p.vercel.app/robots.txt`, `/sitemap.xml`, `/llms.txt`,
+`/llms-full.txt` — tous engendrés par `simulateur/surface_publique.py`.
+Vérification depuis n'importe quelle machine connectée :
+`python3 outils/verifier-surface-en-ligne.py`.
+<!-- /engendre:site-web -->
+
+**Pourquoi ce changement.** Le champ avait été vidé, et ce document conseillait
+de le laisser vide : l'adresse alors déclarée renvoyait
+`404 DEPLOYMENT_NOT_FOUND`, `main` ne contenant ni page d'accueil ni fonctions
+API. Depuis, `main` sert la vraie interface interactive à la racine et une
+fonction Python par route du moteur : **il n'y a plus de raison de se passer
+d'une application qui répond**. Le script pose d'ailleurs la question à chaque
+exécution (`adresse_repond`) et, si le réseau manque, écrit « l'adresse n'a pas
+pu être vérifiée » — jamais « elle est morte ». Une phrase figée ne redevient
+jamais vraie toute seule ; une question posée, si.
 
 Les URL de prévisualisation `git-…vercel.app` peuvent rester protégées par les
-réglages d'accès de Vercel. Pour rendre l'outil public, désactiver
-**Deployment Protection → Vercel Authentication** et utiliser l'alias stable
-de production. Tant que le déploiement de production n'est pas vérifié, les
-options sûres restent :
-
-| Option | Valeur à saisir |
-|---|---|
-| Vider le champ | *(vide)* |
-| Renvoyer vers la documentation du simulateur | `https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md` |
+réglages d'accès de Vercel : c'est **l'alias stable de production** qu'il faut
+déclarer, celui de la région engendrée ci-dessus.
 
 Le simulateur se lance aussi localement : `python -m simulateur.dashboard --port 8080`
 (voir § 5 du `README.md`).
 
+<!-- engendre:sujets -->
 ## 3. Sujets (20 / 20)
 
 ```
-france, simulation, politiques-publiques, finances-publiques, budget, dette-publique,
-democratie, geopolitique, open-data, api-publiques, eurostat, banque-mondiale,
-dashboard, python, modele-systemique, souverainete, politiques-budgetaires,
-transparence, constitution, economie
+france, simulation, politiques-publiques, finances-publiques, budget, dette-publique, democratie, geopolitique, open-data, api-publiques, eurostat, banque-mondiale, dashboard, python, modele-systemique, souverainete, politiques-budgetaires, transparence, constitution, economie
 ```
+<!-- /engendre:sujets -->
 
 Aucun sujet n'était défini : le dépôt n'apparaissait dans aucune recherche
 thématique. Les vingt retenus couvrent ses quatre axes réels : le **modèle**
@@ -75,24 +93,21 @@ publiques, finances publiques, budget, dette, économie), la **doctrine**
 
 ## 4. Aperçu social
 
-Téléverser **`docs/apercu_social.png`** (1280 × 640, 52 Kio, très en
-deçà de la limite d'1 Mo), régénérable par `python3 outils/apercu_social.py`.
-L'image reprend la palette du simulateur, ses quatre chiffres clés (156 leviers ·
-20 domaines · 52 indicateurs publics · 5 échelons) et le ruban de veille avec ses
-pastilles de strate.
+<!-- engendre:apercu -->
+Téléverser **`docs/apercu_social.png`** (1280 × 640, 51 Kio — 52171 octets),
+régénérable par `python3 outils/apercu_social.py`. L'image reprend la palette du
+simulateur, ses chiffres clés — 156 leviers · 20 domaines · 52 indicateurs publics · 5 échelons —
+et le ruban de veille avec ses pastilles de strate.
 
-Empreintes du fichier livré, pour vérifier que c'est bien celui-ci qui a été
-téléversé :
+Empreintes du fichier versionné, pour vérifier que c'est bien celui-ci qui a été
+téléversé dans *Social preview* :
 
 | Format | Valeur |
 |---|---|
-| SHA-256 (hexadécimal) | `90ef4a128ef7d1006af16063824e0b297b92e3af599a9f74121f12d708a86828` |
-| SHA-256 (base64) | `SHA256:kO9KEo730QBq8WBjgk4LKXuS469Zmp90Eh8S1wioaCg=` |
-
-Téléverser **`docs/apercu_social.png`** (1280 × 640, 52 Kio), régénérable par
-`python3 outils/apercu_social.py`. L'image reprend la palette du simulateur, ses
-quatre chiffres clés (156 leviers · 20 domaines · 52 indicateurs publics ·
-5 échelons) et le ruban de veille avec ses pastilles de strate.
+| Octets | `52171` |
+| SHA-256 (hexadécimal) | `2ecba5b1b72d6ab6372eb3f1ada9c6e4bd9b4ef3cfef824257eaf6f9aa714ebd` |
+| SHA-256 (base64) | `SHA256:LsulsbctarY3LrPxranG5L2bTvPP74JCV+r2+apxTr0=` |
+<!-- /engendre:apercu -->
 
 ## 5. Autres cases de la même page
 
@@ -120,7 +135,7 @@ le jeton ne quitte pas votre navigateur, il n'est ni enregistré ni transmis.
 1. Sur la page du dépôt, cliquez sur la roue dentée **⚙** à côté de « About »
    (ou *Settings → General → Edit repository details*).
 2. **Description** : coller le texte du § 1 (270 caractères).
-3. **Website** : vider le champ, ou coller l'adresse de la documentation (§ 2).
+3. **Website** : coller l'adresse de l'application (§ 2).
 4. **Topics** : coller les vingt sujets du § 3.
 5. *Save changes*, puis **Social preview → Edit → Upload an image** et choisir
    `docs/apercu_social.png` (§ 4) — l'aperçu social n'a pas d'API, c'est le seul

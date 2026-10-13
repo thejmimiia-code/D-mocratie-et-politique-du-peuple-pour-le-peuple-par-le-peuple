@@ -20,7 +20,6 @@ Il vérifie trois choses, hors ligne :
 
 from __future__ import annotations
 
-import importlib.util
 import re
 import sys
 import unittest
@@ -30,18 +29,19 @@ RACINE = Path(__file__).resolve().parent.parent
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
+from outils.chargement_module import charger_module  # noqa: E402
 from simulateur import surface_publique as surface  # noqa: E402
 
 CHEMIN = RACINE / "outils" / "verifier-surface-en-ligne.py"
 
 
 def charger_veille() -> object:
-    """Importe le script (son nom porte des tirets, donc pas d'import normal)."""
-    specification = importlib.util.spec_from_file_location("verifier_surface_en_ligne", CHEMIN)
-    module = importlib.util.module_from_spec(specification)
-    sys.modules["verifier_surface_en_ligne"] = module
-    specification.loader.exec_module(module)
-    return module
+    """Importe le script (son nom porte des tirets, donc pas d'import normal).
+
+    Sans cache de bytecode : un script modifié de la même longueur dans la même
+    seconde doit être relu — voir `outils/chargement_module.py`.
+    """
+    return charger_module("verifier_surface_en_ligne", CHEMIN)
 
 
 def routes_du_serveur(methode: str) -> set[str]:

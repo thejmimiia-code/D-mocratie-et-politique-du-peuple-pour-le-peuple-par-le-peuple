@@ -44,7 +44,7 @@
 <body>
 <div class="conteneur">
   <h1>Appliquer les réglages du dépôt</h1>
-  <p class="aide">Description, site web et sujets du dépôt <code>thejmimiia-code/D-mocratie-et-politique-du-peuple</code>.
+  <p class="aide">Description, site web et sujets du dépôt <code>thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple</code>.
   Tout se passe <b>dans votre navigateur</b> : votre jeton n'est envoyé qu'à <code>api.github.com</code>, jamais ailleurs,
   et il n'est ni enregistré ni transmis à un tiers.</p>
 
@@ -72,10 +72,13 @@
     <p class="aide" id="compte-description"></p>
 
     <h2>3. Site web</h2>
-    <label for="site">Adresse du site (laisser vide : l'ancienne adresse Vercel renvoie 404)</label>
-    <input id="site" type="text" placeholder="(vide)">
-    <p class="aide">Ou, à défaut d'application hébergée :
-      <code>https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md</code></p>
+    <label for="site">Adresse du site (l'application publiée)</label>
+    <input id="site" type="text" value="https://d-mocratie-et-politique-du-peuple-p.vercel.app"
+           placeholder="https://…" spellcheck="false">
+    <p class="aide">C'est l'adresse de l'application : elle sert la page interactive et une
+      fonction par route du moteur. Si elle ne répond pas, la documentation fait un repli
+      acceptable :
+      <code>https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md</code></p>
 
     <h2>4. Sujets</h2>
     <div class="topics" id="topics"></div>
@@ -96,7 +99,7 @@
     <h2 style="margin-top:0">Ce que cette page ne peut pas faire</h2>
     <p class="aide">L'<b>aperçu social</b> (la vignette affichée au partage d'un lien) n'a pas d'API :
     GitHub ne l'accepte que par l'interface web. Le fichier est prêt dans le dépôt :
-    <code>docs/apercu_social.png</code> (1280 × 640, 52 Kio) — à téléverser dans
+    <code>docs/apercu_social.png</code> (1280 × 640) — à téléverser dans
     <b>Settings → General → Social preview → Edit → Upload an image</b>.
     Raccourci pour tout le reste : sur la page du dépôt, la roue dentée
     <b>⚙</b> à côté de « About » ouvre directement cette fenêtre.</p>
@@ -104,7 +107,7 @@
 </div>
 
 <script>
-const DEPOT = 'thejmimiia-code/D-mocratie-et-politique-du-peuple';
+const DEPOT = 'thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple';
 const SUJETS = ['france','simulation','politiques-publiques','finances-publiques','budget',
   'dette-publique','democratie','geopolitique','open-data','api-publiques','eurostat',
   'banque-mondiale','dashboard','python','modele-systemique','souverainete',
@@ -163,7 +166,9 @@ async function verifier(){
       + `Description: ${depot.description || '(vide)'}\n`
       + `Site web   : ${depot.homepage || '(vide)'}\n`
       + `Sujets     : ${(depot.topics || []).join(', ') || '(aucun)'}\n`
-      + `Visibilité : ${depot.visibility}`);
+      + `Visibilité : ${depot.visibility}`
+      + (depot.homepage === document.getElementById('site').value.trim() ? ''
+         : `\n\n⚠️ Le site déclaré diffère de l'adresse recommandée ci-dessus.`));
   } catch (erreur){
     journal('Échec de la lecture : ' + erreur.message, 'ko');
   }

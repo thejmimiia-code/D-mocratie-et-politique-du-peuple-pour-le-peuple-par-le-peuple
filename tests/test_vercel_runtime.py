@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import http.client
-import importlib
-import importlib.util
 import json
 import os
 import subprocess
@@ -20,6 +18,7 @@ from unittest.mock import patch
 os.environ.setdefault("SIMULATEUR_HORS_LIGNE", "1")
 os.environ.setdefault("SIMULATEUR_CACHE", "/tmp/simulateur_cache")
 
+from outils.chargement_module import charger_module  # noqa: E402
 from simulateur.dashboard import DashboardHandler  # noqa: E402
 from simulateur.pont_api import FonctionAPI, PontAPI, chemin_de_pont  # noqa: E402
 
@@ -27,12 +26,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def _charger_fonction_unique():
-    """Charge `api/[...path].py` : le nom n'est pas un nom de module, d'où le chemin."""
-    specification = importlib.util.spec_from_file_location(
-        "api_pont_unique", ROOT / "api" / "[...path].py")
-    module = importlib.util.module_from_spec(specification)
-    specification.loader.exec_module(module)
-    return module
+    """Charge `api/[...path].py` : le nom n'est pas un nom de module, d'où le chemin.
+
+    Sans cache de bytecode : l'engendré doit être relu à chaque fois, jamais
+    servi depuis un `.pyc` — voir `outils/chargement_module.py`.
+    """
+    return charger_module("api_pont_unique", ROOT / "api" / "[...path].py")
 ROUTES_MOTEUR = (
     "catalogue",
     "contexte",

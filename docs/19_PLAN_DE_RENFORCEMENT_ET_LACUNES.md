@@ -119,11 +119,20 @@ La description du dépôt dit toujours « Modèle gigogne à 4 échelons », l'a
 pointe vers une instance Vercel qui renvoie 404, et aucun sujet n'est défini :
 `python3 outils/details_depot.py` affiche l'état constaté et le bloc à coller.
 
-*État : non corrigé, et bloqué à dessein.* Le jeton disponible dans l'espace de travail est
-un jeton d'intégration sans droit d'administration : l'API refuse la modification
-(`403 Resource not accessible by integration`), et `outils/details_depot.py` le dit au lieu
-de faire semblant. La correction est à portée de main d'un humain : coller le bloc affiché
-dans *Settings → General*. Cette limite est écrite ici parce qu'elle ne dépend pas du code.
+*État au 13 octobre 2026 : à moitié corrigé, et le reste bloqué à dessein.*
+
+- **Corrigé côté dépôt** : la description et les sujets des documents sont à jour et
+  **engendrés** (`outils/details_depot.py --doc`, contrôlés par `--verifier-doc`) ; l'adresse
+  du site n'est plus « morte » — elle sert l'application, et l'outil **pose la question**
+  (`adresse_repond`) au lieu de l'affirmer, avec une troisième réponse honnête quand le
+  réseau manque. La page `outils/reglages_depot.html` porte enfin des contrôles : elle
+  proposait de vider le champ, et visait un nom de dépôt tronqué — donc un dépôt inexistant.
+  Voir `docs/RD_PREUVE_ET_OUTILLAGE.md`.
+- **Toujours à faire par un humain** : coller le bloc affiché dans
+  *Settings → General → Edit repository details*, et téléverser l'aperçu social. Le jeton
+  disponible dans l'espace de travail est un jeton d'intégration sans droit d'administration :
+  l'API refuse (`403 Resource not accessible by integration`), et l'outil le dit au lieu de
+  faire semblant. Cette limite est écrite ici parce qu'elle ne dépend pas du code.
 
 ### 2.5 Ce que l'audit n'a pas trouvé
 

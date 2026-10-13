@@ -366,13 +366,10 @@ class TestFraicheurDesDocuments(unittest.TestCase):
         indicateurs, garde-fous, scénarios, échelons et routes — et refuse qu'un
         document vivant annonce le compte de ses tests.
         """
-        import importlib.util
+        from outils.chargement_module import charger_module
 
         chemin = RACINE / "outils" / "verifier-compteurs.py"
-        spec = importlib.util.spec_from_file_location("verifier_compteurs", chemin)
-        module = importlib.util.module_from_spec(spec)
-        sys.modules["verifier_compteurs"] = module
-        spec.loader.exec_module(module)
+        module = charger_module("verifier_compteurs", chemin)
         anomalies = module.verifier(RACINE)
         self.assertEqual(anomalies, [],
                          "compteur périmé — régénérer la page ou reprendre le chiffre : "
