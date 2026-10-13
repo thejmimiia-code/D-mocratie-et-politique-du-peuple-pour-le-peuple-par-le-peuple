@@ -301,6 +301,22 @@ noter("la balance explique l'écart entre les deux lectures du budget",
       /recettes nouvelles/.test(contenu("balance-detail"))
       && /drapeaux/i.test(contenu("balance-detail")),
       contenu("balance-detail").slice(0, 140));
+/* Le résumé de tête ne calcule rien : il relit la balance. Le contrôle compare
+   donc les deux textes, il ne se contente pas d'une forme plausible. */
+noter("le résumé de tête porte le solde de la balance, sans le recalculer",
+      / Md€\/an$/.test(elements.get("resume-solde")?.textContent || "")
+      && (elements.get("balance-net")?.textContent || "")
+        .includes(elements.get("resume-solde")?.textContent || "\u0000"),
+      `résumé : ${elements.get("resume-solde")?.textContent} · balance : ${elements.get("balance-net")?.textContent}`);
+noter("la phrase du résumé est mot pour mot celle de la balance",
+      !!elements.get("resume-phrase")?.textContent
+      && elements.get("resume-phrase")?.textContent === elements.get("balance-verdict")?.textContent,
+      `${elements.get("resume-phrase")?.textContent}`);
+noter("le résumé porte les deux plateaux et l'ordre de grandeur par ménage",
+      /Md€\/an/.test(elements.get("resume-entrees")?.textContent || "")
+      && /Md€\/an/.test(elements.get("resume-sorties")?.textContent || "")
+      && /€\/ménage\/an/.test(elements.get("resume-menage")?.textContent || ""),
+      `${elements.get("resume-entrees")?.textContent} / ${elements.get("resume-sorties")?.textContent} / ${elements.get("resume-menage")?.textContent}`);
 const totauxClasse = apiPage.etat().SORTIE?.classes_annuelles || [];
 noter("les totaux par classe viennent du moteur (pas de la page)",
       totauxClasse.length > 0
@@ -352,6 +368,7 @@ noter("la cascade dit ce qu'elle laisse hors budget",
 /* Le rythme : la même lecture année par année. On recule d'un an, puis on
    revient à la dernière année — les contrôles suivants portent sur elle. */
 const soldeNetFinal = elements.get("balance-net")?.textContent;
+const soldeResumeFinal = elements.get("resume-solde")?.textContent;
 noter("les classes se lisent année par année",
       /an \d+ \/ \d+/.test(elements.get("classe-annee-courante")?.textContent || "")
       && /%/.test(contenu("classe-rythme")),
@@ -364,6 +381,9 @@ noter("reculer d'un an relit la balance et la cascade",
       && /solde des classes/.test(elements.get("balance-net")?.textContent || "")
       && contenu("cascade-marches").includes("Solde des classes"),
       `an lu : ${elements.get("classe-annee-courante")?.textContent} · ${elements.get("balance-net")?.textContent}`);
+noter("reculer d'un an relit aussi le résumé de tête",
+      (elements.get("resume-solde")?.textContent || "") !== soldeResumeFinal,
+      `${soldeResumeFinal} → ${elements.get("resume-solde")?.textContent}`);
 apiPage.changerAnneeClasses(1);   // geste de l'utilisateur : « an suivant › »
 noter("revenir à la dernière année restitue le régime de fin de mandature",
       elements.get("balance-net")?.textContent === soldeNetFinal

@@ -626,6 +626,36 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
   .levier.compact{grid-template-columns:1fr 70px auto}}
+/* ── Le résumé de tête : les chiffres, puis la phrase ─────────────────────
+   On doit comprendre le plan sans faire défiler vingt sections. Le bandeau ne
+   calcule rien : il relit la balance (`renderResume` est appelé par
+   `renderBalance`), donc les deux affichages ne peuvent pas diverger. */
+.resume{background:linear-gradient(135deg,var(--panel-2),var(--panel));border-color:var(--mrsc-bleu)}
+.resume-phrase{font-size:max(var(--t-min),.86rem);color:var(--texte);margin:2px 0 10px}
+.resume .metric .valeur{font-variant-numeric:tabular-nums}
+.resume-gain .valeur{color:var(--vert)}
+.resume-cout .valeur{color:var(--rouge)}
+.resume-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:10px}
+.resume-actions a{font-size:max(var(--t-min),.8rem);color:var(--texte-dim)}
+.resume-actions a:hover{color:var(--texte)}
+/* L'interaction répond au geste, sans jamais devenir un feu d'artifice. */
+.resume .metric{transition:transform .15s ease,border-color .15s ease}
+.resume .metric:hover{border-color:var(--accent);transform:translateY(-1px)}
+.cascade-piste .barre,.balance-cote .jauge-classe span{transition:width .25s ease,left .25s ease}
+@media (prefers-reduced-motion:reduce){
+  .resume .metric,.cascade-piste .barre,.balance-cote .jauge-classe span{transition:none}
+  .resume .metric:hover{transform:none}
+}
+/* ── Les chapitres : quatre temps dans une page de vingt sections ─────────
+   Le sommaire dit l'ordre ; les chapitres disent où l'on est, dans le
+   déroulé, sans obliger à remonter. */
+.chapitre{display:flex;align-items:flex-start;gap:12px;margin:20px 0 12px;padding:10px 14px;
+  border-left:4px solid var(--mrsc-or);background:var(--panel-2);border-radius:0 12px 12px 0}
+.chapitre-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+  border-radius:50%;background:var(--mrsc-navy);color:var(--texte);font-weight:700;flex:0 0 auto}
+.chapitre-titre{font-size:1.02rem;font-weight:700;letter-spacing:.3px}
+.chapitre-aide{font-size:max(var(--t-min),.8rem);color:var(--texte-dim);margin-top:2px}
+
 /* ══ Socle responsive : un seul jeu de règles, tous les écrans ═════════════
    Ce bloc vient en fin de feuille : il s'applique à l'écran seulement, et
    jamais à l'impression (l'impression a ses règles, plus haut). Quatre
@@ -746,6 +776,25 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <p class="aide" id="avis-lien" hidden></p>
   </header>
 
+  <section class="bloc resume" id="resume" aria-labelledby="resume-titre">
+    <h2 id="resume-titre">🧾 Votre plan en un coup d'œil <span class="aide">les chiffres qui comptent, repris de la balance — rien n'est recalculé ici</span></h2>
+    <p class="resume-phrase" id="resume-phrase">Déplacez un curseur : le plan se pèse ici, en milliards d'euros par an.</p>
+    <div class="grille metrics">
+      <div class="carte metric"><div class="libelle">Solde du plan</div>
+        <div class="valeur" id="resume-solde">—</div><div class="delta neutre" id="resume-solde-note">en attente d'une simulation</div></div>
+      <div class="carte metric"><div class="libelle">Ce qui entre</div>
+        <div class="valeur" id="resume-entrees">—</div><div class="delta neutre">recettes + économies</div></div>
+      <div class="carte metric"><div class="libelle">Ce qui sort</div>
+        <div class="valeur" id="resume-sorties">—</div><div class="delta neutre" id="resume-sorties-note">dépenses engagées</div></div>
+      <div class="carte metric"><div class="libelle">Par ménage</div>
+        <div class="valeur" id="resume-menage">—</div><div class="delta neutre" id="resume-menage-note">ordre de grandeur</div></div>
+    </div>
+    <div class="resume-actions">
+      <button class="primaire" type="button" onclick="allerAuxLeviers()">Régler les leviers</button>
+      <a href="#section-classes">Voir la balance et les cinq classes</a>
+    </div>
+  </section>
+
   <nav class="sommaire" id="sommaire" aria-label="Sommaire de la page">
     <button type="button" class="sommaire-bascule" id="sommaire-bascule"
       aria-expanded="false" aria-controls="sommaire-liste"
@@ -799,6 +848,14 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     </div>
   </div>
 
+  <div class="chapitre" id="chapitre-comprendre">
+    <span class="chapitre-num" aria-hidden="true">1</span>
+    <div class="chapitre-texte">
+      <p class="chapitre-titre">Comprendre</p>
+      <p class="chapitre-aide">Où en est le pays aujourd'hui, avec les données publiques réellement collectées — et ce que le plan change.</p>
+    </div>
+  </div>
+
   <section class="bloc" id="section-contexte">
     <h2>Contexte « instant T » <span class="aide">données publiques réellement collectées, avec provenance et licence</span></h2>
     <div class="grille metrics" id="grid-metrics"></div>
@@ -840,6 +897,14 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <ul class="clair-limites" id="clair-limites"></ul>
   </section>
 
+  <div class="chapitre" id="chapitre-mesurer">
+    <span class="chapitre-num" aria-hidden="true">2</span>
+    <div class="chapitre-texte">
+      <p class="chapitre-titre">Mesurer</p>
+      <p class="chapitre-aide">Ce que le plan produit, année par année : la cascade des cinq échelons, les strates, la transmission entre générations.</p>
+    </div>
+  </div>
+
   <section class="bloc" id="section-impact">
     <h2>Surface d'impact de vos choix <span class="aide">recettes, dépenses et solde des mesures activées (année terminale)</span></h2>
     <div class="grille metrics" id="grid-impact"></div>
@@ -875,6 +940,14 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <div class="panneau-strate" id="panneau-strate-menages" role="tabpanel" aria-labelledby="tab-strate-menages"></div>
     <div class="panneau-strate" id="panneau-strate-boursier" role="tabpanel" aria-labelledby="tab-strate-boursier"></div>
   </section>
+
+  <div class="chapitre" id="chapitre-regler">
+    <span class="chapitre-num" aria-hidden="true">3</span>
+    <div class="chapitre-texte">
+      <p class="chapitre-titre">Régler</p>
+      <p class="chapitre-aide">Les scénarios rejouables, les préréglages doctrinaux, les classes de leviers et leurs limites juridiques.</p>
+    </div>
+  </div>
 
   <section class="bloc" id="section-scenarios">
     <h2>Scénarios types du dépôt <span class="aide">situations rejouées par le moteur d'origine, année par année — pour comparaison</span></h2>
@@ -962,6 +1035,14 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     <h3 style="margin:14px 0 6px">Réglages déplacés et ce qu'ils touchent</h3>
     <div id="reglages-corps" class="reglages-touches"></div>
   </section>
+
+  <div class="chapitre" id="chapitre-verifier">
+    <span class="chapitre-num" aria-hidden="true">4</span>
+    <div class="chapitre-texte">
+      <p class="chapitre-titre">Vérifier</p>
+      <p class="chapitre-aide">Les objections et leurs réponses, les résultats détaillés, les sources, les licences — et l'audit à livre ouvert.</p>
+    </div>
+  </div>
 
   <section class="bloc" id="section-contradiction">
     <h2>Objections, concessions et réponses <span class="aide">le registre de la contradiction (<code>simulateur/contradiction.py</code>) : pour chaque mesure et pour chaque hypothèse du modèle, la meilleure version de la critique, ce que le dépôt concède, ce qu'il maintient, le fait qui le ferait changer d'avis, ses sources et son statut. La portée des leviers est déduite du catalogue (<code>simulateur/parametres.py</code>), jamais saisie. Rien n'est rédigé ici : tout vient de <code>GET /api/objections</code>.</span></h2>
@@ -2185,6 +2266,49 @@ function renderFiltresClasses(){
     + `les 5 classes et leurs leviers.">Toutes</button>`;
   zone.innerHTML = `<span class="titre">Filtrer par classe</span>${jetons}${tous}`;
 }
+/* ── Le résumé de tête ────────────────────────────────────────────────────
+   Quatre chiffres et une phrase, visibles sans faire défiler la page. Toutes
+   les valeurs viennent des mêmes fonctions que la balance (`classeAnneeAffichee`,
+   `fmtSigne`, `fmtMenage`) et la phrase est celle du verdict de la balance,
+   reprise mot pour mot : le résumé ne raconte pas autre chose que la page. */
+function renderResume(){
+  const solde = document.getElementById('resume-solde');
+  if (!solde) return;
+  const note = document.getElementById('resume-solde-note');
+  const entrees = document.getElementById('resume-entrees');
+  const sorties = document.getElementById('resume-sorties');
+  const sortiesNote = document.getElementById('resume-sorties-note');
+  const menage = document.getElementById('resume-menage');
+  const menageNote = document.getElementById('resume-menage-note');
+  const phrase = document.getElementById('resume-phrase');
+  const annee = classeAnneeAffichee();
+  if (!annee){
+    if (phrase) phrase.textContent = "Déplacez un curseur : le plan se pèse ici, en milliards d'euros par an.";
+    return;
+  }
+  const montant = Number(annee.solde_mde) || 0;
+  const neutre = Math.abs(montant) < 0.05;
+  solde.textContent = `${fmtSigne(montant, 1)} Md€/an`;
+  if (note) note.textContent = neutre
+    ? `à l'équilibre — année ${annee.annee}`
+    : (montant > 0 ? 'marge dégagée' : 'marge consommée') + ` — année ${annee.annee}`;
+  if (entrees) entrees.textContent = `${fmtSigne(annee.entrees_mde, 1)} Md€/an`;
+  if (sorties) sorties.textContent = `${fmtSigne(annee.sorties_mde, 1)} Md€/an`;
+  if (sortiesNote) sortiesNote.textContent = annee.sorties_mde < 0
+    ? 'budgets en baisse : une coupe, pas une dépense'
+    : 'dépenses engagées';
+  if (menage) menage.textContent = fmtMenage(montant);
+  if (menageNote) menageNote.textContent = 'solde du plan « ' + statutDiviseur() + ' »';
+  const verdict = document.getElementById('balance-verdict');
+  if (phrase && verdict) phrase.textContent = verdict.textContent;
+  const net = document.getElementById('balance-net');
+  const carte = solde.parentNode;
+  if (net && carte && carte.classList && net.classList){
+    carte.classList.toggle('resume-gain', net.classList.contains('gain'));
+    carte.classList.toggle('resume-cout', net.classList.contains('cout'));
+  }
+}
+
 function renderBalance(){
   const annee = classeAnneeAffichee();
   const verdict = document.getElementById('balance-verdict');
@@ -2201,6 +2325,7 @@ function renderBalance(){
     if (entrees) entrees.textContent = '—';
     if (sorties) sorties.textContent = '—';
     if (net){ net.textContent = 'solde : —'; net.className = 'net neutre'; }
+    renderResume();
     return;
   }
   const total = Math.abs(annee.entrees_mde) + Math.abs(annee.sorties_mde);
@@ -2253,6 +2378,8 @@ function renderBalance(){
       + `Conversion : ${(DIVISEUR_MENAGES && DIVISEUR_MENAGES.libelle) || 'ordre de grandeur'} `
       + `(<b>${echapperTexte(statutDiviseur())}</b>).`;
   }
+  // Le résumé de tête suit la balance : un seul calcul, deux affichages.
+  renderResume();
 }
 /* ── La cascade : le plan déroulé, marche par marche ─────────────────────
    Ce qu'aucun total annuel ne montre : dans quel ordre le budget se

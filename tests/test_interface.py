@@ -827,3 +827,62 @@ class TestSocleResponsive(unittest.TestCase):
         self.assertNotIn("#7b8aa5", self.css)
         self.assertIn("--panel-3:", self.css)
         self.assertNotIn("#22304f", self.css)
+
+
+class TestResumeDeTeteEtChapitres(unittest.TestCase):
+    """Comprendre sans faire défiler vingt sections.
+
+    Le résumé de tête ne recalcule rien : il relit la balance. Les chapitres
+    donnent quatre temps dans une page qui n'en finissait pas de commencer.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.script = _script(cls.page)
+
+    def test_le_resume_de_tete_est_en_haut_de_page(self):
+        for identifiant in ("resume", "resume-titre", "resume-phrase", "resume-solde",
+                            "resume-entrees", "resume-sorties", "resume-menage"):
+            with self.subTest(identifiant=identifiant):
+                self.assertIn(f'id="{identifiant}"', self.page)
+        # Il se place après l'en-tête, avant la première section de contenu.
+        debut_resume = self.page.index('id="resume"')
+        self.assertLess(self.page.index("</header>"), debut_resume)
+        self.assertLess(debut_resume, self.page.index('id="section-contexte"'))
+
+    def test_le_resume_relit_la_balance_au_lieu_de_recalculer(self):
+        self.assertIn("function renderResume(", self.script)
+        # Les valeurs viennent des mêmes fonctions que la balance…
+        corps = self.script[self.script.index("function renderResume("):]
+        corps = corps[:corps.index("\n}")]
+        for source in ("classeAnneeAffichee()", "fmtSigne(", "fmtMenage(", "statutDiviseur()"):
+            with self.subTest(source=source):
+                self.assertIn(source, corps)
+        # …et la phrase est celle du verdict, reprise telle quelle.
+        self.assertIn("balance-verdict", corps)
+        # La balance appelle le résumé : deux affichages, un seul calcul.
+        balance = self.script[self.script.index("function renderBalance("):]
+        balance = balance[:balance.index("\nfunction ")]   # la fonction seule
+        self.assertIn("renderResume();", balance)
+
+    def test_les_quatre_chapitres_sont_dans_le_deroule(self):
+        for identifiant in ("chapitre-comprendre", "chapitre-mesurer",
+                            "chapitre-regler", "chapitre-verifier"):
+            with self.subTest(identifiant=identifiant):
+                self.assertIn(f'id="{identifiant}"', self.page)
+        # Chaque chapitre précède la première section qu'il ouvre.
+        for chapitre, section in (("chapitre-comprendre", "section-contexte"),
+                                  ("chapitre-mesurer", "section-impact"),
+                                  ("chapitre-regler", "section-scenarios"),
+                                  ("chapitre-verifier", "section-contradiction")):
+            with self.subTest(chapitre=chapitre):
+                self.assertLess(self.page.index(f'id="{chapitre}"'),
+                                self.page.index(f'id="{section}"'))
+
+    def test_les_mouvements_restent_discrets_et_arretables(self):
+        """Le geste reçoit une réponse ; l'utilisateur peut la couper."""
+        self.assertIn(".resume .metric{transition:", self.page)
+        self.assertIn(".cascade-piste .barre,.balance-cote .jauge-classe span{transition:", self.page)
+        bloc = self.page[self.page.index("@media (prefers-reduced-motion:reduce){"):]
+        self.assertIn("transition:none", bloc[:400])

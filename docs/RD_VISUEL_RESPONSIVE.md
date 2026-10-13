@@ -84,6 +84,27 @@ Les teintes en dur passent en variables de thème (`--panel-3`, `--texte-dim`),
 comme les couleurs de classe l'avaient déjà fait. Le site M.R.S.C., qui
 surcharge la palette, suit alors sans réécriture.
 
+## Deuxième incrément — l'organisation et la compréhension
+
+Le socle rend la page lisible ; il ne dit pas encore **où l'on est ni ce
+qu'on vient chercher**. Deux ajouts, sans déplacer une seule section (les
+ancres, les identifiants et l'ordre du document restent ceux du moteur) :
+
+- **Un résumé de tête** (« 🧾 Votre plan en un coup d'œil ») juste après
+  l'en-tête : le solde du plan, ce qui entre, ce qui sort, l'ordre de grandeur
+  par ménage, et **la phrase du verdict reprise mot pour mot de la balance**.
+  Le bandeau ne calcule rien : `renderResume()` est appelé par
+  `renderBalance()`, avec les mêmes fonctions (`classeAnneeAffichee`,
+  `fmtSigne`, `fmtMenage`, `statutDiviseur`). Deux affichages, un seul calcul —
+  c'est la seule façon d'être sûr qu'ils ne finiront pas par se contredire.
+- **Quatre chapitres** dans le déroulé — *Comprendre*, *Mesurer*, *Régler*,
+  *Vérifier* — qui découpent la vingtaine de sections en quatre temps, chacun
+  avec sa phrase d'entrée.
+
+Les mouvements restent discrets : les cartes se soulèvent légèrement, les
+barres de la cascade et les jauges de la balance glissent au lieu de sauter,
+et `prefers-reduced-motion` coupe tout.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -94,10 +115,25 @@ quelqu'un réintroduit les défauts mesurés plus haut.
 - présence de `min-width:0` sur les enfants de grille ;
 - présence de `rendreTableauxDefilants(` et de `.tableau-defilant` avec
   `role="region"` et `tabindex="0"` ;
-- présence du lien d'évitement, en premier élément focalisable de la page.
+- présence du lien d'évitement, en premier élément focalisable de la page ;
+- résumé de tête au-dessus de la première section, alimenté par les mêmes
+  fonctions que la balance, et appelé par elle ;
+- quatre chapitres, chacun avant la première section qu'il ouvre ;
+- mouvements coupables par `prefers-reduced-motion`.
 
-Les tests d'exécution (doublure DOM, 169 étapes) et la suite complète restent la
-référence : une règle visuelle qui casserait un comportement n'a pas sa place.
+Deux contrôles **exécutent** le code, ils ne le relisent pas :
+
+- `tests/test_defilement_tableaux.py` fait tourner les fonctions d'enveloppement
+  sur un DOM minimal et vérifie qu'un seul tableau est enveloppé, que la région
+  est nommée et atteignable au clavier, que le tableau n'est pas modifié et que
+  les tableaux déjà défilants sont laissés tranquilles ;
+- `tests/navigateur_interface.mjs` demande au parcours réel que le résumé de
+  tête porte **le solde de la balance** (comparaison de texte), que sa phrase
+  soit celle du verdict, et qu'un changement d'année relise le résumé.
+
+La suite complète (1 058 tests, 11 ignorés) et `ruff` restent la référence : une
+règle visuelle qui casserait un comportement n'a pas sa place.
+
 
 ## Limites assumées
 
