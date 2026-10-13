@@ -175,6 +175,10 @@ class TestInterfaceDansNode(unittest.TestCase):
                 "GET /api/proxy": proxy,
                 "GET /api/bulle": bulle,
                 "GET /api/bulles": json.loads(cls._get("/api/bulles?detail=resume")),
+                # Les deux registres institutionnels : la section des contre-pouvoirs
+                # les charge elle-même, le parcours vérifie ce qu'elle en fait.
+                "GET /api/contrepouvoirs": json.loads(cls._get("/api/contrepouvoirs")),
+                "GET /api/dynamiques": json.loads(cls._get("/api/dynamiques")),
                 "GET /api/garde_fous": json.loads(cls._get("/api/garde_fous")),
                 "GET /api/objections": json.loads(cls._get("/api/objections")),
                 "GET /api/lexique": json.loads(cls._get("/api/lexique")),

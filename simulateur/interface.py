@@ -20,7 +20,13 @@ aucun CDN) qui contient :
     indices, cinq strates, garde-fous de la couche — et l'état des 38 verrous du
     registre, partagé en touchés / intacts / hors réglage, chaque citation de la
     Constitution pointant sur la fiche servie par `/api/constitution` ;
-  * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;
+  * les **contre-pouvoirs en chiffres** : l'arithmétique servie par
+    `/api/contrepouvoirs` — les seuils de chaque manœuvre, la composition des
+    deux chambres, une coalition qui se compose à l'écran — et le temps des
+    procédures servi par `/api/dynamiques` : trajets, battements, jours de
+    rigueur, fentes non écrites. Les deux registres se chargent à l'approche de
+    la section, jamais au démarrage ;
+  * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;  * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;
   * la matrice croisée levier × domaine (impacts calculés par le modèle) ;
   * le journal causal du moteur et les exports JSON/CSV ;
   * un bouton « Rafraîchir les données » qui interroge les API publiques
@@ -547,6 +553,70 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   white-space:nowrap}
 #section-verrous .puce-reglage{display:inline-block;margin:0 3px;padding:1px 6px;border-radius:999px;
   border:1px solid #2b3d5c;font-size:max(var(--t-min),.7rem);font-style:normal}
+#section-contrepouvoirs .cp-intro{color:#9fb0cc;font-size:max(var(--t-min),.8rem);margin:2px 0 8px}
+#section-contrepouvoirs .cp-chambres{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:10px;margin:8px 0}
+#section-contrepouvoirs .cp-chambre{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;padding:8px 10px}
+#section-contrepouvoirs .cp-chambre h4{margin:0 0 6px;font-size:.84rem;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+#section-contrepouvoirs .cp-seuils{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
+#section-contrepouvoirs .cp-seuil{display:inline-block;border:1px solid #2b3d5c;border-radius:999px;padding:1px 8px;
+  font-size:max(var(--t-min),.7rem);color:#cfe0f5;white-space:nowrap}
+#section-contrepouvoirs .cp-seuil b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#section-contrepouvoirs .cp-sieges{display:flex;height:16px;border-radius:4px;overflow:hidden;border:1px solid #2b3d5c;margin:6px 0 4px}
+#section-contrepouvoirs .cp-sieges span{background:hsl(var(--teinte),58%,52%);min-width:3px}  /* la syntaxe à virgules, comprise partout */
+#section-contrepouvoirs .cp-groupes{display:flex;flex-wrap:wrap;gap:4px}
+#section-contrepouvoirs .cp-groupe{cursor:pointer;border:1px solid #2b3d5c;border-radius:999px;background:#0f1626;
+  color:#cfe0f5;padding:2px 8px;font-size:max(var(--t-min),.7rem);display:inline-flex;gap:5px;align-items:center}
+#section-contrepouvoirs .cp-groupe i{font-style:normal;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#9fb0cc}
+#section-contrepouvoirs .cp-groupe[aria-pressed="true"]{border-color:#38bdf8;background:rgba(56,189,248,.16);color:#e6f6ff}
+#section-contrepouvoirs .cp-groupe[aria-pressed="true"] i{color:#bae6fd}
+#section-contrepouvoirs .cp-coalition{margin-top:6px;font-size:max(var(--t-min),.74rem);color:#dbe6f7;line-height:1.45;
+  border-top:1px dashed rgba(147,163,189,.25);padding-top:6px}
+#section-contrepouvoirs .cp-coalition b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+#section-contrepouvoirs .cp-coherence{font-size:max(var(--t-min),.74rem);color:#7ee0a3;margin:6px 0}
+#section-contrepouvoirs .cp-coherence.ko{color:#f3a0a0}
+#section-contrepouvoirs .cp-familles{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
+#section-contrepouvoirs .cp-famille{cursor:pointer;border:1px solid #2b3d5c;border-radius:999px;background:#0f1626;
+  color:#cfe0f5;padding:2px 10px;font-size:max(var(--t-min),.72rem)}
+#section-contrepouvoirs .cp-famille b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#9fb0cc}
+#section-contrepouvoirs .cp-famille[aria-pressed="true"]{border-color:#38bdf8;background:rgba(56,189,248,.16)}
+#section-contrepouvoirs .cp-famille[aria-pressed="true"] b{color:#bae6fd}
+#section-contrepouvoirs .cp-mecanisme{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;margin:8px 0;padding:8px 10px}
+#section-contrepouvoirs .cp-mecanisme summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:.84rem}
+#section-contrepouvoirs .cp-mecanisme[open] summary{margin-bottom:6px}
+#section-contrepouvoirs .cp-etiquette{font-size:max(var(--t-min),.68rem);text-transform:uppercase;letter-spacing:.4px;
+  color:#9fb0cc;border:1px solid #2b3d5c;border-radius:999px;padding:1px 7px;white-space:nowrap}
+#section-contrepouvoirs .cp-champ{margin:5px 0;font-size:.8rem;line-height:1.45;color:#dbe6f7}
+#section-contrepouvoirs .cp-champ b{display:block;font-size:max(var(--t-min),.7rem);text-transform:uppercase;
+  letter-spacing:.4px;color:#9fb0cc;font-weight:600}
+#section-contrepouvoirs .cp-seuils-liste{list-style:none;margin:4px 0 0;padding:0}
+#section-contrepouvoirs .cp-seuils-liste li{border-bottom:1px dashed rgba(147,163,189,.18);padding:4px 0;font-size:.78rem}
+#section-contrepouvoirs .cp-seuil-ligne{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;color:#e6f6ff}
+#section-contrepouvoirs .cp-citation{display:block;color:#9fb0cc;font-size:max(var(--t-min),.74rem);margin-top:2px}
+#section-contrepouvoirs .cp-puces{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+#section-contrepouvoirs .cp-puce{display:inline-block;border:1px solid #2b3d5c;border-radius:999px;padding:1px 7px;
+  font-size:max(var(--t-min),.7rem);color:#cfe0f5}
+#section-contrepouvoirs a.article{color:#bae6fd;border-bottom:1px dotted #38bdf8;text-decoration:none}
+#section-contrepouvoirs a.article:hover{border-bottom-style:solid}
+#section-contrepouvoirs .cp-table{width:100%;border-collapse:collapse;font-size:max(var(--t-min),.76rem)}
+#section-contrepouvoirs .cp-table th{color:#9fb0cc;text-align:left;font-weight:600;padding:4px 6px;border-bottom:1px solid #2b3d5c}
+#section-contrepouvoirs .cp-table td{padding:4px 6px;border-bottom:1px solid #1b2740;vertical-align:top}
+#section-contrepouvoirs .cp-table td.chiffre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
+#section-contrepouvoirs .cp-bloc{margin:14px 0}
+#section-contrepouvoirs .cp-bloc > h3{margin:0 0 6px;font-size:.88rem;letter-spacing:.3px}
+#section-contrepouvoirs .cp-sous-bloc{margin:12px 0}
+#section-contrepouvoirs .cp-sous-titre{margin:10px 0 2px;font-size:max(var(--t-min),.78rem);text-transform:uppercase;
+  letter-spacing:.4px;color:#9fb0cc;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+#section-contrepouvoirs .cp-details{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;margin:6px 0;padding:7px 10px}
+#section-contrepouvoirs .cp-details summary{cursor:pointer;font-size:.8rem;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+#section-contrepouvoirs .cp-etapes{list-style:none;margin:4px 0 0;padding:0}
+#section-contrepouvoirs .cp-etapes li{border-bottom:1px dashed rgba(147,163,189,.18);padding:3px 0;
+  font-size:max(var(--t-min),.75rem);display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
+#section-contrepouvoirs .cp-jours{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#f3d08a;white-space:nowrap}
+@media screen and (max-width:640px){
+  #section-contrepouvoirs .cp-chambres{grid-template-columns:1fr}
+  #section-contrepouvoirs .cp-sieges{height:12px}
+  #section-contrepouvoirs .cp-mecanisme summary,#section-contrepouvoirs .cp-details summary{font-size:.8rem}
+}
 #section-contradiction .objection{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;
   margin:8px 0;padding:8px 10px}
 #section-contradiction .objection summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;
@@ -1144,7 +1214,8 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     <a href="#section-strates" class="discret" data-aide="<b>Vues par strate</b>Local, national, Europe, monde, géopolitique, ménages, bourse.">Strates</a>
     <a href="#section-domaines" class="discret" data-aide="<b>Domaines</b>Les 20 secteurs de l'action publique, notés par écart à la référence.">Domaines</a>
     <a href="#section-matrice" class="discret" data-aide="<b>Matrice</b>L'effet de chaque levier sur chaque domaine, mesuré par différences finies.">Matrice</a>
-    <a href="#section-contradiction" class="discret" data-aide="<b>Objections</b>Le registre de la contradiction : la meilleure version de chaque critique, ce que le dépôt concède, ce qu'il maintient, ce qui le ferait changer d'avis — et les quatre contre-modèles auxquels il se mesure.">Objections</a>
+    <a href="#section-contradiction" class="discret" data-aide="<b>Objections</b>    <a href="#section-contrepouvoirs" class="discret" data-aide="<b>Contre-pouvoirs</b>De combien de voix, de signatures et de jours chaque manœuvre institutionnelle a besoin — et ce qui peut la faire échouer. La composition des deux chambres s'y coche.">Contre-pouvoirs</a>
+Le registre de la contradiction : la meilleure version de chaque critique, ce que le dépôt concède, ce qu'il maintient, ce qui le ferait changer d'avis — et les quatre contre-modèles auxquels il se mesure.">Objections</a>
   </div>
   </nav>
 
@@ -1364,6 +1435,16 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     <div id="reglages-corps" class="reglages-touches"></div>
   </section>
 
+
+  <section class="bloc" id="section-contrepouvoirs">
+    <h2>Contre-pouvoirs, en chiffres <span class="aide">l'arithmétique servie par <code>/api/contrepouvoirs</code> et le temps des procédures servis par <code>/api/dynamiques</code> : voix, signatures, délais de rigueur et fentes non écrites — tels que le serveur les calcule</span></h2>
+    <div class="nuances-intro" id="contrepouvoirs-resume">L'arithmétique institutionnelle se charge quand la section approche de l'écran.</div>
+    <div id="contrepouvoirs-corps"><div class="carte">Chargement de l'arithmétique institutionnelle…</div></div>
+    <p class="nuances-intro">
+      <button type="button" class="bouton" onclick="chargerContrepouvoirs()">Charger maintenant</button>
+      <span class="aide">La page interroge les deux routes et affiche ce qu'elles renvoient : aucun seuil n'est recalculé dans le navigateur, et une coalition ne fait qu'additionner les sièges que le serveur a donnés.</span>
+    </p>
+  </section>
   <div class="chapitre" id="chapitre-verifier">
     <span class="chapitre-num" aria-hidden="true">4</span>
     <div class="chapitre-texte">
@@ -3412,6 +3493,512 @@ function renderVerrous(){
     + (hors.join('') || '<li>—</li>') + '</ul></div>'
     + (avertissements ? '<div class="garde-fous">Neutralisations en cours : '
         + avertissements + '</div>' : '');
+}
+/* ── L'arithmétique des contre-pouvoirs, et le temps des procédures ────────
+   Deux routes du serveur, aucune reconstitution locale : `/api/contrepouvoirs`
+   dit ce que chaque manœuvre exige — voix, signatures, délais — et
+   `/api/dynamiques` ce que chaque trajet coûte en jours de rigueur. Elles ne
+   se chargent qu'à la demande : quand la section devient visible, ou sur un
+   clic. La page ne paie pas deux cents kilo-octets pour un bloc qu'on peut
+   lire plus tard. */
+let CONTREPOUVOIRS = null;
+let DYNAMIQUES = null;
+let FAMILLE_ACTIVE = '';
+const COALITION = {assemblee_nationale: {}, senat: {}};
+
+function teinteGroupe(rang){
+  /* Une teinte par formation, répartie sur le cercle chromatique : les douze
+     groupes de l'Assemblée se distinguent sans qu'aucune couleur ne soit
+     écrite à la main, et deux groupes voisins ne se ressemblent pas. */
+  return Math.round(rang * 137.508 + 197) % 360;
+}
+
+function lireCleMoteur(cle){
+  /* Un identifiant du moteur (« article_49_3 ») redevient lisible : une espace
+     à la place du souligné, un tiret entre les numéros. La page ne traduit
+     rien — elle remet en forme ce que le serveur nomme. */
+  return String(cle === null || cle === undefined ? '' : cle)
+    .replace(/_/g, ' ').replace(/(\d)\s+(\d)/g, '$1\u2011$2');
+}
+
+function lienArticleDroit(numero){
+  /* Même règle que `lienCitation` : un lien seulement là où la fiche existe.
+     `/api/constitution` accepte un numéro d'article ; tout autre identifiant
+     reste du texte, jamais une adresse inventée qu'on irait chercher pour
+     rien. */
+  const texte = String(numero === null || numero === undefined ? '' : numero).trim();
+  if (!/^[0-9]+(-[0-9]+)*$/.test(texte)) return '<code>' + echapperTexte(texte || '—') + '</code>';
+  return '<a class="article" href="/api/constitution?article=' + encodeURIComponent(texte)
+    + '" target="_blank" rel="noopener" title="Fiche de droit positif de l\'article ' + texte
+    + '">Article ' + texte + '</a>';
+}
+
+function pucesRegistreHtml(valeur){
+  /* Une liste du registre devient des puces. La page ne connaît pas tous les
+     champs des trente et une manœuvres : elle sait seulement qu'une liste
+     reste une liste, et qu'un élément nommé se lit par son nom. */
+  const elements = Array.isArray(valeur) ? valeur : [valeur];
+  const textes = elements.map(function (element){
+    if (element === null || element === undefined) return '';
+    if (typeof element === 'string' || typeof element === 'number') return String(element);
+    if (typeof element === 'object'){
+      const resolu = element.resolu && (element.resolu.libelle || element.resolu.valeur);
+      return element.nom || element.libelle || resolu || element.cle || '';
+    }
+    return '';
+  }).filter(function (texte){ return String(texte).trim() !== ''; });
+  if (!textes.length) return '';
+  return '<span class="cp-puces">' + textes.map(function (texte){
+    return '<span class="cp-puce">' + echapperTexte(lireCleMoteur(texte)) + '</span>';
+  }).join('') + '</span>';
+}
+
+function champTexteHtml(valeur){
+  if (valeur === null || valeur === undefined || valeur === '') return '';
+  if (typeof valeur === 'string') return echapperTexte(valeur);
+  if (typeof valeur === 'boolean') return valeur ? 'oui' : 'non';
+  if (typeof valeur === 'number') return echapperTexte(String(valeur));
+  if (Array.isArray(valeur)){
+    if (valeur.some(function (element){ return element !== null && typeof element === 'object'; })){
+      return pucesRegistreHtml(valeur);
+    }
+    return valeur.length ? echapperTexte(valeur.join(' · ')) : '';
+  }
+  if (typeof valeur === 'object'){
+    /* Un objet de forme inconnue : ses champs texte en puces, plutôt qu'un
+       bloc de JSON que personne ne lit. Rien n'est deviné. */
+    const cles = Object.keys(valeur).filter(function (cle){
+      return typeof valeur[cle] === 'string' || typeof valeur[cle] === 'number';
+    });
+    if (!cles.length) return pucesRegistreHtml(Object.keys(valeur));
+    return '<span class="cp-puces">' + cles.map(function (cle){
+      return '<span class="cp-puce">' + echapperTexte(lireCleMoteur(cle)) + ' : '
+        + echapperTexte(String(valeur[cle])) + '</span>';
+    }).join('') + '</span>';
+  }
+  return '';
+}
+
+function blocChampHtml(libelle, valeur){
+  const contenu = champTexteHtml(valeur);
+  if (!contenu) return '';
+  return '<div class="cp-champ"><b>' + echapperTexte(libelle) + '</b>' + contenu + '</div>';
+}
+
+function champsRegistreHtml(entree, liste){
+  return liste.map(function (champ){ return blocChampHtml(champ[1], entree[champ[0]]); }).join('');
+}
+
+const CHAMPS_MECANISME = [['acteurs', 'Qui agit'], ['condition', 'Condition'],
+  ['effet_modele', 'Dans le moteur'], ['observation', 'Observation'], ['cout', 'Coût politique']];
+const CHAMPS_FENTE = [['deduction', 'La déduction'], ['raison_du_silence', 'Pourquoi le texte est muet'],
+  ['ce_que_ca_change', 'Ce que ça change'], ['condition_de_verrouillage', 'Condition de verrouillage'],
+  ['point_de_vigilance', 'Point de vigilance'], ['effet_chiffre', 'Effet chiffré'],
+  ['robustesse', 'Robustesse'], ['observe_le', 'Observé le']];
+const CHAMPS_STRATEGIE = [['acte', 'L\'acte'], ['condition', 'Condition'],
+  ['comptage', 'Ce que ça compte'], ['deja_vue', 'Déjà vu'], ['fiabilite', 'Fiabilité']];
+const CHAMPS_INSTANCE = [['fiabilite', 'Fiabilité'], ['delais', 'Délais à tenir'],
+  ['saisissable_par', 'Qui peut la saisir'], ['peut_bloquer', 'Ce qu\'elle peut bloquer'],
+  ['juge_par', 'Jugée par']];
+const CHAMPS_TRAJET = [['issue', 'Issue'], ['retard_imposable', 'Retard imposable'],
+  ['tenable_dans_la_fenetre', 'Tenable dans la fenêtre résiduelle']];
+
+function seuilsChambreHtml(chambre){
+  const seuils = [['Majorité absolue', chambre.majorite_absolue],
+    ['Trois cinquièmes', chambre.majorite_qualifiee_3_5], ['Deux tiers', chambre.majorite_2_3],
+    ['Un cinquième', chambre.cinquieme], ['Un dixième', chambre.dixieme],
+    ['Groupe constitué', chambre.seuil_groupe]];
+  return seuils.filter(function (seuil){
+    return seuil[1] !== undefined && seuil[1] !== null;
+  }).map(function (seuil){
+    return '<span class="cp-seuil">' + seuil[0] + ' <b>' + fmt(seuil[1], 0) + '</b></span>';
+  }).join('');
+}
+
+function coalitionEnChiffres(cle, chambre){
+  /* L'état est en mémoire ; la phrase se calcule donc au rendu, et non par une
+     écriture après coup dans le document. Un seul chemin pour un seul
+     résultat. */
+  const selection = COALITION[cle] || {};
+  const choisis = Object.keys(selection);
+  if (!choisis.length){
+    return 'Coalition : aucune formation cochée — cochez des groupes pour voir quels seuils de '
+      + 'la chambre la somme atteint.';
+  }
+  const groupes = chambre.groupes || {};
+  const total = choisis.reduce(function (somme, nom){ return somme + Number(groupes[nom] || 0); }, 0);
+  const seuils = [['la majorité absolue', chambre.majorite_absolue],
+    ['les trois cinquièmes', chambre.majorite_qualifiee_3_5], ['les deux tiers', chambre.majorite_2_3],
+    ['le cinquième', chambre.cinquieme], ['le dixième', chambre.dixieme]];
+  const atteints = seuils.filter(function (seuil){ return seuil[1] && total >= seuil[1]; });
+  const suivants = seuils.filter(function (seuil){ return seuil[1] && total < seuil[1]; });
+  let texte = 'Coalition : <b>' + fmt(total, 0) + '</b> siège(s) sur ' + fmt(chambre.sieges, 0)
+    + ' — ' + choisis.length + ' formation' + (choisis.length > 1 ? 's' : '') + '. ';
+  texte += atteints.length
+    ? 'Elle atteint ' + atteints.map(function (seuil){ return seuil[0]; }).join(', ') + '. '
+    : 'Elle n\'atteint aucun seuil de la chambre. ';
+  if (suivants.length){
+    texte += 'Il manque <b>' + fmt(suivants[0][1] - total, 0) + '</b> voix pour ' + suivants[0][0] + '.';
+  }
+  return texte;
+}
+
+function chambreEnChiffres(cle, chambre){
+  const groupes = Object.keys(chambre.groupes || {}).map(function (nom){
+    return [nom, chambre.groupes[nom]];
+  });
+  const total = groupes.reduce(function (somme, groupe){
+    return somme + Number(groupe[1] || 0);
+  }, 0) || 1;
+  const barre = groupes.map(function (groupe, rang){
+    return '<span style="--teinte:' + teinteGroupe(rang) + ';width:'
+      + (100 * groupe[1] / total).toFixed(3) + '%" title="' + echapperTexte(groupe[0]) + ' : '
+      + fmt(groupe[1], 0) + ' sièges"></span>';
+  }).join('');
+  const formations = groupes.map(function (groupe, rang){
+    const actif = COALITION[cle] && COALITION[cle][groupe[0]] ? 'true' : 'false';
+    return '<button type="button" class="cp-groupe" style="--teinte:' + teinteGroupe(rang)
+      + '" aria-pressed="' + actif + '" onclick="basculerGroupeParlementaire(\'' + cle + '\',\''
+      + echapperTexte(groupe[0]) + '\')" title="Ajouter ou retirer ' + echapperTexte(groupe[0])
+      + ' de la coalition">' + echapperTexte(groupe[0]) + ' <i>' + fmt(groupe[1], 0)
+      + '</i></button>';
+  }).join('');
+  return '<div class="cp-chambre" data-chambre="' + cle + '">'
+    + '<h4>' + (cle === 'senat' ? 'Sénat' : 'Assemblée nationale')
+    + ' <span class="aide">' + fmt(chambre.sieges, 0) + ' sièges, ' + fmt(chambre.pourvus, 0)
+    + ' pourvus</span></h4>'
+    + '<div class="cp-sieges" role="img" aria-label="Composition de la chambre">' + barre + '</div>'
+    + '<div class="cp-seuils">' + seuilsChambreHtml(chambre) + '</div>'
+    + '<div class="cp-groupes">' + formations + '</div>'
+    + '<div class="cp-coalition" id="cp-coalition-' + cle + '">' + coalitionEnChiffres(cle, chambre)
+    + '</div></div>';
+}
+
+function mecanismeEnChiffres(mecanisme){
+  const seuils = (mecanisme.seuils || []).map(function (seuil){
+    const chiffre = (seuil.base !== undefined && seuil.seuil !== undefined)
+      ? fmt(seuil.base, 0) + ' → <b>' + fmt(seuil.seuil, 0) + '</b> '
+        + echapperTexte(seuil.unite || '')
+      : '';
+    return '<li><b>' + echapperTexte(seuil.nom || lireCleMoteur(seuil.cle)) + '</b>'
+      + (seuil.article ? ' <span class="aide">' + echapperTexte(seuil.article) + '</span>' : '')
+      + '<div>' + (seuil.regle ? 'règle : ' + echapperTexte(seuil.regle) : '')
+      + (seuil.assiette ? ' · assiette : ' + echapperTexte(seuil.assiette) : '') + '</div>'
+      + (chiffre ? '<div class="cp-seuil-ligne">' + chiffre + '</div>' : '')
+      + (seuil.formule ? '<div class="aide">' + echapperTexte(seuil.formule) + '</div>' : '')
+      + (seuil.texte ? '<span class="cp-citation">' + echapperTexte(seuil.texte) + '</span>' : '')
+      + '</li>';
+  }).join('');
+  const articles = (mecanisme.articles || []).map(function (article){
+    return lienArticleDroit(article);
+  }).join(' · ');
+  const nombre = (mecanisme.seuils || []).length;
+  return '<details class="cp-mecanisme" data-famille="' + echapperTexte(mecanisme.famille || '')
+    + '" data-cle="' + echapperTexte(mecanisme.cle || '') + '">'
+    + '<summary><b>' + echapperTexte(mecanisme.nom || lireCleMoteur(mecanisme.cle)) + '</b>'
+    + '<span class="cp-etiquette">' + echapperTexte(lireCleMoteur(mecanisme.famille || '—')) + '</span>'
+    + '<span class="aide">' + nombre + ' seuil' + (nombre > 1 ? 's' : '') + ' chiffré'
+    + (nombre > 1 ? 's' : '') + '</span></summary>'
+    + (mecanisme.resume ? '<p class="cp-champ">' + echapperTexte(mecanisme.resume) + '</p>' : '')
+    + champsRegistreHtml(mecanisme, CHAMPS_MECANISME)
+    + (seuils ? '<div class="cp-champ"><b>Ce qu\'il faut, chiffre par chiffre</b>'
+        + '<ul class="cp-seuils-liste">' + seuils + '</ul></div>' : '')
+    + blocChampHtml('Ce que ça déclenche', mecanisme.declenche)
+    + blocChampHtml('Ce qui peut l\'empêcher', mecanisme.empeche_par)
+    + (articles ? '<div class="cp-champ"><b>Articles</b>' + articles + '</div>' : '')
+    + '</details>';
+}
+
+function rendreArithmetique(){
+  const donnees = CONTREPOUVOIRS;
+  if (!donnees || !donnees.mecanismes){
+    return '<div class="cp-bloc"><h3>L\'arithmétique des contre-pouvoirs</h3>'
+      + '<div class="carte">Le registre n\'a pas répondu (<code>/api/contrepouvoirs</code>) : '
+      + 'la page affiche cette absence plutôt que de reconstituer les seuils dans le navigateur.</div></div>';
+  }
+  const mecanismes = donnees.mecanismes || [];
+  const familles = donnees.familles || [];
+  const visibles = FAMILLE_ACTIVE
+    ? mecanismes.filter(function (mecanisme){ return mecanisme.famille === FAMILLE_ACTIVE; })
+    : mecanismes;
+  const chambres = Object.keys(donnees.assemblees || {}).map(function (cle){
+    return chambreEnChiffres(cle, donnees.assemblees[cle]);
+  }).join('');
+  const seuils = mecanismes.reduce(function (somme, mecanisme){
+    return somme + (mecanisme.seuils || []).length;
+  }, 0);
+  const puces = familles.map(function (famille){
+    const nombre = (famille.mecanismes || []).length;
+    return '<button type="button" class="cp-famille" data-famille="' + echapperTexte(famille.nom)
+      + '" aria-pressed="' + (FAMILLE_ACTIVE === famille.nom ? 'true' : 'false')
+      + '" onclick="filtrerContrepouvoirs(\'' + echapperTexte(famille.nom) + '\')">'
+      + echapperTexte(lireCleMoteur(famille.nom)) + ' <b>' + nombre + '</b></button>';
+  }).join('');
+  const coherence = donnees.coherence || {};
+  const conforme = coherence.conforme !== false;
+  return '<div class="cp-bloc"><h3>1. L\'arithmétique des contre-pouvoirs</h3>'
+    + '<p class="cp-intro">' + echapperTexte(donnees.accroche || '') + '</p>'
+    + '<p class="cp-intro"><b>' + mecanismes.length + '</b> manœuvres dans <b>' + familles.length
+    + '</b> familles, <b>' + seuils + '</b> seuils chiffrés · état des assemblées au <b>'
+    + echapperTexte(donnees.date_etat_des_assemblees || '—') + '</b>. '
+    + echapperTexte(donnees.avertissement || '') + '</p>'
+    + '<div class="cp-chambres">' + chambres + '</div>'
+    + '<p class="cp-intro">Cocher des formations compose une coalition : la page additionne les sièges '
+    + 'que le serveur lui a donnés, puis compare la somme aux seuils de la chambre. Cette somme dit ce '
+    + 'qu\'une coalition pèse, pas ce qu\'un texte devient — le seuil propre à chaque manœuvre est dans '
+    + 'sa fiche.</p>'
+    + '<div class="cp-coherence' + (conforme ? '' : ' ko') + '">Cohérence du registre : '
+    + (coherence.mecanismes || 0) + ' manœuvres, ' + (coherence.verrous || 0) + ' verrous · '
+    + (conforme ? 'aucun renvoi orphelin' : 'renvois à vérifier') + '.</div>'
+    + '<div class="cp-familles">' + puces
+    + (FAMILLE_ACTIVE ? '<button type="button" class="cp-famille" aria-pressed="false" '
+        + 'onclick="filtrerContrepouvoirs(\'\')">tout montrer</button>' : '')
+    + '</div>'
+    + '<div class="cp-mecanismes">' + visibles.map(function (mecanisme){
+        return mecanismeEnChiffres(mecanisme);
+      }).join('') + '</div></div>';
+}
+
+function trajetEnChiffres(trajet){
+  const etapes = (trajet.etapes || []).map(function (etape){
+    const jours = etape.jours ? '+' + fmt(etape.jours, 0) + ' j' : '—';
+    return '<li><span>' + echapperTexte(etape.acte || lireCleMoteur(etape.cle)) + '</span>'
+      + '<span class="aide">' + echapperTexte(lireCleMoteur(etape.de || '—')) + ' → '
+      + echapperTexte(lireCleMoteur(etape.vers || '—')) + '</span>'
+      + (etape.fondement ? '<span class="aide">' + echapperTexte(etape.fondement) + '</span>' : '')
+      + '<span class="cp-jours">' + jours + '</span>'
+      + (etape.condition ? '<span class="aide">' + echapperTexte(etape.condition) + '</span>' : '')
+      + '</li>';
+  }).join('');
+  const articles = (trajet.article_cles || []).map(function (article){
+    return lienArticleDroit(article);
+  }).join(' · ');
+  const battements = trajet.battements === undefined ? '' : trajet.battements + ' battement(s)';
+  return '<details class="cp-details" data-cle="' + echapperTexte(trajet.cle || '') + '">'
+    + '<summary><b>' + echapperTexte(trajet.nom || lireCleMoteur(trajet.cle)) + '</b>'
+    + '<span class="cp-etiquette">' + echapperTexte(lireCleMoteur(trajet.categorie || '—')) + '</span>'
+    + '<span class="cp-jours">' + battements + '</span></summary>'
+    + champsRegistreHtml(trajet, CHAMPS_TRAJET)
+    + (etapes ? '<ul class="cp-etapes">' + etapes + '</ul>' : '')
+    + (articles ? '<div class="cp-champ"><b>Articles</b>' + articles + '</div>' : '')
+    + '</details>';
+}
+
+function fenteEnChiffres(fente){
+  const premisses = pucesRegistreHtml(fente.premisses);
+  const articles = (fente.articles || []).map(function (article){
+    return lienArticleDroit(article);
+  }).join(' · ');
+  const pistes = pucesRegistreHtml(fente.pistes);
+  return '<details class="cp-details" data-cle="' + echapperTexte(fente.cle || '') + '">'
+    + '<summary><b>' + echapperTexte(fente.nom || lireCleMoteur(fente.cle)) + '</b>'
+    + '<span class="cp-etiquette">fente</span>'
+    + (fente.sens ? '<span class="aide">joue ' + echapperTexte(fente.sens) + '</span>' : '')
+    + '</summary>'
+    + champsRegistreHtml(fente, CHAMPS_FENTE)
+    + (premisses ? '<div class="cp-champ"><b>Prémisses</b>' + premisses + '</div>' : '')
+    + (fente.etage_de_verrouillage
+        ? blocChampHtml('Étage de verrouillage', fente.etage_de_verrouillage) : '')
+    + (articles ? '<div class="cp-champ"><b>Articles</b>' + articles + '</div>' : '')
+    + (pistes ? '<div class="cp-champ"><b>Pistes</b>' + pistes + '</div>' : '')
+    + '</details>';
+}
+
+function strategieEnChiffres(strategie){
+  const fondements = pucesRegistreHtml(strategie.fondement_resolu || strategie.fondement);
+  const contree = pucesRegistreHtml(strategie.contree_par);
+  return '<details class="cp-details" data-cle="' + echapperTexte(strategie.cle || '') + '">'
+    + '<summary><b>' + echapperTexte(strategie.nom || lireCleMoteur(strategie.cle)) + '</b>'
+    + '<span class="cp-etiquette">' + echapperTexte(lireCleMoteur(strategie.famille || '—'))
+    + '</span></summary>'
+    + champsRegistreHtml(strategie, CHAMPS_STRATEGIE)
+    + (fondements ? '<div class="cp-champ"><b>Fondement</b>' + fondements + '</div>' : '')
+    + (contree ? '<div class="cp-champ"><b>Contrée par</b>' + contree + '</div>' : '')
+    + blocChampHtml('Instance', strategie.instance)
+    + blocChampHtml('Pistes', strategie.pistes)
+    + '</details>';
+}
+
+function instanceEnChiffres(instance){
+  return '<details class="cp-details" data-cle="' + echapperTexte(instance.cle || '') + '">'
+    + '<summary><b>' + echapperTexte(instance.nom || lireCleMoteur(instance.cle)) + '</b></summary>'
+    + blocChampHtml('Mission', instance.mission)
+    + blocChampHtml('Fondement', instance.fondement)
+    + blocChampHtml('Ce qu\'elle peut', instance.effets)
+    + champsRegistreHtml(instance, CHAMPS_INSTANCE)
+    + '</details>';
+}
+
+function boucleEnChiffres(boucle){
+  const voies = (boucle.voies_de_recours || []).map(function (voie){
+    const effets = pucesRegistreHtml(voie.effets);
+    return '<li><span>' + echapperTexte(voie.nom || lireCleMoteur(voie.cle)) + '</span>'
+      + (effets ? '<span>' + effets + '</span>' : '') + '</li>';
+  }).join('');
+  return '<details class="cp-details" data-cle="' + echapperTexte(boucle.cle || '') + '">'
+    + '<summary><b>' + echapperTexte(lireCleMoteur(boucle.etage_attaque || boucle.cle)) + '</b>'
+    + '<span class="aide">' + (boucle.voies_de_recours || []).length + ' voie(s) de recours</span>'
+    + '</summary>'
+    + (voies ? '<ul class="cp-etapes">' + voies + '</ul>' : '')
+    + blocChampHtml('Ce qui manque', boucle.absentes)
+    + blocChampHtml('Sans contrôle', boucle.sans_controle)
+    + blocChampHtml('Lecture', boucle.lecture)
+    + '</details>';
+}
+
+function rendreTempsProcedures(){
+  const donnees = DYNAMIQUES;
+  if (!donnees || !donnees.trajets){
+    return '<div class="cp-bloc"><h3>2. Le temps des procédures</h3>'
+      + '<div class="carte">Le registre des trajets n\'a pas répondu (<code>/api/dynamiques</code>) : '
+      + 'la page affiche cette absence plutôt que de reconstituer les délais dans le navigateur.</div></div>';
+  }
+  const rapport = donnees.rapport_de_temps || {};
+  const sens = Object.keys(rapport.par_sens || {});
+  const lignesTemps = sens.map(function (nom){
+    const valeurs = rapport.par_sens[nom] || {};
+    return '<tr><td>' + echapperTexte(nom) + '</td>'
+      + '<td class="chiffre">' + fmt(valeurs.battements, 0) + '</td>'
+      + '<td class="chiffre">' + fmt(valeurs.jours, 0) + ' j</td></tr>';
+  }).join('');
+  const asymetrie = (donnees.asymetrie || []).map(function (ligne){
+    const retard = ligne.jours_de_retard_imposables === undefined || ligne.jours_de_retard_imposables === null
+      ? '—' : fmt(ligne.jours_de_retard_imposables, 0) + ' j';
+    return '<tr><td>' + echapperTexte(ligne.nom || lireCleMoteur(ligne.trajet)) + '</td>'
+      + '<td class="chiffre">' + retard + '</td>'
+      + '<td>' + (ligne.veto_reel ? 'oui' : 'non') + '</td>'
+      + '<td class="aide">' + echapperTexte(ligne.fondement_du_veto || '—') + '</td></tr>';
+  }).join('');
+  const trajets = (donnees.trajets || []).map(trajetEnChiffres).join('');
+  const fentes = (donnees.fentes || []).map(fenteEnChiffres).join('');
+  const strategies = (donnees.strategies || []).map(strategieEnChiffres).join('');
+  const instances = (donnees.instances || []).map(instanceEnChiffres).join('');
+  const boucles = (donnees.boucles_de_controle || []).map(boucleEnChiffres).join('');
+  const fenetre = donnees.fenetre_residuelle || {};
+  const etages = (donnees.etages || []).map(function (etage){
+    const attaquants = pucesRegistreHtml((donnees.qui_attaque || {})[etage]);
+    return '<li><span>' + echapperTexte(lireCleMoteur(etage)) + '</span>'
+      + (attaquants ? '<span>' + attaquants + '</span>' : '') + '</li>';
+  }).join('');
+  const effets = Object.keys(donnees.effets || {}).map(function (cle){
+    return '<span class="cp-puce">' + echapperTexte(lireCleMoteur(cle)) + ' : '
+      + echapperTexte(donnees.effets[cle]) + '</span>';
+  }).join('');
+  const niveaux = pucesRegistreHtml(donnees.niveaux);
+  return '<div class="cp-bloc"><h3>2. Le temps des procédures</h3>'
+    + '<p class="cp-intro">' + echapperTexte(donnees.accroche || '') + '</p>'
+    + '<p class="cp-intro"><b>' + fmt(rapport.trajets, 0) + '</b> trajets, <b>'
+    + fmt(rapport.battements, 0) + '</b> battements, <b>'
+    + fmt(rapport.fenetre_residuelle_jours, 0) + '</b> jours de fenêtre législative résiduelle · '
+    + 'état observé le <b>' + echapperTexte(donnees.date_observation || '—') + '</b>. '
+    + echapperTexte(rapport.avertissement || '') + '</p>'
+    + '<table class="cp-table"><thead><tr><th>Sens</th><th>Battements</th>'
+    + '<th>Jours de rigueur</th></tr></thead><tbody>' + lignesTemps + '</tbody></table>'
+    + (fenetre.note ? '<p class="cp-intro"><b>Fenêtre résiduelle : ' + fmt(fenetre.jours, 0)
+        + ' jours.</b> ' + echapperTexte(fenetre.note) + '</p>' : '')
+    + '<div class="cp-sous-bloc"><h4 class="cp-sous-titre">L\'asymétrie : ce qu\'un camp impose à l\'autre'
+    + '<span class="aide">jours de retard opposables, et si un veto existe vraiment</span></h4>'
+    + (asymetrie ? '<table class="cp-table"><thead><tr><th>Trajet</th><th>Retard imposable</th>'
+        + '<th>Veto réel</th><th>Fondement</th></tr></thead><tbody>' + asymetrie + '</tbody></table>'
+        : '<p class="cp-intro">Aucune asymétrie servie.</p>') + '</div>'
+    + '<div class="cp-sous-bloc"><h4 class="cp-sous-titre">Les trajets, battement par battement'
+    + '<span class="aide">' + (donnees.trajets || []).length + ' trajets servis par le moteur</span>'
+    + '</h4>' + trajets + '</div>'
+    + '<div class="cp-sous-bloc"><h4 class="cp-sous-titre">Les fentes non écrites'
+    + '<span class="aide">' + (donnees.fentes || []).length
+    + ' conséquences que la logique des textes permet sans que personne ne l\'ait écrit</span></h4>'
+    + fentes + '</div>'
+    + '<div class="cp-sous-bloc"><h4 class="cp-sous-titre">Les stratégies repérées'
+    + '<span class="aide">' + (donnees.strategies || []).length + ' stratégies, contredites une par une'
+    + '</span></h4>' + strategies + '</div>'
+    + '<div class="cp-sous-bloc"><h4 class="cp-sous-titre">Qui peut saisir quoi : les autorités'
+    + '<span class="aide">' + (donnees.instances || []).length + ' autorités, '
+    + (donnees.boucles_de_controle || []).length + ' boucles de contrôle</span></h4>'
+    + instances + boucles + '</div>'
+    + '<div class="cp-sous-bloc"><h4 class="cp-sous-titre">Un étage, qui l\'attaque'
+    + '<span class="aide">' + (donnees.etages || []).length + ' étages de normes</span></h4>'
+    + '<ul class="cp-etapes">' + etages + '</ul>'
+    + '<div class="cp-champ"><b>Les huit effets qu\'un juge peut produire</b>'
+    + '<span class="cp-puces">' + effets + '</span></div>'
+    + (niveaux ? '<div class="cp-champ"><b>Niveaux d\'autorité</b>' + niveaux + '</div>' : '')
+    + '</div></div>';
+}
+
+function rendreContrepouvoirs(){
+  const zone = document.getElementById('contrepouvoirs-corps');
+  const intro = document.getElementById('contrepouvoirs-resume');
+  if (!zone) return;
+  const arithmetique = CONTREPOUVOIRS && CONTREPOUVOIRS.mecanismes ? CONTREPOUVOIRS : null;
+  const temps = DYNAMIQUES && DYNAMIQUES.trajets ? DYNAMIQUES : null;
+  if (!arithmetique && !temps){
+    if (intro) intro.innerHTML = '';
+    zone.innerHTML = '<div class="carte">Les deux registres n\'ont pas répondu '
+      + '(<code>/api/contrepouvoirs</code>, <code>/api/dynamiques</code>) : la page montre cette '
+      + 'absence plutôt que de reconstituer les chiffres dans le navigateur.</div>';
+    return;
+  }
+  if (intro){
+    const manœuvres = arithmetique ? arithmetique.mecanismes.length : 0;
+    const trajets = temps ? (temps.trajets || []).length : 0;
+    intro.innerHTML = '<b>' + manœuvres + '</b> manœuvres institutionnelles et <b>' + trajets
+      + '</b> trajets législatifs — les chiffres viennent du serveur, jamais du navigateur.'
+      + (FAMILLE_ACTIVE ? ' Filtre actif : <b>' + echapperTexte(lireCleMoteur(FAMILLE_ACTIVE))
+        + '</b>.' : '');
+  }
+  zone.innerHTML = (arithmetique ? rendreArithmetique() : '')
+    + (temps ? rendreTempsProcedures() : '');
+}
+
+async function chargerContrepouvoirs(){
+  /* Deux requêtes, aucun calcul : le registre est daté et n'entre dans aucune
+     simulation, il se charge donc une fois pour toutes. Une erreur réseau
+     laisse les deux registres à null, et la section dit pourquoi elle est
+     vide au lieu d'afficher des chiffres recomposés. */
+  const intro = document.getElementById('contrepouvoirs-resume');
+  if (intro && !CONTREPOUVOIRS && !DYNAMIQUES){
+    intro.innerHTML = 'Chargement de l\'arithmétique institutionnelle…';
+  }
+  try {
+    const reponses = await Promise.all([
+      fetch('/api/contrepouvoirs'),
+      fetch('/api/dynamiques'),
+    ]);
+    const corps = await Promise.all(reponses.map(function (reponse){ return reponse.json(); }));
+    CONTREPOUVOIRS = (corps[0] && corps[0].mecanismes) ? corps[0] : null;
+    DYNAMIQUES = (corps[1] && corps[1].trajets) ? corps[1] : null;
+  } catch (erreur){
+    CONTREPOUVOIRS = null;
+    DYNAMIQUES = null;
+  }
+  rendreContrepouvoirs();
+}
+
+function filtrerContrepouvoirs(famille){
+  FAMILLE_ACTIVE = (FAMILLE_ACTIVE === famille) ? '' : famille;
+  rendreContrepouvoirs();
+}
+
+function basculerGroupeParlementaire(chambre, nom){
+  const selection = COALITION[chambre] || (COALITION[chambre] = {});
+  if (selection[nom]) delete selection[nom]; else selection[nom] = true;
+  rendreContrepouvoirs();
+}
+
+function observerContrepouvoirs(){
+  /* La section se remplit quand elle approche de l'écran : la page ne paie pas
+     deux cents kilo-octets au démarrage pour un bloc qui se lit plus bas. Sans
+     observateur, le bouton de la section fait le même travail. */
+  if (typeof IntersectionObserver !== 'function' || !document.getElementById) return false;
+  const section = document.getElementById('section-contrepouvoirs');
+  if (!section || !section.getBoundingClientRect) return false;
+  const observateur = new IntersectionObserver(function (entrees){
+    if (entrees.some(function (entree){ return entree.isIntersecting; })){
+      observateur.disconnect();
+      chargerContrepouvoirs();
+    }
+  }, {rootMargin: '400px'});
+  observateur.observe(section);
+  return true;
 }
 function renderReglagesTouches(){
   const zone = document.getElementById('reglages-corps');
@@ -5630,7 +6217,13 @@ async function chargerObjections(filtre){
   // présentent : leur nom et leur arrêt de tabulation suivent la taille de
   // l'écran, sans attendre un rendu. Un pli de fenêtre n'est pas un rendu.
   suivrePliDeLEcran();
+  // L'arithmétique des contre-pouvoirs se charge à l'approche : elle ne
+  // retarde rien au démarrage, et le bouton de la section fait le même travail
+  // si l'observateur n'existe pas.
+  observerContrepouvoirs();
   // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
+  // a cliqué pour la dernière fois.
+  observerLecture();  // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
   // a cliqué pour la dernière fois.
   observerLecture();
   // La barre collante annonce sa hauteur : les ancres s'y rangent au lieu de
