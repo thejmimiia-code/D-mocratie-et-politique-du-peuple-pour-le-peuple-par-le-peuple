@@ -10,7 +10,6 @@ qu'il le mérite.
 
 from __future__ import annotations
 
-import importlib.util
 import re
 import sys
 import tempfile
@@ -21,13 +20,10 @@ RACINE = Path(__file__).resolve().parent.parent
 if str(RACINE) not in sys.path:
     sys.path.insert(0, str(RACINE))
 
-_spec = importlib.util.spec_from_file_location(
-    "verifier_compteurs", RACINE / "outils" / "verifier-compteurs.py")
-verificateur = importlib.util.module_from_spec(_spec)
-# Enregistrer le module avant de l'exécuter : les dataclasses ont besoin de le
-# retrouver dans `sys.modules` pour être construites.
-sys.modules["verifier_compteurs"] = verificateur
-_spec.loader.exec_module(verificateur)
+from outils.chargement_module import charger_module  # noqa: E402
+
+#: Chargé sans passer par le cache de bytecode : voir `outils/chargement_module.py`.
+verificateur = charger_module("verifier_compteurs", RACINE / "outils" / "verifier-compteurs.py")
 
 
 class TestCompteursDuDepot(unittest.TestCase):

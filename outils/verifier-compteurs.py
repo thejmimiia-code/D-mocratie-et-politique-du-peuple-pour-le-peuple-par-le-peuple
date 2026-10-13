@@ -22,7 +22,6 @@ Usage :
 from __future__ import annotations
 
 import argparse
-import importlib.util
 import re
 import sys
 from dataclasses import dataclass
@@ -30,6 +29,11 @@ from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RACINE))
+
+try:                                        # lancé depuis la racine du dépôt
+    from outils.chargement_module import charger_module
+except ImportError:                         # lancé depuis outils/
+    from chargement_module import charger_module  # type: ignore[no-redef]
 
 from simulateur.dashboard import SCENARIOS  # noqa: E402
 from simulateur.domaines import DOMAINES, SPECS  # noqa: E402
@@ -52,10 +56,7 @@ def _routes_api() -> int:
     engendré : c'est le générateur qui fait foi, l'autre fichier en découle.
     """
     chemin = RACINE / "outils" / "generer-fonctions-api.py"
-    spec = importlib.util.spec_from_file_location("generateur_fonctions_api", chemin)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
+    module = charger_module("generateur_fonctions_api", chemin)
     routes = getattr(module, "ROUTES", None)
     if routes is None:                      # repli : la table des routes du fichier engendré
         return len(re.findall(r"^\s*\"[a-z_]+\"", (RACINE / "api" / "[...path].py").read_text("utf-8"), re.M))

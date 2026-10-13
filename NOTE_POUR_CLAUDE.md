@@ -38,6 +38,15 @@ Puis **une seule action manuelle**, impossible par API : téléverser
 
 ---
 
+> **Note historique (5 octobre 2026).** Ce document raconte ce qui restait à faire
+> à cette date. L'état courant fait foi dans
+> [`docs/REPOSITORY_DETAILS.md`](docs/REPOSITORY_DETAILS.md), dont les valeurs
+> sont engendrées par `outils/details_depot.py --doc` et contrôlées par la suite
+> de tests. En particulier, le champ **Website** n'est plus à vider : l'adresse
+> déclarée sert l'application (page interactive et une fonction par route du
+> moteur), et le script pose la question à chaque exécution au lieu de
+> l'affirmer.
+
 ## 1. Objectif
 
 Le bloc **« About »** du dépôt (bouton ⚙ à côté du titre, ou *Settings → General
@@ -46,7 +55,7 @@ faut le rendre fidèle à ce que le dépôt fait aujourd'hui.
 
 | Champ | État au 5 octobre 2026 (constaté par API) | État cible |
 |---|---|---|
-| **Description** | « Plateforme de réflexion républicaine et Simulateur macro-politique systémique (**Modèle gigogne à quatre échelons**) » (état observé, obsolète) | la description du § 2 (270 caractères) |
+| **Description** | « Plateforme de réflexion républicaine et Simulateur macro-politique systémique (**Modèle gigogne à quatre échelons**) » (état observé, obsolète) | la description du § 2 (271 caractères) |
 | **Website** | `https://d-mocratie-et-politique-du-peuple-p.vercel.app` → **renvoie 404** (vérifié) | vide, ou la documentation (§ 2) |
 | **Topics** | *aucun* | les 20 sujets du § 2 |
 | **Social preview** | aucune image | `docs/apercu_social.png` (1280 × 640) |
@@ -62,7 +71,7 @@ thématique, et l'aperçu social est vide au partage d'un lien.
 
 ## 2. Les valeurs exactes (à coller telles quelles)
 
-### Description — 270 / 350 caractères
+### Description — 271 / 350 caractères
 
 ```
 Simulateur macro-politique systémique à 5 échelons (local → européen → mondial → géopolitique) : 156 leviers croisables, 20 domaines d'impact notés 0-100, données publiques en direct (Eurostat, BCE, Banque mondiale) et console de veille des seuils tolérables et hors-sol.
@@ -72,7 +81,7 @@ Simulateur macro-politique systémique à 5 échelons (local → européen → m
 
 - *Recommandé* : **vider le champ** (l'instance Vercel n'existe plus) ;
 - ou, à défaut d'application hébergée, renvoyer vers la documentation :
-  `https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md`
+  `https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/SIMULATEUR_PARAMETRABLE.md`
 
 ### Topics — 20 / 20
 
