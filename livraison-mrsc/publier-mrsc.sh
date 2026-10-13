@@ -5,18 +5,22 @@
 #
 # La copie embarquée par le site datait du 8 octobre (99491d8) ; l'amont a
 # beaucoup bougé depuis. Le correctif de sécurité du site, lui, ne s'appliquait
-# plus : il est rebasé ici sur 22957da (voir LISEZ-MOI.md, à côté de ce script,
-# qui dit ce que le rebasage conserve).
+# plus : il est rebasé ici (voir LISEZ-MOI.md, à côté de ce script, qui dit ce
+# que le rebasage conserve).
 #
-# Le script travaille dans un dossier jetable, ne touche jamais `main`, et
+# Le script copie **le sommet de `main`** au moment où il tourne — c'est ce qui
+# garde la veille du site au vert — puis rejoue exactement la CI du site. Il
+# travaille dans un dossier jetable, ne touche jamais `main` côté site, et
 # s'arrête **avant** de publier si un contrôle échoue.
+#
+# Pour rejouer une publication à une révision précise (par exemple pour vérifier
+# ce colis), donner la révision en troisième argument.
 set -euo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ATELIER="${1:-/tmp/mrsc-moteur}"
-BRANCHE="${2:-maj-simulateur-22957da}"
-REVISION="22957da0e7ffad92c3e087d9c6bbd6f3b5b907b9"
-REVISION_COURTE="22957da"
+BRANCHE="${2:-}"
+REVISION="${3:-}"
 AMONT="https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple.git"
 SITE="https://github.com/thejmimiia-code/MRSC.git"
 
@@ -24,23 +28,26 @@ etape() { printf '\n\033[1m%s\033[0m\n' "$*"; }
 bilan() { printf '  ✓ %s\n' "$*"; }
 
 # ─────────────────────────────────────────────────────────── 1. les deux dépôts
-etape "1/7 · récupération des dépôts dans $ATELIER"
+etape "1/6 · récupération des dépôts dans $ATELIER"
 
 rm -rf "$ATELIER"
 mkdir -p "$ATELIER"
 git clone --quiet --depth 1 "$AMONT" "$ATELIER/amont"
 git clone --quiet --depth 1 "$SITE" "$ATELIER/site"
 
-if [ "$(git -C "$ATELIER/amont" rev-parse HEAD)" != "$REVISION" ]; then
-  # La branche principale a avancé : on va chercher précisément la révision
-  # sur laquelle le correctif a été rebasé, sinon la copie partirait trop loin.
-  git -C "$ATELIER/amont" fetch --quiet --depth 1 origin "$REVISION"
-  git -C "$ATELIER/amont" checkout --quiet FETCH_HEAD
+if [ -n "$REVISION" ]; then
+  # Révision imposée : on va la chercher précisément, sinon la copie partirait
+  # du sommet de `main` et le récit du colis ne serait plus vrai.
+  if [ "$(git -C "$ATELIER/amont" rev-parse HEAD)" != "$REVISION" ]; then
+    git -C "$ATELIER/amont" fetch --quiet --depth 1 origin "$REVISION"
+    git -C "$ATELIER/amont" checkout --quiet FETCH_HEAD
+  fi
+  if [ "$(git -C "$ATELIER/amont" rev-parse HEAD)" != "$REVISION" ]; then
+    echo "Révision amont introuvable : $REVISION" >&2
+    exit 1
+  fi
 fi
-if [ "$(git -C "$ATELIER/amont" rev-parse HEAD)" != "$REVISION" ]; then
-  echo "Révision amont introuvable : $REVISION" >&2
-  exit 1
-fi
+REVISION_COURTE="$(git -C "$ATELIER/amont" rev-parse --short HEAD)"
 bilan "amont à $REVISION_COURTE"
 bilan "site à $(git -C "$ATELIER/site" rev-parse --short HEAD)"
 
@@ -49,11 +56,19 @@ cp "$ICI/simulateur-securite-mrsc.patch" \
 cd "$ATELIER/site"
 
 # ──────────────────────────────────────────────────────────── 2. la copie
-etape "2/7 · copie du moteur et correctif du site"
-python3 outils/mettre-a-jour-simulateur.py --depuis "$ATELIER/amont"
+etape "2/6 · copie du moteur et correctif du site"
+if ! python3 outils/mettre-a-jour-simulateur.py --depuis "$ATELIER/amont"; then
+  cat >&2 <<'FIN'
+La copie n'a pas été faite : le correctif du site ne s'applique plus sur la
+révision visée — l'amont a bougé sous lui. Rien n'a été remplacé.
+C'est exactement ce que l'outil doit faire : rebaser le correctif (voir
+LISEZ-MOI.md, « Le correctif rebasé, en clair »), puis relancer.
+FIN
+  exit 1
+fi
 
 # ─────────────────────────────────────────── 3. reconstruction et API du site
-etape "3/7 · reconstruction de la page et des fonctions api/"
+etape "3/6 · reconstruction de la page et des fonctions api/"
 
 # Six routes servies par le moteur, encore absentes de la liste du site : les
 # taire ferait diverger l'API publiée de celle du moteur (la porte
@@ -88,12 +103,30 @@ PY
 python3 outils/construire-simulateur.py
 python3 outils/generer-fonctions-api.py
 
-# ───────────────────────────────────────────── 4. contrôles avant de publier
-etape "4/7 · contrôles de la copie publiée"
+# ───────────────────────────────────────── 4. les contrôles de la CI du site
+etape "4/6 · rejeu de la CI du site"
+
+python3 -m py_compile simulateur/*.py api/*.py outils/*.py
+bilan "py_compile"
+python3 outils/construire-apprentissages.py --verifier || exit 1
+bilan "construire-apprentissages --verifier"
+python3 outils/construire-simulateur.py --verifier || exit 1
+bilan "construire-simulateur --verifier"
+for porte in verifier-rd-continue verifier-site-statique verifier-securite verifier-integration; do
+  if python3 "outils/$porte.py" > "$ATELIER/$porte.log" 2>&1; then
+    bilan "$porte"
+  else
+    echo "Porte en échec : $porte" >&2
+    tail -20 "$ATELIER/$porte.log" >&2
+    exit 1
+  fi
+done
+
+# ─────────────────────────────────── 5. les contrôles propres à cette copie
+etape "5/6 · contrôles de la copie publiée"
 
 python3 - <<'PY'
 import pathlib
-import sys
 
 # Les durcissements du site absents de l'amont : ils ne doivent jamais
 # disparaître dans une mise à jour du moteur.
@@ -125,13 +158,9 @@ if perdues:
     raise SystemExit("Protections perdues dans la copie : " + ", ".join(perdues))
 print(f"  ✓ les {len(GARDE)} protections du site sont présentes")
 
-marqueurs = {
-    fichier.name: fichier.read_text(encoding="utf-8").count("<<<<<<<")
-    for fichier in fichiers
-    if "<<<<<<<" in fichier.read_text(encoding="utf-8")
-}
-if marqueurs:
-    raise SystemExit(f"Marqueurs de conflit restants : {marqueurs}")
+restants = {fichier.name for fichier, texte in modules.items() if "<<<<<<<" in texte}
+if restants:
+    raise SystemExit(f"Marqueurs de conflit restants : {sorted(restants)}")
 print("  ✓ aucun marqueur de conflit")
 
 page = pathlib.Path("simulateur/index.html").read_text(encoding="utf-8")
@@ -161,27 +190,28 @@ else:
         print(f"  ✓ script {rang} ({len(script)} caractères)")
 PY
 
-# ──────────────────────────────────────────────────────────── 5. les portes
-etape "5/7 · portes du site"
-for porte in verifier-securite verifier-maj-amont verifier-integration \
-             verifier-site-statique verifier-rd-continue verifier-source-distante; do
-  if python3 "outils/$porte.py" > "$ATELIER/$porte.log" 2>&1; then
-    bilan "$porte"
-  elif [ "$porte" = "verifier-source-distante" ]; then
-    # Cette porte interroge le réseau : sans lui, elle le dit et laisse la copie
-    # embarquée faire le calcul. Hors ligne n'est pas un échec.
-    printf '  · %s : réseau injoignable, la copie embarquée fait le calcul\n' "$porte"
-  else
-    echo "Porte en échec : $porte" >&2
-    tail -20 "$ATELIER/$porte.log" >&2
-    exit 1
-  fi
-done
-python3 outils/construire-apprentissages.py > "$ATELIER/apprentissages.log" 2>&1
-bilan "construire-apprentissages"
+# La veille du site compare la révision copiée au sommet de `main` : elle a sa
+# propre exécution hebdomadaire, et doit dire « à jour » ici.
+if python3 outils/verifier-maj-amont.py > "$ATELIER/veille.log" 2>&1; then
+  bilan "verifier-maj-amont — la copie est le sommet de main"
+else
+  printf '  ! verifier-maj-amont signale un retard :\n'
+  sed 's/^/    /' "$ATELIER/veille.log" | tail -6
+fi
+
+# Cette porte interroge le réseau : sans lui, elle le dit et laisse la copie
+# embarquée faire le calcul. Hors ligne n'est pas un échec.
+if python3 outils/verifier-source-distante.py > "$ATELIER/source-distante.log" 2>&1; then
+  bilan "verifier-source-distante"
+else
+  printf '  · verifier-source-distante : réseau injoignable, la copie embarquée fait le calcul\n'
+fi
 
 # ───────────────────────────────────────────────────── 6. la branche publiée
-etape "6/7 · branche $BRANCHE"
+etape "6/6 · branche et demande de fusion"
+if [ -z "$BRANCHE" ]; then
+  BRANCHE="maj-moteur-$REVISION_COURTE"
+fi
 if [ -z "$(git config user.email || true)" ]; then
   git config user.name "${GIT_AUTEUR_NOM:-Mise à jour du moteur}"
   git config user.email "${GIT_AUTEUR_COURRIEL:-maj-moteur@localhost}"
@@ -189,13 +219,12 @@ fi
 git checkout --quiet -b "$BRANCHE"
 git add -A
 git commit --quiet -F "$ICI/corps-de-pr.md"
-bilan "commit $(git rev-parse --short HEAD) — $(git show --stat --oneline HEAD | tail -1 | xargs)"
+bilan "commit $(git rev-parse --short HEAD)"
 git push -u origin "$BRANCHE"
-bilan "branche poussée"
+bilan "branche $BRANCHE poussée"
 
-# ─────────────────────────────────────────────────────────────── 7. le lien
-etape "7/7 · suite"
 LIEN="https://github.com/thejmimiia-code/MRSC/compare/main...$BRANCHE?expand=1"
+echo
 echo "  Relecture puis fusion : $LIEN"
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
   if gh pr create --repo thejmimiia-code/MRSC --base main --head "$BRANCHE" \
