@@ -583,6 +583,38 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("nul ne peut s'en attribuer", self.page.lower())
         self.assertIn("par le peuple, pour le peuple", self.page.lower())
 
+    def test_credit_du_mouvement_en_bas_de_page(self):
+        """Le crédit ferme la page et mène au site du mouvement.
+
+        Exigence de l'auteur : le pied de page porte « © 2026 Mouvement
+        Représentatif de la Société Civile (M.R.S.C) » et renvoie vers
+        https://thejmimiia-code.github.io/MRSC/. Le test verrouille les trois
+        choses qui peuvent se perdre sans bruit : le texte exact, la cible du
+        lien, et le fait qu'il soit bien en **bas** de page — pas coincé au
+        milieu du contenu.
+        """
+        lien = ('<a href="https://thejmimiia-code.github.io/MRSC/" '
+                'target="_blank" rel="noopener noreferrer">')
+        self.assertIn("© 2026 " + lien + "Mouvement Représentatif de la Société Civile (M.R.S.C)</a>.",
+                      self.page)
+        # Le crédit tel qu'il se lit à l'écran, une fois les balises retirées :
+        # c'est le texte que l'auteur a demandé, au caractère près.
+        texte_nu = re.sub(r"<[^>]+>", "", self.page)
+        self.assertIn("© 2026 Mouvement Représentatif de la Société Civile (M.R.S.C).", texte_nu)
+        # Stratégie du dépôt pour les liens sortants : nouvel onglet, sans
+        # référent ni accès à la page d'origine.
+        self.assertIn('rel="noopener noreferrer"', self.page)
+        # Il vient après l'attribution et la bannière : c'est le pied, pas un encart.
+        self.assertLess(self.page.index("Bannière MRSC"), self.page.index(lien))
+        # Et rien ne le suit : le dernier texte balisé de la page est le crédit.
+        corps = self.page[:self.page.rindex("<script")]
+        self.assertTrue(corps.rstrip().endswith("</div>"),
+                        "le crédit doit être le dernier bloc avant les scripts")
+        self.assertIn(lien, corps[-400:])
+        # Il se distingue de l'attribution par sa propre règle : sans elle, le
+        # crédit hériterait du padding haut de `.pied` et flotterait au milieu.
+        self.assertIn(".pied.credit{", self.page)
+
 
 class TestLisibilitePourTous(unittest.TestCase):
     """Compréhensible par tous : sommaire, lexique, lecture en clair, guide.

@@ -379,6 +379,11 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   border-radius:10px;padding:9px 12px;font-size:.78rem;margin-bottom:10px}
 .svg-chart{width:100%;height:210px;background:var(--panel-2);border-radius:10px;border:1px solid var(--border)}
 .pied{color:var(--texte-dim);font-size:max(var(--t-min),.72rem);text-align:center;padding:14px 0 26px}
+/* Le crédit du mouvement ferme la page : c'est le dernier texte qu'on lit, et
+   le seul lien sortant du pied. Il respire comme l'attribution qu'il suit, sans
+   dédoubler son espace — d'où le padding haut annulé. */
+.pied.credit{margin-top:0;padding:0 0 26px}
+.pied.credit a{font-weight:700}
 .provenance{font-size:max(var(--t-min),.73rem);color:var(--texte-dim);max-height:210px;overflow:auto}
 .provenance div{padding:3px 0;border-bottom:1px dashed rgba(147,163,189,.15)}
 .onglets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
@@ -1221,6 +1226,10 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
     <span class="aide" id="version-interface">Interface v1.10.2 (2026-10-08) — calibration des dépenses du foyer par source publique ou données personnelles; données personnelles locales à la page.</span>
+  </p>
+
+  <p class="pied credit">
+    © 2026 <a href="https://thejmimiia-code.github.io/MRSC/" target="_blank" rel="noopener noreferrer">Mouvement Représentatif de la Société Civile (M.R.S.C)</a>.
   </p>
 </div>
 
