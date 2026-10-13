@@ -191,7 +191,7 @@ Chaque chantier porte sa preuve de fin : ce qu'il faudra montrer pour dire « c'
 | # | Chantier | Pourquoi | Preuve de fin |
 |---|---|---|---|
 | P1‑1 | **Résorber le recouvrement de 21 communes** entre la strate rurale et les classes du modèle (`simulateur/model.py`) | une somme de strates qui dépasse son propre total est une incohérence de données, pas un détail d'arrondi | le test de `tests/test_territoires_elections.py` passe sans l'écart documenté |
-| P1‑2 | **Figer la date des données Banque mondiale** : l'URL de `simulateur/donnees_live.py` porte `date=2024` en dur, donc l'« instant T » peut rester figé sur 2024 sans que rien ne le signale | une donnée en direct qui n'avance plus sans le dire viole la promesse affichée | un indicateur daté dans le ruban, et un test qui refuse une période de plus d'un an |
+| P1‑2 | **Figer la date des données Banque mondiale** : l'URL de `simulateur/donnees_live.py` porte `date=2024` en dur, donc l'« instant T » peut rester figé sur 2024 sans que rien ne le signale | une donnée en direct qui n'avance plus sans le dire viole la promesse affichée | un indicateur daté dans le ruban, et un test qui refuse une période de plus d'un an — **réglé** : l'URL porte désormais `date=2019:{année courante}` et la période est relevée avec la valeur (`simulateur/donnees_live.py`, `ad_worldbank`) |
 | P1‑4 | **Débrancher ou réparer le projet Vercel fantôme** (`…-aazf`) qui échoue sur `main` comme sur les branches | une croix rouge qu'on ne peut pas réparer dans le dépôt apprend la même chose qu'une CI rouge : à l'ignorer | le statut du dernier commit ne porte plus de contrôle en échec |
 | P1‑3 | **Étendre le garde-fou aux taux et aux parts** annoncés (« 30 % aux PME », « 3 % du PIB », « 5,5 % de TVA ») : aujourd'hui seuls les comptages du code sont couverts | ce sont les chiffres les plus cités dans les débats publics, donc les plus coûteux à voir vieillir | `outils/verifier-compteurs.py` couvre une famille « taux », avec contre-épreuve |
 
@@ -202,7 +202,18 @@ Chaque chantier porte sa preuve de fin : ce qu'il faudra montrer pour dire « c'
 | P2‑1 | **Décider du sort de la console héritée** (`simulateur/web_server.py`, ~4 800 lignes, cinq gabarits HTML) : ses familles d'API (`/api/societe`, `/api/histoire`) ne sont servies ni par le routeur du dashboard ni par la fonction unique déployée ; le site en ligne ne les expose donc pas | deux serveurs, deux contrats : le jour où l'un dérive, plus personne ne sait lequel fait foi | une décision écrite, puis soit le portage des familles dans `simulateur/dashboard.py`, soit un renvoi assumé « console locale » dans `docs/HEBERGEMENT.md` |
 | P2‑2 | **Automatiser le suivi du registre d'engagements** : les 6 indicateurs de `docs/22` sont vérifiables à la main ; trois d'entre eux ont une source publique interrogeable | un registre d'engagements qu'on ne relit pas devient un monument | `GET /api/engagements` renvoie, pour chaque indicateur, la dernière valeur publiée et l'écart au seuil |
 | P2‑3 | **Ouvrir les objections du registre comme issues** (`outils/ouvrir-objections.py`) en réutilisant le gabarit « Objection sourcée » | le registre vit dans un document ; les objections vivent dans les discussions | les 24 objections existent en issues, avec leur numéro dans `docs/21` |
-| P2‑4 | **Budgéter le poids de la page** : `index.html` pèse 249 416 caractères, et la page charge catalogues et scénarios au démarrage | la fluidité est une qualité politique : une page lente n'est pas lue | `python3 outils/mesurer_fluidite.py` fixe un budget, et la CI échoue au-delà de +10 % |
+| P2‑4 | **Budgéter le poids de la page** : `index.html` pèse 249 416 caractères, et la page charge catalogues et scénarios au démarrage | la fluidité est une qualité politique : une page lente n'est pas lue | `python3 outils/mesurer_fluidite.py` fixe un budget, et la CI échoue au-delà de +10 % — **fait le 14 octobre 2026** ; règles, table et limites dans `docs/RD_BUDGETS_DE_FLUIDITE.md` |
+
+> **Suite, 14 octobre 2026 — les plafonds de poids (P2‑4), et une ligne périmée du plan.**
+> `outils/budgets_fluidite.py` tient quinze plafonds ancrés sur les mesures du jour,
+> `outils/mesurer_fluidite.py --verifier` refuse un dépassement (c'est une étape de la
+> CI), et 45 contrôles pesent la page à chaque poussée, dont la version hors ligne qui
+> n'a besoin d'aucun serveur. Le plan demandait « la CI échoue au-delà de +10 % » : la
+> marge est de 10 % par budget, et le budget du premier écran tombe plus tôt que la
+> somme des charges qu'il couvre. Au passage, **P1‑2 n'était plus ouvert** : le `date=2024`
+> en dur avait disparu lors du chantier des données datées, et la période du millésime
+> est relevée avec la valeur — la ligne du plan vieillissait toute seule, ce que ce plan
+> reproche précisément aux compteurs écrits à la main.
 
 ### P3 — Long terme, à instruire
 

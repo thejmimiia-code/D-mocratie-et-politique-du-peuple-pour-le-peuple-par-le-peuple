@@ -249,3 +249,26 @@ régler → mesurer → vérifier*, avec des raccourcis vers les sections.
    résout pas — un premier appel à 4,5 s reste un premier appel à 4,5 s.
 4. Faire relire le lexique par des non-spécialistes et tenir un journal des
    termes mal compris : c'est la seule métrique de lisibilité qui vaille.
+
+---
+
+## Les plafonds : de la mesure au refus (14 octobre 2026)
+
+Ce document mesure ; il ne refusait rien, et c'est ce qui lui manquait. Depuis
+cette passe, quinze plafonds sont écrits dans `outils/budgets_fluidite.py`,
+ancrés sur les mesures du 14 octobre 2026, vérifiés par
+`python3 outils/mesurer_fluidite.py --verifier` (une étape de la CI) et par
+42 contrôles hors ligne qui n'ont besoin d'aucun serveur. Les suites envisagées
+ci-dessus y gagnent un cadre chiffré :
+
+1. le **profilage dans un vrai navigateur** reste à faire : un plafond d'octets ne
+   dit rien du coût de rendu, et c'est la limite que ce chantier ne lève pas ;
+2. le payload de `/api/simuler` — **44 014 o** compressés sur cinq ans — a
+   désormais un plafond : l'alléger devient une décision, le laisser grossir en
+   devient une autre, et les deux se voient en revue ;
+3. le découpage de `/api/bulles` est chiffré : **169 866 o** compressés
+   (3 112 907 o bruts) sous un plafond de 186 853 o. La question n'est plus
+   « est-ce gros ? » mais « de combien reste-t-il de marge, et pour combien de temps ? ».
+
+Le détail — les quatre règles, la table des quinze plafonds, les dix sabotages et
+les limites assumées — est dans [`RD_BUDGETS_DE_FLUIDITE.md`](RD_BUDGETS_DE_FLUIDITE.md).

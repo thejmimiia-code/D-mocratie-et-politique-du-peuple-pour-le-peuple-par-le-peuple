@@ -874,10 +874,20 @@ seuil du modèle.
 ```bash
 python3 outils/mesurer_fluidite.py            # tableau des gains
 python3 outils/mesurer_fluidite.py --markdown # pour la documentation
+python3 outils/mesurer_fluidite.py --verifier # plafonds de poids, code de sortie
 ```
 
 Les mesures sont locales et hors ligne : le gain de volume est structurel, les
 durées dépendent de la machine.
+
+Depuis le 14 octobre 2026, ces mesures sont **opposables** : quinze plafonds sont
+écrits dans [`outils/budgets_fluidite.py`](outils/budgets_fluidite.py) — chacun
+avec son ancre datée, son motif et sa sortie, une marge de 10 %, et une raison
+écrite pour les cinq routes appelées et volontairement non plafonnées. La page
+est pesée **sans serveur** par 45 contrôles à chaque poussée, et une étape de la
+CI exécute `--verifier` : elle refuse la livraison qui franchit un plafond. Le
+détail, les sabotages et les limites sont dans
+[`docs/RD_BUDGETS_DE_FLUIDITE.md`](docs/RD_BUDGETS_DE_FLUIDITE.md).
 
 ### Audit technique de la PR
 
