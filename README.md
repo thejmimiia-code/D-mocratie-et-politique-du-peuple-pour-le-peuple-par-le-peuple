@@ -256,6 +256,27 @@ lecteurs automatiques — depuis une **source unique**, `simulateur/surface_publ
   versionnés, engendrés par `outils/apercu_social.py`, qui **lit** les comptes du
   catalogue au moment du dessin.
 
+Un dépôt vert ne dit rien de ce que les hébergeurs servent : un fichier peut
+être présent et jamais déployé, une route ajoutée au moteur et absente des
+fonctions serverless. `outils/verifier-surface-en-ligne.py` interroge donc les
+**deux adresses publiques**, et les interroge au caractère : le texte servi doit
+être égal à celui que `surface_publique.py` engendre, l'image servie égale au
+fichier versionné, la page doit porter sa canonique et ses métadonnées, et
+chaque route de l'API — y compris le POST `/api/simuler`, le calcul que la page
+demande à chaque mouvement de curseur — doit répondre 200 en JSON exploitable.
+
+```bash
+python3 outils/verifier-surface-en-ligne.py                 # 68 épreuves, deux hôtes
+python3 outils/verifier-surface-en-ligne.py --hote secours  # un seul
+```
+
+La copie de secours s'endort quand personne ne l'appelle : le script insiste et
+le dit, au lieu de confondre un réveil avec une panne — et surtout, il refuse de
+prendre sa page d'attente (un 200 qui raconte qu'elle démarre) pour une réponse.
+`.github/workflows/veille-en-ligne.yml` l'exécute une fois par semaine et à la
+demande : jamais à chaque poussée, pour qu'une panne d'hébergeur ne fasse pas
+rougir la contribution de quelqu'un d'autre.
+
 `outils/generer-surface-publique.py --verifier` refuse la divergence entre le
 module et les fichiers publiés ; `tests/test_indexation.py` (35 contrôles)
 refuse tout le reste — ressource distante, adresse canonique en double, données

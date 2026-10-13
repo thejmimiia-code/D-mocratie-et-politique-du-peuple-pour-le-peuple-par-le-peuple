@@ -6,6 +6,15 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Tout accessible, vérifié en ligne plutôt que supposé
+
+- **La suite de tests s'arrête au bord du réseau** : elle contrôle ce que le dépôt contient, jamais ce que Vercel ou Render servent. `outils/verifier-surface-en-ligne.py` comble ce trou — il interroge les deux adresses publiques et compare **au caractère** : le texte servi doit être égal à celui que `surface_publique.py` engendre, l'image servie égale au fichier versionné. Comparer à une photographie ne dirait rien des jours suivants.
+- **68 épreuves** : la page (canonique, description, aperçu de partage, données structurées, directives), les quatre textes et les quatre images, les seize routes GET, deux routes GET paramétrées, les quatre routes POST — dont `/api/simuler`, le calcul que la page demande à chaque mouvement de curseur — et les refus qui doivent rester des refus : une route inconnue, un proxy sans cible, un POST sur une route qui n'existe pas.
+- **Le piège de la copie de secours est traité** : elle s'endort, puis répond **200 avec une page qui raconte qu'elle démarre**. La prendre pour une réponse serait le pire des silences — la veille dirait que tout va bien au moment précis où rien ne répond. Elle insiste, en le disant, et elle refuse cette page comme une réponse.
+- **`.github/workflows/veille-en-ligne.yml`** l'exécute à la main et une fois par semaine, jamais à chaque poussée : une panne d'hébergeur ne doit pas faire rougir la contribution de quelqu'un d'autre. Le rapport s'écrit dans le résumé du run — un journal de job se télécharge, une page de run se lit.
+- **Treize contrôles hors ligne** (`tests/test_surface_en_ligne.py`) : la veille ne peut pas prendre du retard sur le moteur (une route servie et non sondée fait échouer la suite), ses épreuves reconnaissent un vrai succès, et cinq sabotages sont attrapés — texte tronqué, page sans canonique, route disparue, route qui répond une erreur, hôte endormi. Le contrôle de couverture a d'ailleurs attrapé un trou au premier essai : le POST `/api/simuler` n'était pas sondé.
+- **Résultat du premier passage** : 68 épreuves sur 68, sur les deux hébergeurs.
+
 ### Être trouvé : la page se décrit aux moteurs, aux aperçus et aux lecteurs automatiques
 
 - **Rien ne décrivait la page.** Ni description, ni adresse canonique, ni `robots.txt`, ni plan, ni vignette : deux hébergeurs servaient la même page sans dire laquelle fait foi, et un partage affichait un lien nu. `simulateur/surface_publique.py` **est** désormais la source : `robots.txt`, `sitemap.xml`, `llms.txt`, `llms-full.txt` et l'en-tête de la page (description, canonique, directives, aperçu de partage 1200 × 630, données structurées, icônes) viennent du même endroit. `outils/generer-surface-publique.py` écrit les fichiers pour Vercel ; le serveur Python sert le même texte pour Render.
