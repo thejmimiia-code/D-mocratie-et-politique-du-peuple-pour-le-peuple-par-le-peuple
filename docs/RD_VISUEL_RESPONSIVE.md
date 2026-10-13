@@ -304,6 +304,36 @@ Décisions :
   chaque rendu, une cellule qui porte déjà le bon `data-label` est laissée
   tranquille.
 
+## Huitième incrément — ce que le navigateur décidait à sa façon
+
+Trois détails ne se voyaient pas dans le CSS : ils se décidaient ailleurs, dans
+le navigateur, sans que la page ait son mot à dire.
+
+| Constat | Mesure | Conséquence |
+|---|---|---|
+| Une page sombre sans mot sur elle-même | aucun `color-scheme` | barres de défilement, curseurs, cases et menus natifs restés clairs sur fond sombre, et un fond blanc derrière le doigt qui tire la page |
+| Le texte redimensionné par le navigateur | aucun `text-size-adjust` | sur iOS, le texte regrossit seul quand on tourne le téléphone : le plancher de lisibilité ne veut plus dire grand-chose |
+| Le geste qui traverse les surfaces | aucun `overscroll-behavior` | arrivé au bout d'un tableau ou d'une modale, le doigt entraînait la page derrière — et sur Android, tirait le rechargement |
+
+Décisions :
+
+- **`color-scheme:dark`, une fois pour toutes** : déclaré dans `:root`. La page
+  ne suit pas le réglage du système — la palette M.R.S.C. est la seule — et un
+  test refuse l'arrivée de `prefers-color-scheme`, qui ferait deux thèmes à
+  maintenir.
+- **`text-size-adjust:100%` sur `html`** : c'est le document qui fixe la taille
+  du texte. Et le zoom reste libre : ni `user-scalable=no`, ni `maximum-scale=1`
+  — un test le vérifie, parce que c'est la première chose qu'un gabarit recopie.
+- **Le geste s'arrête au bord** : les douze surfaces qui défilent —
+  `.defilable`, `.journal`, `.provenance`, `.tableau-strate`, `.bourse-table`,
+  `.overlay`, `.modale-corps`, `.graphique`, `.tableau-defilant`, `.sommaire`,
+  `.sommaire-liste`, `.onglets-strates` — portent `overscroll-behavior:contain`.
+  Le contrôle fait le tour du CSS : **toute** règle qui déclare un
+  `overflow:auto` ou `scroll` doit figurer dans cette liste. C'est ainsi que
+  `.overlay` — la feuille de modale, oubliée par l'inventaire à la main — a été
+  rattrapée : un premier jet qui range `.modale-fond`, une classe qui n'existe
+  pas, ne prouve rien.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -333,6 +363,9 @@ quelqu'un réintroduit les défauts mesurés plus haut.
   de la balance ; sans simulation, les barres restent à zéro ;
 - aucune propriété personnalisée ne se définit elle-même — `--panel-3` portait
   sa propre boucle, donc une couleur qui n'arrivait jamais.
+- ce que le navigateur décidait seul : `color-scheme:dark` déclaré une fois et
+  aucun `prefers-color-scheme`, `text-size-adjust:100%`, zoom laissé libre, et
+  **toute** surface déclarant un défilement qui retient son geste ;
 - le repère de lecture : `marquerLecture` appelée par le clic **et** par
   l'observateur, `aria-current` posé avec la classe, un identifiant inconnu qui
   efface la marque au lieu de la laisser ;

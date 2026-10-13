@@ -1287,3 +1287,63 @@ class TestTableauxEnCartes(unittest.TestCase):
         self.assertEqual(corps.count("tableauEnCartes(tableau);"), 2,
                          "une fois pour un tableau déjà dans une région défilante, une fois "
                          "pour celui qu'on vient d'envelopper")
+
+
+class TestCeQueLeNavigateurDecideToutSeul(unittest.TestCase):
+    """Ce que la page doit dire pour que le navigateur cesse de choisir seul.
+
+    Trois choses se décidaient sans nous : la couleur des barres de défilement
+    et des champs natifs (clairs, sur une page sombre), la taille du texte sur
+    iOS quand on tourne le téléphone, et le geste qui, au bout d'un tableau,
+    entraîne la page entière — jusqu'au rechargement.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.page = HTML_PAGE
+        cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
+        cls.nu = re.sub(r"/\*.*?\*/", "", cls.css, flags=re.S)
+
+    def test_le_document_dit_qu_il_est_sombre(self):
+        self.assertEqual(self.nu.count("color-scheme:dark"), 1)
+        self.assertRegex(self.nu, r":root\{color-scheme:dark\}")
+        # La palette M.R.S.C. est la seule du document : elle ne bascule pas
+        # selon le réglage du système.
+        self.assertNotIn("prefers-color-scheme", self.nu)
+
+    def test_le_texte_ne_change_pas_de_taille_tout_seul(self):
+        self.assertIn("-webkit-text-size-adjust:100%", self.nu)
+        html = self.nu[self.nu.index("\nhtml{"):]
+        self.assertIn("text-size-adjust:100%", html[:80],
+                      "c'est le document qui fixe la taille du texte, pas iOS en paysage")
+
+    def test_l_agrandissement_du_texte_reste_possible(self):
+        # WCAG 1.4.4 : on ne bride pas le zoom.
+        self.assertNotIn("user-scalable=no", self.page)
+        self.assertNotIn("maximum-scale=1", self.page)
+
+    def test_toute_surface_qui_defile_retient_son_geste(self):
+        """Une zone défilante ajoutée sans `overscroll-behavior` échoue ici.
+
+        Sans cette déclaration, arrivé au bout d'un tableau, le doigt continue
+        d'entraîner la page derrière — et sur Android, tire le rechargement.
+        """
+        i = self.nu.index("{overscroll-behavior:contain}")
+        couvertes = set(re.findall(r"\.([\w-]+)", self.nu[:i].split("}")[-1]))
+        for attendue in ("defilable", "journal", "provenance", "tableau-strate", "bourse-table",
+                         "overlay", "modale-corps", "graphique", "tableau-defilant",
+                         "sommaire", "sommaire-liste", "onglets-strates"):
+            with self.subTest(classe=attendue):
+                self.assertIn(attendue, couvertes)
+
+        for bloc in re.finditer(r"([^{}]+)\{([^{}]*)\}", self.nu):
+            selecteur, declarations = bloc.group(1), bloc.group(2)
+            if not re.search(r"overflow(?:-[xy])?\s*:\s*(?:auto|scroll)", declarations):
+                continue
+            for morceau in selecteur.split(","):
+                classes = re.findall(r"\.([\w-]+)", morceau)
+                if not classes:
+                    continue
+                with self.subTest(selecteur=morceau.strip()):
+                    self.assertTrue([c for c in classes if c in couvertes],
+                                    f"{morceau.strip()} défile sans retenir son geste")

@@ -6,6 +6,13 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Ce que le navigateur décidait à sa façon : surfaces natives, taille du texte, geste au bord
+
+- **`color-scheme:dark`** déclaré une fois dans `:root` : barres de défilement, curseurs, cases, menus natifs et le fond derrière la page passent en sombre — jusqu'ici le navigateur les peignait en clair. La page ne suit pas le réglage du système (la palette M.R.S.C. est la seule) et un test refuse l'arrivée d'un second thème.
+- **`text-size-adjust:100%`** : c'est le document qui fixe la taille du texte ; le navigateur ne la regrossit plus tout seul quand on tourne le téléphone, et le plancher de lisibilité n'est plus défait par un redimensionnement automatique. Le zoom reste libre — ni `user-scalable=no`, ni `maximum-scale` —, ce qu'un test vérifie.
+- **`overscroll-behavior:contain` sur les douze surfaces qui défilent** : arrivé au bout d'un tableau, d'un journal ou d'une modale, le doigt n'entraîne plus la page derrière, et ne déclenche plus le rechargement par surprise sur Android. Le garde-fou fait le tour du CSS — toute règle qui déclare `overflow:auto|scroll` doit figurer dans la liste ; c'est ainsi que `.overlay`, la feuille de modale, a été rattrapée.
+- **Garde-fous** : `tests/test_interface.py::TestCeQueLeNavigateurDecideToutSeul`.
+
 ### Le sommaire dit où l'on est, et les tableaux deviennent des cartes sur un téléphone
 
 - **Repère de lecture** : le sommaire collant surlignait la dernière entrée *cliquée*. Sur une page de vingt-quatre sections, il désignait une section quittée depuis longtemps dès qu'on faisait défiler sans cliquer. `marquerLecture(identifiant)` est maintenant le seul endroit qui pose la marque — le clic et l'observateur de défilement l'appellent tous les deux —, la position est **annoncée** (`aria-current="location"`, pas seulement colorée) et un identifiant inconnu l'**efface** au lieu de la laisser sur l'entrée précédente. Dans une région qui défile, la première colonne colle à gauche pour qu'on sache encore quelle ligne on lit.

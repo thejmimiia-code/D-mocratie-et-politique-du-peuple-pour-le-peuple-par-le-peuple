@@ -87,6 +87,20 @@ HTML_PAGE = r"""<!DOCTYPE html>
   --z-fond:0; --z-contenu:1; --z-sommaire:56; --z-ruban:60;
   --z-evitement:80; --z-infobulle:120; --z-bandeau:160; --z-modale:200;
 }
+
+/* ── Ce que le navigateur décidait à sa façon ─────────────────────────────
+   Une page sombre laissée sans mot reçoit des barres de défilement claires,
+   des curseurs et des cases clairs, et un fond blanc derrière le doigt qui
+   tire la page ; sur iOS, le texte peut être redimensionné sans prévenir
+   quand on tourne le téléphone. Ces deux déclarations le disent une fois pour
+   toutes, et chaque surface qui défile retient son geste : arrivé au bout
+   d'un tableau, d'un journal ou d'une modale, le doigt n'entraîne plus la
+   page derrière — ni un rechargement par surprise. */
+:root{color-scheme:dark}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+.defilable,.journal,.provenance,.tableau-strate,.bourse-table,
+.overlay,.modale-corps,.graphique,.tableau-defilant,.sommaire,
+.sommaire-liste,.onglets-strates{overscroll-behavior:contain}
 :focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
 
 *{margin:0;padding:0;box-sizing:border-box}
