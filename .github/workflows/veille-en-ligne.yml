@@ -1,0 +1,31 @@
+name: Veille en ligne
+
+# Ce que servent réellement les deux hébergeurs, vérifié pour de vrai : le
+# dépôt ne peut pas le savoir, et un dépôt vert peut servir une page cassée.
+#
+# Déclenchée à la main, et une fois par semaine — jamais à chaque poussée : une
+# panne d'hébergeur ne doit pas faire rougir la contribution de quelqu'un
+# d'autre, et une veille qui crie à chaque fusion ne se lit plus.
+#
+# La copie de secours s'endort quand personne ne l'appelle : le script insiste
+# donc cinq fois, en le disant, au lieu de confondre un réveil avec une panne.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+jobs:
+  surfaces:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Interroger les deux adresses publiques
+        run: python3 outils/verifier-surface-en-ligne.py --essais 5 --attente 20
