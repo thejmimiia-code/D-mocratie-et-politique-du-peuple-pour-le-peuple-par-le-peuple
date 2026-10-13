@@ -27,66 +27,10 @@ NODE = shutil.which("node")
 DEBUT = "function tableauDejaDefilant("
 FIN = "function marquerSommaire("
 
-DOM_MINIMAL = r"""
-class ClassList {
-  constructor(element) { this.element = element; this.valeurs = new Set(); }
-  get valeur() { return [...this.valeurs].join(" "); }
-  add(c) { this.valeurs.add(c); this.element._classes = this.valeur; }
-  remove(c) { this.valeurs.delete(c); this.element._classes = this.valeur; }
-  contains(c) { return this.valeurs.has(c); }
-  toggle(c) { if (this.valeurs.has(c)) { this.remove(c); return false; } this.add(c); return true; }
-}
-
-class Element {
-  constructor(tagName) {
-    this.tagName = tagName.toUpperCase();
-    this.enfants = [];
-    this.parentNode = null;
-    this.parentElement = null;
-    this.attributs = {};
-    this.textContent = "";
-    this._classes = "";
-    this.classList = new ClassList(this);
-  }
-  get className() { return this._classes; }
-  set className(valeur) { this._classes = valeur; this.classList.valeurs = new Set(String(valeur).split(/\s+/).filter(Boolean)); }
-  setAttribute(nom, valeur) { this.attributs[nom] = String(valeur); }
-  getAttribute(nom) { return Object.prototype.hasOwnProperty.call(this.attributs, nom) ? this.attributs[nom] : null; }
-  appendChild(enfant) {
-    if (enfant.parentNode) enfant.parentNode.retirer(enfant);
-    enfant.parentNode = this; enfant.parentElement = this;
-    this.enfants.push(enfant); return enfant;
-  }
-  insertBefore(nouveau, reference) {
-    const rang = this.enfants.indexOf(reference);
-    nouveau.parentNode = this; nouveau.parentElement = this;
-    if (rang < 0) this.enfants.push(nouveau); else this.enfants.splice(rang, 0, nouveau);
-    return nouveau;
-  }
-  retirer(enfant) {
-    const rang = this.enfants.indexOf(enfant);
-    if (rang >= 0) this.enfants.splice(rang, 1);
-    if (enfant.parentNode === this) { enfant.parentNode = null; enfant.parentElement = null; }
-  }
-  descendants() {
-    return this.enfants.flatMap(enfant => [enfant, ...enfant.descendants()]);
-  }
-  querySelectorAll(selecteur) {
-    return this.descendants().filter(noeud => noeud.tagName === selecteur.toUpperCase());
-  }
-}
-
-class Document {
-  constructor() {
-    this.body = new Element("body");
-    this.racine = this.body;
-  }
-  createElement(balise) { return new Element(balise); }
-  querySelectorAll(selecteur) { return this.racine.querySelectorAll(selecteur); }
-}
-"""
+DOM_PARTAGE = RACINE / "tests" / "dom_minimal.mjs"
 
 PROGRAMME = r"""
+
 const document = new Document();
 const section = document.createElement("section");
 document.body.appendChild(section);
@@ -144,7 +88,8 @@ class TestDefilementDesTableaux(unittest.TestCase):
         cls.fragment = script[debut:fin]
         with tempfile.TemporaryDirectory(prefix="tableaux-defilants-") as temporaire:
             chemin = Path(temporaire) / "essai.mjs"
-            chemin.write_text(DOM_MINIMAL + cls.fragment + PROGRAMME, encoding="utf-8")
+            import_ = f'import {{ Document }} from "{DOM_PARTAGE.as_uri()}";\n'
+            chemin.write_text(import_ + cls.fragment + PROGRAMME, encoding="utf-8")
             resultat = subprocess.run([NODE, str(chemin)], capture_output=True, text=True, timeout=120)
         cls.retour = resultat
         if resultat.returncode == 0:

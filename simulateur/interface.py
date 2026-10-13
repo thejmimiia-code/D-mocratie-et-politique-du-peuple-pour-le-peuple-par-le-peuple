@@ -694,6 +694,15 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .chapitre-titre{font-size:1.02rem;font-weight:700;letter-spacing:.3px}
 .chapitre-aide{font-size:max(var(--t-min),.8rem);color:var(--texte-dim);margin-top:2px}
 
+/* ── Le graphique : lisible à toutes les largeurs ─────────────────────────
+   Le dessin a 900 unités de large. Étiré sur un écran de 1400 px, il s'élargit ;
+   écrasé sur un téléphone, ses libellés deviennent illisibles. On lui donne
+   donc une largeur minimale et une région qui défile : la courbe garde son
+   échelle, la page garde sa largeur. */
+.graphique{overflow-x:auto;max-width:100%;-webkit-overflow-scrolling:touch}
+.graphique .svg-chart{min-width:640px}
+.graphique:focus-visible,.tableau-defilant:focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
+
 /* ══ Socle responsive : un seul jeu de règles, tous les écrans ═════════════
    Ce bloc vient en fin de feuille : il s'applique à l'écran seulement, et
    jamais à l'impression (l'impression a ses règles, plus haut). Quatre
@@ -713,7 +722,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
     box-shadow:inset -14px 0 14px -14px rgba(0,0,0,.55)}
   .tableau-defilant>table{margin:0}
   .tableau-defilant:focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
-  body{padding:clamp(10px,1.6vw,18px)}
+  body{padding:clamp(10px,1.6vw,18px);overflow-wrap:break-word}
   header.entete{padding:clamp(14px,1.6vw,22px)}
   section.bloc{padding:clamp(12px,1.4vw,18px)}
   header.entete h1{font-size:clamp(1.15rem,.8vw + .78rem,1.52rem);line-height:1.3}
@@ -750,6 +759,12 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   .cascade-ligne{grid-template-columns:minmax(96px,1.1fr) minmax(72px,2.2fr) auto}
   .sommaire{box-shadow:none}
 }
+@media screen and (max-width:900px){
+  /* Deux panneaux de 330 px dans 700 px se lisent mal : un seul, large. */
+  .console-corps{grid-template-columns:minmax(0,1fr)}
+  .onglets-strates{display:flex;flex-wrap:nowrap;overflow-x:auto}
+  .onglets-strates button{flex:0 0 auto}
+}
 @media screen and (max-width:640px){
   :root{--collant:44px}
   .sommaire{position:sticky;top:0;z-index:56;gap:7px;padding:6px;flex-wrap:nowrap}
@@ -763,9 +778,22 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   section.bloc>h2 .aide{display:block;margin-top:3px}
 }
 @media screen and (max-width:480px){
-  .grille.metrics{grid-template-columns:repeat(auto-fit,minmax(min(100%,132px),1fr))}
+  /* Quatre chiffres en deux colonnes plutôt qu'en quatre : chaque nombre
+     garde de la place, y compris « +49,1 Md€/an ». */
+  .grille.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .resume .metric .valeur{font-size:1.2rem}
   .pastille{white-space:normal}
   .tableau-defilant table{font-size:max(var(--t-min),.76rem)}
+}
+/* Le sommaire ouvert sur téléphone ne doit pas manger l'écran : il défile. */
+@media screen and (max-width:640px){
+  .sommaire.ouverte .sommaire-liste{max-height:46vh;overflow-y:auto}
+}
+/* Contraste renforcé demandé par le système : bordures plus franches, textes
+   secondaires plus lisibles. Aucune information ne dépend de cette règle. */
+@media screen and (prefers-contrast:more){
+  :root{--border:#4a5c85;--texte-dim:#b9c6dc}
+  .carte,section.bloc,.tableau-defilant,.graphique .svg-chart{border-width:2px}
 }
 @media screen and (pointer:coarse){
   button,.bouton,summary,.onglets button,.onglets-strates button,.sommaire a,
@@ -775,6 +803,24 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   .annee-classes button{display:inline-flex;align-items:center}
   input,select,textarea{font-size:max(16px,1rem)}
   input[type=range]{height:34px}
+}
+/* ══ Impression : tout le contenu, rien de coupé ════════════════════════════
+   À l'écran, les grands tableaux défilent dans une région à hauteur plafonnée :
+   c'est confortable et ça n'écrase pas la page. Sur papier, ce plafond
+   supprimerait des lignes en silence — les vingt-trois tableaux de l'audit
+   feraient trois lignes chacun. On rend donc tout le contenu, on enlève les
+   fonds sombres et les barres collantes, et on évite de couper une ligne en
+   deux. */
+@media print{
+  .defilable,.journal,.provenance,.tableau-strate,.bourse-table,.tableau-defilant,.graphique{
+    max-height:none;overflow:visible;box-shadow:none;border-color:#000}
+  .graphique .svg-chart{min-width:0;height:auto}
+  .sommaire,.ruban-veille{position:static;box-shadow:none}
+  .sommaire-bascule,.lien-evitement,.resume-actions,.infobulle,.overlay{display:none}
+  .resume,.chapitre{background:#fff !important;border-color:#000 !important;box-shadow:none}
+  .chapitre-num{background:#fff !important;color:#000 !important;border:1px solid #000}
+  tr,li{page-break-inside:avoid}
+  a[href^="#"]{text-decoration:none;color:#000}
 }
 </style>
 <script>
@@ -1104,7 +1150,10 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 
   <section class="bloc" id="section-trajectoires">
     <h2>Trajectoires clés <span class="aide">déficit, dette, taux OAT, tension sociale et confiance</span></h2>
-    <svg class="svg-chart" id="svg-chart" viewBox="0 0 900 210" preserveAspectRatio="none"></svg>
+    <div class="graphique" id="graphique-trajectoires">
+      <svg class="svg-chart" id="svg-chart" viewBox="0 0 900 210" preserveAspectRatio="none"
+        role="img" aria-label="Courbes des trajectoires clés : déficit, dette, taux OAT, tension sociale et confiance, année par année"></svg>
+    </div>
   </section>
 
   <section class="bloc" id="section-domaines">
@@ -4000,6 +4049,34 @@ function basculerSommaire(){
   if (bouton.setAttribute) bouton.setAttribute('aria-expanded', ouverte ? 'true' : 'false');
 }
 
+/* ── Les aides atteignables au doigt ──────────────────────────────────────
+   Une infobulle s'ouvre au survol et au focus. Au doigt, ni l'un ni l'autre :
+   les éléments annotés qui ne sont pas déjà un bouton, un lien ou un champ
+   deviennent focalisables — sur appareil tactile seulement, pour ne pas
+   ajouter vingt-sept arrêts de tabulation à un clavier d'ordinateur. */
+function pointerGrossier(){
+  return typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+    && window.matchMedia('(pointer:coarse)').matches === true;
+}
+
+function rendreAidesFocalisables(force){
+  if (!document.querySelectorAll || typeof document.createElement !== 'function') return 0;
+  if (force !== true && !pointerGrossier()) return 0;
+  const aides = document.querySelectorAll('[data-aide], [data-aide-levier]');
+  if (!aides || !aides.length || typeof aides.forEach !== 'function') return 0;
+  const dejaFocalisables = ['button', 'a', 'input', 'select', 'textarea', 'summary'];
+  let poses = 0;
+  aides.forEach(function(noeud){
+    if (!noeud.setAttribute) return;
+    if (noeud.hasAttribute && noeud.hasAttribute('tabindex')) return;
+    const balise = ('' + (noeud.tagName || '')).toLowerCase();
+    if (dejaFocalisables.indexOf(balise) >= 0) return;
+    noeud.setAttribute('tabindex', '0');
+    poses += 1;
+  });
+  return poses;
+}
+
 /* ── Tableaux larges : la page ne déborde jamais ──────────────────────────
    Un tableau de 860 px posé dans un écran de 360 px ne rétrécit pas : il
    pousse tout le reste, et toute la page devient glissante. Chaque tableau
@@ -4047,6 +4124,14 @@ function marquerSommaire(lien){
   if (!document.querySelectorAll) return;
   document.querySelectorAll('.sommaire a').forEach(ancre => ancre.classList.remove('actif'));
   if (lien && lien.classList) lien.classList.add('actif');
+  // Choisir une destination referme le sommaire ouvert au doigt : la page
+  // reste devant, l'utilisateur voit où il arrive.
+  const nav = document.getElementById('sommaire');
+  const bouton = document.getElementById('sommaire-bascule');
+  if (nav && nav.classList && nav.classList.contains('ouverte')){
+    nav.classList.remove('ouverte');
+    if (bouton && bouton.setAttribute) bouton.setAttribute('aria-expanded', 'false');
+  }
 }
 
 /* ── Lecture en clair ─────────────────────────────────────────────────────
@@ -4961,12 +5046,18 @@ async function chargerObjections(filtre){
   // enveloppe une fois pour toutes, à chaque rendu, sans dépendre d'un moteur
   // de rendu précis — la page reste lisible même sans observateur.
   rendreTableauxDefilants();
+  rendreAidesFocalisables();
   if (typeof MutationObserver === 'function' && document.body){
     let enAttente = false;
     const observateur = new MutationObserver(function(){
       if (enAttente) return;
       enAttente = true;
-      setTimeout(function(){ enAttente = false; rendreTableauxDefilants(); }, 120);
+      setTimeout(function(){
+        enAttente = false;
+        rendreTableauxDefilants();
+        // Les leviers sont réécrits à chaque filtre : leurs aides aussi.
+        rendreAidesFocalisables();
+      }, 120);
     });
     observateur.observe(document.body, {childList: true, subtree: true});
   }

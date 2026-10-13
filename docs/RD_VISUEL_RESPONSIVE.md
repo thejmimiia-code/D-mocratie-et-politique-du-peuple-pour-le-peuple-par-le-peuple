@@ -105,6 +105,41 @@ Les mouvements restent discrets : les cartes se soulèvent légèrement, les
 barres de la cascade et les jauges de la balance glissent au lieu de sauter,
 et `prefers-reduced-motion` coupe tout.
 
+## Troisième incrément — la deuxième passe : ce qui restait
+
+Le socle et l'organisation ont tenu ; une seconde mesure a trouvé cinq défauts
+de plus, aucun visible sur un grand écran.
+
+| Constat | Mesure | Conséquence |
+|---|---|---|
+| L'impression coupait le contenu | `.defilable` et `.tableau-strate` à **430 px**, `.journal` à 260, `.provenance` à 210, `.bourse-table` à 520, tous en `overflow:auto` | Sur papier, un tableau de 1 200 lignes en imprimait onze — sans le dire |
+| Le graphique se déformait | `<svg viewBox="0 0 900 210" preserveAspectRatio="none">` dans un bloc `width:100%` | À 350 px de large, 900 unités écrasées : libellés illisibles ; et aucun nom, donc rien pour un lecteur d'écran |
+| Les aides n'existaient qu'au survol | **27** des 58 annotations `data-aide` sont portées par des éléments non focalisables | Au doigt, pas de survol : l'explication restait inaccessible |
+| La tablette était mal servie | deux panneaux de 330 px dans 700 px de large | Colonnes étriquées, alors que le palier 900 px existait déjà pour d'autres blocs |
+| Les écrans de 320-480 px | quatre chiffres dans quatre colonnes d'environ 132 px | « +49,1 Md€/an » ne tenait pas dans sa colonne |
+
+Décisions :
+
+- **Impression, troisième bloc `@media print`** : les plafonds de hauteur
+  tombent (`max-height:none;overflow:visible`), les barres collantes
+  redeviennent statiques, les fonds sombres passent en blanc, et une ligne de
+  tableau ne se coupe plus en deux. À l'écran, rien ne change.
+- **Le graphique a sa région** : `.graphique` défile horizontalement et le
+  dessin garde 640 px de large minimum — il perd son étirement sur grand écran,
+  garde son échelle sur petit. Il reçoit `role="img"` et un nom : il existe
+  enfin pour un lecteur d'écran.
+- **Les aides au doigt** : `rendreAidesFocalisables()` rend focalisables les
+  seuls éléments annotés qui ne sont ni un bouton, ni un lien, ni un champ —
+  **et seulement sur appareil tactile** (`pointer:coarse`), pour ne pas ajouter
+  vingt-sept arrêts de tabulation à un clavier d'ordinateur. Le second passage
+  ne fait rien.
+- **Tablette** : un seul panneau large dans la console au-dessous de 900 px, et
+  les sept onglets de strate défilent au lieu de s'écraser.
+- **Très petits écrans** : deux colonnes, valeur du résumé ramenée à 1,2 rem.
+- **Finitions** : `overflow-wrap:break-word` sur le corps (un mot long ne
+  déborde plus), sommaire ouvert plafonné à 46 % de la hauteur visible, et
+  `prefers-contrast:more` honoré (bordures et textes secondaires renforcés).
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -119,20 +154,27 @@ quelqu'un réintroduit les défauts mesurés plus haut.
 - résumé de tête au-dessus de la première section, alimenté par les mêmes
   fonctions que la balance, et appelé par elle ;
 - quatre chapitres, chacun avant la première section qu'il ouvre ;
-- mouvements coupables par `prefers-reduced-motion`.
+- mouvements coupables par `prefers-reduced-motion` ;
+- impression sans plafond de hauteur, graphique nommé et à échelle gardée,
+  aides tactiles, contraste renforcé, grille à deux colonnes sous 480 px.
 
-Deux contrôles **exécutent** le code, ils ne le relisent pas :
+Trois fichiers de tests **exécutent** le code, ils ne le relisent pas :
 
-- `tests/test_defilement_tableaux.py` fait tourner les fonctions d'enveloppement
+- `tests/test_defilement_tableaux.py` fait tourner l'enveloppement des tableaux
   sur un DOM minimal et vérifie qu'un seul tableau est enveloppé, que la région
   est nommée et atteignable au clavier, que le tableau n'est pas modifié et que
   les tableaux déjà défilants sont laissés tranquilles ;
+- `tests/test_aides_focalisables.py` vérifie qu'un ordinateur ne gagne aucun
+  arrêt de tabulation, qu'un appareil tactile gagne exactement les deux aides
+  qui en avaient besoin, que les éléments déjà focalisables sont laissés tels
+  quels, et que le sommaire ouvert se referme en annonçant son état ;
 - `tests/navigateur_interface.mjs` demande au parcours réel que le résumé de
   tête porte **le solde de la balance** (comparaison de texte), que sa phrase
   soit celle du verdict, et qu'un changement d'année relise le résumé.
 
-La suite complète (1 058 tests, 11 ignorés) et `ruff` restent la référence : une
-règle visuelle qui casserait un comportement n'a pas sa place.
+Le DOM minuscule commun aux deux premiers vit dans `tests/dom_minimal.mjs` : il
+fournit classes, attributs, enfants et ordre du document, et rien d'autre.
+
 
 
 ## Limites assumées
