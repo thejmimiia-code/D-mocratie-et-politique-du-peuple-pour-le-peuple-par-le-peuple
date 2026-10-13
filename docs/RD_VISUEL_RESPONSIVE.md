@@ -220,6 +220,90 @@ Décisions :
   C'est le genre de faute qui ne se voit pas : aucune erreur, aucune alerte —
   simplement une couleur qui n'arrive jamais.
 
+## Sixième incrément — le repère du sommaire dit où l'on est, pas où l'on a cliqué
+
+Constat : le sommaire collant surlignait la dernière entrée **cliquée**. La page
+compte désormais vingt-quatre sections : dès qu'on fait défiler sans cliquer, le
+repère indiquait un endroit où l'on n'était plus.
+
+| Constat | Mesure | Conséquence |
+|---|---|---|
+| Le repère suit le clic, pas la lecture | `.sommaire a.actif` n'était posée que par `onclick` | en défilant, le sommaire désignait une section quittée depuis longtemps |
+| La marque n'existait qu'en couleur | aucune annonce d'état | la position courante n'existait pas pour un lecteur d'écran |
+| Dans une région défilante, la ligne perdait son nom | la première colonne glissait avec le reste | au bout de trois colonnes glissées, on ne sait plus quelle ligne on lit |
+
+Décisions :
+
+- **Un seul endroit pose la marque** : `marquerLecture(identifiant)` — le clic
+  (`marquerSommaire`) et l'observateur de défilement l'appellent tous les deux,
+  donc le sommaire ne peut plus dire deux choses à la fois. Un identifiant
+  inconnu **efface** la marque au lieu de la laisser sur l'entrée précédente.
+- **La marque est annoncée** : `aria-current="location"` accompagne la classe
+  `.actif`. Un repère qui n'existe qu'en couleur n'existe pas pour tout le monde.
+- **L'observateur** (`observerLecture`) suit les sections repères
+  (`section.bloc[id]`) avec `rootMargin:'0px 0px -70% 0px'` : la section lue est
+  celle dont le haut est le plus proche du haut de la fenêtre, ce qui donne une
+  marque stable quand deux sections se disputent l'écran.
+- **La première colonne reste en place** : dans une région défilante, la
+  première cellule colle à gauche (`position:sticky;left:0`) avec un fond plein
+  — sans lui, le texte passerait dessous — et une ombre discrète qui dit qu'il y
+  a de la suite. Sur papier, la colonne reprend sa place (`position:static`).
+
+Deux doublures de test ont été corrigées au passage : `classList.toggle(classe,
+force)` **ajoutait** la classe quand `force` valait `false`. Le contrôle « une
+seule entrée marquée » passait donc sur une doublure infidèle — le genre de vert
+qui ne prouve rien.
+
+## Septième incrément — le tableau devient une carte sur un téléphone
+
+Constat : les tableaux de la page sont tous écrits par le script, et plusieurs
+portent six à neuf colonnes (`min-width` de 600 px pour les strates, 860 px pour
+la bourse). Dans 360 px, on fait glisser la ligne sous ses yeux, et l'en-tête a
+disparu depuis longtemps.
+
+| Constat | Mesure | Conséquence |
+|---|---|---|
+| Neuf colonnes dans 360 px | `.tableau-strate table{min-width:600px}`, `.bourse-table table{min-width:860px}` | une ligne à la fois, sans son en-tête : on lit des nombres sans savoir ce qu'ils sont |
+| Aucun libellé de colonne dans les cellules | aucun `data-label` dans la page ; les dix-sept tableaux naissent du script | étiqueter à la main demandait de toucher dix-sept gabarits — et le rendu suivant effaçait tout |
+| Le tableau est réécrit à chaque frappe | l'observateur de la page réenveloppe les tableaux à chaque vague de rendu | un étiquetage posé une seule fois au chargement ne survivrait pas |
+
+Décisions :
+
+- **Le libellé se déduit, il ne s'écrit pas deux fois** : `tableauEnCartes(tableau)`
+  lit la ligne d'en-tête et pose `data-label` sur chaque cellule ; en CSS,
+  `tr>*::before{content:attr(data-label)}` l'affiche sous 640 px. Personne ne
+  maintient une seconde liste de noms de colonnes.
+- **La ligne devient une carte, la première cellule devient le titre** : sa
+  colonne est déjà écrite par la ligne elle-même, son libellé serait redondant
+  (`::before{content:none}`).
+- **L'en-tête quitte l'écran sans quitter le document** : la ligne d'en-tête est
+  réduite à un pixel (`clip-path:inset(50%)`), jamais `display:none` — elle
+  reste pour les lecteurs d'écran, et l'impression retrouve un tableau normal,
+  toute la bascule étant enfermée dans `@media screen`.
+- **Les régions qui ne défilaient que pour la largeur rendent la place** :
+  `.tableau-strate`, `.bourse-table`, `.tableau-defilant` et `.defilable`
+  passent en `overflow:visible;max-height:none` **quand** ils contiennent un
+  tableau en cartes (`:has(.tableau-cartes)`).
+- **La bascule vaut aussi pour les tableaux déjà défilants** : c'est justement
+  là qu'il y a le plus de colonnes (strates, bourse, audit, modales). La
+  première colonne y colle à gauche, et ne colle plus dès que la carte prend la
+  place (`position:static`).
+- **Tout ou rien, et ça se répare** : le tableau entier est vérifié **avant** la
+  première écriture. Deux lignes d'en-tête, une seule colonne, ou une cellule
+  qui fusionne des colonnes (`colspan`, `rowspan`) : il n'est pas étiqueté du
+  tout — et s'il l'était déjà, il **rend sa marque** et redevient un tableau qui
+  défile. Le passage reprend à chaque vague de rendu, donc un gabarit qui
+  remplace sa cellule « en chargement… » par de vraies valeurs redevient
+  étiquetable tout seul. Un tableau peut aussi refuser la bascule :
+  `data-cartes="non"`.
+- **La spécificité compte** : `.bourse-table table{min-width:860px}` (une classe,
+  un type) battait `.tableau-cartes{min-width:0}` (une classe seule). C'est
+  `table.tableau-cartes` qui tranche — sans quoi les tableaux les plus larges
+  auraient débordé de leur propre carte.
+- **On n'écrit pas deux fois la même étiquette** : le passage ayant lieu à
+  chaque rendu, une cellule qui porte déjà le bon `data-label` est laissée
+  tranquille.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
@@ -249,8 +333,16 @@ quelqu'un réintroduit les défauts mesurés plus haut.
   de la balance ; sans simulation, les barres restent à zéro ;
 - aucune propriété personnalisée ne se définit elle-même — `--panel-3` portait
   sa propre boucle, donc une couleur qui n'arrivait jamais.
+- le repère de lecture : `marquerLecture` appelée par le clic **et** par
+  l'observateur, `aria-current` posé avec la classe, un identifiant inconnu qui
+  efface la marque au lieu de la laisser ;
+- le passage en cartes : la bascule dans la requête de 640 px, l'en-tête clippé
+  et **jamais** `display:none`, `content:attr(data-label)`, la première cellule
+  en titre, la première colonne qui ne colle plus, et la vérification qui
+  précède toute écriture ;
+- aucune règle de carte dans les blocs d'impression (le papier garde un tableau) ;
 
-Quatre fichiers de tests **exécutent** le code, ils ne le relisent pas :
+Cinq fichiers de tests **exécutent** le code, ils ne le relisent pas :
 
 - `tests/test_defilement_tableaux.py` fait tourner l'enveloppement des tableaux
   sur un DOM minimal et vérifie qu'un seul tableau est enveloppé, que la région
@@ -272,8 +364,16 @@ Quatre fichiers de tests **exécutent** le code, ils ne le relisent pas :
   ramène la page entière **et le focus sur le bouton**, et une impression
   refusée ne laisse ni exception ni page amputée.
 
-Le DOM minuscule commun aux deux premiers vit dans `tests/dom_minimal.mjs` : il
-fournit classes, attributs, enfants et ordre du document, et rien d'autre.
+`tests/test_tableaux_en_cartes.py` exécute le passage en cartes sur un DOM
+minimal : un tableau simple reçoit le nom de sa colonne sur chaque valeur, un
+tableau à deux lignes d'en-tête ou à cellule fusionnée n'est **pas** touché
+(zéro étiquette — tout ou rien), une cellule réparée rend le tableau étiquetable,
+et un tableau devenu incohérent rend sa marque. Un sabotage volontaire du
+script (l'étiquette refusée ignorée) a été posé puis retiré pour vérifier que ces
+contrôles mordent.
+
+Le DOM minuscule commun à trois de ces fichiers vit dans `tests/dom_minimal.mjs` :
+il fournit classes, attributs, enfants et ordre du document, et rien d'autre.
 
 
 
@@ -288,3 +388,11 @@ fournit classes, attributs, enfants et ordre du document, et rien d'autre.
   deux.
 - **La densité des tableaux d'audit reste supérieure à celle du reste** : c'est
   voulu (audit et traçabilité), et le plancher de lisibilité s'y applique.
+
+- **Le nom de la région ne suit pas la bascule** : `aria-label` dit encore
+  « faites défiler horizontalement » sur une région dont le tableau est devenu
+  une pile de cartes. La phrase reste vraie au-dessus de 640 px, où le tableau
+  défile vraiment ; elle est seulement inutile en dessous.
+- **`:has()`** : les quatre règles qui rendent la place supposent `:has()`. Sans
+  lui, les cartes s'affichent quand même, dans une boîte qui garde son plafond de
+  hauteur — une dégradation, pas une rupture.

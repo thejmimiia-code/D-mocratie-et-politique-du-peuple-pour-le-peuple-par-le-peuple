@@ -818,6 +818,40 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .pastille{white-space:normal}
   .tableau-defilant table{font-size:max(var(--t-min),.76rem)}
 }
+/* ── Le même tableau, en cartes, sur un écran étroit ──────────────────────
+   Neuf colonnes ne se lisent pas dans 360 px : on fait glisser la ligne, et
+   l'en-tête a disparu depuis longtemps. La ligne devient donc une carte, et
+   chaque valeur porte le nom de sa colonne (`data-label`, écrit par
+   `tableauEnCartes`). L'en-tête n'est pas supprimé : il est retiré de l'écran
+   mais reste dans le document, pour les lecteurs d'écran et pour l'impression
+   — qui, elle, retrouve un tableau normal. */
+@media screen and (max-width:640px){
+  table.tableau-cartes{min-width:0;width:100%;border:0;background:transparent}
+  .tableau-cartes thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);
+    white-space:nowrap}
+  .tableau-cartes tbody{display:block}
+  .tableau-cartes tr{display:block;margin:0 0 9px;padding:7px 11px;
+    border:1px solid var(--border);border-radius:10px;background:var(--panel-2)}
+  .tableau-cartes tr>*{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+    text-align:right;white-space:normal;padding:3px 0;border-bottom:1px dashed var(--border)}
+  .tableau-cartes tr>*:last-child{border-bottom:0}
+  .tableau-cartes tr>*::before{content:attr(data-label);color:var(--texte-dim);font-weight:600;
+    text-align:left;white-space:normal}
+  /* La première cellule devient le titre de la carte : sa colonne est déjà
+     écrite par la ligne elle-même. */
+  .tableau-cartes tr>*:first-child{display:block;font-weight:700;color:var(--texte);text-align:left;
+    padding-bottom:5px;margin-bottom:3px;border-bottom:1px solid var(--border)}
+  .tableau-cartes tr>*:first-child::before{content:none}
+  /* Dans une carte, plus rien à retenir à gauche : la première colonne ne colle
+     plus, et la région n'a plus d'ombre de défilement à montrer. */
+  .tableau-cartes th:first-child,.tableau-cartes td:first-child{position:static;box-shadow:none;
+    background:transparent}
+  /* Ces régions-là n'avaient qu'une raison de défiler : la largeur du tableau.
+     Une fois le tableau en cartes, elles rendent toute la place. */
+  .tableau-defilant:has(.tableau-cartes),.tableau-strate:has(.tableau-cartes),
+  .bourse-table:has(.tableau-cartes),.defilable:has(.tableau-cartes){overflow:visible;
+    max-height:none;border:0;background:transparent;box-shadow:none}
+}
 /* Le sommaire ouvert sur téléphone ne doit pas manger l'écran : il défile. */
 @media screen and (max-width:640px){
   .sommaire.ouverte .sommaire-liste{max-height:46vh;overflow-y:auto}
@@ -4225,6 +4259,83 @@ function tableauDejaDefilant(tableau){
   return false;
 }
 
+/* ── Le même tableau, en cartes, sur un téléphone ─────────────────────────
+   Neuf colonnes ne se lisent pas dans 360 px : on fait glisser la ligne sous
+   ses yeux, et l'en-tête a disparu depuis longtemps. Sous 640 px, chaque ligne
+   devient donc une carte, chaque valeur porte le nom de sa colonne
+   (`data-label`), et la première cellule sert de titre. Rien n'est retiré du
+   document : les mêmes cellules, dans le même ordre — le tableau redevient un
+   tableau dès que l'écran s'élargit, et sur papier.
+
+   Deux réserves décident de la bascule : les tableaux à plusieurs lignes
+   d'en-tête, et ceux dont une cellule fusionne des colonnes (`colspan`,
+   `rowspan`) — leur étiquetage n'aurait pas de sens, ils gardent le
+   défilement. Un tableau peut aussi refuser la bascule : `data-cartes="non"`.
+
+   Tout est vérifié avant d'écrire : un tableau à moitié étiqueté serait pire
+   qu'un tableau qui défile. */
+function tableauEnCartes(tableau){
+  if (!tableau || !tableau.querySelectorAll) return false;
+  const marque = tableau.getAttribute ? tableau.getAttribute('data-cartes') : null;
+  if (marque === 'non') return false;
+
+  // 1. Vérifier le tableau entier avant d'écrire quoi que ce soit : un tableau
+  //    à moitié étiqueté serait pire qu'un tableau qui défile.
+  const lignesEntete = tableau.querySelectorAll('thead tr');
+  const entetes = (lignesEntete && lignesEntete.length === 1)
+    ? lignesEntete[0].querySelectorAll('th, td') : null;
+  const lignes = tableau.querySelectorAll('tbody tr');
+  let etiquetable = !!(entetes && entetes.length >= 2 && lignes && lignes.length);
+  const titres = [];
+  if (etiquetable){
+    for (let colonne = 0; colonne < entetes.length; colonne += 1){
+      titres.push(((entetes[colonne].textContent) || '').trim());
+    }
+  }
+  const etiquettes = [];
+  for (let rang = 0; etiquetable && rang < lignes.length; rang += 1){
+    const cellules = lignes[rang].querySelectorAll('td, th');
+    if (!cellules || !cellules.length){ etiquetable = false; break; }
+    const ligne = [];
+    for (let colonne = 0; colonne < cellules.length; colonne += 1){
+      if (cellules[colonne].hasAttribute
+          && (cellules[colonne].hasAttribute('colspan')
+              || cellules[colonne].hasAttribute('rowspan'))){
+        etiquetable = false;
+        break;
+      }
+      ligne.push(titres[colonne] || '');
+    }
+    if (!etiquetable) break;
+    etiquettes.push(ligne);
+  }
+  if (!etiquetable){
+    // Ce tableau-ci ne se met pas en cartes : s'il l'était, la marque s'en va.
+    // Mieux vaut un tableau qui défile qu'une carte à moitié faite.
+    if (marque === 'oui'){
+      if (tableau.removeAttribute) tableau.removeAttribute('data-cartes');
+      if (tableau.classList && tableau.classList.remove) tableau.classList.remove('tableau-cartes');
+    }
+    return false;
+  }
+
+  // 2. Écrire : chaque valeur porte le nom de sa colonne. Le passage a lieu à
+  //    chaque vague de rendu, donc on n'écrit que ce qui manque.
+  for (let rang = 0; rang < lignes.length; rang += 1){
+    const cellules = lignes[rang].querySelectorAll('td, th');
+    for (let colonne = 0; colonne < cellules.length; colonne += 1){
+      const etiquette = etiquettes[rang][colonne];
+      if (!etiquette || !cellules[colonne].setAttribute) continue;
+      if (cellules[colonne].getAttribute
+          && cellules[colonne].getAttribute('data-label') === etiquette) continue;
+      cellules[colonne].setAttribute('data-label', etiquette);
+    }
+  }
+  if (tableau.setAttribute) tableau.setAttribute('data-cartes', 'oui');
+  if (tableau.classList && tableau.classList.add) tableau.classList.add('tableau-cartes');
+  return true;
+}
+
 function rendreTableauxDefilants(){
   if (!document.querySelectorAll || typeof document.createElement !== 'function') return 0;
   const tableaux = document.querySelectorAll('table');
@@ -4232,7 +4343,11 @@ function rendreTableauxDefilants(){
   let poses = 0;
   tableaux.forEach(function(tableau){
     if (!tableau.parentNode || !tableau.parentNode.insertBefore) return;
-    if (tableauDejaDefilant(tableau)) return;
+    if (tableauDejaDefilant(tableau)){
+      // Déjà dans une région défilante : il reste à l'étiqueter pour le téléphone.
+      tableauEnCartes(tableau);
+      return;
+    }
     const enveloppe = document.createElement('div');
     enveloppe.className = 'tableau-defilant';
     enveloppe.setAttribute('role', 'region');
@@ -4242,6 +4357,7 @@ function rendreTableauxDefilants(){
       (legende ? legende : 'Tableau de résultats') + ' — faites défiler horizontalement');
     tableau.parentNode.insertBefore(enveloppe, tableau);
     enveloppe.appendChild(tableau);
+    tableauEnCartes(tableau);
     poses += 1;
   });
   return poses;
