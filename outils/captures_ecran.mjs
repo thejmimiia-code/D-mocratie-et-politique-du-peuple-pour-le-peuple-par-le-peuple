@@ -219,6 +219,30 @@ async function photographier(nom, { theme, largeur, preparation }) {
       hauteur_page: document.documentElement.scrollHeight,
       debordement_horizontal: document.documentElement.scrollWidth > window.innerWidth + 1,
       recouverts,
+      /* Le diagnostic du cadre collant : sa hauteur calculée, son alignement,
+         le nombre d'enfants (même non peints) et ce que le script a mesuré. */
+      collant: (() => {
+        const barre = document.getElementById("sommaire");
+        if (!barre) return null;
+        const style = getComputedStyle(barre);
+        const liste = document.getElementById("sommaire-liste");
+        return {
+          hauteur: Math.round(barre.getBoundingClientRect().height),
+          display: style.display,
+          alignement: style.alignItems,
+          position: style.position,
+          hauteur_mesuree: getComputedStyle(document.documentElement)
+            .getPropertyValue("--collant").trim(),
+          enfants: [...barre.children].map((enfant) => {
+            const r = enfant.getBoundingClientRect();
+            return `${enfant.id || enfant.className || enfant.tagName} `
+              + `${Math.round(r.width)}×${Math.round(r.height)} `
+              + `${getComputedStyle(enfant).display}`;
+          }),
+          liste_alignement: liste ? getComputedStyle(liste).alignSelf : "—",
+          liste_display: liste ? getComputedStyle(liste).display : "—",
+        };
+      })(),
       plans: {
         entete: plan(".entete"),
         barre: plan(".entete .barre-contexte"),
@@ -327,6 +351,13 @@ if (plans.length) {
   for (const vue of plans) {
     const cadre = boite(vue, ".entete");
     const enfants = vue.plans?.entete || [];
+    if (vue.collant) {
+      lignes.push(`    - cadre collant : ${vue.collant.hauteur} px, display ${vue.collant.display}, `
+        + `alignement ${vue.collant.alignement}, position ${vue.collant.position}, `
+        + `--collant ${vue.collant.hauteur_mesuree || "—"}, `
+        + `enfants [${vue.collant.enfants.join(" | ")}], `
+        + `liste ${vue.collant.liste_display}/align-self ${vue.collant.liste_alignement}`);
+    }
     lignes.push(`- ${vue.nom} — cadre ${nombre(cadre?.largeur)} × ${nombre(cadre?.hauteur)}, `
       + `${enfants.length} enfant(s) peint(s) :`);
     for (const enfant of enfants) {
