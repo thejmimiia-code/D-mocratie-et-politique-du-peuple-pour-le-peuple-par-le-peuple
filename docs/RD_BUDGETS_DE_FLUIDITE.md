@@ -19,7 +19,7 @@ transmis après compression (`gzip -6`, le niveau que sert `simulateur/compressi
 
 | Charge | Brut | Compressé | Ce que c'est |
 |---|---:|---:|---|
-| la page entière | 460 870 o | **123 997 o** | `index.html`, publié et servi à l'identique |
+| la page entière | 465 279 o | **125 284 o** | `index.html`, publié et servi à l'identique |
 | le catalogue des leviers | 275 363 o | 44 526 o | 156 leviers, leurs bornes et leurs textes courts |
 | une simulation, 5 ans | — | 44 014 o | le va-et-vient de chaque curseur |
 | une simulation, 10 ans | — | 48 239 o | le même, horizon double |
@@ -37,7 +37,7 @@ transmis après compression (`gzip -6`, le niveau que sert `simulateur/compressi
 Deux chiffres méritent d'être dits à part :
 
 - **le premier écran** — la page, les sept charges du démarrage et la première
-  simulation — pèse **269 214 o compressés**. C'est ce qu'un visiteur paie avant
+  simulation — pèse **270 501 o compressés**. C'est ce qu'un visiteur paie avant
   de pouvoir bouger son premier curseur, et donc le seul chiffre qui décide s'il
   reste ;
 - **le catalogue des bulles** est, à lui seul, **plus d'une fois et demie la page
@@ -111,7 +111,24 @@ budget dérivé du premier écran suit dans la même proportion
 (**265 212 o → 268 348 o**, plafond 295 183 o). La marge reste de 10 %, et
 `outils/budgets_fluidite.py` reste le juge.
 
-### Le troisième relèvement du 14 octobre 2026 (passe « le bandeau se règle sur la mesure »)
+### Le quatrième relèvement du 14 octobre 2026 (passe « la fenêtre se comporte comme une fenêtre »)
+
+Quatrième et dernier relèvement de la journée : **+1 287 o** (+1,0 %). Ce qui l'a
+payé n'est pas une fonctionnalité de plus, c'est une **correction d'accessibilité**.
+La fenêtre du lexique et du guide ne prenait pas le focus, ne le retenait pas et
+ne le rendait pas : au clavier, la première tabulation menait aux curseurs de la
+page, **derrière** la fenêtre ouverte, et la refermer laissait le curseur au pied
+du document. Elle reçoit maintenant le focus (`tabindex="-1"` sur le dialogue),
+le retient (les six familles de commandes énumérées, tabulation circulaire aux
+deux bouts), le rend à qui l'a ouverte — ou, quand personne ne l'a ouverte (le
+guide de première visite se montre tout seul), à la commande principale. Échap,
+lui, ne ferme plus que ce qui est ouvert.
+
+La page passe de **123 997 o à 125 284 o** compressés (brut 460 870 → 465 279 o),
+son plafond de **136 397 o à 137 813 o**, et l'ancre du premier écran suit la
+somme de ses membres (**269 214 o → 270 501 o**, plafond 297 552 o). La marge
+reste de 10 %, et `outils/budgets_fluidite.py` reste le juge. La table des
+plafonds, juste en dessous, porte les valeurs du jour.
 
 Troisième relèvement de la journée, et le plus modeste : **+866 o** (+0,7 %).
 Ce qui l'a payé n'est pas une fonctionnalité mais une **mise en page mesurée**.
@@ -127,9 +144,9 @@ page passe de **123 131 o à 123 997 o** compressés, son plafond de **135 445 o
 
 | Budget | Ancre | Plafond | Marge |
 |---|---:|---:|---:|
-| la page entière | 123 997 o | 136 397 o | 12 400 o |
+| la page entière | 125 284 o | 137 813 o | 12 529 o |
 | le catalogue des leviers | 44 526 o | 48 979 o | 4 453 o |
-| ce que la page télécharge avant d'être utilisable | 269 214 o | 296 136 o | 26 922 o |
+| ce que la page télécharge avant d'être utilisable | 270 501 o | 297 552 o | 27 051 o |
 | les bulles | 169 866 o | 186 853 o | 16 987 o |
 | une simulation, 10 ans | 48 239 o | 53 063 o | 4 824 o |
 | une simulation, 5 ans | 44 014 o | 48 416 o | 4 402 o |
