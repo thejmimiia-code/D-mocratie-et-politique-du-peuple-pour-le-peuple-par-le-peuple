@@ -262,6 +262,55 @@ class TestLeBandeauEpouseSesCommandes(unittest.TestCase):
         self.assertEqual(pose.get("grid-column"), "2")
         self.assertNotIn("max-width", pose, "la barre se plafonne et se casse en rangées")
 
+    def test_le_sommaire_ne_porte_pas_de_texte_en_clair(self):
+        """Un texte libre dans la liste du sommaire est un enfant flex anonyme.
+
+        Mesuré dans Chromium : 290 px de cadre pour une rangée de pastilles de
+        25 px. La cause n'était pas la feuille de style : le balisage du lien
+        « Objections » était cassé, et les 217 caractères de son aide
+        retombaient **en texte** dans la liste, où ils se repliaient en
+        paragraphe — centré verticalement, invisible au premier regard, mais
+        bien là : la barre collante faisait 290 px, et le script qui mesure la
+        barre (`--collant`) rangeait toutes les ancres 290 px trop bas.
+        """
+        liste = _noeud("sommaire-liste")
+        self.assertEqual(liste.texte, [],
+                         f"du texte traîne dans le sommaire : {liste.texte}")
+        texte = " ".join(enfant.texte[0] if enfant.texte else "" for enfant in liste.enfants)
+        self.assertIn("Objections", texte,
+                      "le sommaire ne mène plus au registre des objections")
+
+    def test_chaque_acces_rapide_mene_a_une_section(self):
+        """Un lien du sommaire qui ne mène nulle part est un lien mort."""
+        identifiants = {noeud.identifiant() for noeud in
+                        contraste_ecran.parcourir(contraste_ecran.arbre(HTML_PAGE))}
+        liste = _noeud("sommaire-liste")
+        liens = [enfant for enfant in liste.enfants if enfant.nom == "a"]
+        self.assertGreaterEqual(len(liens), 12, "le sommaire a perdu ses accès rapides")
+        for lien in liens:
+            cible = (lien.attributs.get("href") or "").lstrip("#")
+            with self.subTest(lien=cible):
+                self.assertTrue(cible, "un accès rapide n'a plus de destination")
+                self.assertIn(cible, identifiants,
+                              f"« {' '.join(lien.texte)} » mène à #{cible}, qui n'existe pas")
+
+    def test_aucune_aide_ne_porte_de_balisage_de_commande(self):
+        """Une aide peut mettre en gras ; elle ne peut pas ouvrir de balise.
+
+        Le balisage de commande dans une aide est le signe d'un attribut mal
+        fermé : c'est ainsi que le lien « Objections » a disparu du sommaire, le
+        temps que quelqu'un regarde de près.
+        """
+        page = HTML_PAGE
+        fautives = []
+        for aide in re.findall(r'data-aide="([^"]*)"', page):
+            for marque in ("<a ", "<button", "<summary", "<input", "<select",
+                           "href=", "class="):
+                if marque in aide:
+                    fautives.append((marque, aide[:60]))
+        self.assertEqual(fautives, [],
+                         f"aides qui contiennent du balisage : {fautives}")
+
     def _pose_large(self, selecteur):
         """La pose d'un élément du bandeau dans la feuille large (≥ 1200 px)."""
         pose = None
