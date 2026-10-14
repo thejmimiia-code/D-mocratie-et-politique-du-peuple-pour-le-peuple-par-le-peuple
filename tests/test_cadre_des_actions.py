@@ -262,6 +262,39 @@ class TestLeBandeauEpouseSesCommandes(unittest.TestCase):
         self.assertEqual(pose.get("grid-column"), "2")
         self.assertNotIn("max-width", pose, "la barre se plafonne et se casse en rangées")
 
+    def _pose_large(self, selecteur):
+        """La pose d'un élément du bandeau dans la feuille large (≥ 1200 px)."""
+        pose = None
+        for contexte, liste, corps in contraste_ecran.regles(_css()):
+            if "min-width:1200px" not in " ".join(contexte).replace(" ", ""):
+                continue
+            if selecteur in [morceau.strip() for morceau in liste.split(",")]:
+                pose = _declarations(corps)
+        self.assertIsNotNone(pose, f"{selecteur} a quitté la grille du bandeau large")
+        return pose
+
+    def test_le_titre_du_bandeau_s_etale_sur_toute_la_largeur(self):
+        """Le titre ne se casse plus dans une colonne trop étroite.
+
+        Mesuré dans Chromium à 1280 px : la colonne de texte faisait 528 px, le
+        titre y tenait en trois lignes (89 px) au lieu d'une sur toute la
+        largeur. Le cadre mesurait alors 296 px de haut — pour 35 px de boutons.
+        """
+        pose = self._pose_large("header.entete h1")
+        self.assertEqual(pose.get("grid-column"), "1 / -1",
+                         "le titre est revenu dans une colonne : il se casse en lignes")
+
+    def test_la_ligne_d_etat_ne_creuse_plus_de_vide_sous_la_barre(self):
+        """Sous les commandes, le vide de 139 px est occupé par la ligne d'état."""
+        etat = self._pose_large("header.entete .etat-contexte")
+        self.assertEqual(etat.get("grid-column"), "2",
+                         "la ligne d'état a quitté la colonne des commandes")
+        self.assertEqual(etat.get("grid-row"), "3",
+                         "la ligne d'état ne se range plus sous la barre")
+        accroche = self._pose_large("header.entete .accroche")
+        self.assertEqual(accroche.get("grid-row"), "3",
+                         "la phrase d'accroche ne partage plus la rangée de l'état")
+
     def test_le_sommaire_se_resserre_sur_ses_pastilles(self):
         """Le cadre des accès rapides se règle sur les jetons, pas sur des valeurs à lui."""
         declarations = _regle_de(".sommaire")

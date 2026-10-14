@@ -127,10 +127,20 @@ async function photographier(nom, { theme, largeur, preparation }) {
          bouton absent de la pile — les panneaux fermés gardent une géométrie
          (`content-visibility: hidden`) mais ne sont ni peints ni cliquables :
          c'étaient 17 faux positifs par vue. */
+      /* La commande doit être **elle-même** dans la pile : un ancêtre peint ne
+         suffit pas — les panneaux fermés gardent la géométrie de leurs boutons,
+         qui retombent alors sur le texte du bandeau et l'accusaient à tort. */
       const rang = pile.findIndex((noeud) => noeud
-        && (noeud === commande || commande.contains(noeud) || noeud.contains(commande)));
+        && (noeud === commande || commande.contains(noeud)));
       if (rang === -1) continue;            // pas peinte : le panneau est fermé
       if (rang === 0) continue;             // au-dessus : accessible
+      /* Ce qui recouvre volontairement ne compte pas : un panneau déplié, une
+         fenêtre de dialogue ou une infobulle sont **au-dessus** par métier, et
+         ce qu'ils masquent dessous, le visiteur ne le cherche pas. Restent les
+         vraies gênes : un cadre de page qui passe par-dessus une commande. */
+      const volontaire = pile.slice(0, rang).some((noeud) => noeud && noeud.matches
+        && noeud.matches(".affichage-panneau, .outils-panneau, #overlay, .modale, .infobulle"));
+      if (volontaire) continue;
       recouverts.push({
         texte: (commande.textContent || "").trim().slice(0, 30).replace(/\s+/g, " "),
         par: etiqueter(pile[0]),

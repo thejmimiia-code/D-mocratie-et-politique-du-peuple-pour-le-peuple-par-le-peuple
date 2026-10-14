@@ -321,16 +321,26 @@ header.entete .etat-contexte{margin-top:var(--e-1)}
    trois rangées (115 px de haut) là où elles tiennent sur une (34 px). Deux
    colonnes ne valent que si les commandes tiennent en ligne. En dessous de
    1200 px, la colonne unique reprend ses droits — la barre y dispose de toute
-   la largeur — et les quatre paliers restent la loi. */
+   la largeur — et les quatre paliers restent la loi.
+
+   Le plan coté du bandeau, relevé par Chromium à 1280 px, a montré ce que la
+   hauteur seule cachait : la colonne de texte faisait 528 px de large, le titre
+   y tenait en **trois lignes** (89 px), et sous la barre de commandes
+   (651 × 35 px) restaient **139 px de vide** — le cadre était haut de 296 px
+   pour 35 px de boutons. D'où la répartition actuelle : les commandes en
+   première rangée à droite, le titre étalé sur toute la largeur (une ligne au
+   lieu de trois), puis la phrase d'accroche et la ligne d'état côte à côte.
+   Rien n'a été retiré : tout a été replacé. */
 @media screen and (min-width:1200px){
   header.entete{display:grid;grid-template-columns:minmax(0,1fr) auto;
     gap:var(--e-1) var(--e-4);align-items:start}
   header.entete .eyebrow{grid-column:1;grid-row:1}
-  header.entete h1{grid-column:1;grid-row:2;margin-top:0}
+  header.entete h1{grid-column:1 / -1;grid-row:2;margin-top:0}
   header.entete .accroche{grid-column:1;grid-row:3}
-  header.entete .barre-contexte{grid-column:2;grid-row:1 / span 3;margin-top:0;
-    justify-content:flex-end;align-content:start;flex-wrap:nowrap}
-  header.entete .etat-contexte{grid-column:1 / -1;grid-row:4;margin-top:var(--e-1)}
+  header.entete .barre-contexte{grid-column:2;grid-row:1;margin-top:0;
+    justify-content:flex-end;flex-wrap:nowrap}
+  header.entete .etat-contexte{grid-column:2;grid-row:3;margin-top:var(--e-1);
+    align-self:start}
 }
 /* Entre 901 et 1199 px, les deux barres collantes se partageaient le haut de
    l'écran : le sommaire puise dans la largeur, le ruban passe dessous. C'est
@@ -1058,6 +1068,12 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .guide-etape p{font-size:.82rem;color:var(--texte)}
 .guide-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
+  /* Le bandeau d'un téléphone occupait 576 px, dont 41 px de marges intérieures
+     pour 35 px de boutons. Le cadre se resserre — pas le texte, qui garde son
+     corps et son interligne. */
+  header.entete{padding:var(--e-2) var(--e-3)}
+  header.entete h1,header.entete .accroche,header.entete .etat-contexte,
+  header.entete .barre-contexte{margin-top:6px}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
   .levier.compact{grid-template-columns:1fr 70px auto}}
 /* ── Le résumé de tête : les chiffres, puis la phrase ─────────────────────
