@@ -86,7 +86,15 @@ HTML_PAGE = r"""<!DOCTYPE html>
   --pad-bloc:var(--e-4);
   --ecart-section:var(--e-5);
   --ecart-carte:var(--e-3);
+  /* Les cadres qui portent des boutons : une seule recette pour le bandeau,
+     le ruban de veille et les actions du plan. Le bouton garde la même
+     hauteur partout, et le cadre ne prend jamais plus de place que lui. */
+  --h-bouton:34px;
+  --gap-barre:6px;
   --mesure:74ch;
+  /* La largeur de la page, décidée par la présentation choisie : les trois
+     valeurs vivent plus bas, avec les autres réglages d'affichage. */
+  --largeur-page:1440px;
   --collant:0px;
   --z-fond:0; --z-contenu:1; --z-sommaire:56; --z-ruban:60;
   --z-evitement:80; --z-infobulle:120; --z-bandeau:160; --z-modale:200;
@@ -98,6 +106,17 @@ HTML_PAGE = r"""<!DOCTYPE html>
    seules ces trois lignes changent, et tout ce qui respire suit. */
 html[data-densite="aere"]{--pad-bloc:var(--e-4);--ecart-section:var(--e-5);--ecart-carte:var(--e-3)}
 html[data-densite="compact"]{--pad-bloc:var(--e-3);--ecart-section:var(--e-4);--ecart-carte:var(--e-2)}
+/* ── La présentation : trois largeurs, comme le site M.R.S.C. ─────────────
+   « Équilibrée » est la page telle qu'elle a été dessinée. « Lecture »
+   resserre la colonne pour suivre un texte long sans perdre la ligne.
+   « Panorama » l'élargit pour que les grilles de chiffres tiennent côte à
+   côte. Un seul jeton change, et les grilles suivent d'elles-mêmes : elles
+   se règlent en `minmax` sur la place disponible. Le choix vit dans le
+   navigateur (`localStorage`), jamais sur le serveur. */
+html[data-layout="lecture"]{--largeur-page:1000px}
+html[data-layout="panorama"]{--largeur-page:1680px}
+html[data-layout="lecture"] .grille.metrics{grid-template-columns:repeat(auto-fit,minmax(min(100%,210px),1fr))}
+html[data-layout="panorama"] .grille.domaines{grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
 /* ── Les teintes : quatre thèmes, les mêmes noms ─────────────────────────────
    Une couleur se déclare ici, jamais dans une règle. Quatre thèmes portent
    exactement les mêmes jetons — vérifié par un contrôle : un thème à qui il
@@ -151,7 +170,7 @@ html[data-densite="compact"]{--pad-bloc:var(--e-3);--ecart-section:var(--e-4);--
   --creux:#f7f9fd; --profond:#ffffff; --jeton:#f4f7fc; --onglet:#e8edf6;
   --ruban:#ffffff; --ruban-2:#f2f5fb;
   --entete-1:#ffffff; --entete-2:#e8eef9; --entete-bord:#d5dfee; --halo:#eaf0fa;
-  --texte:#18243b; --texte-dim:#5a6980;
+  --texte:#18243b; --texte-dim:#56637a;
   --accent:#2958a2; --vert:#456d29; --rouge:#b3261e; --ambre:#8a5a00;
   --violet:#6d28d9; --rose:#b3226b;
   --mrsc-navy:#1d3268; --mrsc-bleu:#2958a2; --mrsc-vert:#456d29;
@@ -246,7 +265,11 @@ html[data-densite="compact"]{--pad-bloc:var(--e-3);--ecart-section:var(--e-4);--
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .defilable,.journal,.provenance,.tableau-strate,.bourse-table,
 .overlay,.modale-corps,.graphique,.tableau-defilant,.sommaire,
-.sommaire-liste,.onglets-strates,.affichage-panneau{overscroll-behavior:contain}
+.sommaire-liste,.onglets-strates,.affichage-panneau,.outils-panneau{overscroll-behavior:contain}
+/* Le panneau « Outils » range ce qu'on n'utilise pas à chaque visite :
+   même look, même geste, même place que le panneau « Affichage ». */
+.outils-panneau{display:flex;flex-direction:column;gap:var(--e-1)}
+.outils-panneau button{width:100%;justify-content:flex-start;border-radius:var(--rayon-1)}
 :focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -265,19 +288,38 @@ p{text-wrap:pretty}
 /* La largeur de lecture : au-delà, l'œil perd la ligne suivante. Les
    tableaux larges gardent leur défilement, les paragraphes s'arrêtent à
    --mesure. */
-.conteneur{max-width:1440px;margin:0 auto}
+.conteneur{max-width:var(--largeur-page);margin:0 auto}
 a{color:var(--accent)}
-header.entete{background:linear-gradient(135deg,var(--mrsc-navy),var(--entete-2));border:1px solid var(--border);
-  border-color:var(--entete-bord);border-radius:14px;padding:18px 22px;margin-bottom:14px;box-shadow:0 10px 30px var(--ombre-forte)}
-header.entete h1{font-size:1.45rem;letter-spacing:.2px}
-header.entete p{color:var(--texte-dim);font-size:.88rem;margin-top:4px}
-.barre-contexte{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
-.barre-contexte .separateur{width:1px;height:22px;background:var(--border);margin:0 2px}
+/* Le bandeau suit le thème : il est peint avec ses propres jetons, jamais
+   avec une couleur de marque figée. Un dégradé qui partait du bleu M.R.S.C.
+   pour finir dans le papier clair laissait le titre et toute la barre
+   illisibles en thème « jour » (1,26:1) : l'encre suivait le thème, pas le
+   fond. La marque reste là où elle est juste — les boutons d'action. */
+header.entete{background:linear-gradient(135deg,var(--entete-1),var(--entete-2));border:1px solid var(--border);
+  border-color:var(--entete-bord);border-radius:var(--rayon-3);padding:var(--e-3) var(--e-4);
+  color:var(--texte);margin-bottom:var(--e-2);box-shadow:0 10px 30px var(--ombre-forte)}
+header.entete h1{font-size:1.45rem;letter-spacing:.2px;margin-top:var(--e-1)}
+header.entete .accroche{color:var(--texte-dim);font-size:.95rem;line-height:1.6;
+  margin-top:var(--e-1);max-width:var(--mesure)}
+header.entete .etat-contexte{margin-top:var(--e-1)}
+/* Une barre, une recette : même écart, même hauteur de bouton, même rayon —
+   dans le bandeau, dans le ruban de veille et dans les actions du plan. Un
+   cadre qui portait ses propres mesures paraissait plus grand que ses
+   boutons ; ici, c'est la même règle qui les habille tous. */
+.barre-contexte,.etat-contexte,.ruban-veille,.resume-actions{
+  display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-barre)}
+.barre-contexte{margin-top:var(--e-2)}
+.etat-contexte{margin-top:var(--e-1);color:var(--texte-dim);
+  font-size:max(var(--t-min),.74rem)}
+.barre-contexte button,.barre-contexte summary,.ruban-veille .ruban-actions button,
+.resume-actions button,.outils-panneau button{
+  min-height:var(--h-bouton);display:inline-flex;align-items:center;justify-content:center;gap:5px}
+.barre-contexte .separateur{width:1px;height:18px;background:var(--border);margin:0 1px}
 .select-horizon{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--border);
   border-radius:999px;padding:4px 10px;background:var(--panel);color:var(--texte-dim);font-size:.78rem}
 .select-horizon select{font:inherit;color:var(--texte);background:var(--panel-2);border:1px solid var(--border);
   border-radius:7px;padding:4px 7px}
-.pastille{border-radius:999px;padding:4px 12px;font-size:.75rem;border:1px solid var(--border);
+.pastille{border-radius:999px;padding:3px 9px;font-size:max(var(--t-min),.72rem);border:1px solid var(--border);
   background:var(--panel);color:var(--texte-dim);white-space:nowrap}
 .pastille.live{border-color:var(--vert);color:color-mix(in srgb,var(--vert) 45%,var(--texte));background:color-mix(in srgb,var(--vert) 12%,transparent)}
 .pastille.reference{border-color:var(--ambre);color:color-mix(in srgb,var(--ambre) 45%,var(--texte));background:color-mix(in srgb,var(--ambre) 12%,transparent)}
@@ -286,7 +328,11 @@ button{font-family:inherit;font-size:.82rem;cursor:pointer;border-radius:9px;bor
   background:var(--panel-2);color:var(--texte);padding:8px 13px;transition:.15s}
 button:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
 button:disabled{opacity:.45;cursor:not-allowed}
-button.primaire{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu)}
+/* L'encre d'un bouton de marque ne s'hérite pas : elle s'écrit. Sans cette
+   ligne, le bouton prenait l'encre du thème — bleu nuit sur bleu nuit en
+   « jour » (1,26:1), quasi invisible. */
+button.primaire{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));
+  border-color:var(--mrsc-bleu);color:var(--sur-mrsc)}
 button.discret{background:transparent}
 section.bloc{background:var(--panel);border:1px solid var(--border);border-radius:var(--rayon-3);
   padding:var(--pad-bloc);margin-bottom:var(--ecart-section)}
@@ -593,7 +639,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .provenance{font-size:max(var(--t-min),.73rem);color:var(--texte-dim);max-height:210px;overflow:auto}
 .provenance div{padding:3px 0;border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 15%,transparent)}
 .onglets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.onglets button.actif{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu)}
+.onglets button.actif{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));
+  border-color:var(--mrsc-bleu);color:var(--sur-mrsc)}
 .onglets-strates{padding:7px;background:var(--onglet);border:1px solid var(--border);border-radius:12px}
 .onglets-strates button{flex:1 1 118px;min-height:40px}
 .onglets-strates button[aria-selected="true"]{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu);color:var(--sur-mrsc)}
@@ -622,9 +669,9 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 /* ── Console de veille permanente ─────────────────────────────────────── */
 .console{border-width:2px}
 /* Ruban de veille : une seule ligne collante, jamais devant les leviers. */
-.ruban-veille{position:sticky;top:0;z-index:var(--z-ruban);display:flex;align-items:center;gap:10px;
+.ruban-veille{position:sticky;top:0;z-index:var(--z-ruban);display:flex;align-items:center;gap:var(--gap-barre);
   flex-wrap:wrap;background:linear-gradient(135deg,var(--ruban),var(--ruban-2));border:1px solid var(--border);
-  border-radius:12px;padding:7px 12px;margin-bottom:12px;box-shadow:0 8px 22px var(--ombre-forte)}
+  border-radius:var(--rayon-2);padding:5px 10px;margin-bottom:var(--e-2);box-shadow:0 8px 22px var(--ombre-forte)}
 .ruban-veille .ruban-titre{font-size:max(var(--t-min),.68rem);text-transform:uppercase;letter-spacing:.6px;
   color:var(--texte-dim);white-space:nowrap}
 .ruban-veille .console-verdict{font-size:.78rem;padding:4px 12px;max-width:520px;
@@ -1051,7 +1098,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   margin:var(--ecart-section) 0 var(--e-3);padding:var(--e-3) var(--e-4);
   border-left:4px solid var(--mrsc-or);background:var(--panel-2);border-radius:0 var(--rayon-3) var(--rayon-3) 0}
 .chapitre-num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
-  border-radius:50%;background:var(--mrsc-navy);color:var(--texte);font-weight:700;flex:0 0 auto}
+  border-radius:50%;background:var(--mrsc-navy);color:var(--sur-mrsc);font-weight:700;flex:0 0 auto}
 .chapitre-titre{font-size:clamp(1.02rem,.6vw + .9rem,1.3rem);font-weight:750;letter-spacing:-.01em}
 .chapitre-aide{font-size:max(var(--t-min),.85rem);color:var(--texte-dim);margin-top:.25rem;
   line-height:1.6;max-width:var(--mesure)}
@@ -1077,7 +1124,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
       16 px de police dans un champ (sinon iOS zoome tout seul au focus). */
 @media screen{
   .conteneur,section.bloc,.carte,.famille,.levier,.grille>*,.leviers-grille>*,
-  .barre-contexte>*,.sommaire>*,.console-corps>*,.classes-legende>*,
+  .barre-contexte>*,.etat-contexte>*,.sommaire>*,.console-corps>*,.classes-legende>*,
   .balance-plateau>*,.cascade-ligne>*,.classe-carte>*,.audit>*{min-width:0}
   .tableau-defilant{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch;
     border:1px solid var(--border);border-radius:9px;background:var(--panel-2);
@@ -1239,6 +1286,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   button,.bouton,summary,.onglets button,.onglets-strates button,.sommaire a,
   .sommaire-bascule,.annee-classes button,.classes-filtres button,
   label.select-horizon{min-height:44px}
+  :root{--h-bouton:44px}
   .sommaire a,.onglets-strates button,.classes-filtres button,
   .annee-classes button{display:inline-flex;align-items:center}
   input,select,textarea{font-size:max(16px,1rem)}
@@ -1307,16 +1355,17 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
    serveur : le thème, la densité et la taille vivent dans le navigateur, et la
    page les applique avant même de s'afficher (voir le script d'en-tête), pour
    qu'aucune page ne s'ouvre dans le mauvais thème puis bascule. */
-.affichage{position:relative;margin-left:auto}
-.affichage>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+.affichage,.outils{position:relative;margin-left:auto}
+.affichage>summary,.outils>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
   padding:7px 12px;border:1px solid var(--border);border-radius:999px;
   background:var(--panel);color:var(--texte);font-size:.82rem;list-style:none}
-.affichage>summary::-webkit-details-marker{display:none}
-.affichage>summary::marker{content:""}
-.affichage>summary:hover,.affichage[open]>summary{border-color:var(--accent)}
+.affichage>summary::-webkit-details-marker,.outils>summary::-webkit-details-marker{display:none}
+.affichage>summary::marker,.outils>summary::marker{content:""}
+.affichage>summary:hover,.affichage[open]>summary,
+.outils>summary:hover,.outils[open]>summary{border-color:var(--accent)}
 .affichage-chevron{transition:transform .15s}
-.affichage[open] .affichage-chevron{transform:rotate(180deg)}
-.affichage-panneau{position:absolute;right:0;top:calc(100% + 7px);z-index:var(--z-infobulle);
+.affichage[open] .affichage-chevron,.outils[open] .affichage-chevron{transform:rotate(180deg)}
+.affichage-panneau,.outils-panneau{position:absolute;right:0;top:calc(100% + 7px);z-index:var(--z-infobulle);
   width:min(330px,calc(100vw - 24px));padding:var(--e-3);
   background:var(--panel-2);border:1px solid var(--border);border-radius:var(--rayon-3);
   box-shadow:0 14px 34px var(--ombre-forte);text-align:left}
@@ -1376,6 +1425,9 @@ html[data-texte="137"]{font-size:137.5%}
     racine.setAttribute('data-theme', theme);
     var densite = lire('densite');
     racine.setAttribute('data-densite', densites.indexOf(densite) < 0 ? 'aere' : densite);
+    var presentations = ['equilibree', 'lecture', 'panorama'];
+    var presentation = lire('presentation');
+    racine.setAttribute('data-layout', presentations.indexOf(presentation) < 0 ? 'equilibree' : presentation);
     var texte = lire('texte');
     racine.setAttribute('data-texte', textes.indexOf(texte) < 0 ? '100' : texte);
   })();
@@ -1398,29 +1450,13 @@ html[data-texte="137"]{font-size:137.5%}
   </div>
 
   <header class="entete">
+    <p class="eyebrow">Outil citoyen · code ouvert</p>
     <h1>Simulateur Macro-Politique — Démocratie et politique, du peuple, pour le peuple, par le peuple</h1>
-    <p>Choisissez vos politiques : le modèle à 5 échelons propage les effets, domaine par domaine, avec les données publiques réelles du jour.</p>
+    <p class="accroche">Choisissez vos politiques : le modèle à 5 échelons propage les effets, domaine par domaine, avec les données publiques réelles du jour.</p>
+
     <div class="barre-contexte">
-      <span class="pastille" id="badge-contexte">contexte : chargement…</span>
-      <span class="pastille" id="badge-date">—</span>
-      <span class="pastille" id="badge-leviers">—</span>
-      <label class="select-horizon" data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">
-        Horizon <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
-          <option value="5" selected>1 mandature · 5 ans</option>
-          <option value="10">2 mandatures · 10 ans</option>
-        </select>
-      </label>
-      <span class="pastille" id="badge-horizon">une mandature · 5 ans</span>
-      <button id="btn-lexique" onclick="ouvrirLexique()" data-aide="<b>Lexique</b>Chaque mot technique employé par la page, défini en français ordinaire, avec un repère chiffré. Les termes soulignés en pointillé dans la page s'expliquent aussi au survol.">📖 Lexique</button>
-      <button id="btn-guide" onclick="ouvrirGuide()" data-aide="<b>Guide de démarrage</b>Quatre étapes pour comprendre ce que fait le simulateur, ce qu'il mesure et ce qu'il ne mesure pas.">❓ Guide</button>
-      <button id="btn-partage" onclick="partagerReglages()" data-aide="<b>Partager mes réglages</b>Copie une adresse qui rouvre le simulateur exactement sur les réglages affichés. Utile pour soumettre un budget au débat : rien n'est envoyé au serveur, tout est dans le lien.">🔗 Partager mes réglages</button>
-      <span class="separateur" aria-hidden="true"></span>
-      <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène tous les réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
-      <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données (API publiques)</button>
-      <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule l'horizon sélectionné (5 ou 10 ans), les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Le modèle reste une exploration, pas une prévision.">Simuler avec impacts croisés</button>
-      <span class="separateur" aria-hidden="true"></span>
-      <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
-      <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
+      <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule l'horizon sélectionné (5 ou 10 ans), les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Le modèle reste une exploration, pas une prévision.">▶ Simuler avec impacts croisés</button>
+      <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données</button>
       <details class="affichage" id="affichage" data-aide="<b>Affichage</b>Quatre thèmes (soir, jour, crème, contraste renforcé), deux densités et cinq tailles de texte. Ces choix restent enregistrés sur votre appareil : rien n'est envoyé au serveur.">
         <summary title="Options d'affichage">🎨 Affichage <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
         <div class="affichage-panneau">
@@ -1441,6 +1477,14 @@ html[data-texte="137"]{font-size:137.5%}
               <button class="affichage-choix" id="densite-compact" type="button" data-densite-choix="compact" aria-pressed="false" title="Sections, cartes et marges resserrées — le contenu reste entier" onclick="choisirDensite('compact')">Compact</button>
             </span>
           </div>
+          <div class="affichage-ligne" role="group" aria-label="Présentation de la page">
+            <span class="affichage-mot">Présentation</span>
+            <span class="affichage-groupe">
+              <button class="affichage-choix" id="presentation-equilibree" type="button" data-presentation-choix="equilibree" aria-pressed="true" title="La page telle qu'elle est dessinée" onclick="choisirPresentation('equilibree')">Équilibrée</button>
+              <button class="affichage-choix" id="presentation-lecture" type="button" data-presentation-choix="lecture" aria-pressed="false" title="Une colonne plus étroite, pour suivre un texte long" onclick="choisirPresentation('lecture')">Lecture</button>
+              <button class="affichage-choix" id="presentation-panorama" type="button" data-presentation-choix="panorama" aria-pressed="false" title="Une page plus large, pour les grilles de chiffres" onclick="choisirPresentation('panorama')">Panorama</button>
+            </span>
+          </div>
           <div class="affichage-ligne" role="group" aria-label="Taille du texte">
             <span class="affichage-mot">Texte</span>
             <span class="affichage-groupe">
@@ -1449,10 +1493,35 @@ html[data-texte="137"]{font-size:137.5%}
               <button class="affichage-choix" id="texte-plus" type="button" aria-label="Agrandir la taille du texte" title="Agrandir le texte" onclick="changerTailleTexte(1)">A+</button>
             </span>
           </div>
-          <p class="affichage-note">Ces choix restent enregistrés sur cet appareil ; le zoom du navigateur reste disponible. La « vue compacte » des leviers, elle, se règle dans « Vos réglages ».</p>
+          <p class="affichage-note">Ces choix restent enregistrés sur cet appareil ; le zoom du navigateur reste disponible. « Compact » resserre toute la page, catalogue des leviers compris ; « Lecture » resserre la colonne, « Panorama » l'élargit. Un réglage, un seul endroit.</p>
+        </div>
+      </details>
+      <details class="outils" id="outils-simulateur" data-aide="<b>Outils</b>Le lexique, le guide de démarrage, le partage des réglages, les exports et la remise à zéro. Ils restent là, mais seulement quand on ouvre le tiroir : la page garde la place pour ce qu'on lit.">
+        <summary title="Lexique, guide, partage, exports et remise à zéro">🧰 Outils <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="affichage-panneau outils-panneau">
+          <p class="affichage-titre"><b>Outils du simulateur</b></p>
+          <button id="btn-lexique" onclick="ouvrirLexique()" data-aide="<b>Lexique</b>Chaque mot technique employé par la page, défini en français ordinaire, avec un repère chiffré. Les termes soulignés en pointillé dans la page s'expliquent aussi au survol.">📖 Lexique</button>
+          <button id="btn-guide" onclick="ouvrirGuide()" data-aide="<b>Guide de démarrage</b>Quatre étapes pour comprendre ce que fait le simulateur, ce qu'il mesure et ce qu'il ne mesure pas.">❓ Guide</button>
+          <button id="btn-partage" onclick="partagerReglages()" data-aide="<b>Partager mes réglages</b>Copie une adresse qui rouvre le simulateur exactement sur les réglages affichés. Utile pour soumettre un budget au débat : rien n'est envoyé au serveur, tout est dans le lien.">🔗 Partager mes réglages</button>
+          <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
+          <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
+          <button class="discret" onclick="reinitialiser()" data-aide="<b>Réinitialiser</b>Ramène tous les réglages à leur valeur neutre (aucune politique nouvelle) : la référence de comparaison.">Réinitialiser les leviers</button>
         </div>
       </details>
     </div>
+
+    <p class="etat-contexte">
+      <span class="pastille" id="badge-contexte">contexte : chargement…</span>
+      <span class="pastille" id="badge-date">—</span>
+      <span class="pastille" id="badge-leviers">—</span>
+      <label class="select-horizon" data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">
+        Horizon <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
+          <option value="5" selected>1 mandature · 5 ans</option>
+          <option value="10">2 mandatures · 10 ans</option>
+        </select>
+      </label>
+      <span class="pastille" id="badge-horizon">une mandature · 5 ans</span>
+    </p>
     <p class="aide" id="avis-lien" hidden></p>
   </header>
 
@@ -1954,7 +2023,7 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.11.0 (2026-10-14) — quatre thèmes (soir, jour, crème, contraste), deux densités et cinq tailles de texte, choisis par le visiteur et gardés sur son appareil ; sections aérées (sur-titre, titre, phrase).</span>
+    <span class="aide" id="version-interface">Interface v1.12.0 (2026-10-14) — quatre thèmes (soir, jour, crème, contraste), trois présentations (équilibrée, lecture, panorama), deux densités et cinq tailles de texte, choisis par le visiteur et gardés sur son appareil ; contraste mesuré sur chaque texte, aucun sous le seuil WCAG AA.</span>
   </p>
 
   <p class="pied credit">
@@ -3475,12 +3544,27 @@ function filtreCourant(){
   const champ = document.getElementById('recherche-levier');
   return (champ && champ.value) || '';
 }
+// La vue du catalogue des leviers et la densité de la page sont le même
+// réglage, vu de deux endroits. Un bouton « Vue compacte » dans le ruban et un
+// bouton « Compact » dans le panneau ne peuvent pas dire deux choses
+// différentes : tout ce qui touche à l'affichage se décide dans le panneau,
+// partout ailleurs on ne fait que le suivre.
+function cataloguePret(){
+  return typeof CATALOGUE !== 'undefined' && !!CATALOGUE && !!CATALOGUE.parametres;
+}
 function basculerDensite(force){
   VUE_COMPACTE = (force === undefined) ? !VUE_COMPACTE : !!force;
   const case_ = document.getElementById('case-densite');
   if (case_) case_.checked = VUE_COMPACTE;
   const bouton = document.getElementById('btn-densite');
   if (bouton) bouton.textContent = VUE_COMPACTE ? 'Vue confort' : 'Vue compacte';
+  const densite = VUE_COMPACTE ? 'compact' : 'aere';
+  if (densiteAffichage() !== densite){
+    retenirAffichage('densite', densite);
+    const racine = document.documentElement;
+    if (racine) racine.setAttribute('data-densite', densite);
+    majBoutonsAffichage();
+  }
   renderLeviers(filtreCourant());
 }
 function basculerDetailsConsole(){
@@ -5376,6 +5460,7 @@ function contenuGuide(){
    toujours, et se garde jusqu'à ce qu'on en change. */
 const THEMES_AFFICHAGE = ['soir', 'jour', 'creme', 'contraste'];
 const DENSITES_AFFICHAGE = ['aere', 'compact'];
+const PRESENTATIONS_AFFICHAGE = ['equilibree', 'lecture', 'panorama'];
 const TAILLES_AFFICHAGE = ['87', '100', '112', '125', '137'];
 const NIVEAUX_AFFICHAGE = {'87':'87,5 %','100':'100 %','112':'112,5 %','125':'125 %','137':'137,5 %'};
 
@@ -5407,13 +5492,27 @@ function tailleAffichage(){
   return TAILLES_AFFICHAGE.indexOf(choisi) >= 0 ? choisi : '100';
 }
 
+function presentationAffichage(){
+  const choisi = preferenceAffichage('presentation');
+  return PRESENTATIONS_AFFICHAGE.indexOf(choisi) >= 0 ? choisi : 'equilibree';
+}
+
 function appliquerAffichage(){
   const racine = document.documentElement;
   if (!racine) return;
   racine.setAttribute('data-theme', themeAffichage());
   racine.setAttribute('data-densite', densiteAffichage());
   racine.setAttribute('data-texte', tailleAffichage());
+  racine.setAttribute('data-layout', presentationAffichage());
   majBoutonsAffichage();
+  // La densité de la page et celle du catalogue des leviers sont le même
+  // réglage, vu de deux endroits. « Compact » resserre tout, catalogue compris ;
+  // le ruban ne fait que suivre, et ne propose jamais autre chose que ce qui
+  // est réglé ici. Le catalogue arrive après le premier rendu : tant qu'il
+  // n'est pas là, la densité de la page s'applique quand même, et la liste
+  // suit dès qu'elle arrive.
+  const compact = densiteAffichage() === 'compact';
+  if (VUE_COMPACTE !== compact && cataloguePret()) basculerDensite(compact);
 }
 
 function choisirTheme(theme){
@@ -5425,6 +5524,12 @@ function choisirTheme(theme){
 function choisirDensite(densite){
   if (DENSITES_AFFICHAGE.indexOf(densite) < 0) return;
   retenirAffichage('densite', densite);
+  appliquerAffichage();
+}
+
+function choisirPresentation(presentation){
+  if (PRESENTATIONS_AFFICHAGE.indexOf(presentation) < 0) return;
+  retenirAffichage('presentation', presentation);
   appliquerAffichage();
 }
 
@@ -5446,6 +5551,11 @@ function majBoutonsAffichage(){
   DENSITES_AFFICHAGE.forEach(function (densite) {
     const bouton = document.getElementById(densite === 'aere' ? 'densite-aere' : 'densite-compact');
     if (bouton) bouton.setAttribute('aria-pressed', densite === densiteAffichage() ? 'true' : 'false');
+  });
+  PRESENTATIONS_AFFICHAGE.forEach(function (presentation) {
+    const bouton = document.getElementById('presentation-' + presentation);
+    if (bouton) bouton.setAttribute('aria-pressed',
+      presentation === presentationAffichage() ? 'true' : 'false');
   });
   const niveau = document.getElementById('affichage-niveau');
   if (niveau) niveau.textContent = NIVEAUX_AFFICHAGE[tailleAffichage()];

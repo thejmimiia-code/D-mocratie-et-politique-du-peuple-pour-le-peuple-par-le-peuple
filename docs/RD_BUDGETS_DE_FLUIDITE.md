@@ -19,7 +19,7 @@ transmis après compression (`gzip -6`, le niveau que sert `simulateur/compressi
 
 | Charge | Brut | Compressé | Ce que c'est |
 |---|---:|---:|---|
-| la page entière | 439 540 o | **119 995 o** | `index.html`, publié et servi à l'identique |
+| la page entière | 455 491 o | **122 046 o** | `index.html`, publié et servi à l'identique |
 | le catalogue des leviers | 275 363 o | 44 526 o | 156 leviers, leurs bornes et leurs textes courts |
 | une simulation, 5 ans | — | 44 014 o | le va-et-vient de chaque curseur |
 | une simulation, 10 ans | — | 48 239 o | le même, horizon double |
@@ -37,7 +37,7 @@ transmis après compression (`gzip -6`, le niveau que sert `simulateur/compressi
 Deux chiffres méritent d'être dits à part :
 
 - **le premier écran** — la page, les sept charges du démarrage et la première
-  simulation — pèse **256 372 o compressés**. C'est ce qu'un visiteur paie avant
+  simulation — pèse **267 263 o compressés**. C'est ce qu'un visiteur paie avant
   de pouvoir bouger son premier curseur, et donc le seul chiffre qui décide s'il
   reste ;
 - **le catalogue des bulles** est, à lui seul, **plus d'une fois et demie la page
@@ -98,11 +98,24 @@ d'espacement branchée. L'ancre de la page passe donc de **111 155 o à
 prévu par la règle : une croissance assumée se paie d'un relèvement d'ancre
 daté, pas d'un silence.
 
+### Le second relèvement du 14 octobre 2026 (passe « le cadre des actions »)
+
+Même journée, autre raison. Cette passe ajoute la **présentation à trois
+largeurs** — équilibrée, lecture, panorama —, la « mise en page » du site
+M.R.S.C. transposée au simulateur ; elle resserre le cadre du bandeau (18 px
+de tour → 14, 14 px sous le bloc → 9, 9 px entre la barre et la ligne d'état
+→ 5) ; elle répare surtout **onze textes illisibles** dans les thèmes clairs.
+La page passe de **119 995 o à 122 046 o** compressés — **+2 022 o**, soit
++1,7 % — et son plafond suit mécaniquement : **131 995 o → 134 251 o**. Le
+budget dérivé du premier écran suit dans la même proportion
+(**265 212 o → 267 263 o**, plafond 293 990 o). La marge reste de 10 %, et
+`outils/budgets_fluidite.py` reste le juge.
+
 | Budget | Ancre | Plafond | Marge |
 |---|---:|---:|---:|
-| la page entière | 119 995 o | 131 995 o | 11 985 o |
+| la page entière | 122 046 o | 134 251 o | 12 205 o |
 | le catalogue des leviers | 44 526 o | 48 979 o | 4 453 o |
-| ce que la page télécharge avant d'être utilisable | 265 212 o | 291 734 o | 26 507 o |
+| ce que la page télécharge avant d'être utilisable | 267 263 o | 293 990 o | 26 727 o |
 | les bulles | 169 866 o | 186 853 o | 16 987 o |
 | une simulation, 10 ans | 48 239 o | 53 063 o | 4 824 o |
 | une simulation, 5 ans | 44 014 o | 48 416 o | 4 402 o |

@@ -364,6 +364,12 @@ class TestContrastesDesQuatreThemes(unittest.TestCase):
         exceptions = {
             '.onglets-strates button[aria-selected="true"]',
             ".ruban-strate.niveau-hors_sol",
+            # Ces deux règles peignent un aplat de marque et écrivent leur
+            # encre : c'est `test_aucune_regle_ne_peint_un_aplat_de_marque_…`
+            # qui les mesure, sur le fond qu'elles peignent vraiment.
+            "button.primaire",
+            ".onglets button.actif",
+            ".chapitre-num",
         }
         fautes = []
         for selecteur, corps in _regles_visibles():
@@ -403,6 +409,59 @@ class TestContrastesDesQuatreThemes(unittest.TestCase):
                     rapport = couleurs.contraste(encre, _couleur(f"var({fond})", palette))
                     self.assertGreaterEqual(rapport, SEUIL_TEXTE,
                                             f"{theme} : onglet actif sur {fond} = {rapport:.2f}:1")
+
+    def test_aucune_regle_ne_peint_un_aplat_de_marque_sans_ecrire_son_encre(self):
+        """Le défaut trouvé en vrai : un bouton peint en bleu M.R.S.C. sans encre.
+
+        `button.primaire` peignait le dégradé de marque et laissait l'encre
+        s'hériter du thème : bleu nuit sur bleu nuit en « jour » (1,26:1), donc
+        invisible. Ce contrôle-ci est structurel : il exige qu'une règle qui
+        peint un aplat de marque **écrive** l'encre qui va dessus, et que cette
+        encre se lise sur chacun des arrêts du fond.
+        """
+        fautes = []
+        for selecteur, corps in _regles_visibles():
+            fond = re.search(r"(?<![\w-])background\s*:\s*([^;]+)", corps)
+            if not fond:
+                continue
+            jetons = [jeton for jeton in re.findall(r"var\((--[\w-]+)\)", fond.group(1))
+                      if jeton.startswith("--mrsc-")]
+            if not jetons:
+                continue
+            encre = re.search(r"(?<![\w-])color\s*:\s*([^;]+)", corps)
+            if not encre:
+                fautes.append(f"{selecteur.strip()[:44]} peint {jetons[0]} sans écrire son encre")
+                continue
+            for theme in THEMES:
+                palette = _palette(theme)
+                avant = _couleur(encre.group(1).strip(), palette)
+                for jeton in jetons:
+                    rapport = couleurs.contraste(avant, _couleur(f"var({jeton})", palette))
+                    if rapport is not None and rapport < SEUIL_TEXTE:
+                        fautes.append(f"{theme} : {selecteur.strip()[:36]} sur {jeton} = {rapport:.2f}:1")
+        self.assertEqual(fautes, [], "aplats de marque sans encre lisible : " + " · ".join(fautes))
+
+    def test_le_bandeau_suit_le_theme_au_lieu_de_la_marque(self):
+        """Le fond du bandeau est peint avec les jetons du thème, jamais avec la marque.
+
+        Un dégradé qui partait du bleu M.R.S.C. pour finir dans le papier clair
+        laissait la moitié du bandeau sombre sous une encre sombre : c'est ce
+        que le visiteur a vu avant tout contrôle.
+        """
+        regle = _regle("header.entete")
+        jetons = re.findall(r"var\((--[\w-]+)\)", regle.get("background", ""))
+        self.assertTrue(jetons, "le bandeau n'a plus de fond")
+        for jeton in jetons:
+            with self.subTest(jeton=jeton):
+                self.assertFalse(jeton.startswith("--mrsc-"),
+                                 f"le bandeau peint {jeton} : une couleur de marque ne suit pas les thèmes")
+        for theme in THEMES:
+            palette = _palette(theme)
+            avant = _couleur(regle.get("color", "var(--texte)"), palette)
+            for jeton in jetons:
+                rapport = couleurs.contraste(avant, _couleur(f"var({jeton})", palette))
+                self.assertGreaterEqual(rapport, SEUIL_TEXTE,
+                                        f"{theme} : l'encre du bandeau sur {jeton} = {rapport:.2f}:1")
 
     def test_aucune_regle_n_ecrit_de_teinte_en_clair(self):
         """Hors palettes, impression et couleurs forcées, aucune couleur littérale.
@@ -516,7 +575,14 @@ class TestLesReglagesDuVisiteur(unittest.TestCase):
 
     def test_le_panneau_retient_son_geste(self):
         """Un panneau qui défile sans retenir son geste entraîne la page derrière."""
-        self.assertIn(".affichage-panneau{overscroll-behavior:contain}", _css())
+        for selecteur, corps in _regles_visibles():
+            if ".affichage-panneau" not in selecteur:
+                continue
+            for nom, valeur in re.findall(r"([-\w]+)\s*:\s*([^;]+)", corps):
+                if nom == "overscroll-behavior":
+                    self.assertIn("contain", valeur)
+                    return
+        self.fail("le panneau ne retient plus son geste : overscroll-behavior a disparu")
 
 
 class TestLaLigneEditoriale(unittest.TestCase):
@@ -526,7 +592,7 @@ class TestLaLigneEditoriale(unittest.TestCase):
         corps = _corps()
         sections = len(re.findall(r"<section\b", corps))
         entetes = corps.count('<header class="section-entete">')
-        surtitres = corps.count('class="eyebrow"')
+        surtitres = len(re.findall(r'<header class="section-entete">\s*<p class="eyebrow">', corps))
         phrases = corps.count('class="section-intro"')
         titres = len(re.findall(
             r'<header class="section-entete">\s*<p class="eyebrow">.*?</p>\s*<h2\b[^>]*>', corps, re.S))
