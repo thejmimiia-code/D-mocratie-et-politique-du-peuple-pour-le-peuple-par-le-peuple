@@ -396,6 +396,34 @@ script levait à l'exécution —, et la densité du panneau, que rien ne vérif
 avant qu'une étape ne soit ajoutée. C'est le rôle de la campagne : elle a
 d'abord trouvé les trous des contrôles, pas celles du code.
 
+## 13. Le treizième incrément : le bandeau mesuré, la sonde réparée (14 octobre 2026)
+
+Troisième relèvement d'ancre de la journée, mais pas pour une fonctionnalité : le
+bandeau avait été déclaré « plus grand que ses boutons » par le visiteur, et la
+réponse devait être chiffrée. `outils/captures_ecran.mjs` publie le plan coté des
+cadres du bandeau ; il a montré, à 1280 px, un titre cassé en trois lignes dans
+une colonne de 528 px et **139 px de vide** sous la barre de commandes — 296 px
+de cadre pour 35 px de boutons.
+
+Répartition neuve : les quatre commandes en première rangée à droite, le titre
+étalé sur toute la largeur, la phrase d'accroche et la ligne d'état côte à côte.
+**296 → 248 px** à 1280 px, 576 → 566 px à 380, sans qu'un mot soit retiré. La
+ligne d'état, placée dans la colonne des commandes, ne doit pas commander la
+grille : sa demande de largeur (1179 px mesurés) écrasait la colonne du titre —
+un bandeau de 2955 px et un sur-titre empilé lettre par lettre ; elle est bornée
+par la mesure de lecture, le jeton qui borne déjà la phrase d'accroche.
+
+Deux contrôles neufs gardent la répartition (le titre étalé, l'état sous les
+commandes), sabotés trois fois pour vérifier qu'ils mordent. Le seuil des deux
+colonnes reste **1200 px** : à 900 px, le plafond de 46 % cassait les quatre
+commandes en trois rangées (115 px) là où elles tiennent sur une (34 px).
+
+Deux mesures fausses ont été réparées dans la sonde le même jour — les
+« commandes recouvertes » (17 faux positifs par vue, dus aux panneaux fermés dont
+la géométrie subsiste) et le compte des rangées (les `offsetTop` distincts ne
+font pas des rangées) : le détail est dans le quinzième incrément de
+`docs/RD_VISUEL_RESPONSIVE.md`.
+
 ## 12. Le douzième incrément : l'aide, le cadre, l'état (14 octobre 2026)
 
 Trois phrases du visiteur, trois chantiers — et une leçon commune : ce qui

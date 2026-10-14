@@ -19,7 +19,7 @@ transmis après compression (`gzip -6`, le niveau que sert `simulateur/compressi
 
 | Charge | Brut | Compressé | Ce que c'est |
 |---|---:|---:|---|
-| la page entière | 458 656 o | **123 131 o** | `index.html`, publié et servi à l'identique |
+| la page entière | 460 870 o | **123 997 o** | `index.html`, publié et servi à l'identique |
 | le catalogue des leviers | 275 363 o | 44 526 o | 156 leviers, leurs bornes et leurs textes courts |
 | une simulation, 5 ans | — | 44 014 o | le va-et-vient de chaque curseur |
 | une simulation, 10 ans | — | 48 239 o | le même, horizon double |
@@ -37,7 +37,7 @@ transmis après compression (`gzip -6`, le niveau que sert `simulateur/compressi
 Deux chiffres méritent d'être dits à part :
 
 - **le premier écran** — la page, les sept charges du démarrage et la première
-  simulation — pèse **268 348 o compressés**. C'est ce qu'un visiteur paie avant
+  simulation — pèse **269 214 o compressés**. C'est ce qu'un visiteur paie avant
   de pouvoir bouger son premier curseur, et donc le seul chiffre qui décide s'il
   reste ;
 - **le catalogue des bulles** est, à lui seul, **plus d'une fois et demie la page
@@ -111,11 +111,25 @@ budget dérivé du premier écran suit dans la même proportion
 (**265 212 o → 268 348 o**, plafond 295 183 o). La marge reste de 10 %, et
 `outils/budgets_fluidite.py` reste le juge.
 
+### Le troisième relèvement du 14 octobre 2026 (passe « le bandeau se règle sur la mesure »)
+
+Troisième relèvement de la journée, et le plus modeste : **+866 o** (+0,7 %).
+Ce qui l'a payé n'est pas une fonctionnalité mais une **mise en page mesurée**.
+Le plan coté du bandeau, relevé par Chromium (`outils/captures_ecran.mjs`), a
+montré qu'à 1280 px la colonne de texte faisait 528 px de large — le titre y
+tenait en **trois lignes** — et qu'il restait **139 px de vide** sous la barre de
+commandes : un cadre de 296 px pour 35 px de boutons. Le titre s'étale désormais
+sur toute la largeur, la phrase d'accroche et la ligne d'état partagent la
+rangée suivante : **248 px** (moins 16 %), sans qu'un mot ait été retiré. La
+page passe de **123 131 o à 123 997 o** compressés, son plafond de **135 445 o à
+136 397 o**, et l'ancre du premier écran suit (**268 348 o → 269 214 o**, plafond
+296 136 o). La marge reste de 10 %, et `outils/budgets_fluidite.py` reste le juge.
+
 | Budget | Ancre | Plafond | Marge |
 |---|---:|---:|---:|
-| la page entière | 123 131 o | 135 445 o | 12 314 o |
+| la page entière | 123 997 o | 136 397 o | 12 400 o |
 | le catalogue des leviers | 44 526 o | 48 979 o | 4 453 o |
-| ce que la page télécharge avant d'être utilisable | 268 348 o | 295 183 o | 26 835 o |
+| ce que la page télécharge avant d'être utilisable | 269 214 o | 296 136 o | 26 922 o |
 | les bulles | 169 866 o | 186 853 o | 16 987 o |
 | une simulation, 10 ans | 48 239 o | 53 063 o | 4 824 o |
 | une simulation, 5 ans | 44 014 o | 48 416 o | 4 402 o |

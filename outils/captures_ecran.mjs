@@ -223,6 +223,7 @@ async function photographier(nom, { theme, largeur, preparation }) {
         entete: plan(".entete"),
         barre: plan(".entete .barre-contexte"),
         etat: plan(".entete .etat-contexte"),
+        sommaire: plan(".sommaire-liste"),
       },
       boites: [".entete", ".entete .barre-contexte", ".entete .barre-contexte button",
         ".entete .etat-contexte", ".sommaire", ".sommaire-liste", ".ruban-veille",
@@ -335,6 +336,14 @@ if (plans.length) {
     for (const enfant of vue.plans?.barre || []) {
       lignes.push(`    - barre : x=${enfant.x} y=${enfant.y} ${enfant.largeur}×${enfant.hauteur} `
         + `${enfant.nom} « ${enfant.texte} »`);
+    }
+    /* Le sommaire est collant : sa hauteur se paie à chaque défilement. */
+    const sommaire = vue.plans?.sommaire || [];
+    if (sommaire.length) {
+      const haut = Math.max(...sommaire.map((e) => e.y + e.hauteur));
+      lignes.push(`    - liste du sommaire : ${sommaire.length} enfant(s), `
+        + `${new Set(sommaire.map((e) => e.y)).size} bande(s) verticale(s), `
+        + `bas le plus haut à y=${haut}`);
     }
   }
 }

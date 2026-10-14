@@ -587,6 +587,59 @@ dessous. La hauteur du cadre devient celle de son contenu, au lieu d'être la
 somme de son texte et d'une rangée de boutons. Le sommaire des accès rapides se
 règle sur les jetons d'espacement, comme les trois barres.
 
+## Quinzième incrément — le plan coté, et deux mesures fausses
+
+Le visiteur l'avait dit en une phrase : « le cadre avec les boutons d'accès
+rapide est beaucoup plus grand que la place que prennent les boutons eux-mêmes ».
+L'outil de captures savait photographier la page et additionner des hauteurs ; il
+ne savait pas dire **où**. Il publie désormais le **plan coté de chaque cadre** :
+pour chaque enfant peint, sa position et sa taille relatives au cadre. C'est ce
+plan qui a répondu, et la réponse était plus précise que l'impression.
+
+### Ce que le plan a montré, à 1280 px
+
+| Ce qui occupe le bandeau | Avant | Après |
+|---|---:|---:|
+| la colonne de texte | 528 px | 571 px |
+| le titre | 3 lignes (89 px) | 2 lignes (59 px), sur toute la largeur |
+| la barre de commandes | 651 × 35 px | 651 × 35 px |
+| le vide sous la barre | 139 px | 0 |
+| la ligne d'état | 1201 × 69 px | 589 × 101 px, sous les commandes |
+| **le cadre** | **296 px** | **248 px** |
+
+Rien n'a été retiré : le titre a gagné la largeur de la page, et la rangée qui
+restait vide sous les quatre commandes porte maintenant la ligne d'état — ce
+qu'un cadre doit faire de sa place, la donner à son contenu. Sous 641 px, le
+rembourrage du bandeau suit l'écran (`clamp(9px, 1.6vw, 22px)`) : une seule
+règle, là où deux se contredisaient — la mesure avait montré 14 px de marge
+intérieure à 380 px pour 35 px de boutons, parce que la règle du grand écran,
+écrite plus bas, l'emportait.
+
+### Deux mesures fausses, corrigées avant d'accuser la page
+
+**Les « commandes recouvertes » étaient un cri de dix-sept faux positifs par
+vue.** Un `<details>` fermé garde la géométrie de ses boutons — Chromium les
+garde en mémoire de mise en page sans les peindre —, leurs rectangles retombent
+sur le texte du bandeau, et la sonde accusait celui-ci. La règle est désormais
+stricte : la commande doit être **peinte**, c'est-à-dire apparaître **elle-même**
+dans la pile des éléments sous son centre, et ce qu'un panneau déplié, une
+fenêtre de dialogue ou une infobulle masque **volontairement** ne compte pas
+comme une gêne — un panneau ouvert est là pour ça.
+
+**Les rangées se comptaient mal.** Le premier compte prenait les `offsetTop`
+distincts pour des rangées : faux dès que des voisins ont des hauteurs
+différentes et sont centrés verticalement — un chapelet de pastilles et de
+séparateurs annonçait trois rangées là où il y en avait une. Le compte suit
+maintenant le **chevauchement vertical** (plus de la moitié du plus petit), et le
+sommaire des accès rapides, annoncé en trois rangées, se révèle sur **une**.
+
+### Ce que la mesure ne dira jamais
+
+Le plan dit les positions, pas la beauté. « 139 px de vide » est un fait, « le
+cadre paraissait grand » est un jugement — et c'est le visiteur qui l'avait
+porté. Les images restent dans l'artefact, pour l'œil ; les chiffres, dans le
+commentaire de demande de fusion, pour la revue.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
