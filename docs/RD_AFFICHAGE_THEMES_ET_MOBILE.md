@@ -278,10 +278,120 @@ mention « valeur citoyenne non vérifiée par le M.R.S.C ».
 | Les fiches « Apprendre » (dossier documentaire) | Ce sont les documents de `docs/`. Les recopier dans la page la ferait grossir de plusieurs centaines de kilo-octets — le budget de page les refuserait — et figerait des contenus qui vivent dans le dépôt |
 | Le formulaire « Nous contacter » | Il n'existe aucun service de messagerie côté simulateur : un formulaire qui ne mène nulle part vaut moins qu'une absence |
 | L'`iframe` d'intégration du site | C'est le site qui intègre le simulateur, pas l'inverse ; en intégrer un ici ferait une page dans la page |
-| `html[data-layout="lecture"|"panorama"]` (940 / 1480 px) | **Piste retenue pour une passe suivante.** Le réglage est proche de la densité, mais la question « à quoi sert la largeur de lecture ? » n'a pas encore d'usage mesuré ici : les tableaux larges ont leur propre défilement, et les phrases sont déjà bornées |
+| `html[data-layout="lecture"|"panorama"]` (940 / 1480 px) | **Importé le 14 octobre 2026**, onzième incrément ci-dessous, sous forme de trois présentations — Équilibrée (1440 px), Lecture (1000 px), Panorama (1680 px). Ce qui a décidé de la largeur : les phrases sont bornées par `--mesure` mais les **grilles** ne l'étaient pas, et un écran très large les étirait sur quatre colonnes sans intérêt |
 
 *Vérifié en ligne le 14 octobre 2026 : le site sert toujours « Simulateur
 macro-politique » avec son bandeau de chiffres clés et sa copie embarquée du
 simulateur (révision lisible dans la page). Rien ici n'en dépend — la copie
 embarquée est sortie de ce dépôt par décision de son auteur — mais la langue
 visuelle, elle, est partagée.*
+
+## 11. Le onzième incrément : l'encre, le cadre, la présentation (14 octobre 2026)
+
+Le visiteur a écrit : « certains thèmes n'apparaissent pas correctement, les
+couleurs des boutons ne sont pas adaptées par rapport au fond, ce qui fait que la
+lecture est difficile ; il y a trop d'espace entre deux blocs ; le cadre avec les
+boutons d'accès rapide est beaucoup plus grand que la place que prennent les
+boutons eux-mêmes. » Les trois griefs étaient mesurables, et les trois étaient
+justes.
+
+### 11.1 Ce que la mesure a trouvé
+
+`outils/contraste_ecran.py` est né de ce grief. Les contrôles de la §4 mesurent
+des **règles** : ils ne voient pas l'héritage, et la faute vivait exactement là.
+L'audit de la version en ligne du 14 octobre a rendu onze textes illisibles par
+thème clair :
+
+| Texte | Encre héritée | Fond peint | Rapport |
+|---|---|---|---:|
+| le titre du bandeau | `#18243b` (« jour ») | `#1d3268` | **1,27:1** |
+| la phrase d'accroche | `#5a6980` | `#1d3268` | **1,64:1** |
+| « Simuler avec impacts croisés » | `#18243b` | `#1d3268` | **1,27:1** |
+| « Rafraîchir les données » | `#18243b` | `#1d3268` | **1,27:1** |
+| « Réinitialiser les leviers » | `#18243b` | `#1d3268` | **1,27:1** |
+| « Régler les leviers » (plan et ruban) | `#18243b` | `#1d3268` | **1,27:1** |
+| les quatre numéros de chapitre | `#18243b` | `#1d3268` | **1,27:1** |
+
+Le mécanisme est toujours le même : un élément **peint** un fond de marque et
+**n'écrit pas** d'encre — l'encre du thème lui tombe dessus. En « soir » et
+« contraste », l'encre du thème est claire, donc la faute était invisible ; en
+« jour » et « crème », elle est sombre.
+
+### 11.2 L'instrument, et ce qu'il refuse de cacher
+
+L'outil lit la page **réellement servie** (`index.html`), en dresse l'arbre,
+applique la feuille (cascade, spécificité, héritage, `var()`, `color-mix()`,
+`@media` selon la largeur demandée), compose les fonds (dégradés, transparences,
+`opacity`) et compare chaque texte à son fond réel avec la formule WCAG 2.1.
+
+Il affiche **ce qu'il écarte** : les règles d'état (`:hover`, `:focus`,
+`:disabled`, `::before`) et les commandes inactives, que la norme exempte. Un
+contrôle qui tait ce qu'il ignore n'est pas un contrôle.
+
+    python3 outils/contraste_ecran.py                        # 4 thèmes × 2 largeurs
+    python3 outils/contraste_ecran.py --theme jour --verbeux  # le détail, ligne à ligne
+
+### 11.3 La réparation
+
+- **Le bandeau suit le thème** : `header.entete` garde son dégradé de jetons
+  (`--entete-1` → `--entete-2`, blancs en « jour », papier en « crème », nuit en
+  « soir ») et **écrit son encre** ; un contrôle refuse désormais qu'il peigne un
+  jeton de marque.
+- **Un aplat de marque écrit son encre** : `button.primaire`,
+  `.onglets button.actif` et `.chapitre-num` prennent `--sur-mrsc`, et un
+  contrôle structurel l'exige — il refuse toute règle qui peint `--mrsc-*` sans
+  écrire de `color`, et vérifie le rapport sur chaque arrêt du dégradé, dans les
+  quatre thèmes.
+- **Le texte secondaire remonte** : `--texte-dim` du thème « jour » passe de
+  `#5a6980` à `#56637a`. Les libellés des plateaux de la balance passent de
+  **4,34:1 à 4,73:1**, le ruban de coût de **4,38:1 à 4,74:1**.
+- **Le résultat** : pire cas mesuré **4,58:1** (« soir »), **4,62:1** (« jour »),
+  **4,76:1** (« crème »), **8,16:1** (« contraste ») — et zéro faute sur les
+  huit combinaisons thème × largeur, 283 textes mesurés par combinaison.
+
+### 11.4 Le cadre, et la place qu'il prend
+
+Le bandeau portait quinze commandes de premier niveau. Il en porte quatre :
+simuler, rafraîchir, et les deux tiroirs (affichage, outils) ; les six outils
+secondaires s'ouvrent. Le tour du bandeau passe de 18 px à 14, la marge sous le
+bloc de 14 px à 9, l'écart entre la barre et la ligne d'état de 9 px à 5, et les
+trois barres de la page partagent la même hauteur de bouton (`--h-bouton`,
+34 px — 44 px sur écran tactile) et le même écart (`--gap-barre`).
+
+### 11.5 La présentation, importée du site M.R.S.C.
+
+Le site de l'association propose une « mise en page » : équilibrée, lecture,
+panorama. Le simulateur la reprend telle quelle dans son panneau d'affichage :
+
+| Présentation | Largeur | Ce qu'elle sert |
+|---|---:|---|
+| **Équilibrée** (défaut) | 1440 px | la page telle qu'elle a été dessinée |
+| **Lecture** | 1000 px | suivre un texte long sans perdre la ligne |
+| **Panorama** | 1680 px | faire tenir les grilles de chiffres côte à côte |
+
+Un seul jeton change (`--largeur-page`) ; les grilles suivent d'elles-mêmes.
+Le choix est posé sur `<html data-layout="…">` **avant le premier pixel** (sinon
+la page s'ouvrirait à la mauvaise largeur puis sauterait), gardé sur l'appareil,
+et jamais envoyé au serveur.
+
+### 11.6 Une densité, un seul réglage
+
+Le ruban de veille portait un bouton « Vue compacte » et le panneau un bouton
+« Compact » : deux noms pour un même réglage, qui pouvaient diverger. Ils
+s'écrivent maintenant l'un l'autre — dans les deux sens — et l'état est retenu.
+
+### 11.7 Ce qui surveille
+
+| Contrôle | Fichier | Ce qu'il refuse |
+|---|---|---:|
+| contraste effectif | `tests/test_contraste_ecran.py` (10) | un texte sous le seuil dans l'un des huit cas, une mesure qui ne couvrirait pas la page, un instrument qui deviendrait aveugle |
+| cadre des actions | `tests/test_cadre_des_actions.py` (13) | une barre qui regonfle, un outil qui ressort du tiroir, une mesure écrite en clair, une présentation sans largeur ou absente du panneau |
+| règles et jetons | `tests/test_themes_en_page.py` (38) | un aplat de marque sans encre, un bandeau peint avec un jeton de marque, un jeton employé mais non défini |
+| le geste, exécuté | `tests/navigateur_interface.mjs` (227 étapes) | un réglage qui ne se pose pas, ne se retient pas, ou ne ressort pas du catalogue |
+
+**14 sabotages posés, 14 attrapés.** Trois ont d'abord échappé : le lexique
+« sorti » du tiroir par une classe (il était toujours dedans), le doublon de
+`const compact` qui n'a été vu que par le harnais — `node --check` passait, le
+script levait à l'exécution —, et la densité du panneau, que rien ne vérifiait
+avant qu'une étape ne soit ajoutée. C'est le rôle de la campagne : elle a
+d'abord trouvé les trous des contrôles, pas celles du code.

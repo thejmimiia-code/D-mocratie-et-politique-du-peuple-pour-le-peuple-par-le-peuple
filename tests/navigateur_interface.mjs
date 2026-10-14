@@ -277,7 +277,8 @@ const programme = `
                        'chargerComparaison','rendreComparaison','trierComparaison',
                        'choisirTheme','choisirDensite','changerTailleTexte','appliquerAffichage',
                        'initialiserAffichage','majBoutonsAffichage','preferenceAffichage',
-                       'themeAffichage','densiteAffichage','tailleAffichage']) {
+                       'themeAffichage','densiteAffichage','tailleAffichage',
+                       'choisirPresentation','presentationAffichage','PRESENTATIONS_AFFICHAGE']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
@@ -308,6 +309,9 @@ if (!entete) {
         && racineDocument.getAttribute("data-texte") === "100",
         "densité=" + racineDocument.getAttribute("data-densite")
         + " texte=" + racineDocument.getAttribute("data-texte"));
+  noter("la présentation part d'équilibrée",
+        racineDocument.getAttribute("data-layout") === "equilibree",
+        "mise en page=" + racineDocument.getAttribute("data-layout"));
   // Les deux réglages de l'appareil, l'un après l'autre : un appareil qui
   // annonce préférer le clair doit recevoir le thème clair, et non le sombre
   // par défaut.
@@ -320,14 +324,17 @@ if (!entete) {
   memoire.set("simulateur-theme", "creme");
   memoire.set("simulateur-densite", "compact");
   memoire.set("simulateur-texte", "125");
+  memoire.set("simulateur-presentation", "lecture");
   eval(entete.replace(/^/gm, ""));
   noter("un choix enregistré est repris tel quel au chargement suivant",
         racineDocument.getAttribute("data-theme") === "creme"
         && racineDocument.getAttribute("data-densite") === "compact"
-        && racineDocument.getAttribute("data-texte") === "125",
+        && racineDocument.getAttribute("data-texte") === "125"
+        && racineDocument.getAttribute("data-layout") === "lecture",
         "thème=" + racineDocument.getAttribute("data-theme")
         + " densité=" + racineDocument.getAttribute("data-densite")
-        + " texte=" + racineDocument.getAttribute("data-texte"));
+        + " texte=" + racineDocument.getAttribute("data-texte")
+        + " mise en page=" + racineDocument.getAttribute("data-layout"));
   memoire.set("simulateur-theme", "fluo");
   eval(entete);
   noter("un choix inconnu est écarté, pas appliqué",
@@ -784,6 +791,29 @@ apiPage.basculerDensite(false);
 for (let i = 0; i < 2; i += 1) await tourner();
 noter("le retour en vue confort restaure les descriptions",
       contenu("leviers-grille").includes("class=\"desc\""));
+
+/* 2 bis ter. Une seule densité : le ruban et le panneau d'affichage disent la
+   même chose. Deux boutons qui portent le même nom ne peuvent pas en dire
+   deux — c'est le défaut que le visiteur a signalé. */
+apiPage.basculerDensite(true);
+for (let i = 0; i < 2; i += 1) await tourner();
+noter("la vue compacte pose la densité de la page",
+      racineDocument.getAttribute("data-densite") === "compact",
+      "data-densite=" + racineDocument.getAttribute("data-densite"));
+noter("la densité compacte est retenue sur l'appareil",
+      globalThis.localStorage.getItem("simulateur-densite") === "compact",
+      globalThis.localStorage.getItem("simulateur-densite"));
+noter("le panneau d'affichage suit le ruban",
+      elements.get("densite-compact")?.getAttribute("aria-pressed") === "true",
+      "aria-pressed=" + elements.get("densite-compact")?.getAttribute("aria-pressed"));
+apiPage.basculerDensite(false);
+for (let i = 0; i < 2; i += 1) await tourner();
+noter("le retour en vue confort remet la densité aérée",
+      racineDocument.getAttribute("data-densite") === "aere",
+      "data-densite=" + racineDocument.getAttribute("data-densite"));
+noter("la densité aérée est retenue à son tour",
+      globalThis.localStorage.getItem("simulateur-densite") === "aere",
+      globalThis.localStorage.getItem("simulateur-densite"));
 
 /* 2 ter. Le détail des seuils se replie pour libérer l'écran. */
 apiPage.basculerDetailsConsole();
@@ -1314,10 +1344,20 @@ noter("le bouton du thème en vigueur dit son état, les autres non",
       "crème=" + elements.get("theme-creme")?.getAttribute("aria-pressed")
       + " soir=" + elements.get("theme-soir")?.getAttribute("aria-pressed"));
 apiPage.choisirDensite("compact");
+for (let i = 0; i < 2; i += 1) await tourner();
 noter("la densité compacte se pose sur la racine et se retient",
       racineDocument.getAttribute("data-densite") === "compact"
       && memoire.get("simulateur-densite") === "compact",
       "densité=" + racineDocument.getAttribute("data-densite"));
+noter("le panneau resserre aussi le catalogue des leviers",
+      (contenu("leviers-grille").match(/class="levier compact/g) || []).length === leviersComplets,
+      "leviers compacts : " + (contenu("leviers-grille").match(/class="levier compact/g) || []).length
+      + " sur " + leviersComplets);
+apiPage.choisirDensite("aere");
+for (let i = 0; i < 2; i += 1) await tourner();
+noter("le retour en densité aérée restaure les descriptions",
+      contenu("leviers-grille").includes("class=\"desc\""));
+apiPage.choisirDensite("compact");
 apiPage.choisirTheme("fluo");
 apiPage.choisirDensite("serree");
 noter("un réglage inconnu ne change rien",
@@ -1351,6 +1391,31 @@ apiPage.changerTailleTexte(1);
 apiPage.choisirTheme("soir");
 apiPage.choisirDensite("aere");
 apiPage.changerTailleTexte(-1);
+
+/* 15 bis. La présentation : trois largeurs, un seul réglage. Elle ne change
+   rien d'autre que la largeur de la colonne, et elle se garde comme les
+   autres. */
+apiPage.choisirPresentation("lecture");
+noter("la présentation choisie se pose sur la racine et se retient",
+      racineDocument.getAttribute("data-layout") === "lecture"
+      && memoire.get("simulateur-presentation") === "lecture",
+      "mise en page=" + racineDocument.getAttribute("data-layout")
+      + " mémoire=" + memoire.get("simulateur-presentation"));
+noter("le bouton de la présentation en vigueur dit son état, les autres non",
+      elements.get("presentation-lecture")?.getAttribute("aria-pressed") === "true"
+      && elements.get("presentation-equilibree")?.getAttribute("aria-pressed") === "false",
+      "lecture=" + elements.get("presentation-lecture")?.getAttribute("aria-pressed")
+      + " équilibrée=" + elements.get("presentation-equilibree")?.getAttribute("aria-pressed"));
+apiPage.choisirPresentation("panorama");
+apiPage.choisirPresentation("inconnue");
+noter("une présentation inconnue ne change rien",
+      racineDocument.getAttribute("data-layout") === "panorama",
+      "mise en page=" + racineDocument.getAttribute("data-layout"));
+apiPage.choisirPresentation("equilibree");
+noter("la présentation revient à son état d'origine",
+      racineDocument.getAttribute("data-layout") === "equilibree"
+      && memoire.get("simulateur-presentation") === "equilibree",
+      "mise en page=" + racineDocument.getAttribute("data-layout"));
 memoire.clear();
 
 /* ── Rapport ────────────────────────────────────────────────────────────── */

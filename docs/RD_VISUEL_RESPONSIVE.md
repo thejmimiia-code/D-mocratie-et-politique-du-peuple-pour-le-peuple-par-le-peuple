@@ -503,6 +503,58 @@ figée sur la strate hors-sol (**3,76:1** en « soir », **2,02:1** en
 (**1,06:1** en « contraste »). Deux jetons neufs les réparent — `--encre-pleine`
 et `--sur-mrsc`.
 
+## Treizième incrément — l'encre qui manquait, et le cadre qui se resserre
+
+Le douzième incrément avait réparé ce que la mesure des **règles** pouvait voir.
+Il restait ce qu'elle ne pouvait pas voir : un élément qui **peint un fond** et
+laisse l'encre venir de son parent. Le visiteur l'a signalé avant les contrôles —
+« certains thèmes n'apparaissent pas correctement, les couleurs des boutons ne
+sont pas adaptées par rapport au fond ».
+
+### Ce qui était cassé, et pourquoi aucun contrôle ne le voyait
+
+En « jour » et « crème », le bandeau peignait le dégradé de marque
+(`--mrsc-navy` → `--entete-2`) et le titre, la phrase d'accroche, les boutons
+« Simuler », « Rafraîchir », « Réinitialiser », « Régler les leviers » et les
+quatre numéros de chapitre **héritaient** l'encre sombre du thème : **1,27:1**
+pour les boutons et le titre, **1,64:1** pour l'accroche. Onze textes illisibles
+par thème clair, invisibles pour les trente-six contrôles de règles — chacun
+mesure une règle seule, avec ses propres couleurs.
+
+### L'instrument
+
+`outils/contraste_ecran.py` (neuf) fait ce qu'un navigateur fait, en plus petit :
+il lit la page servie, en dresse l'arbre, applique la feuille (cascade,
+spécificité, héritage des jetons, `var()`, `color-mix()`, `@media` selon la
+largeur), compose les fonds réellement peints (dégradés, transparences,
+`opacity`) et compare chaque texte à son fond réel. Il **compte ce qu'il
+écarte** — règles d'état, commandes inactives — au lieu de le taire.
+
+### Le cadre
+
+Le bandeau portait quinze commandes de premier niveau ; il en porte quatre, et
+les six outils secondaires s'ouvrent dans un tiroir. Le tour du bandeau passe de
+18 px à 14, la marge sous le bloc de 14 px à 9, l'écart entre la barre et la
+ligne d'état de 9 px à 5. Les trois barres de la page (bandeau, ruban de veille,
+actions du plan) partagent la même hauteur de bouton et le même écart — deux
+jetons, `--h-bouton` (34 px, 44 px sur écran tactile) et `--gap-barre`.
+
+### La présentation
+
+Trois largeurs, comme la « mise en page » du site M.R.S.C. : **Équilibrée**
+(1440 px, le défaut), **Lecture** (1000 px), **Panorama** (1680 px). Le choix vit
+sur `<html data-layout="…">`, posé avant le premier pixel, gardé sur l'appareil.
+Un seul jeton change (`--largeur-page`) : les grilles suivent d'elles-mêmes, et
+les quatre paliers d'écran restent la loi — une présentation ne remplace pas la
+mise en page responsive, elle la borne.
+
+### Ce que ça change pour les paliers
+
+Rien n'est cassé aux quatre paliers : les contrôles de contraste tournent à
+1280 px et à 380 px, dans les quatre thèmes, et les huit combinaisons sont
+vertes. Le pire cas mesuré est **4,58:1** (« soir »), **4,62:1** (« jour »),
+**4,76:1** (« crème »), **8,16:1** (« contraste »).
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
