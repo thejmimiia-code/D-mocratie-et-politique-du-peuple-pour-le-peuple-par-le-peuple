@@ -82,8 +82,9 @@ n'est pas un plafond large : c'est un angle mort.
 
 ## 3. La table des plafonds
 
-Écrite dans `outils/budgets_fluidite.py` : quinze budgets, quinze ancres datées
-du 14 octobre 2026, la marge de 10 % par défaut (20 % pour les cotations, dont la
+Écrite dans `outils/budgets_fluidite.py` : **seize entrées** — quinze plafonds
+directs et un budget dérivé (le premier écran) —, seize ancres datées des 13 et
+14 octobre 2026, la marge de 10 % par défaut (20 % pour les cotations, dont la
 base — sept lignes — rendrait un plafond trop serré cassant au premier ajout).
 
 | Budget | Ancre | Plafond | Marge |
@@ -98,6 +99,7 @@ base — sept lignes — rendrait un plafond trop serré cassant au premier ajou
 | les nuances institutionnelles | 21 929 o | 24 122 o | 2 193 o |
 | les objections | 19 820 o | 21 802 o | 1 982 o |
 | l'arithmétique des contre-pouvoirs | 18 207 o | 20 028 o | 1 821 o |
+| la comparaison des scénarios | 9 795 o | 10 775 o | 980 o |
 | le contexte « instant T » | 14 329 o | 15 762 o | 1 433 o |
 | le lexique | 13 233 o | 14 557 o | 1 324 o |
 | les instances | 7 795 o | 8 575 o | 780 o |
@@ -170,13 +172,22 @@ Chaque contrôle a été cassé exprès, un par un, dans une copie du dépôt :
 | un budget dérivé décroché de ses membres | le dérivé est la somme des membres |
 | la mesure hors ligne retenant le plus léger exemplaire | la mesure retient le plus lourd |
 
+**Trois de ces sabotages sont attrapés d'abord par le contrôle du document**,
+celui qui exige que les ancres et les plafonds annoncés soient ceux du code. Le
+document ayant été mis à jour en même temps que le code — ce que ferait un
+saboteur soigneux —, les contrôles de fond mordent à leur tour ; vérifié le
+14 octobre 2026 : le plafond de la page rabaissé (`test_la_page_tient_dans_son_plafond`,
+6 échecs), la marge portée à 80 % (`test_les_marges_sont_dans_la_fourchette_utile`,
+31 échecs), le plafond recopié (`test_le_plafond_se_calcule_et_ne_se_recopie_pas`,
+36 échecs).
+
 ### Dans la CI, à chaque poussée
 
 - **les tests** mesurent hors ligne la page et refusent un dépassement, sans
   serveur : c'est le contrôle payé à chaque exécution de la suite ;
 - **une étape dédiée** (`smoke-test`) exécute
   `python3 outils/mesurer_fluidite.py --verifier --repetitions 1` : elle sert le
-  simulateur sur un port libre, mesure les quinze charges et échoue sur la
+  simulateur sur un port libre, mesure les seize charges et échoue sur la
   première qui franchit son plafond. Le tableau qu'elle imprime porte les ancres,
   les plafonds, la marge restante et, en cas de refus, le motif et la sortie.
 
@@ -191,7 +202,7 @@ Chaque contrôle a été cassé exprès, un par un, dans une copie du dépôt :
 - **Ils ne mesurent pas le temps.** Voir la règle 3 : les durées sont mesurées,
   rapportées, jamais bloquantes.
 - **Ils dépendent d'un geste humain : le relèvement d'ancre.** Un budget ne peut
-  pas empêcher quelqu'un de relever les quinze ancres dans le même commit. Ce
+  pas empêcher quelqu'un de relever les seize ancres dans le même commit. Ce
   qu'il garantit, c'est que ce geste soit **visible, daté et commentable** — la
   garantie est celle de la revue, pas celle du test.
 - **L'unité est `gzip -6`.** Sur un interpréteur qui fournit brotli, le serveur

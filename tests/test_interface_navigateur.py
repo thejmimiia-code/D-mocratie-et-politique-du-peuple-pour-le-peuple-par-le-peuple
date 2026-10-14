@@ -263,6 +263,20 @@ class TestInterfaceDansNode(unittest.TestCase):
                     "l'adresse partagée est reprise à l'ouverture de la page"):
             self.assertTrue(etapes.get(nom), f"étape absente ou fausse : {nom}")
 
+    def test_la_comparaison_des_scenarios_est_affichee_et_rangee(self):
+        """La section « Comparer » rend les lignes servies, les range, et s'arrête là."""
+        etapes = {etape["nom"]: etape["ok"] for etape in self.rapport.get("etapes", [])}
+        for nom in ("affiche chaque scénario que la route a calculé",
+                    "le tableau s'ouvre sur le premier scénario du catalogue",
+                    "le montant affiché est celui que le serveur a calculé",
+                    "les barres se mesurent sur le plus fort montant servi",
+                    "le scénario de référence est signalé, sans être le seul marqué",
+                    "le premier clic range la colonne par ordre croissant",
+                    "le second clic inverse le rangement",
+                    "le troisième clic rend l'ordre du catalogue",
+                    "un scénario hostile est échappé, jamais interprété"):
+            self.assertTrue(etapes.get(nom), f"étape absente ou fausse : {nom}")
+
     def test_la_console_signale_l_austerite_puis_recalcule_le_scenario_de_reference(self):
         """Le rouge signale les risques; le neutre doit être recalculé, pas blanchi artificiellement."""
         etapes = {etape["nom"]: etape["ok"] for etape in self.rapport.get("etapes", [])}

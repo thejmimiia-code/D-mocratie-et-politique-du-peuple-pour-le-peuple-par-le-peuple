@@ -218,6 +218,14 @@ BUDGETS: tuple[Budget, ...] = (
         "section",
     ),
     Budget(
+        "comparer",
+        "la comparaison des scénarios",
+        9_795,
+        "Seize simulations en une requête, servie depuis le 14 octobre 2026 : c'est "
+        "le prix d'un écran qui compare, et il se paie à la demande, jamais au démarrage.",
+        "section",
+    ),
+    Budget(
         "dynamiques",
         "les trajets et leurs battements",
         26_230,
@@ -284,6 +292,7 @@ ROUTES_MESUREES: tuple[tuple[str, str], ...] = (
     ("/api/objections", "objections"),
     ("/api/nuances", "nuances"),
     ("/api/contrepouvoirs", "contrepouvoirs"),
+    ("/api/comparer", "comparer"),
     ("/api/dynamiques", "dynamiques"),
     ("/api/instances", "instances"),
     ("/api/bulles?detail=resume", "bulles"),
@@ -510,9 +519,11 @@ def rapport_texte(
         for anomalie in anomalies:
             lignes.append(f"  · {anomalie.cle} : {anomalie.message}")
     if not depassements and not anomalies:
-        nombre = sum(1 for budget in budgets if budget.ou != "derive")
+        directs = sum(1 for budget in budgets if budget.ou != "derive")
+        derives = len(budgets) - directs
         lignes.append(
-            f"Aucun dépassement, aucune anomalie ({nombre} plafonds dans la table)."
+            f"Aucun dépassement, aucune anomalie — {len(budgets)} entrées dans la table "
+            f"({directs} plafonds directs, {derives} budget dérivé)."
         )
     return "\n".join(lignes)
 

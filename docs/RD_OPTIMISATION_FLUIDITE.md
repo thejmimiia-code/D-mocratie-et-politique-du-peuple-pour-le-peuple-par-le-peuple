@@ -255,7 +255,7 @@ régler → mesurer → vérifier*, avec des raccourcis vers les sections.
 ## Les plafonds : de la mesure au refus (14 octobre 2026)
 
 Ce document mesure ; il ne refusait rien, et c'est ce qui lui manquait. Depuis
-cette passe, quinze plafonds sont écrits dans `outils/budgets_fluidite.py`,
+cette passe, seize plafonds sont écrits dans `outils/budgets_fluidite.py`,
 ancrés sur les mesures du 14 octobre 2026, vérifiés par
 `python3 outils/mesurer_fluidite.py --verifier` (une étape de la CI) et par
 42 contrôles hors ligne qui n'ont besoin d'aucun serveur. Les suites envisagées
@@ -270,5 +270,5 @@ ci-dessus y gagnent un cadre chiffré :
    (3 112 907 o bruts) sous un plafond de 186 853 o. La question n'est plus
    « est-ce gros ? » mais « de combien reste-t-il de marge, et pour combien de temps ? ».
 
-Le détail — les quatre règles, la table des quinze plafonds, les dix sabotages et
+Le détail — les quatre règles, la table des seize plafonds, les dix sabotages et
 les limites assumées — est dans [`RD_BUDGETS_DE_FLUIDITE.md`](RD_BUDGETS_DE_FLUIDITE.md).

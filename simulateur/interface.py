@@ -26,7 +26,13 @@ aucun CDN) qui contient :
     procédures servi par `/api/dynamiques` : trajets, battements, jours de
     rigueur, fentes non écrites. Les deux registres se chargent à l'approche de
     la section, jamais au démarrage ;
-  * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;  * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;
+  * la **comparaison des préréglages** servie par `/api/comparer` : les
+    scénarios du catalogue rejoués par le serveur, côte à côte à leur année
+    finale — ce que chacun dégage, la dette, le déficit, le risque pour la
+    population et le nombre d'alertes ; le tableau se range en cliquant un titre
+    de colonne, et chaque barre se mesure sur le plus fort montant servi, jamais
+    sur un chiffre écrit dans la page ;
+  * les 20 domaines d'action publique avec leurs indicateurs et mini-graphes ;
   * la matrice croisée levier × domaine (impacts calculés par le modèle) ;
   * le journal causal du moteur et les exports JSON/CSV ;
   * un bouton « Rafraîchir les données » qui interroge les API publiques
@@ -617,6 +623,35 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   #section-contrepouvoirs .cp-sieges{height:12px}
   #section-contrepouvoirs .cp-mecanisme summary,#section-contrepouvoirs .cp-details summary{font-size:.8rem}
 }
+/* Comparer : un tableau, des unités nommées, et la couleur qui ne parle jamais
+   seule — le signe et l'unité sont écrits à côté de chaque barre. */
+#section-comparaison .cmp-table{width:100%;border-collapse:collapse;font-size:max(var(--t-min),.76rem)}
+#section-comparaison .cmp-table caption{caption-side:top;text-align:left;color:var(--texte-dim);
+  font-size:max(var(--t-min),.74rem);padding:0 0 6px}
+#section-comparaison .cmp-table th,#section-comparaison .cmp-table td{padding:5px 7px;
+  border-bottom:1px solid var(--border);vertical-align:middle}
+#section-comparaison .cmp-table thead th{color:var(--texte-dim);font-weight:600;text-align:right;white-space:nowrap}
+#section-comparaison .cmp-table thead th:first-child{text-align:left}
+#section-comparaison .cmp-tri{cursor:pointer;background:none;border:0;border-bottom:1px dotted rgba(147,163,189,.5);
+  color:inherit;font:inherit;padding:2px 0}
+#section-comparaison .cmp-tri:hover{border-bottom-style:solid;color:#e6f6ff}
+#section-comparaison th[aria-sort="ascending"] .cmp-tri::after{content:" \25b2"}
+#section-comparaison th[aria-sort="descending"] .cmp-tri::after{content:" \25bc"}
+#section-comparaison .cmp-nom{text-align:left;font-weight:600;color:#e6edf7}
+#section-comparaison .cmp-marque{display:inline-block;margin-left:6px;border:1px solid var(--border);
+  border-radius:999px;padding:0 6px;font-size:max(var(--t-min),.66rem);color:var(--texte-dim);font-weight:400}
+#section-comparaison .cmp-chiffre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right;white-space:nowrap}
+#section-comparaison .cmp-barre{display:block;height:8px;margin-top:3px;border-radius:3px;background:#0f1626;
+  border:1px solid var(--border);overflow:hidden;min-width:64px}
+#section-comparaison .cmp-barre span{display:block;height:100%;background:var(--classe-recettes)}
+#section-comparaison .cmp-barre.negatif span{background:var(--classe-depenses)}
+#section-comparaison .cmp-repere{background:rgba(147,163,189,.06)}
+#section-comparaison .cmp-legende{margin:6px 0 0}
+@media screen and (max-width:640px){
+  #section-comparaison .cmp-table th,#section-comparaison .cmp-table td{font-size:max(var(--t-min),.72rem)}
+  #section-comparaison .cmp-barre{min-height:10px;min-width:48px}
+}
+
 #section-contradiction .objection{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;
   margin:8px 0;padding:8px 10px}
 #section-contradiction .objection summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;
@@ -1215,6 +1250,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     <a href="#section-domaines" class="discret" data-aide="<b>Domaines</b>Les 20 secteurs de l'action publique, notés par écart à la référence.">Domaines</a>
     <a href="#section-matrice" class="discret" data-aide="<b>Matrice</b>L'effet de chaque levier sur chaque domaine, mesuré par différences finies.">Matrice</a>
     <a href="#section-contradiction" class="discret" data-aide="<b>Objections</b>    <a href="#section-contrepouvoirs" class="discret" data-aide="<b>Contre-pouvoirs</b>De combien de voix, de signatures et de jours chaque manœuvre institutionnelle a besoin — et ce qui peut la faire échouer. La composition des deux chambres s'y coche.">Contre-pouvoirs</a>
+    <a href="#section-comparaison" class="discret" data-aide="<b>Comparer</b>Les préréglages du catalogue rejoués par le serveur, côte à côte à leur année finale : ce que chacun dégage, la dette, le déficit, le risque et les alertes. Le tableau se range en cliquant un titre de colonne.">Comparer</a>
 Le registre de la contradiction : la meilleure version de chaque critique, ce que le dépôt concède, ce qu'il maintient, ce qui le ferait changer d'avis — et les quatre contre-modèles auxquels il se mesure.">Objections</a>
   </div>
   </nav>
@@ -1443,6 +1479,16 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
     <p class="nuances-intro">
       <button type="button" class="bouton" onclick="chargerContrepouvoirs()">Charger maintenant</button>
       <span class="aide">La page interroge les deux routes et affiche ce qu'elles renvoient : aucun seuil n'est recalculé dans le navigateur, et une coalition ne fait qu'additionner les sièges que le serveur a donnés.</span>
+    </p>
+  </section>
+  <section class="bloc" id="section-comparaison">
+    <h2>Comparer <span class="aide">les préréglages du catalogue rejoués par le serveur (<code>/api/comparer</code>) à leur année finale : ce que chacun dégage, ce qu'il laisse de dette publique, son déficit, le risque pour la population et le nombre de seuils en alerte — tels que le serveur les calcule, sans recalcul dans la page</span></h2>
+    <div class="nuances-intro" id="comparaison-resume">La comparaison se charge quand la section approche de l'écran.</div>
+    <div id="comparaison-corps"><div class="carte">Chargement de la comparaison…</div></div>
+    <p class="aide cmp-legende">Lecture : le <b>solde des mesures</b> est ce que le scénario dégage ou coûte par an à l'année finale (recettes nouvelles moins dépenses nouvelles) ; la <b>dette</b> et le <b>déficit</b> sont en points de PIB ; le <b>risque population</b> va de 0 à 100 ; les <b>alertes</b> comptent les seuils franchis. La barre se mesure sur le plus fort montant servi ; le signe et l'unité disent le sens, jamais la couleur seule.</p>
+    <p class="nuances-intro">
+      <button type="button" class="bouton" onclick="chargerComparaison()">Charger maintenant</button>
+      <span class="aide">Ce sont les scénarios du catalogue, pas vos réglages : les vôtres sont dans la balance plus haut. Un bouton de colonne range le tableau — ranger n'est pas calculer.</span>
     </p>
   </section>
   <div class="chapitre" id="chapitre-verifier">
@@ -4000,6 +4046,175 @@ function observerContrepouvoirs(){
   observateur.observe(section);
   return true;
 }
+/* ── Comparer : les préréglages du catalogue, côte à côte ────────────────────
+   La route /api/comparer rejoue chaque préréglage et rend son année finale.
+   Cette section n'ajoute rien aux chiffres : elle les range, les étiquette et
+   les met à l'échelle — ranger n'est pas calculer. */
+let COMPARAISON = null;        // la réponse servie par /api/comparer
+let TRI_COMPARAISON = '';      // colonne active du rangement : '' = ordre du catalogue
+let SENS_TRI_COMPARAISON = 1;  // 1 croissant, -1 décroissant
+
+const COLONNES_COMPARAISON = {
+  solde:   { libelle: 'Solde des mesures (Md€/an)' },
+  dette:   { libelle: 'Dette (% PIB)' },
+  deficit: { libelle: 'Déficit (% PIB)' },
+  risque:  { libelle: 'Risque population (/100)' },
+  alertes: { libelle: 'Alertes (nombre)' }
+};
+
+function lignesComparaison(){
+  const registre = COMPARAISON && COMPARAISON.comparaison;
+  return Array.isArray(registre) ? registre : [];
+}
+
+function valeurComparaison(ligne, colonne){
+  /* Une seule porte vers les valeurs servies : le rangement, la barre et les
+     cellules lisent tous par ici, donc la même valeur. */
+  const synthese = (ligne && ligne.synthese) || {};
+  const diagnostic = (ligne && ligne.diagnostic) || {};
+  const servies = {
+    solde: synthese.solde_mesures_mde,
+    dette: synthese.dette_finale_pct,
+    deficit: synthese.deficit_final_pct,
+    risque: diagnostic.risque_population,
+    alertes: diagnostic.nombre_alertes
+  };
+  const valeur = Number(servies[colonne]);
+  return Number.isNaN(valeur) ? 0 : valeur;
+}
+
+function maximumSoldeComparaison(lignes){
+  /* L'échelle des barres : le plus fort montant servi, en valeur absolue. */
+  return (lignes || []).reduce(function (plus, ligne){
+    return Math.max(plus, Math.abs(valeurComparaison(ligne, 'solde')));
+  }, 0);
+}
+
+function lignesRangeesComparaison(){
+  const lignes = lignesComparaison().slice();
+  if (!TRI_COMPARAISON) return lignes;
+  const colonne = TRI_COMPARAISON;
+  const sens = SENS_TRI_COMPARAISON;
+  return lignes.sort(function (a, b){
+    return sens * (valeurComparaison(a, colonne) - valeurComparaison(b, colonne));
+  });
+}
+
+function trierComparaison(colonne){
+  /* Un clic range la colonne, un second l'inverse, un troisième rend l'ordre du
+     catalogue : trois états, aucun calcul. */
+  if (TRI_COMPARAISON !== colonne){
+    TRI_COMPARAISON = colonne;
+    SENS_TRI_COMPARAISON = 1;
+  } else if (SENS_TRI_COMPARAISON === 1){
+    SENS_TRI_COMPARAISON = -1;
+  } else {
+    TRI_COMPARAISON = '';
+    SENS_TRI_COMPARAISON = 1;
+  }
+  rendreComparaison();
+}
+
+function barreSoldeComparaisonHtml(valeur, maximum){
+  const montant = Number(valeur) || 0;
+  const reference = Math.max(Number(maximum) || 0, 1e-9);
+  const part = Math.min(100, Math.round(100 * Math.abs(montant) / reference));
+  return '<span class="cmp-barre' + (montant < 0 ? ' negatif' : '')
+    + '" aria-hidden="true"><span style="width:' + part + '%"></span></span>';
+}
+
+function enteteComparaisonHtml(colonne){
+  const actif = (TRI_COMPARAISON === colonne);
+  const sens = actif ? (SENS_TRI_COMPARAISON === 1 ? 'ascending' : 'descending') : 'none';
+  return '<th scope="col" aria-sort="' + sens + '">'
+    + '<button type="button" class="cmp-tri" onclick="trierComparaison(\'' + colonne + '\')">'
+    + echapperTexte(COLONNES_COMPARAISON[colonne].libelle) + '</button></th>';
+}
+
+function ligneComparaisonHtml(ligne, maximum){
+  /* Le libellé du scénario vient du serveur : il est échappé comme tout texte
+     reçu. Les deux repères sont désignés par leur clé, pas par leur libellé —
+     une clé ne change pas quand la formulation change. */
+  const marques = [];
+  if (ligne.cle === 'statut_quo') marques.push('<span class="cmp-marque">référence (inertie)</span>');
+  if (ligne.cle === 'mandature') marques.push('<span class="cmp-marque">préréglage d\'ouverture</span>');
+  const solde = valeurComparaison(ligne, 'solde');
+  return '<tr class="cmp-ligne' + (ligne.cle === 'statut_quo' ? ' cmp-repere' : '') + '">'
+    + '<th scope="row" class="cmp-nom">' + echapperTexte(ligne.libelle) + marques.join('') + '</th>'
+    + '<td class="cmp-chiffre cmp-solde">' + echapperTexte(fmtSigne(solde, 1))
+    + barreSoldeComparaisonHtml(solde, maximum) + '</td>'
+    + '<td class="cmp-chiffre">' + echapperTexte(fmt(valeurComparaison(ligne, 'dette'), 1)) + ' %</td>'
+    + '<td class="cmp-chiffre">' + echapperTexte(fmt(valeurComparaison(ligne, 'deficit'), 2)) + ' %</td>'
+    + '<td class="cmp-chiffre">' + echapperTexte(fmt(valeurComparaison(ligne, 'risque'), 1)) + ' /100</td>'
+    + '<td class="cmp-chiffre">' + echapperTexte(fmt(valeurComparaison(ligne, 'alertes'), 0)) + '</td>'
+    + '</tr>';
+}
+
+function rendreComparaison(){
+  const zone = document.getElementById('comparaison-corps');
+  const intro = document.getElementById('comparaison-resume');
+  if (!zone) return;
+  const lignes = lignesComparaison();
+  if (!lignes.length){
+    if (intro) intro.innerHTML = '';
+    zone.innerHTML = '<div class="carte">La comparaison n\'a pas répondu '
+      + '(<code>/api/comparer</code>) : la page montre cette absence plutôt que de '
+      + 'recomposer les chiffres dans le navigateur.</div>';
+    return;
+  }
+  const maximum = maximumSoldeComparaison(lignes);
+  if (intro){
+    const horodatage = COMPARAISON && COMPARAISON.horodatage
+      ? String(COMPARAISON.horodatage).slice(0, 10) : '';
+    intro.innerHTML = '<b>' + lignes.length + '</b> scénario(s) du catalogue rejoué(s) par le '
+      + 'serveur, chacun à son année finale'
+      + (horodatage ? ' · contexte du <b>' + echapperTexte(horodatage) + '</b>' : '')
+      + (TRI_COMPARAISON ? ' · rangés par <b>' + echapperTexte(COLONNES_COMPARAISON[TRI_COMPARAISON].libelle)
+        + '</b> (' + (SENS_TRI_COMPARAISON === 1 ? 'croissant' : 'décroissant') + ')'
+        : ' · dans l\'ordre du catalogue') + '.';
+  }
+  const colonnes = ['solde', 'dette', 'deficit', 'risque', 'alertes'];
+  zone.innerHTML = '<table class="cmp-table">'
+    + '<caption>Les scénarios du catalogue, pas vos réglages : chaque ligne est une simulation '
+    + 'complète faite par le serveur.</caption>'
+    + '<thead><tr><th scope="col">Scénario</th>'
+    + colonnes.map(enteteComparaisonHtml).join('') + '</tr></thead><tbody>'
+    + lignesRangeesComparaison().map(function (ligne){
+        return ligneComparaisonHtml(ligne, maximum);
+      }).join('') + '</tbody></table>';
+}
+
+async function chargerComparaison(){
+  /* Une requête, un calcul côté serveur : les préréglages sont rejoués par le
+     moteur, la page n'en refait aucun. Une erreur réseau laisse la comparaison
+     à null, et la section dit pourquoi elle est vide. */
+  const intro = document.getElementById('comparaison-resume');
+  if (intro && !COMPARAISON) intro.innerHTML = 'Chargement de la comparaison…';
+  try{
+    const reponse = await fetch('/api/comparer');
+    const corps = await reponse.json();
+    COMPARAISON = (corps && Array.isArray(corps.comparaison)) ? corps : null;
+  } catch (erreur){
+    COMPARAISON = null;
+  }
+  rendreComparaison();
+}
+
+function observerComparaison(){
+  /* Comme les contre-pouvoirs : la section se remplit quand elle approche de
+     l'écran, et le bouton fait le même travail sans observateur. */
+  if (typeof IntersectionObserver !== 'function' || !document.getElementById) return false;
+  const section = document.getElementById('section-comparaison');
+  if (!section || !section.getBoundingClientRect) return false;
+  const observateur = new IntersectionObserver(function (entrees){
+    if (entrees.some(function (entree){ return entree.isIntersecting; })){
+      observateur.disconnect();
+      chargerComparaison();
+    }
+  }, {rootMargin: '400px'});
+  observateur.observe(section);
+  return true;
+}
 function renderReglagesTouches(){
   const zone = document.getElementById('reglages-corps');
   if (!zone) return;
@@ -6221,9 +6436,8 @@ async function chargerObjections(filtre){
   // retarde rien au démarrage, et le bouton de la section fait le même travail
   // si l'observateur n'existe pas.
   observerContrepouvoirs();
+  observerComparaison();
   // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
-  // a cliqué pour la dernière fois.
-  observerLecture();  // Le repère du sommaire suit le défilement : il dit où l'on est, pas où l'on
   // a cliqué pour la dernière fois.
   observerLecture();
   // La barre collante annonce sa hauteur : les ancres s'y rangent au lieu de

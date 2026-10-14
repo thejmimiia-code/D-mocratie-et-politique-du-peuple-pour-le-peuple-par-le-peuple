@@ -57,12 +57,6 @@ ROUTES_SANS_APPEL: dict[str, str] = {
         "coûte plusieurs secondes au premier appel, et l'interface n'en montre qu'une à la fois. "
         "La route reste entière pour l'API publique et pour la veille en ligne."
     ),
-    "comparer": (
-        "la comparaison des 16 préréglages à l'année finale est exercée par la veille en ligne "
-        "(`outils/verifier-surface-en-ligne.py`) et par les tests du serveur ; dans la page, les "
-        "préréglages se rejouent un par un dans la grille des scénarios, ce qui donne le même "
-        "chiffre sans un second calcul complet."
-    ),
     "instances": (
         "vue courte de `/api/dynamiques`, que la page charge en entier : les 26 autorités y "
         "figurent, avec leurs fondements, leurs effets et leurs boucles de contrôle."

@@ -364,7 +364,7 @@ class TestLigneDeCommande(unittest.TestCase):
 
     def test_le_rapport_de_ci_dit_ce_qu_il_a_mesure(self):
         self.assertIn(budgets.DATE_ANCRAGE, self.tenu.stdout)
-        self.assertIn("plafonds dans la table", self.tenu.stdout)
+        self.assertIn("entrées dans la table", self.tenu.stdout)
         self.assertIn("0 dépassement", self.tenu.stdout)
 
 
