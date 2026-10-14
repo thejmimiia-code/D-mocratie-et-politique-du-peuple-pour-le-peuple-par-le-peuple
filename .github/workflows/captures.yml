@@ -17,6 +17,10 @@ jobs:
   capturer:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
 
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +56,9 @@ jobs:
             || { echo "Le serveur ne sert pas la page attendue" ; cat /tmp/serveur-captures.log ; exit 1 ; }
 
       - name: Photographier
-        run: node outils/captures_ecran.mjs --url http://127.0.0.1:8124/
+        run: |
+          set -o pipefail
+          node outils/captures_ecran.mjs --url http://127.0.0.1:8124/ 2>&1 | tee /tmp/captures.log
 
       - name: Publier les captures
         uses: actions/upload-artifact@v4
@@ -86,3 +92,25 @@ jobs:
             gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$demande/comments" -f body="$corps" > /dev/null
             echo "Commentaire publié sur la demande $demande"
           fi
+
+      - name: Dire l'échec là où il se lit
+        # Les journaux d'un travail vivent derrière une adresse qu'un agent n'a
+        # pas toujours le droit d'ouvrir. L'échec, lui, doit se lire : il part
+        # donc dans le commentaire de la demande de fusion, en clair.
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          demande=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number' || true)
+          if [ -z "$demande" ]; then exit 0 ; fi
+          {
+            echo "<!-- captures-echec -->"
+            echo "### Captures d'écran : échec"
+            echo '```'
+            tail -30 /tmp/serveur-captures.log 2>/dev/null || echo "pas de journal de serveur"
+            echo "---"
+            tail -40 /tmp/captures.log 2>/dev/null || echo "pas de journal de captures"
+            echo '```'
+          } > /tmp/echec.md
+          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$demande/comments" -f body="$(cat /tmp/echec.md)" > /dev/null
+          echo "Échec publié sur la demande $demande"
