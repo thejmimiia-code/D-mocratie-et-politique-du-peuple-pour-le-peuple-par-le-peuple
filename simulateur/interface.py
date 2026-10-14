@@ -74,13 +74,52 @@ HTML_PAGE = r"""<!DOCTYPE html>
 ===ENTETE_PUBLIQUE===
 <style>
 :root{
-  --bg:#0b1220; --panel:#131c2f; --panel-2:#1a2540; --border:#26324d;
-  --texte:#e6edf7; --texte-dim:#93a3bd; --accent:#38bdf8; --vert:#22c55e;
-  --rouge:#ef4444; --ambre:#f59e0b; --violet:#a855f7; --rose:#ec4899;
-  /* Accents M.R.S.C (charte du site : navy #1d3268, bleu #2958a2, vert #456d29,
-     or #e7a126, rouge #e55058). Sur fond sombre, on reprend les variantes
-     éclaircies déjà appliquées par le site à la page intégrée du simulateur :
-     le contraste requis par l'interface sombre est conservé, l'identité aussi. */
+  /* ── Le socle : ce qui ne dépend pas du thème ─────────────────────────────
+     Un thème change des couleurs, pas des mesures. Les mesures vivent ici :
+     une échelle d'espacement (--e-1 … --e-6), trois rayons, une longueur de
+     ligne lisible (--mesure), le plancher de lecture (--t-min) et les plans
+     d'empilement. Une valeur d'espacement écrite en clair dans une règle ne
+     suit plus la densité : c'est ce que cette échelle est venue remplacer. */
+  --t-min:12.5px;
+  --rayon-1:8px; --rayon-2:11px; --rayon-3:14px; --rayon-4:18px;
+  --e-1:5px; --e-2:9px; --e-3:14px; --e-4:22px; --e-5:32px; --e-6:44px;
+  --pad-bloc:var(--e-4);
+  --ecart-section:var(--e-5);
+  --ecart-carte:var(--e-3);
+  --mesure:74ch;
+  --collant:0px;
+  --z-fond:0; --z-contenu:1; --z-sommaire:56; --z-ruban:60;
+  --z-evitement:80; --z-infobulle:120; --z-bandeau:160; --z-modale:200;
+}
+/* ── La densité ──────────────────────────────────────────────────────────────
+   « Aéré » est l'état par défaut : la page respire sans qu'on demande rien.
+   « Compact » rend la place que certains viennent chercher. Les deux modes
+   posent les mêmes jetons, donc aucune règle n'a besoin de connaître le mode :
+   seules ces trois lignes changent, et tout ce qui respire suit. */
+html[data-densite="aere"]{--pad-bloc:var(--e-4);--ecart-section:var(--e-5);--ecart-carte:var(--e-3)}
+html[data-densite="compact"]{--pad-bloc:var(--e-3);--ecart-section:var(--e-4);--ecart-carte:var(--e-2)}
+/* ── Les teintes : quatre thèmes, les mêmes noms ─────────────────────────────
+   Une couleur se déclare ici, jamais dans une règle. Quatre thèmes portent
+   exactement les mêmes jetons — vérifié par un contrôle : un thème à qui il
+   manque un nom afficherait du transparent, sans erreur ni message.
+   Toute teinte dérivée (fond de jeton, encre d'un état) s'écrit dans la règle
+   comme un mélange `color-mix()` des jetons ci-dessous : elle suit donc le
+   thème sans être déclarée quatre fois.
+   Le thème « soir » est l'identité d'origine ; « jour » reprend la charte du
+   site M.R.S.C. (encre #18243b, papier #f5f7fa, bleu #2958a2, vert #456d29) ;
+   « crème » est un papier chaud pour les longues lectures ; « contraste »
+   pousse tout au-delà de 7:1, y compris pour qui lit en plein soleil. */
+:root,[data-theme="soir"]{
+  color-scheme:dark;
+  --bg:#0b1220; --panel:#131c2f; --panel-2:#1a2540; --panel-3:#1f2a45;
+  --border:#26324d; --border-fin:#1b2740; --border-champ:#3b4a66;
+  --creux:#111c2c; --profond:#0d1526; --jeton:#0f1626; --onglet:#0f172a;
+  --ruban:#0e1a30; --ruban-2:#141b33;
+  --entete-1:#1d3268; --entete-2:#26375f; --entete-bord:#344b79; --halo:#16233d;
+  --texte:#e6edf7; --texte-dim:#93a3bd;
+  --accent:#38bdf8; --vert:#22c55e; --rouge:#ef4444; --ambre:#f59e0b;
+  --violet:#b57bf7; --rose:#ec4899;
+  /* Accents M.R.S.C. : l'identité de l'association, telle quelle. */
   --mrsc-navy:#1d3268; --mrsc-bleu:#2958a2; --mrsc-vert:#456d29;
   --mrsc-or:#e7a126; --mrsc-rouge:#e55058;
   --mrsc-bleu-clair:#91b2e6; --mrsc-vert-clair:#9bc77a;
@@ -88,35 +127,111 @@ HTML_PAGE = r"""<!DOCTYPE html>
   /* Une couleur ne porte jamais seule une information : chaque classe a aussi
      un symbole, un libellé écrit et un motif de fond (voir .motif-*). */
   --classe-recettes:#9bc77a; --classe-economies:#9bc77a;
+  /* Les deux plateaux teintés : la teinte calculée par `color-mix` n'est pas
+     comprise partout, celle-ci est le repli écrit en clair, calculé depuis la
+     variable de classe plutôt que recopié d'une autre palette. */
+  --classe-recettes-fond:#233138;
+  --classe-depenses-fond:#2f2a3b;
   --classe-depenses:#ff9295; --classe-regles:#91b2e6; --classe-monde:#f2c15f;
-  /* Teintes de fond des deux plateaux : déclarées ici, une seule fois, et
-     recalculées à l'usage par `color-mix` sur la variable de classe — pour que
-     la page suive la palette en vigueur (celle du site quand elle est
-     intégrée), sans qu'aucune teinte reste accrochée à l'ancienne. */
-  --classe-recettes-fond:rgba(155,199,122,.12);
-  --classe-depenses-fond:rgba(255,146,149,.12);
-  /* ── Socle de lisibilité ──────────────────────────────────────────────────
-     --t-min est le plancher de lecture : aucun texte de la page ne descend
-     sous cette taille, quelle que soit la taille de référence. Il s'applique
-     par `max(var(--t-min), …)` sur les tailles secondaires, pour que les
-     réglages d'agrandissement du texte (125 %, 150 %) continuent de
-     fonctionner au-dessus du plancher. */
-  --t-min:12.5px;
-  /* Palette : une couleur se déclare ici, jamais dans une règle. Un troisième
-     palier de panneau, pour les fonds survolés et les pistes de jauge —
-     `--panel-3:var(--panel-3)` se définissait lui-même : la valeur était
-     invalide, donc transparente, et le survol des cartes ne se voyait pas. */
-  --panel-3:#1f2a45;
-  /* Hauteur de la barre haute collante : les ancres s'en décalent d'autant. */
-  --collant:0px;
-  /* ── Plans d'empilement ───────────────────────────────────────────────────
-     Une seule échelle, déclarée ici et nulle part ailleurs : ce qui doit passer
-     devant le fait par son nom. Les sept nombres qui traînaient dans sept
-     règles (56, 60, 80, 120, 200) sont désormais rangés du fond vers le
-     premier plan, et le bandeau d'impression a sa place réservée. */
-  --z-fond:0; --z-contenu:1; --z-sommaire:56; --z-ruban:60;
-  --z-evitement:80; --z-infobulle:120; --z-bandeau:160; --z-modale:200;
+  /* L'encre posée sur un aplat de couleur pleine, et les ombres : elles
+     changent de sens avec le thème — une ombre noire sur du noir ne se voit
+     pas, une ombre noire sur du blanc salit. */
+  --encre-pleine:#0b1220;
+  /* L'encre qui se lit sur le bandeau de marque M.R.S.C. (onglet
+     actif, boutons pleins) : elle reste claire même dans un thème clair,
+     puisque le bandeau, lui, reste sombre dans les quatre thèmes. */
+  --sur-mrsc:#ffffff;
+  --ombre:rgba(0,0,0,.35); --ombre-forte:rgba(0,0,0,.55);
+  --ombre-modale:rgba(0,0,0,.9); --voile:rgba(2,6,23,.72);
 }
+[data-theme="jour"]{
+  color-scheme:light;
+  --bg:#f2f5fa; --panel:#ffffff; --panel-2:#f5f7fa; --panel-3:#e9eef8;
+  --border:#dbe3ee; --border-fin:#eceff5; --border-champ:#c3cede;
+  --creux:#f7f9fd; --profond:#ffffff; --jeton:#f4f7fc; --onglet:#e8edf6;
+  --ruban:#ffffff; --ruban-2:#f2f5fb;
+  --entete-1:#ffffff; --entete-2:#e8eef9; --entete-bord:#d5dfee; --halo:#eaf0fa;
+  --texte:#18243b; --texte-dim:#5a6980;
+  --accent:#2958a2; --vert:#456d29; --rouge:#b3261e; --ambre:#8a5a00;
+  --violet:#6d28d9; --rose:#b3226b;
+  --mrsc-navy:#1d3268; --mrsc-bleu:#2958a2; --mrsc-vert:#456d29;
+  --mrsc-or:#a8720f; --mrsc-rouge:#c0332f;
+  --mrsc-bleu-clair:#234c8f; --mrsc-vert-clair:#3f5c1f;
+  --mrsc-rouge-clair:#a5211a; --mrsc-or-clair:#8a5a00;
+  --classe-recettes:#3f5c1f; --classe-economies:#3f5c1f;
+  /* Les deux plateaux teintés : la teinte calculée par `color-mix` n'est pas
+     comprise partout, celle-ci est le repli écrit en clair, calculé depuis la
+     variable de classe plutôt que recopié d'une autre palette. */
+  --classe-recettes-fond:#e8ebe4;
+  --classe-depenses-fond:#f4e4e4;
+  --classe-depenses:#a5211a; --classe-regles:#234c8f; --classe-monde:#8a5a00;
+  --encre-pleine:#ffffff;
+  /* L'encre qui se lit sur le bandeau de marque M.R.S.C. (onglet
+     actif, boutons pleins) : elle reste claire même dans un thème clair,
+     puisque le bandeau, lui, reste sombre dans les quatre thèmes. */
+  --sur-mrsc:#ffffff;
+  --ombre:rgba(24,36,59,.10); --ombre-forte:rgba(24,36,59,.18);
+  --ombre-modale:rgba(24,36,59,.30); --voile:rgba(24,36,59,.5);
+}
+[data-theme="creme"]{
+  color-scheme:light;
+  --bg:#f6f1e6; --panel:#fffdf7; --panel-2:#f1ead9; --panel-3:#e8dfca;
+  --border:#e0d7c3; --border-fin:#ece4d3; --border-champ:#cdc2a8;
+  --creux:#faf6ec; --profond:#fffdf8; --jeton:#f4eee1; --onglet:#eae1cd;
+  --ruban:#fffdf7; --ruban-2:#f6f0e2;
+  --entete-1:#fffdf7; --entete-2:#f2e9d6; --entete-bord:#ddd2b8; --halo:#f2e8d4;
+  --texte:#2b2a26; --texte-dim:#5f5a4d;
+  --accent:#2f5d8a; --vert:#4a6b2e; --rouge:#a8342a; --ambre:#7d5a12;
+  --violet:#6b3fa0; --rose:#a8216a;
+  --mrsc-navy:#2b3a5c; --mrsc-bleu:#2f5d8a; --mrsc-vert:#4a6b2e;
+  --mrsc-or:#8a5f14; --mrsc-rouge:#a8342a;
+  --mrsc-bleu-clair:#2c517c; --mrsc-vert-clair:#42602a;
+  --mrsc-rouge-clair:#96301f; --mrsc-or-clair:#7d5a12;
+  --classe-recettes:#42602a; --classe-economies:#42602a;
+  /* Les deux plateaux teintés : la teinte calculée par `color-mix` n'est pas
+     comprise partout, celle-ci est le repli écrit en clair, calculé depuis la
+     variable de classe plutôt que recopié d'une autre palette. */
+  --classe-recettes-fond:#e8eade;
+  --classe-depenses-fond:#f2e4dd;
+  --classe-depenses:#96301f; --classe-regles:#2c517c; --classe-monde:#7d5a12;
+  --encre-pleine:#fffdf7;
+  /* L'encre qui se lit sur le bandeau de marque M.R.S.C. (onglet
+     actif, boutons pleins) : elle reste claire même dans un thème clair,
+     puisque le bandeau, lui, reste sombre dans les quatre thèmes. */
+  --sur-mrsc:#fffdf7;
+  --ombre:rgba(60,50,30,.12); --ombre-forte:rgba(60,50,30,.20);
+  --ombre-modale:rgba(43,42,38,.32); --voile:rgba(43,42,38,.55);
+}
+[data-theme="contraste"]{
+  color-scheme:dark;
+  --bg:#000000; --panel:#000000; --panel-2:#121212; --panel-3:#1c1c1c;
+  --border:#ffffff; --border-fin:#9a9a9a; --border-champ:#ffffff;
+  --creux:#0a0a0a; --profond:#000000; --jeton:#141414; --onglet:#141414;
+  --ruban:#000000; --ruban-2:#141414;
+  --entete-1:#000000; --entete-2:#1c1c1c; --entete-bord:#ffffff; --halo:#000000;
+  --texte:#ffffff; --texte-dim:#e8e8e8;
+  --accent:#7fd0ff; --vert:#7ee787; --rouge:#ff9b95; --ambre:#ffd166;
+  --violet:#d3a6ff; --rose:#ff9ecb;
+  --mrsc-navy:#000a1f; --mrsc-bleu:#1f4f8f; --mrsc-vert:#8fd45a;
+  --mrsc-or:#ffd166; --mrsc-rouge:#ff9b95;
+  --mrsc-bleu-clair:#9dc4ff; --mrsc-vert-clair:#a8e07a;
+  --mrsc-rouge-clair:#ff9b95; --mrsc-or-clair:#ffd166;
+  --classe-recettes:#a8e07a; --classe-economies:#a8e07a;
+  /* Les deux plateaux teintés : la teinte calculée par `color-mix` n'est pas
+     comprise partout, celle-ci est le repli écrit en clair, calculé depuis la
+     variable de classe plutôt que recopié d'une autre palette. */
+  --classe-recettes-fond:#141b0f;
+  --classe-depenses-fond:#1f1312;
+  --classe-depenses:#ff9b95; --classe-regles:#9dc4ff; --classe-monde:#ffd166;
+  --encre-pleine:#000000;
+  /* L'encre qui se lit sur le bandeau de marque M.R.S.C. (onglet
+     actif, boutons pleins) : elle reste claire même dans un thème clair,
+     puisque le bandeau, lui, reste sombre dans les quatre thèmes. */
+  --sur-mrsc:#ffffff;
+  --ombre:rgba(0,0,0,.9); --ombre-forte:rgba(0,0,0,.95);
+  --ombre-modale:rgba(0,0,0,.98); --voile:rgba(0,0,0,.88);
+}
+
 
 /* ── Ce que le navigateur décidait à sa façon ─────────────────────────────
    Une page sombre laissée sans mot reçoit des barres de défilement claires,
@@ -126,16 +241,17 @@ HTML_PAGE = r"""<!DOCTYPE html>
    toutes, et chaque surface qui défile retient son geste : arrivé au bout
    d'un tableau, d'un journal ou d'une modale, le doigt n'entraîne plus la
    page derrière — ni un rechargement par surprise. */
-:root{color-scheme:dark}
+/* Le sens du thème n'est plus dit ici : chaque palette annonce le sien
+   (`color-scheme`), dans les déclarations de thème plus haut. */
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .defilable,.journal,.provenance,.tableau-strate,.bourse-table,
 .overlay,.modale-corps,.graphique,.tableau-defilant,.sommaire,
-.sommaire-liste,.onglets-strates{overscroll-behavior:contain}
+.sommaire-liste,.onglets-strates,.affichage-panneau{overscroll-behavior:contain}
 :focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
 
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Segoe UI',Roboto,system-ui,sans-serif;background:
-  radial-gradient(1200px 600px at 50% -10%,#16233d 0%,var(--bg) 60%);
+  radial-gradient(1200px 600px at 50% -10%,var(--halo) 0%,var(--bg) 60%);
   color:var(--texte);min-height:100vh;padding:18px;line-height:1.45}
 /* Encoches et coins arrondis : en portrait, la marge de 18 px tombe sous la
    barre d'état ; en paysage, sous l'encoche latérale. Les deux déclarations
@@ -146,10 +262,13 @@ body{padding:max(18px,env(safe-area-inset-top,0px)) max(18px,env(safe-area-inset
 /* Titres en drapeau : un titre ne se casse plus sur un mot orphelin. */
 h1,h2,h3{text-wrap:balance}
 p{text-wrap:pretty}
-.conteneur{max-width:1560px;margin:0 auto}
+/* La largeur de lecture : au-delà, l'œil perd la ligne suivante. Les
+   tableaux larges gardent leur défilement, les paragraphes s'arrêtent à
+   --mesure. */
+.conteneur{max-width:1440px;margin:0 auto}
 a{color:var(--accent)}
-header.entete{background:linear-gradient(135deg,var(--mrsc-navy),#26375f);border:1px solid var(--border);
-  border-color:#344b79;border-radius:14px;padding:18px 22px;margin-bottom:14px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+header.entete{background:linear-gradient(135deg,var(--mrsc-navy),var(--entete-2));border:1px solid var(--border);
+  border-color:var(--entete-bord);border-radius:14px;padding:18px 22px;margin-bottom:14px;box-shadow:0 10px 30px var(--ombre-forte)}
 header.entete h1{font-size:1.45rem;letter-spacing:.2px}
 header.entete p{color:var(--texte-dim);font-size:.88rem;margin-top:4px}
 .barre-contexte{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:12px}
@@ -160,28 +279,48 @@ header.entete p{color:var(--texte-dim);font-size:.88rem;margin-top:4px}
   border-radius:7px;padding:4px 7px}
 .pastille{border-radius:999px;padding:4px 12px;font-size:.75rem;border:1px solid var(--border);
   background:var(--panel);color:var(--texte-dim);white-space:nowrap}
-.pastille.live{border-color:var(--vert);color:#bbf7d0;background:rgba(34,197,94,.12)}
-.pastille.reference{border-color:var(--ambre);color:#fde68a;background:rgba(245,158,11,.12)}
-.pastille.mixte{border-color:var(--accent);color:#bae6fd;background:rgba(56,189,248,.12)}
+.pastille.live{border-color:var(--vert);color:color-mix(in srgb,var(--vert) 45%,var(--texte));background:color-mix(in srgb,var(--vert) 12%,transparent)}
+.pastille.reference{border-color:var(--ambre);color:color-mix(in srgb,var(--ambre) 45%,var(--texte));background:color-mix(in srgb,var(--ambre) 12%,transparent)}
+.pastille.mixte{border-color:var(--accent);color:color-mix(in srgb,var(--accent) 45%,var(--texte));background:color-mix(in srgb,var(--accent) 12%,transparent)}
 button{font-family:inherit;font-size:.82rem;cursor:pointer;border-radius:9px;border:1px solid var(--border);
   background:var(--panel-2);color:var(--texte);padding:8px 13px;transition:.15s}
 button:hover:not(:disabled){border-color:var(--accent);transform:translateY(-1px)}
 button:disabled{opacity:.45;cursor:not-allowed}
 button.primaire{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu)}
 button.discret{background:transparent}
-section.bloc{background:var(--panel);border:1px solid var(--border);border-radius:14px;
-  padding:16px;margin-bottom:14px}
-section.bloc > h2{font-size:1rem;margin-bottom:4px;display:flex;align-items:center;gap:8px}
-section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
-.grille{display:grid;gap:12px}
+section.bloc{background:var(--panel);border:1px solid var(--border);border-radius:var(--rayon-3);
+  padding:var(--pad-bloc);margin-bottom:var(--ecart-section)}
+/* ══ La ligne éditoriale ═══════════════════════════════════════════════════
+   Une section se lit en trois temps, comme les pages du site M.R.S.C. : un
+   sur-titre qui dit de quoi il s'agit, un titre qui porte le message, une
+   phrase qui explique sans détour. Avant, l'explication vivait collée dans le
+   titre, dans un corps plus petit : vingt-quatre sections de cette forme
+   faisaient un mur compact. Le sur-titre est décoratif — le titre reste un
+   vrai titre de niveau 2, lu par les lecteurs d'écran et repris par le
+   sommaire : rien n'a été retiré du document, seulement aéré. */
+.eyebrow{display:inline-flex;align-items:center;gap:.5rem;margin:0 0 .4rem;
+  color:var(--accent);font-size:max(var(--t-min),.72rem);font-weight:800;
+  letter-spacing:.13em;text-transform:uppercase;line-height:1.2}
+.eyebrow::before{width:25px;height:3px;border-radius:8px;background:var(--vert);content:""}
+.section-entete{margin-bottom:var(--e-4)}
+.section-entete h2{margin:0;font-size:clamp(1.12rem,.7vw + .96rem,1.55rem);
+  line-height:1.2;letter-spacing:-.01em}
+.section-intro{margin-top:.45rem;max-width:var(--mesure);color:var(--texte-dim);
+  font-size:.95rem;line-height:1.65}
+.grille{display:grid;gap:var(--ecart-carte)}
 .grille.metrics{grid-template-columns:repeat(auto-fit,minmax(158px,1fr))}
 .grille.scenarios{grid-template-columns:repeat(auto-fit,minmax(232px,1fr))}
 .grille.domaines{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
-.carte{background:var(--panel-2);border:1px solid var(--border);border-radius:11px;padding:12px}
+.carte{background:var(--panel-2);border:1px solid var(--border);border-radius:var(--rayon-2);
+  padding:var(--e-3)}
 .metric .valeur{font-size:1.32rem;font-weight:600}
 .metric .libelle{font-size:max(var(--t-min),.74rem);color:var(--texte-dim);text-transform:uppercase;letter-spacing:.4px}
 .metric .delta{font-size:.75rem;margin-top:2px}
-.delta.hausse{color:var(--vert)} .delta.baisse{color:var(--rouge)} .delta.neutre{color:var(--texte-dim)}
+/* Les teintes de sens, écrites en petit texte, sont ramenées vers l'encre
+   du thème : le rouge pur se lisait à 4,0:1 sur le second fond en « soir ».
+   Le repère de couleur reste, la lisibilité passe d'abord. */
+.delta.hausse{color:color-mix(in srgb,var(--vert) 72%,var(--texte))}
+.delta.baisse{color:color-mix(in srgb,var(--rouge) 72%,var(--texte))} .delta.neutre{color:var(--texte-dim)}
 .scenario-card{cursor:pointer;border-left:4px solid var(--accent);transition:.15s}
 .scenario-card:hover{background:var(--panel-3);transform:translateY(-2px)}
 .scenario-card.actif{box-shadow:0 0 0 2px var(--accent) inset;background:var(--panel-3)}
@@ -206,8 +345,8 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
    seule. */
 .motif-uni{background-image:none}
 .motif-hachure,[data-motif="hachure"]{background-image:repeating-linear-gradient(45deg,
-  var(--teinte-motif,rgba(155,199,122,.18)) 0 5px,transparent 5px 11px)}
-.motif-pointille,[data-motif="pointille"]{background-image:radial-gradient(var(--teinte-motif,rgba(145,178,230,.34)) 1px,transparent 1.6px);
+  var(--teinte-motif,color-mix(in srgb,var(--classe-recettes) 18%,transparent)) 0 5px,transparent 5px 11px)}
+.motif-pointille,[data-motif="pointille"]{background-image:radial-gradient(var(--teinte-motif,color-mix(in srgb,var(--mrsc-bleu-clair) 34%,transparent)) 1px,transparent 1.6px);
   background-size:9px 9px}
 .classe-pastille{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--couleur-classe,var(--border));
   border-radius:999px;padding:1px 8px;font-size:max(var(--t-min),.66rem);line-height:1.7;color:var(--couleur-classe,var(--texte));
@@ -238,13 +377,13 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
    reprend la main. La première ligne est le repli des navigateurs sans
    `color-mix` ; la seconde recalcule la teinte sur la variable de classe. */
 .balance-cote.entrees{border-color:var(--classe-recettes);background:var(--classe-recettes-fond);
-  background:color-mix(in srgb,var(--classe-recettes) 14%,transparent)}
+  background:color-mix(in srgb,var(--classe-recettes) 12%,transparent)}
 .balance-cote.sorties{border-color:var(--classe-depenses);background:var(--classe-depenses-fond);
-  background:color-mix(in srgb,var(--classe-depenses) 14%,transparent)}
+  background:color-mix(in srgb,var(--classe-depenses) 12%,transparent)}
 .balance-cote .etiquette{font-size:max(var(--t-min),.68rem);text-transform:uppercase;letter-spacing:.5px;color:var(--texte-dim)}
 .balance-cote .montant{font-size:1.3rem;font-weight:700;font-variant-numeric:tabular-nums}
 .balance-cote .menage{font-size:max(var(--t-min),.7rem);color:var(--texte-dim)}
-.balance-cote .jauge-classe{height:9px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;
+.balance-cote .jauge-classe{height:9px;border-radius:6px;background:color-mix(in srgb,var(--texte) 8%,transparent);overflow:hidden;
   border:1px solid var(--border);margin-top:6px}
 .balance-cote .jauge-classe span{display:block;height:100%}
 .balance-cote.entrees .jauge-classe span{background:var(--classe-recettes)}
@@ -283,13 +422,13 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .cascade-nom .symbole{color:var(--couleur-classe);font-weight:800;font-variant-numeric:tabular-nums}
 .cascade-nom small{font-weight:400;font-size:max(var(--t-min),.64rem);color:var(--texte-dim)}
 .cascade-piste{position:relative;height:17px;border:1px solid var(--border);border-radius:5px;
-  background:rgba(255,255,255,.045);overflow:hidden}
+  background:color-mix(in srgb,var(--texte) 4%,transparent);overflow:hidden}
 .cascade-piste i{position:absolute;display:block;border-radius:4px}
 .cascade-piste .zero{top:-2px;bottom:-2px;width:1px;background:var(--texte-dim);opacity:.45;border-radius:0}
 .cascade-piste .barre{top:1px;bottom:1px;background-color:var(--couleur-classe)}
 .cascade-piste .barre.hachure{background-image:repeating-linear-gradient(45deg,
-  var(--teinte-motif,rgba(255,255,255,.35)) 0 4px,transparent 4px 9px)}
-.cascade-piste .barre.pointille{background-image:radial-gradient(var(--teinte-motif,rgba(255,255,255,.35)) 1px,transparent 1.5px);
+  var(--teinte-motif,color-mix(in srgb,var(--texte) 35%,transparent)) 0 4px,transparent 4px 9px)}
+.cascade-piste .barre.pointille{background-image:radial-gradient(var(--teinte-motif,color-mix(in srgb,var(--texte) 35%,transparent)) 1px,transparent 1.5px);
   background-size:8px 8px}
 .cascade-montant{display:flex;flex-direction:column;align-items:flex-end;text-align:right;
   font-size:.8rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--couleur-classe,var(--texte));white-space:nowrap}
@@ -349,6 +488,7 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
   .cascade-piste .zero{background:CanvasText !important}
   .cascade-montant{color:CanvasText !important}
 }
+
 @media print{
   .classes-filtres,.balance-axe .fleche{display:none}
   .classe-carte,.balance,.balance-cote,.levier,.famille{background:#fff !important;color:#000 !important;
@@ -359,6 +499,7 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
   .cascade-piste .zero{background:#000 !important}
   .cascade-montant{color:#000 !important}
 }
+
 .levier{margin-bottom:11px}
 .levier .ligne{display:flex;justify-content:space-between;gap:8px;font-size:.79rem;align-items:baseline}
 .levier .nom{font-weight:500}
@@ -367,25 +508,27 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .levier input[type=range]{width:100%;margin-top:5px;accent-color:var(--accent)}
 .levier .source{font-size:max(var(--t-min),.66rem);color:var(--texte-dim);font-style:italic;margin-top:3px}
 /* Statut de vérification : lisible sans couleur (texte + bordure), visible à l'impression et à la copie. */
-.vstatut{font-size:max(var(--t-min),.66rem);margin-top:4px;padding:3px 6px;border-radius:4px;border:1px solid #3b4a66;color:#c9d3e6}
+.vstatut{font-size:max(var(--t-min),.66rem);margin-top:4px;padding:3px 6px;border-radius:4px;border:1px solid var(--border-champ);color:var(--texte-dim)}
 .vstatut b{font-weight:600}
-.vstatut .vnote{font-style:italic;color:#9aa8c2;margin-top:2px}
-.vstatut-verifie{border-color:#2f8f5b;color:#bfe9d1}
-.vstatut-partiel{border-color:#4c7fd6}
-.vstatut-date_decalee,.vstatut-non_verifie,.vstatut-inaccessible{border-style:dashed;border-color:#d68a2b;color:#f3d6a6}
-.levier.non-verifie{border-style:dashed;border-color:#d68a2b}
-.saisie-citoyenne{margin-top:5px;font-size:max(var(--t-min),.66rem);border:1px dashed #d68a2b;border-radius:4px;padding:4px 6px;background:repeating-linear-gradient(45deg,rgba(214,138,43,.10) 0 6px,transparent 6px 12px)}
-.saisie-citoyenne summary{cursor:pointer;color:#f3d6a6}
-.saisie-citoyenne input{width:100%;margin:2px 0;background:#0d1526;color:#e8edf7;border:1px solid #3b4a66;border-radius:3px;padding:2px 4px}
-.saisie-texte{font-weight:600;color:#f3d6a6;margin-top:3px}
+.vstatut .vnote{font-style:italic;color:var(--texte-dim);margin-top:2px}
+.vstatut-verifie{border-color:color-mix(in srgb,var(--vert) 70%,var(--panel));color:color-mix(in srgb,var(--vert) 40%,var(--texte))}
+.vstatut-partiel{border-color:var(--accent)}
+.vstatut-date_decalee,.vstatut-non_verifie,.vstatut-inaccessible{border-style:dashed;border-color:color-mix(in srgb,var(--ambre) 65%,var(--panel));color:color-mix(in srgb,var(--ambre) 45%,var(--texte))}
+.levier.non-verifie{border-style:dashed;border-color:color-mix(in srgb,var(--ambre) 65%,var(--panel))}
+.saisie-citoyenne{margin-top:5px;font-size:max(var(--t-min),.66rem);border:1px dashed color-mix(in srgb,var(--ambre) 65%,var(--panel));border-radius:4px;padding:4px 6px;background:repeating-linear-gradient(45deg,color-mix(in srgb,var(--ambre) 10%,transparent) 0 6px,transparent 6px 12px)}
+.saisie-citoyenne summary{cursor:pointer;color:color-mix(in srgb,var(--ambre) 45%,var(--texte))}
+.saisie-citoyenne input{width:100%;margin:2px 0;background:var(--profond);color:var(--texte);border:1px solid var(--border-champ);border-radius:3px;padding:2px 4px}
+.saisie-texte{font-weight:600;color:color-mix(in srgb,var(--ambre) 45%,var(--texte));margin-top:3px}
 .saisie-etiquette{display:none}
+
 @media print{.saisie-etiquette{display:block;font-weight:700;color:#000}.vstatut{color:#000;border-color:#000}}
+
 .levier .ligne .bascule{margin-bottom:0}
 /* Infobulle instantanée : tout réglage ou bouton annoté s'explique au survol
    (et au focus clavier), sans jamais recouvrir les leviers durablement. */
-.infobulle{position:fixed;z-index:var(--z-infobulle);max-width:352px;background:#0d1526;border:1px solid var(--accent);
+.infobulle{position:fixed;z-index:var(--z-infobulle);max-width:352px;background:var(--profond);border:1px solid var(--accent);
   border-radius:11px;padding:9px 11px;font-size:max(var(--t-min),.74rem);line-height:1.5;color:var(--texte);
-  box-shadow:0 16px 38px rgba(2,6,23,.6);pointer-events:none;opacity:0;transition:opacity .08s}
+  box-shadow:0 16px 38px var(--voile);pointer-events:none;opacity:0;transition:opacity .08s}
 .infobulle.visible{opacity:1}
 .infobulle b{color:var(--accent)}
 .infobulle .aide-titre{display:block;margin-bottom:3px;font-weight:600;color:var(--texte)}
@@ -393,7 +536,7 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .levier .bulle-bouton{margin-left:auto;background:transparent;border:1px solid var(--border);border-radius:999px;
   color:var(--texte-dim);font-size:max(var(--t-min),.64rem);padding:1px 8px;line-height:1.5;white-space:nowrap}
 .levier .bulle-bouton:hover{border-color:var(--accent);color:var(--accent);transform:none}
-.levier .bulle-bouton.actif{border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,.12)}
+.levier .bulle-bouton.actif{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
 .bulle-levier{grid-column:1/-1;margin-top:9px;border-top:1px dashed var(--border);padding-top:9px;
   font-size:max(var(--t-min),.72rem);line-height:1.5;color:var(--texte-dim)}
 .bulle-levier b{color:var(--texte)}
@@ -407,10 +550,10 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .bulle-levier .bulle-mesure.bulle-favorable{border-left-color:var(--vert)}
 .bulle-levier .bulle-domaine{display:inline-block;margin:1px 4px 1px 0;padding:1px 7px;border-radius:999px;
   border:1px solid var(--border);font-variant-numeric:tabular-nums}
-.bulle-levier .bulle-domaine.pos{border-color:rgba(34,197,94,.6);color:#86efac}
-.bulle-levier .bulle-domaine.neg{border-color:rgba(239,68,68,.6);color:#fca5a5}
-.bulle-levier .bulle-alerte{color:#fca5a5}
-.bulle-levier .bulle-alerte.vigilance{color:#fcd34d}
+.bulle-levier .bulle-domaine.pos{border-color:color-mix(in srgb,var(--vert) 60%,transparent);color:color-mix(in srgb,var(--vert) 55%,var(--texte))}
+.bulle-levier .bulle-domaine.neg{border-color:color-mix(in srgb,var(--rouge) 60%,transparent);color:color-mix(in srgb,var(--rouge) 50%,var(--texte))}
+.bulle-levier .bulle-alerte{color:color-mix(in srgb,var(--rouge) 50%,var(--texte))}
+.bulle-levier .bulle-alerte.vigilance{color:color-mix(in srgb,var(--ambre) 45%,var(--texte))}
 .bulle-levier .bulle-journal li{font-style:italic}
 .bulle-levier .bulle-note{margin-top:8px;font-style:italic;color:var(--texte-dim)}
 .bulle-levier .bulle-chargement{font-style:italic}
@@ -424,7 +567,7 @@ section.bloc > h2 .aide{font-size:.75rem;color:var(--texte-dim);font-weight:400}
 .domaine .ref{font-size:max(var(--t-min),.7rem);color:var(--texte-dim)}
 .domaine ul{list-style:none;margin-top:9px;font-size:.78rem}
 .domaine li{display:flex;justify-content:space-between;gap:10px;padding:3px 0;
-  border-bottom:1px dashed rgba(147,163,189,.18)}
+  border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 18%,transparent)}
 .domaine li:last-child{border-bottom:none}
 .domaine .indic{color:var(--texte-dim)}
 table{width:100%;border-collapse:collapse;font-size:.78rem}
@@ -433,12 +576,12 @@ th:first-child,td:first-child{text-align:left}
 thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background:var(--panel)}
 .defilable{overflow:auto;max-height:430px;border-radius:9px;border:1px solid var(--border)}
 .matrice td,.matrice th{text-align:center}
-.matrice td.pos{background:rgba(34,197,94,.18);color:#bbf7d0}
-.matrice td.neg{background:rgba(239,68,68,.16);color:#fecaca}
-.matrice td.vide{color:#42506b}
+.matrice td.pos{background:color-mix(in srgb,var(--vert) 18%,transparent);color:color-mix(in srgb,var(--vert) 45%,var(--texte))}
+.matrice td.neg{background:color-mix(in srgb,var(--rouge) 16%,transparent);color:color-mix(in srgb,var(--rouge) 35%,var(--texte))}
+.matrice td.vide{color:var(--texte-dim)}
 .journal{max-height:260px;overflow:auto;font-size:.78rem;color:var(--texte-dim)}
-.journal div{padding:3px 0;border-bottom:1px dashed rgba(147,163,189,.15)}
-.alerte{background:rgba(245,158,11,.1);border:1px solid var(--ambre);color:#fde68a;
+.journal div{padding:3px 0;border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 15%,transparent)}
+.alerte{background:color-mix(in srgb,var(--ambre) 10%,transparent);border:1px solid var(--ambre);color:color-mix(in srgb,var(--ambre) 45%,var(--texte));
   border-radius:10px;padding:9px 12px;font-size:.78rem;margin-bottom:10px}
 .svg-chart{width:100%;height:210px;background:var(--panel-2);border-radius:10px;border:1px solid var(--border)}
 .pied{color:var(--texte-dim);font-size:max(var(--t-min),.72rem);text-align:center;padding:14px 0 26px}
@@ -448,20 +591,20 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .pied.credit{margin-top:0;padding:0 0 26px}
 .pied.credit a{font-weight:700}
 .provenance{font-size:max(var(--t-min),.73rem);color:var(--texte-dim);max-height:210px;overflow:auto}
-.provenance div{padding:3px 0;border-bottom:1px dashed rgba(147,163,189,.15)}
+.provenance div{padding:3px 0;border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 15%,transparent)}
 .onglets{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .onglets button.actif{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu)}
-.onglets-strates{padding:7px;background:#0f172a;border:1px solid var(--border);border-radius:12px}
+.onglets-strates{padding:7px;background:var(--onglet);border:1px solid var(--border);border-radius:12px}
 .onglets-strates button{flex:1 1 118px;min-height:40px}
-.onglets-strates button[aria-selected="true"]{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu);color:#fff}
+.onglets-strates button[aria-selected="true"]{background:linear-gradient(135deg,var(--mrsc-navy),var(--mrsc-bleu));border-color:var(--mrsc-bleu);color:var(--sur-mrsc)}
 .panneau-strate{display:none;min-width:0}
 .panneau-strate.actif{display:block}
 .strate-intro{font-size:.78rem;color:var(--texte-dim);line-height:1.6;margin:2px 0 12px}
 .strate-sous-titre{font-size:.84rem;margin:14px 0 7px;color:var(--texte)}
 .tableau-strate{overflow:auto;max-height:430px;border:1px solid var(--border);border-radius:9px}
 .tableau-strate table{min-width:600px}
-.tableau-strate td.delta-pos{color:#86efac}.tableau-strate td.delta-neg{color:#fca5a5}
-.note-source{font-size:max(var(--t-min),.7rem);line-height:1.55;color:var(--texte-dim);margin:8px 0;padding:8px 10px;background:rgba(15,23,42,.7);border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
+.tableau-strate td.delta-pos{color:color-mix(in srgb,var(--vert) 55%,var(--texte))}.tableau-strate td.delta-neg{color:color-mix(in srgb,var(--rouge) 50%,var(--texte))}
+.note-source{font-size:max(var(--t-min),.7rem);line-height:1.55;color:var(--texte-dim);margin:8px 0;padding:8px 10px;background:var(--voile);border-left:3px solid var(--accent);border-radius:0 8px 8px 0}
 .grille-profil{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:9px;margin:10px 0}
 .champ-profil{display:flex;flex-direction:column;gap:4px;font-size:max(var(--t-min),.72rem);color:var(--texte-dim)}
 .champ-profil input,.champ-profil select{width:100%;padding:7px 9px;border-radius:8px;border:1px solid var(--border);background:var(--panel-2);color:var(--texte);font:inherit}
@@ -469,35 +612,39 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .champ-profil input[readonly]{border-style:dashed;opacity:.86;cursor:default}
 .profil-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:9px 0}
 .range-bourse{width:120px;accent-color:var(--accent)}
-.saisie-euros{max-width:125px;padding:5px 7px;border:1px solid var(--border);border-radius:7px;background:#0d1526;color:var(--texte);font:inherit}
+.saisie-euros{max-width:125px;padding:5px 7px;border:1px solid var(--border);border-radius:7px;background:var(--profond);color:var(--texte);font:inherit}
 .bourse-table{max-height:520px}
 .bourse-table table{min-width:860px}
 .bourse-table td,.bourse-table th{vertical-align:middle}
 .marches-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:10px 0}
 .marches-actions .pastille{white-space:normal}
-.marches-table-row .positif{color:#86efac}.marches-table-row .negatif{color:#fca5a5}
+.marches-table-row .positif{color:color-mix(in srgb,var(--vert) 55%,var(--texte))}.marches-table-row .negatif{color:color-mix(in srgb,var(--rouge) 50%,var(--texte))}
 /* ── Console de veille permanente ─────────────────────────────────────── */
 .console{border-width:2px}
 /* Ruban de veille : une seule ligne collante, jamais devant les leviers. */
 .ruban-veille{position:sticky;top:0;z-index:var(--z-ruban);display:flex;align-items:center;gap:10px;
-  flex-wrap:wrap;background:linear-gradient(135deg,#0e1a30,#141b33);border:1px solid var(--border);
-  border-radius:12px;padding:7px 12px;margin-bottom:12px;box-shadow:0 8px 22px rgba(0,0,0,.45)}
+  flex-wrap:wrap;background:linear-gradient(135deg,var(--ruban),var(--ruban-2));border:1px solid var(--border);
+  border-radius:12px;padding:7px 12px;margin-bottom:12px;box-shadow:0 8px 22px var(--ombre-forte)}
 .ruban-veille .ruban-titre{font-size:max(var(--t-min),.68rem);text-transform:uppercase;letter-spacing:.6px;
   color:var(--texte-dim);white-space:nowrap}
 .ruban-veille .console-verdict{font-size:.78rem;padding:4px 12px;max-width:520px;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ruban-veille.niveau-vigilance{border-color:rgba(245,158,11,.65)}
-.ruban-veille.niveau-risque{border-color:rgba(239,68,68,.7)}
+.ruban-veille.niveau-vigilance{border-color:color-mix(in srgb,var(--ambre) 65%,transparent)}
+.ruban-veille.niveau-risque{border-color:color-mix(in srgb,var(--rouge) 70%,transparent)}
 .ruban-veille.niveau-hors_sol{border-color:var(--rouge);
-  box-shadow:0 0 0 3px rgba(239,68,68,.25),0 8px 22px rgba(0,0,0,.5)}
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--rouge) 25%,transparent),0 8px 22px var(--ombre-forte)}
 .ruban-strates{display:flex;gap:5px;align-items:center}
 .ruban-strate{width:26px;height:22px;border-radius:6px;border:1px solid var(--border);
   font-size:max(var(--t-min),.62rem);display:flex;align-items:center;justify-content:center;cursor:help;
   background:var(--panel-2);color:var(--texte-dim);font-weight:700}
-.ruban-strate.niveau-favorable,.ruban-strate.niveau-tolerable{background:rgba(34,197,94,.22);color:#bbf7d0;border-color:rgba(34,197,94,.5)}
-.ruban-strate.niveau-vigilance{background:rgba(245,158,11,.22);color:#fde68a;border-color:rgba(245,158,11,.55)}
-.ruban-strate.niveau-risque{background:rgba(239,68,68,.24);color:#fecaca;border-color:rgba(239,68,68,.6)}
-.ruban-strate.niveau-hors_sol{background:var(--rouge);color:#fff;border-color:#fff}
+.ruban-strate.niveau-favorable,.ruban-strate.niveau-tolerable{background:color-mix(in srgb,var(--vert) 22%,transparent);color:color-mix(in srgb,var(--vert) 45%,var(--texte));border-color:color-mix(in srgb,var(--vert) 50%,transparent)}
+.ruban-strate.niveau-vigilance{background:color-mix(in srgb,var(--ambre) 22%,transparent);color:color-mix(in srgb,var(--ambre) 45%,var(--texte));border-color:color-mix(in srgb,var(--ambre) 55%,transparent)}
+.ruban-strate.niveau-risque{background:color-mix(in srgb,var(--rouge) 24%,transparent);color:color-mix(in srgb,var(--rouge) 35%,var(--texte));border-color:color-mix(in srgb,var(--rouge) 60%,transparent)}
+/* Sur un fond rouge vif, c'est l'encre du thème qui tranche : sombre en
+   soir, blanche en jour et crème, noire en contraste. Un blanc figé se lisait
+   mal en « soir » (3,8:1) et très mal en « contraste » (2,0:1). */
+.ruban-strate.niveau-hors_sol{background:var(--rouge);color:var(--encre-pleine);
+  border-color:var(--encre-pleine)}
 .ruban-pop{font-size:max(var(--t-min),.72rem);color:var(--texte-dim);white-space:nowrap}
 .ruban-pop b{font-variant-numeric:tabular-nums}
 .ruban-veille .ruban-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
@@ -510,114 +657,114 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .famille.compacte{padding:9px 10px}
 .famille.compacte h3{font-size:.76rem;margin-bottom:6px;padding-bottom:4px}
 .levier.compact{margin-bottom:6px;display:grid;grid-template-columns:1fr 96px 74px auto;
-  gap:6px;align-items:center;padding-bottom:5px;border-bottom:1px dashed rgba(147,163,189,.14)}
+  gap:6px;align-items:center;padding-bottom:5px;border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 14%,transparent)}
 .levier.compact .nom{font-size:max(var(--t-min),.73rem)}
 .levier.compact input[type=range]{margin-top:0}
 .levier.compact .valeur{font-size:max(var(--t-min),.72rem);text-align:right}
 .levier.compact .desc,.levier.compact .source,.levier .articles{display:none}
 .levier:not(.compact) .articles{display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:4px}
-.levier .articles-legende{font-size:max(var(--t-min),.6rem);color:#64748b;text-transform:uppercase;letter-spacing:.04em}
-.levier .article{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:max(var(--t-min),.62rem);color:#8ab4ff;
-  border:1px solid #2b3d5c;border-radius:6px;padding:0 5px;text-decoration:none;background:#111c2c}
-.levier .article:hover{border-color:#8ab4ff;color:#c8dbff}
-.levier .articles-hors{font-size:max(var(--t-min),.6rem);color:#64748b;font-style:italic}
+.levier .articles-legende{font-size:max(var(--t-min),.6rem);color:var(--texte-dim);text-transform:uppercase;letter-spacing:.04em}
+.levier .article{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:max(var(--t-min),.62rem);color:color-mix(in srgb,var(--accent) 45%,var(--texte));
+  border:1px solid var(--border);border-radius:6px;padding:0 5px;text-decoration:none;background:var(--creux)}
+.levier .article:hover{border-color:color-mix(in srgb,var(--accent) 45%,var(--texte));color:color-mix(in srgb,var(--accent) 35%,var(--texte))}
+.levier .articles-hors{font-size:max(var(--t-min),.6rem);color:var(--texte-dim);font-style:italic}
 /* Nuances institutionnelles : la couche qui traduit les curseurs en droit. */
-#section-nuances .nuances-intro{color:#9fb0cc;font-size:.8rem;margin:2px 0 10px}
+#section-nuances .nuances-intro{color:var(--texte-dim);font-size:.8rem;margin:2px 0 10px}
 #section-nuances table{width:100%;border-collapse:collapse;font-size:.76rem}
-#section-nuances th{color:var(--texte-dim);text-align:left;font-weight:600;padding:4px 6px;border-bottom:1px solid #2b3d5c}
-#section-nuances td{padding:4px 6px;border-bottom:1px solid #1b2740;vertical-align:top}
+#section-nuances th{color:var(--texte-dim);text-align:left;font-weight:600;padding:4px 6px;border-bottom:1px solid var(--border)}
+#section-nuances td{padding:4px 6px;border-bottom:1px solid var(--border-fin);vertical-align:top}
 #section-nuances td.chiffre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
-#section-nuances .plus{color:#7ee0a3}
-#section-nuances .moins{color:#f3a0a0}
-#section-nuances .ok{color:#7ee0a3}
-#section-nuances .hors{color:#f3a0a0;font-weight:700}
-#section-nuances .fentes,#section-nuances .limites{font-size:max(var(--t-min),.74rem);color:#9fb0cc}
-#section-nuances .garde-fous{border:1px solid #7f1d1d;background:#2a1214;border-radius:8px;
-  padding:8px 10px;margin:8px 0;font-size:.76rem;color:#fecaca}
-#section-nuances .puce-indice{display:inline-block;border:1px solid #2b3d5c;border-radius:8px;
-  padding:4px 8px;margin:0 6px 6px 0;background:#111c2c;font-size:max(var(--t-min),.74rem)}
+#section-nuances .plus{color:color-mix(in srgb,var(--vert) 60%,var(--texte))}
+#section-nuances .moins{color:color-mix(in srgb,var(--rouge) 45%,var(--texte))}
+#section-nuances .ok{color:color-mix(in srgb,var(--vert) 60%,var(--texte))}
+#section-nuances .hors{color:color-mix(in srgb,var(--rouge) 45%,var(--texte));font-weight:700}
+#section-nuances .fentes,#section-nuances .limites{font-size:max(var(--t-min),.74rem);color:var(--texte-dim)}
+#section-nuances .garde-fous{border:1px solid color-mix(in srgb,var(--rouge) 55%,var(--border));background:color-mix(in srgb,var(--rouge) 10%,transparent);border-radius:8px;
+  padding:8px 10px;margin:8px 0;font-size:.76rem;color:color-mix(in srgb,var(--rouge) 35%,var(--texte))}
+#section-nuances .puce-indice{display:inline-block;border:1px solid var(--border);border-radius:8px;
+  padding:4px 8px;margin:0 6px 6px 0;background:var(--creux);font-size:max(var(--t-min),.74rem)}
 #section-nuances .puce-indice b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
 /* Citations : le texte n'est jamais recopié ici, seul le lien vers la fiche servie. */
-#section-nuances a.article,#section-verrous a.article{color:#bae6fd;border-bottom:1px dotted #38bdf8;
+#section-nuances a.article,#section-verrous a.article{color:color-mix(in srgb,var(--accent) 45%,var(--texte));border-bottom:1px dotted var(--accent);
   text-decoration:none;font-style:normal}
 #section-nuances a.article:hover,#section-verrous a.article:hover{border-bottom-style:solid}
 #section-nuances .reglages-touches{display:grid;gap:6px;margin-top:6px}
-#section-nuances .reglage-touche{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;
+#section-nuances .reglage-touche{background:var(--panel);border:1px solid var(--border);border-radius:8px;
   padding:7px 9px;font-size:.76rem}
 #section-nuances .badge-cible{display:inline-block;margin:1px 4px 1px 0;padding:1px 7px;
-  border-radius:999px;border:1px solid #2b3d5c;font-variant-numeric:tabular-nums}
+  border-radius:999px;border:1px solid var(--border);font-variant-numeric:tabular-nums}
 #section-verrous .verrou-groupe{margin-top:12px}
 #section-verrous .verrou-titre{font-size:max(var(--t-min),.72rem);text-transform:uppercase;letter-spacing:.5px;
-  color:#9fb0cc;margin-bottom:4px}
+  color:var(--texte-dim);margin-bottom:4px}
 #section-verrous ul{list-style:none;margin:0;padding:0}
 #section-verrous li{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:.78rem;
-  border-bottom:1px dashed rgba(147,163,189,.18);padding:4px 0}
-#section-verrous li.touche{border-left:3px solid #ef4444;padding-left:8px}
-#section-verrous li.intact{border-left:3px solid #2f8f5b;padding-left:8px}
-#section-verrous li.hors{border-left:3px dashed #d68a2b;padding-left:8px}
+  border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 18%,transparent);padding:4px 0}
+#section-verrous li.touche{border-left:3px solid var(--rouge);padding-left:8px}
+#section-verrous li.intact{border-left:3px solid color-mix(in srgb,var(--vert) 70%,var(--panel));padding-left:8px}
+#section-verrous li.hors{border-left:3px dashed color-mix(in srgb,var(--ambre) 65%,var(--panel));padding-left:8px}
 #section-verrous .verrou-seuil{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   white-space:nowrap}
 #section-verrous .puce-reglage{display:inline-block;margin:0 3px;padding:1px 6px;border-radius:999px;
-  border:1px solid #2b3d5c;font-size:max(var(--t-min),.7rem);font-style:normal}
-#section-contrepouvoirs .cp-intro{color:#9fb0cc;font-size:max(var(--t-min),.8rem);margin:2px 0 8px}
+  border:1px solid var(--border);font-size:max(var(--t-min),.7rem);font-style:normal}
+#section-contrepouvoirs .cp-intro{color:var(--texte-dim);font-size:max(var(--t-min),.8rem);margin:2px 0 8px}
 #section-contrepouvoirs .cp-chambres{display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:10px;margin:8px 0}
-#section-contrepouvoirs .cp-chambre{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;padding:8px 10px}
+#section-contrepouvoirs .cp-chambre{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 #section-contrepouvoirs .cp-chambre h4{margin:0 0 6px;font-size:.84rem;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
 #section-contrepouvoirs .cp-seuils{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0}
-#section-contrepouvoirs .cp-seuil{display:inline-block;border:1px solid #2b3d5c;border-radius:999px;padding:1px 8px;
-  font-size:max(var(--t-min),.7rem);color:#cfe0f5;white-space:nowrap}
+#section-contrepouvoirs .cp-seuil{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 8px;
+  font-size:max(var(--t-min),.7rem);color:var(--texte);white-space:nowrap}
 #section-contrepouvoirs .cp-seuil b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-#section-contrepouvoirs .cp-sieges{display:flex;height:16px;border-radius:4px;overflow:hidden;border:1px solid #2b3d5c;margin:6px 0 4px}
+#section-contrepouvoirs .cp-sieges{display:flex;height:16px;border-radius:4px;overflow:hidden;border:1px solid var(--border);margin:6px 0 4px}
 #section-contrepouvoirs .cp-sieges span{background:hsl(var(--teinte),58%,52%);min-width:3px}  /* la syntaxe à virgules, comprise partout */
 #section-contrepouvoirs .cp-groupes{display:flex;flex-wrap:wrap;gap:4px}
-#section-contrepouvoirs .cp-groupe{cursor:pointer;border:1px solid #2b3d5c;border-radius:999px;background:#0f1626;
-  color:#cfe0f5;padding:2px 8px;font-size:max(var(--t-min),.7rem);display:inline-flex;gap:5px;align-items:center}
-#section-contrepouvoirs .cp-groupe i{font-style:normal;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#9fb0cc}
-#section-contrepouvoirs .cp-groupe[aria-pressed="true"]{border-color:#38bdf8;background:rgba(56,189,248,.16);color:#e6f6ff}
-#section-contrepouvoirs .cp-groupe[aria-pressed="true"] i{color:#bae6fd}
-#section-contrepouvoirs .cp-coalition{margin-top:6px;font-size:max(var(--t-min),.74rem);color:#dbe6f7;line-height:1.45;
-  border-top:1px dashed rgba(147,163,189,.25);padding-top:6px}
+#section-contrepouvoirs .cp-groupe{cursor:pointer;border:1px solid var(--border);border-radius:999px;background:var(--jeton);
+  color:var(--texte);padding:2px 8px;font-size:max(var(--t-min),.7rem);display:inline-flex;gap:5px;align-items:center}
+#section-contrepouvoirs .cp-groupe i{font-style:normal;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--texte-dim)}
+#section-contrepouvoirs .cp-groupe[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);color:color-mix(in srgb,var(--accent) 30%,var(--texte))}
+#section-contrepouvoirs .cp-groupe[aria-pressed="true"] i{color:color-mix(in srgb,var(--accent) 45%,var(--texte))}
+#section-contrepouvoirs .cp-coalition{margin-top:6px;font-size:max(var(--t-min),.74rem);color:var(--texte-dim);line-height:1.45;
+  border-top:1px dashed color-mix(in srgb,var(--texte-dim) 25%,transparent);padding-top:6px}
 #section-contrepouvoirs .cp-coalition b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
-#section-contrepouvoirs .cp-coherence{font-size:max(var(--t-min),.74rem);color:#7ee0a3;margin:6px 0}
-#section-contrepouvoirs .cp-coherence.ko{color:#f3a0a0}
+#section-contrepouvoirs .cp-coherence{font-size:max(var(--t-min),.74rem);color:color-mix(in srgb,var(--vert) 60%,var(--texte));margin:6px 0}
+#section-contrepouvoirs .cp-coherence.ko{color:color-mix(in srgb,var(--rouge) 45%,var(--texte))}
 #section-contrepouvoirs .cp-familles{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 4px}
-#section-contrepouvoirs .cp-famille{cursor:pointer;border:1px solid #2b3d5c;border-radius:999px;background:#0f1626;
-  color:#cfe0f5;padding:2px 10px;font-size:max(var(--t-min),.72rem)}
-#section-contrepouvoirs .cp-famille b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#9fb0cc}
-#section-contrepouvoirs .cp-famille[aria-pressed="true"]{border-color:#38bdf8;background:rgba(56,189,248,.16)}
-#section-contrepouvoirs .cp-famille[aria-pressed="true"] b{color:#bae6fd}
-#section-contrepouvoirs .cp-mecanisme{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;margin:8px 0;padding:8px 10px}
+#section-contrepouvoirs .cp-famille{cursor:pointer;border:1px solid var(--border);border-radius:999px;background:var(--jeton);
+  color:var(--texte);padding:2px 10px;font-size:max(var(--t-min),.72rem)}
+#section-contrepouvoirs .cp-famille b{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--texte-dim)}
+#section-contrepouvoirs .cp-famille[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent)}
+#section-contrepouvoirs .cp-famille[aria-pressed="true"] b{color:color-mix(in srgb,var(--accent) 45%,var(--texte))}
+#section-contrepouvoirs .cp-mecanisme{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin:8px 0;padding:8px 10px}
 #section-contrepouvoirs .cp-mecanisme summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:.84rem}
 #section-contrepouvoirs .cp-mecanisme[open] summary{margin-bottom:6px}
 #section-contrepouvoirs .cp-etiquette{font-size:max(var(--t-min),.68rem);text-transform:uppercase;letter-spacing:.4px;
-  color:#9fb0cc;border:1px solid #2b3d5c;border-radius:999px;padding:1px 7px;white-space:nowrap}
-#section-contrepouvoirs .cp-champ{margin:5px 0;font-size:.8rem;line-height:1.45;color:#dbe6f7}
+  color:var(--texte-dim);border:1px solid var(--border);border-radius:999px;padding:1px 7px;white-space:nowrap}
+#section-contrepouvoirs .cp-champ{margin:5px 0;font-size:.8rem;line-height:1.45;color:var(--texte-dim)}
 #section-contrepouvoirs .cp-champ b{display:block;font-size:max(var(--t-min),.7rem);text-transform:uppercase;
-  letter-spacing:.4px;color:#9fb0cc;font-weight:600}
+  letter-spacing:.4px;color:var(--texte-dim);font-weight:600}
 #section-contrepouvoirs .cp-seuils-liste{list-style:none;margin:4px 0 0;padding:0}
-#section-contrepouvoirs .cp-seuils-liste li{border-bottom:1px dashed rgba(147,163,189,.18);padding:4px 0;font-size:.78rem}
-#section-contrepouvoirs .cp-seuil-ligne{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;color:#e6f6ff}
-#section-contrepouvoirs .cp-citation{display:block;color:#9fb0cc;font-size:max(var(--t-min),.74rem);margin-top:2px}
+#section-contrepouvoirs .cp-seuils-liste li{border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 18%,transparent);padding:4px 0;font-size:.78rem}
+#section-contrepouvoirs .cp-seuil-ligne{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;color:color-mix(in srgb,var(--accent) 30%,var(--texte))}
+#section-contrepouvoirs .cp-citation{display:block;color:var(--texte-dim);font-size:max(var(--t-min),.74rem);margin-top:2px}
 #section-contrepouvoirs .cp-puces{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
-#section-contrepouvoirs .cp-puce{display:inline-block;border:1px solid #2b3d5c;border-radius:999px;padding:1px 7px;
-  font-size:max(var(--t-min),.7rem);color:#cfe0f5}
-#section-contrepouvoirs a.article{color:#bae6fd;border-bottom:1px dotted #38bdf8;text-decoration:none}
+#section-contrepouvoirs .cp-puce{display:inline-block;border:1px solid var(--border);border-radius:999px;padding:1px 7px;
+  font-size:max(var(--t-min),.7rem);color:var(--texte)}
+#section-contrepouvoirs a.article{color:color-mix(in srgb,var(--accent) 45%,var(--texte));border-bottom:1px dotted var(--accent);text-decoration:none}
 #section-contrepouvoirs a.article:hover{border-bottom-style:solid}
 #section-contrepouvoirs .cp-table{width:100%;border-collapse:collapse;font-size:max(var(--t-min),.76rem)}
-#section-contrepouvoirs .cp-table th{color:#9fb0cc;text-align:left;font-weight:600;padding:4px 6px;border-bottom:1px solid #2b3d5c}
-#section-contrepouvoirs .cp-table td{padding:4px 6px;border-bottom:1px solid #1b2740;vertical-align:top}
+#section-contrepouvoirs .cp-table th{color:var(--texte-dim);text-align:left;font-weight:600;padding:4px 6px;border-bottom:1px solid var(--border)}
+#section-contrepouvoirs .cp-table td{padding:4px 6px;border-bottom:1px solid var(--border-fin);vertical-align:top}
 #section-contrepouvoirs .cp-table td.chiffre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap}
 #section-contrepouvoirs .cp-bloc{margin:14px 0}
 #section-contrepouvoirs .cp-bloc > h3{margin:0 0 6px;font-size:.88rem;letter-spacing:.3px}
 #section-contrepouvoirs .cp-sous-bloc{margin:12px 0}
 #section-contrepouvoirs .cp-sous-titre{margin:10px 0 2px;font-size:max(var(--t-min),.78rem);text-transform:uppercase;
-  letter-spacing:.4px;color:#9fb0cc;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
-#section-contrepouvoirs .cp-details{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;margin:6px 0;padding:7px 10px}
+  letter-spacing:.4px;color:var(--texte-dim);display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+#section-contrepouvoirs .cp-details{background:var(--panel);border:1px solid var(--border);border-radius:8px;margin:6px 0;padding:7px 10px}
 #section-contrepouvoirs .cp-details summary{cursor:pointer;font-size:.8rem;display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
 #section-contrepouvoirs .cp-etapes{list-style:none;margin:4px 0 0;padding:0}
-#section-contrepouvoirs .cp-etapes li{border-bottom:1px dashed rgba(147,163,189,.18);padding:3px 0;
+#section-contrepouvoirs .cp-etapes li{border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 18%,transparent);padding:3px 0;
   font-size:max(var(--t-min),.75rem);display:flex;flex-wrap:wrap;gap:6px;align-items:baseline}
-#section-contrepouvoirs .cp-jours{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:#f3d08a;white-space:nowrap}
+#section-contrepouvoirs .cp-jours{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:color-mix(in srgb,var(--ambre) 45%,var(--texte));white-space:nowrap}
 @media screen and (max-width:640px){
   #section-contrepouvoirs .cp-chambres{grid-template-columns:1fr}
   #section-contrepouvoirs .cp-sieges{height:12px}
@@ -632,71 +779,71 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   border-bottom:1px solid var(--border);vertical-align:middle}
 #section-comparaison .cmp-table thead th{color:var(--texte-dim);font-weight:600;text-align:right;white-space:nowrap}
 #section-comparaison .cmp-table thead th:first-child{text-align:left}
-#section-comparaison .cmp-tri{cursor:pointer;background:none;border:0;border-bottom:1px dotted rgba(147,163,189,.5);
+#section-comparaison .cmp-tri{cursor:pointer;background:none;border:0;border-bottom:1px dotted color-mix(in srgb,var(--texte-dim) 50%,transparent);
   color:inherit;font:inherit;padding:2px 0}
-#section-comparaison .cmp-tri:hover{border-bottom-style:solid;color:#e6f6ff}
+#section-comparaison .cmp-tri:hover{border-bottom-style:solid;color:color-mix(in srgb,var(--accent) 30%,var(--texte))}
 #section-comparaison th[aria-sort="ascending"] .cmp-tri::after{content:" \25b2"}
 #section-comparaison th[aria-sort="descending"] .cmp-tri::after{content:" \25bc"}
-#section-comparaison .cmp-nom{text-align:left;font-weight:600;color:#e6edf7}
+#section-comparaison .cmp-nom{text-align:left;font-weight:600;color:var(--texte)}
 #section-comparaison .cmp-marque{display:inline-block;margin-left:6px;border:1px solid var(--border);
   border-radius:999px;padding:0 6px;font-size:max(var(--t-min),.66rem);color:var(--texte-dim);font-weight:400}
 #section-comparaison .cmp-chiffre{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;text-align:right;white-space:nowrap}
-#section-comparaison .cmp-barre{display:block;height:8px;margin-top:3px;border-radius:3px;background:#0f1626;
+#section-comparaison .cmp-barre{display:block;height:8px;margin-top:3px;border-radius:3px;background:var(--jeton);
   border:1px solid var(--border);overflow:hidden;min-width:64px}
 #section-comparaison .cmp-barre span{display:block;height:100%;background:var(--classe-recettes)}
 #section-comparaison .cmp-barre.negatif span{background:var(--classe-depenses)}
-#section-comparaison .cmp-repere{background:rgba(147,163,189,.06)}
+#section-comparaison .cmp-repere{background:color-mix(in srgb,var(--texte-dim) 6%,transparent)}
 #section-comparaison .cmp-legende{margin:6px 0 0}
 @media screen and (max-width:640px){
   #section-comparaison .cmp-table th,#section-comparaison .cmp-table td{font-size:max(var(--t-min),.72rem)}
   #section-comparaison .cmp-barre{min-height:10px;min-width:48px}
 }
 
-#section-contradiction .objection{background:#131c2f;border:1px solid #2b3d5c;border-radius:8px;
+#section-contradiction .objection{background:var(--panel);border:1px solid var(--border);border-radius:8px;
   margin:8px 0;padding:8px 10px}
 #section-contradiction .objection summary{cursor:pointer;display:flex;flex-wrap:wrap;gap:8px;
   align-items:baseline;font-size:.84rem}
 #section-contradiction .objection[open] summary{margin-bottom:6px}
 #section-contradiction .objection h4{margin:8px 0 3px;font-size:max(var(--t-min),.74rem);text-transform:uppercase;
   letter-spacing:.4px;color:var(--texte-dim);font-weight:600}
-#section-contradiction .objection p{margin:0;font-size:.8rem;line-height:1.45;color:#dbe6f7}
-#section-contradiction .objection .attaque{color:#9fb0cc;font-size:.76rem}
+#section-contradiction .objection p{margin:0;font-size:.8rem;line-height:1.45;color:var(--texte-dim)}
+#section-contradiction .objection .attaque{color:var(--texte-dim);font-size:.76rem}
 #section-contradiction .numero{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
   color:var(--texte-dim)}
 #section-contradiction .badge-statut{display:inline-block;padding:1px 8px;border-radius:999px;
-  border:1px solid #2b3d5c;font-size:max(var(--t-min),.7rem)}
-#section-contradiction .badge-statut.ok{color:#7ee0a3;border-color:#2f8f5b}
-#section-contradiction .badge-statut.partiel{color:#f3c98b;border-color:#8f6b2f}
-#section-contradiction .badge-statut.concede{color:#bae6fd;border-color:#2b6c8f}
-#section-contradiction .badge-statut.encours{color:#e6d18b;border-color:#7f6b1d}
-#section-contradiction .badge-statut.ouverte{color:#c3cbdb;border-color:#40506e}
+  border:1px solid var(--border);font-size:max(var(--t-min),.7rem)}
+#section-contradiction .badge-statut.ok{color:color-mix(in srgb,var(--vert) 60%,var(--texte));border-color:color-mix(in srgb,var(--vert) 70%,var(--panel))}
+#section-contradiction .badge-statut.partiel{color:color-mix(in srgb,var(--ambre) 45%,var(--texte));border-color:color-mix(in srgb,var(--ambre) 55%,var(--border))}
+#section-contradiction .badge-statut.concede{color:color-mix(in srgb,var(--accent) 45%,var(--texte));border-color:color-mix(in srgb,var(--accent) 55%,var(--border))}
+#section-contradiction .badge-statut.encours{color:color-mix(in srgb,var(--ambre) 45%,var(--texte));border-color:color-mix(in srgb,var(--ambre) 55%,var(--border))}
+#section-contradiction .badge-statut.ouverte{color:var(--texte-dim);border-color:var(--border)}
 #section-contradiction .famille,#section-contradiction .suivi{font-size:max(var(--t-min),.72rem);color:var(--texte-dim)}
 #section-contradiction .meta{margin-top:6px;display:flex;flex-wrap:wrap;gap:10px;
-  font-size:max(var(--t-min),.74rem);color:#9fb0cc}
-#section-contradiction .puce-portee{border:1px dashed #2b3d5c;border-radius:8px;padding:1px 7px}
+  font-size:max(var(--t-min),.74rem);color:var(--texte-dim)}
+#section-contradiction .puce-portee{border:1px dashed var(--border);border-radius:8px;padding:1px 7px}
 #section-contradiction ul.sources{list-style:none;margin:4px 0 0;padding:0;font-size:max(var(--t-min),.74rem);
-  color:#9fb0cc}
+  color:var(--texte-dim)}
 #section-contradiction ul.sources li{margin:2px 0}
-#section-contradiction .contre-modele{background:#131c2f;border:1px solid #2b3d5c;
+#section-contradiction .contre-modele{background:var(--panel);border:1px solid var(--border);
   border-radius:8px;margin:8px 0;padding:8px 10px;font-size:.8rem;line-height:1.45}
-#section-contradiction .contre-modele h4{margin:6px 0 3px;font-size:.78rem;color:#bae6fd}
+#section-contradiction .contre-modele h4{margin:6px 0 3px;font-size:.78rem;color:color-mix(in srgb,var(--accent) 45%,var(--texte))}
 #section-contradiction .contre-modele .porte-par{color:var(--texte-dim);font-size:max(var(--t-min),.74rem);font-style:italic}
-#section-contradiction .garde-fous{border:1px solid #7f1d1d;background:#2a1214;border-radius:8px;
-  padding:6px 9px;margin:8px 0;font-size:.76rem;color:#f3a0a0}
-.levier.modifie{border-left:3px solid var(--accent);padding-left:8px;background:rgba(56,189,248,.06);
+#section-contradiction .garde-fous{border:1px solid color-mix(in srgb,var(--rouge) 55%,var(--border));background:color-mix(in srgb,var(--rouge) 10%,transparent);border-radius:8px;
+  padding:6px 9px;margin:8px 0;font-size:.76rem;color:color-mix(in srgb,var(--rouge) 45%,var(--texte))}
+.levier.modifie{border-left:3px solid var(--accent);padding-left:8px;background:color-mix(in srgb,var(--accent) 6%,transparent);
   border-radius:0 8px 8px 0}
 .levier.modifie .nom{font-weight:700}
 .puces{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
 .puce-effect{font-size:max(var(--t-min),.66rem);border-radius:6px;padding:1px 6px;border:1px solid var(--border);
   white-space:nowrap}
-.puce-effect.pos{background:rgba(34,197,94,.16);color:#bbf7d0;border-color:rgba(34,197,94,.45)}
-.puce-effect.neg{background:rgba(239,68,68,.16);color:#fecaca;border-color:rgba(239,68,68,.45)}
+.puce-effect.pos{background:color-mix(in srgb,var(--vert) 16%,transparent);color:color-mix(in srgb,var(--vert) 45%,var(--texte));border-color:color-mix(in srgb,var(--vert) 45%,transparent)}
+.puce-effect.neg{background:color-mix(in srgb,var(--rouge) 16%,transparent);color:color-mix(in srgb,var(--rouge) 35%,var(--texte));border-color:color-mix(in srgb,var(--rouge) 45%,transparent)}
 .console-corps.replie{display:none}
-.console.niveau-favorable,.console.niveau-tolerable{border-color:rgba(34,197,94,.55)}
-.console.niveau-vigilance{border-color:rgba(245,158,11,.65)}
-.console.niveau-risque{border-color:rgba(239,68,68,.7)}
+.console.niveau-favorable,.console.niveau-tolerable{border-color:color-mix(in srgb,var(--vert) 55%,transparent)}
+.console.niveau-vigilance{border-color:color-mix(in srgb,var(--ambre) 65%,transparent)}
+.console.niveau-risque{border-color:color-mix(in srgb,var(--rouge) 70%,transparent)}
 .console.niveau-hors_sol{border-color:var(--rouge);
-  box-shadow:0 0 0 3px rgba(239,68,68,.28),0 12px 34px rgba(0,0,0,.5)}
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--rouge) 28%,transparent),0 12px 34px var(--ombre-forte)}
 .console-entete{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .console-verdict{font-weight:700;font-size:.85rem;padding:7px 14px;border-radius:999px;
   border:1px solid var(--border);max-width:720px}
@@ -707,8 +854,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .console-corps{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:14px}
 .console-titre{font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--texte-dim);
   margin:8px 0 6px}
-.niveau-favorable{color:#bbf7d0}.niveau-tolerable{color:#bbf7d0}.niveau-vigilance{color:#fde68a}
-.niveau-risque{color:#fecaca}.niveau-hors_sol{color:#fff;background:rgba(239,68,68,.22)}
+.niveau-favorable{color:color-mix(in srgb,var(--vert) 45%,var(--texte))}.niveau-tolerable{color:color-mix(in srgb,var(--vert) 45%,var(--texte))}.niveau-vigilance{color:color-mix(in srgb,var(--ambre) 45%,var(--texte))}
+.niveau-risque{color:color-mix(in srgb,var(--rouge) 35%,var(--texte))}.niveau-hors_sol{color:var(--texte);background:color-mix(in srgb,var(--rouge) 22%,transparent)}
 .strate-puce.niveau-hors_sol{border-color:var(--rouge)}
 .message-seuil{border-left:3px solid var(--border);padding:6px 10px;margin-bottom:7px;
   font-size:.76rem;background:var(--panel-2);border-radius:0 8px 8px 0}
@@ -720,37 +867,37 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .jauge > span{display:block;height:100%;transition:width .25s}
 .graduations{display:flex;justify-content:space-between;font-size:max(var(--t-min),.64rem);color:var(--texte-dim);margin-top:3px}
 .ligne-marge{display:flex;justify-content:space-between;gap:10px;font-size:.75rem;padding:4px 0;
-  border-bottom:1px dashed rgba(147,163,189,.18)}
+  border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 18%,transparent)}
 .ligne-marge .droite{color:var(--texte-dim);white-space:nowrap}
-.bandeau-hors-sol{background:linear-gradient(90deg,rgba(239,68,68,.35),rgba(239,68,68,.06));
+.bandeau-hors-sol{background:linear-gradient(90deg,color-mix(in srgb,var(--rouge) 35%,transparent),color-mix(in srgb,var(--rouge) 6%,transparent));
   border:1px solid var(--rouge);border-radius:10px;padding:9px 12px;font-size:.79rem;margin-top:10px}
 .bandeau-hors-sol b{font-size:.82rem;letter-spacing:.3px}
-.delta-mesure{font-size:.75rem;padding:4px 0;border-bottom:1px dashed rgba(147,163,189,.18);
+.delta-mesure{font-size:.75rem;padding:4px 0;border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 18%,transparent);
   display:flex;justify-content:space-between;gap:10px}
 .delta-mesure .valeur{font-variant-numeric:tabular-nums;white-space:nowrap}
 /* Coût / gain réel : affichage live, rouge ou vert en transparence, comme le
    bandeau hors-sol mais dédié à la mesure budgétaire d'un réglage. */
 .cout-gain{border-radius:10px;padding:9px 12px;font-size:.8rem;margin-top:8px;border:1px solid}
 .cout-gain b.chiffre{font-size:1.05rem;font-variant-numeric:tabular-nums}
-.cout-gain.gain{background:linear-gradient(90deg,rgba(34,197,94,.34),rgba(34,197,94,.06));
+.cout-gain.gain{background:linear-gradient(90deg,color-mix(in srgb,var(--vert) 34%,transparent),color-mix(in srgb,var(--vert) 6%,transparent));
   border-color:var(--vert)}
-.cout-gain.cout{background:linear-gradient(90deg,rgba(239,68,68,.34),rgba(239,68,68,.06));
+.cout-gain.cout{background:linear-gradient(90deg,color-mix(in srgb,var(--rouge) 34%,transparent),color-mix(in srgb,var(--rouge) 6%,transparent));
   border-color:var(--rouge)}
-.cout-gain.neutre{background:rgba(147,163,189,.12);border-color:var(--border)}
+.cout-gain.neutre{background:color-mix(in srgb,var(--texte-dim) 12%,transparent);border-color:var(--border)}
 .cout-gain .detail{display:flex;flex-wrap:wrap;gap:12px;margin-top:6px;color:var(--texte-dim);font-size:max(var(--t-min),.72rem)}
 .cout-gain .trace{margin-top:6px;font-size:max(var(--t-min),.66rem);color:var(--texte-dim);font-style:italic}
 /* Badge live sous le levier manipulé et puce du ruban : toujours visibles. */
 .cout-live-zone{grid-column:1/-1}
 .cout-live{margin-top:6px;border-radius:9px;padding:5px 10px;font-size:.76rem;font-weight:600;
   border:1px solid;font-variant-numeric:tabular-nums}
-.cout-live.gain{background:rgba(34,197,94,.20);border-color:rgba(34,197,94,.55);color:#86efac}
-.cout-live.cout{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.55);color:#fca5a5}
-.cout-live.neutre{background:rgba(147,163,189,.12);border-color:var(--border);color:var(--texte-dim);font-weight:400}
+.cout-live.gain{background:color-mix(in srgb,var(--vert) 20%,transparent);border-color:color-mix(in srgb,var(--vert) 55%,transparent);color:color-mix(in srgb,var(--vert) 55%,var(--texte))}
+.cout-live.cout{background:color-mix(in srgb,var(--rouge) 20%,transparent);border-color:color-mix(in srgb,var(--rouge) 55%,transparent);color:color-mix(in srgb,var(--rouge) 50%,var(--texte))}
+.cout-live.neutre{background:color-mix(in srgb,var(--texte-dim) 12%,transparent);border-color:var(--border);color:var(--texte-dim);font-weight:400}
 .ruban-cout{font-size:max(var(--t-min),.72rem);padding:3px 10px;border-radius:999px;border:1px solid;
   white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:600}
-.ruban-cout.gain{background:rgba(34,197,94,.20);border-color:rgba(34,197,94,.55);color:#86efac}
-.ruban-cout.cout{background:rgba(239,68,68,.20);border-color:rgba(239,68,68,.55);color:#fca5a5}
-.ruban-cout.neutre{background:rgba(147,163,189,.12);border-color:var(--border);color:var(--texte-dim)}
+.ruban-cout.gain{background:color-mix(in srgb,var(--vert) 20%,transparent);border-color:color-mix(in srgb,var(--vert) 55%,transparent);color:color-mix(in srgb,var(--vert) 55%,var(--texte))}
+.ruban-cout.cout{background:color-mix(in srgb,var(--rouge) 20%,transparent);border-color:color-mix(in srgb,var(--rouge) 55%,transparent);color:color-mix(in srgb,var(--rouge) 50%,var(--texte))}
+.ruban-cout.neutre{background:color-mix(in srgb,var(--texte-dim) 12%,transparent);border-color:var(--border);color:var(--texte-dim)}
 /* Coût / gain global : toujours dans la partie visible de la console, même
    quand le détail des seuils est replié. */
 .cout-global-veille{margin:10px 0 4px}
@@ -763,7 +910,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .audit summary:hover{color:var(--accent)}
 .audit .corps{margin-top:9px;font-size:max(var(--t-min),.74rem);color:var(--texte-dim)}
 .audit table{width:100%;border-collapse:collapse;font-size:max(var(--t-min),.72rem)}
-.audit th,.audit td{text-align:left;border-bottom:1px dashed rgba(147,163,189,.18);
+.audit th,.audit td{text-align:left;border-bottom:1px dashed color-mix(in srgb,var(--texte-dim) 18%,transparent);
   padding:5px 7px;vertical-align:top}
 .audit th{color:var(--texte);font-size:max(var(--t-min),.7rem);text-transform:uppercase;letter-spacing:.4px}
 .audit td.chiffre{font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -778,7 +925,7 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .sommaire a{font-size:.75rem;text-decoration:none;color:var(--texte-dim);background:var(--panel-2);
   border:1px solid var(--border);border-radius:999px;padding:3px 10px;white-space:nowrap}
 .sommaire a:hover{border-color:var(--accent);color:var(--texte)}
-.sommaire a.actif{border-color:var(--accent);color:var(--accent);background:rgba(56,189,248,.12)}
+.sommaire a.actif{border-color:var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent)}
 /* La pastille de veille de la barre : le verdict du ruban en trois mots, pour
    les largeurs qui n'ont de place que pour une barre collante. Elle reste
    cachée tant qu'aucun diagnostic n'est connu (`hidden`, posé dans la page),
@@ -791,7 +938,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
   line-height:1.15;overflow:hidden}
 .sommaire-veille.niveau-favorable,.sommaire-veille.niveau-tolerable{border-color:var(--vert);color:var(--vert)}
 .sommaire-veille.niveau-vigilance{border-color:var(--ambre);color:var(--ambre)}
-.sommaire-veille.niveau-risque,.sommaire-veille.niveau-hors_sol{border-color:var(--rouge);color:var(--rouge)}
+.sommaire-veille.niveau-risque,.sommaire-veille.niveau-hors_sol{border-color:var(--rouge);
+  color:color-mix(in srgb,var(--rouge) 72%,var(--texte))}
 .sommaire .etape{font-size:max(var(--t-min),.66rem);color:var(--texte-dim);padding:0 4px}
 /* ── Lecture en clair ─────────────────────────────────────────────────────
    Les chiffres du moteur sont justes ; la section « lire le résultat » les
@@ -812,11 +960,11 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 /* ── Termes du lexique soulignés dans le texte ──────────────────────────── */
 .terme{border-bottom:1px dotted var(--accent);cursor:help}
 /* ── Modale (lexique et guide) ──────────────────────────────────────────── */
-.overlay{position:fixed;inset:0;z-index:var(--z-modale);background:rgba(2,6,23,.72);display:none;
+.overlay{position:fixed;inset:0;z-index:var(--z-modale);background:var(--voile);display:none;
   align-items:flex-start;justify-content:center;padding:28px 14px;overflow:auto}
 .overlay.visible{display:flex}
 .modale{background:var(--panel);border:1px solid var(--accent);border-radius:14px;max-width:920px;width:100%;
-  box-shadow:0 24px 60px rgba(0,0,0,.55)}
+  box-shadow:0 24px 60px var(--ombre-forte)}
 .modale-entete{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 18px;
   border-bottom:1px solid var(--border)}
 .modale-entete h2{font-size:1rem}
@@ -845,8 +993,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .resume{background:linear-gradient(135deg,var(--panel-2),var(--panel));border-color:var(--mrsc-bleu)}
 .resume-phrase{font-size:max(var(--t-min),.86rem);color:var(--texte);margin:2px 0 10px}
 .resume .metric .valeur{font-variant-numeric:tabular-nums}
-.resume-gain .valeur{color:var(--vert)}
-.resume-cout .valeur{color:var(--rouge)}
+.resume-gain .valeur{color:color-mix(in srgb,var(--vert) 78%,var(--texte))}
+.resume-cout .valeur{color:color-mix(in srgb,var(--rouge) 72%,var(--texte))}
 .resume-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin-top:10px}
 .resume-actions a{font-size:max(var(--t-min),.8rem);color:var(--texte-dim)}
 .resume-actions a:hover{color:var(--texte)}
@@ -883,9 +1031,9 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   background:var(--panel-3);overflow:hidden}
 .resume-balance .piste span{display:block;height:100%;width:0;transition:width .25s ease}
 .resume-balance .cote.entrees .piste span{background-color:var(--classe-recettes);
-  background-image:repeating-linear-gradient(45deg,rgba(0,0,0,.18) 0 5px,transparent 5px 10px)}
+  background-image:repeating-linear-gradient(45deg,color-mix(in srgb,var(--texte) 18%,transparent) 0 5px,transparent 5px 10px)}
 .resume-balance .cote.sorties .piste span{background-color:var(--classe-depenses);
-  background-image:radial-gradient(rgba(0,0,0,.22) 1px,transparent 1.6px);background-size:7px 7px}
+  background-image:radial-gradient(color-mix(in srgb,var(--texte) 22%,transparent) 1px,transparent 1.6px);background-size:7px 7px}
 .resume-balance .part-note{font-size:max(var(--t-min),.68rem);color:var(--texte-dim)}
 /* L'interaction répond au geste, sans jamais devenir un feu d'artifice. */
 .resume .metric{transition:transform .15s ease,border-color .15s ease}
@@ -899,12 +1047,14 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
 /* ── Les chapitres : quatre temps dans une page de vingt sections ─────────
    Le sommaire dit l'ordre ; les chapitres disent où l'on est, dans le
    déroulé, sans obliger à remonter. */
-.chapitre{display:flex;align-items:flex-start;gap:12px;margin:20px 0 12px;padding:10px 14px;
-  border-left:4px solid var(--mrsc-or);background:var(--panel-2);border-radius:0 12px 12px 0}
-.chapitre-num{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;
+.chapitre{display:flex;align-items:flex-start;gap:var(--e-3);
+  margin:var(--ecart-section) 0 var(--e-3);padding:var(--e-3) var(--e-4);
+  border-left:4px solid var(--mrsc-or);background:var(--panel-2);border-radius:0 var(--rayon-3) var(--rayon-3) 0}
+.chapitre-num{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;
   border-radius:50%;background:var(--mrsc-navy);color:var(--texte);font-weight:700;flex:0 0 auto}
-.chapitre-titre{font-size:1.02rem;font-weight:700;letter-spacing:.3px}
-.chapitre-aide{font-size:max(var(--t-min),.8rem);color:var(--texte-dim);margin-top:2px}
+.chapitre-titre{font-size:clamp(1.02rem,.6vw + .9rem,1.3rem);font-weight:750;letter-spacing:-.01em}
+.chapitre-aide{font-size:max(var(--t-min),.85rem);color:var(--texte-dim);margin-top:.25rem;
+  line-height:1.6;max-width:var(--mesure)}
 
 /* ── Le graphique : lisible à toutes les largeurs ─────────────────────────
    Le dessin a 900 unités de large. Étiré sur un écran de 1400 px, il s'élargit ;
@@ -931,7 +1081,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .balance-plateau>*,.cascade-ligne>*,.classe-carte>*,.audit>*{min-width:0}
   .tableau-defilant{max-width:100%;overflow:auto;-webkit-overflow-scrolling:touch;
     border:1px solid var(--border);border-radius:9px;background:var(--panel-2);
-    box-shadow:inset -14px 0 14px -14px rgba(0,0,0,.55)}
+    box-shadow:inset -14px 0 14px -14px var(--ombre-forte)}
   .tableau-defilant>table{margin:0}
   /* La première colonne reste visible pendant le défilement horizontal :
      après trois colonnes, on ne sait plus quelle ligne on lit. Le fond est
@@ -939,13 +1089,13 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
      du reste. */
   .tableau-defilant th:first-child,.tableau-defilant td:first-child{
     position:sticky;left:0;background:var(--panel-2);z-index:var(--z-contenu);
-    box-shadow:7px 0 9px -9px rgba(0,0,0,.9)}
+    box-shadow:7px 0 9px -9px var(--ombre-modale)}
   .tableau-defilant:focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
   body{padding:clamp(10px,1.6vw,18px);overflow-wrap:break-word}
   header.entete{padding:clamp(14px,1.6vw,22px)}
-  section.bloc{padding:clamp(12px,1.4vw,18px)}
+  section.bloc{padding:var(--pad-bloc)}
   header.entete h1{font-size:clamp(1.15rem,.8vw + .78rem,1.52rem);line-height:1.3}
-  section.bloc>h2{font-size:clamp(1rem,.3vw + .9rem,1.16rem)}
+
   .metric .valeur{font-size:clamp(1.32rem,.6vw + 1rem,1.55rem)}
   .balance-cote .montant{font-size:clamp(1.3rem,1.1vw + .95rem,1.9rem)}
   .grille.metrics{grid-template-columns:repeat(auto-fit,minmax(min(100%,148px),1fr))}
@@ -971,7 +1121,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
      quarante-quatre, et les ancres atterrissaient sous la barre. */
   :root{--collant:44px}
   .sommaire{position:sticky;top:0;z-index:var(--z-sommaire);flex-wrap:nowrap;overflow-x:auto;
-    box-shadow:0 8px 20px rgba(0,0,0,.28)}
+    box-shadow:0 8px 20px var(--ombre)}
   .sommaire-liste{display:flex;flex-wrap:nowrap;align-items:center;gap:6px}
   .ruban-veille{top:var(--collant)}
 }
@@ -1011,8 +1161,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .sommaire.ouverte .sommaire-liste{display:flex;flex-wrap:wrap;overflow-x:visible}
   .onglets-strates{display:flex;flex-wrap:nowrap;overflow-x:auto}
   .onglets-strates button{flex:0 0 auto}
-  section.bloc>h2{display:block}
-  section.bloc>h2 .aide{display:block;margin-top:3px}
+  section.bloc>.section-entete{position:static}
 }
 @media screen and (max-width:480px){
   /* Quatre chiffres en deux colonnes plutôt qu'en quatre : chaque nombre
@@ -1079,8 +1228,12 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
 /* Contraste renforcé demandé par le système : bordures plus franches, textes
    secondaires plus lisibles. Aucune information ne dépend de cette règle. */
 @media screen and (prefers-contrast:more){
-  :root{--border:#4a5c85;--texte-dim:#b9c6dc}
-  .carte,section.bloc,.tableau-defilant,.graphique .svg-chart{border-width:2px}
+  /* Contrastes renforcés demandés par le système : des bordures plus franches
+     et un texte secondaire plus dense — dans la mesure du thème en vigueur, et
+     non dans celle du thème sombre, qui écraserait les trois autres. */
+  :root,[data-theme="soir"]{--border:#4a5c85;--texte-dim:#b9c6dc}
+  [data-theme="jour"],[data-theme="creme"]{--border:#8c9cb8;--texte-dim:#3f4b5d}
+  [data-theme="contraste"]{--border:#ffffff;--texte-dim:#ffffff}
 }
 @media screen and (pointer:coarse){
   button,.bouton,summary,.onglets button,.onglets-strates button,.sommaire a,
@@ -1111,6 +1264,7 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
    feraient trois lignes chacun. On rend donc tout le contenu, on enlève les
    fonds sombres et les barres collantes, et on évite de couper une ligne en
    deux. */
+
 @media print{
   .defilable,.journal,.provenance,.tableau-strate,.bourse-table,.tableau-defilant,.graphique{
     max-height:none;overflow:visible;box-shadow:none;border-color:#000}
@@ -1144,7 +1298,88 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
      refuse d'imprimer les fonds. */
   .resume-balance .piste span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 }
+
+
+/* ══ Le panneau d'affichage ═════════════════════════════════════════════════
+   Quatre thèmes, deux densités, cinq tailles de texte : les mêmes réglages que
+   le site M.R.S.C., sous le même nom (« Affichage »), avec la même promesse —
+   « ces choix restent enregistrés sur cet appareil ». Rien n'est envoyé au
+   serveur : le thème, la densité et la taille vivent dans le navigateur, et la
+   page les applique avant même de s'afficher (voir le script d'en-tête), pour
+   qu'aucune page ne s'ouvre dans le mauvais thème puis bascule. */
+.affichage{position:relative;margin-left:auto}
+.affichage>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;
+  padding:7px 12px;border:1px solid var(--border);border-radius:999px;
+  background:var(--panel);color:var(--texte);font-size:.82rem;list-style:none}
+.affichage>summary::-webkit-details-marker{display:none}
+.affichage>summary::marker{content:""}
+.affichage>summary:hover,.affichage[open]>summary{border-color:var(--accent)}
+.affichage-chevron{transition:transform .15s}
+.affichage[open] .affichage-chevron{transform:rotate(180deg)}
+.affichage-panneau{position:absolute;right:0;top:calc(100% + 7px);z-index:var(--z-infobulle);
+  width:min(330px,calc(100vw - 24px));padding:var(--e-3);
+  background:var(--panel-2);border:1px solid var(--border);border-radius:var(--rayon-3);
+  box-shadow:0 14px 34px var(--ombre-forte);text-align:left}
+.affichage-titre{margin:0 0 .7rem;color:var(--texte);font-size:.9rem}
+.affichage-ligne{display:flex;align-items:center;justify-content:space-between;gap:var(--e-2);
+  margin-bottom:.6rem}
+.affichage-ligne:last-of-type{margin-bottom:0}
+.affichage-mot{color:var(--texte-dim);font-size:max(var(--t-min),.74rem);
+  text-transform:uppercase;letter-spacing:.06em}
+.affichage-groupe{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+.affichage-choix{padding:6px 10px;font-size:max(var(--t-min),.78rem);border-radius:999px;
+  border:1px solid var(--border);background:var(--panel);color:var(--texte)}
+.affichage-choix[aria-pressed="true"]{border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 16%,transparent)}
+.affichage-texte{font-size:max(var(--t-min),.78rem);color:var(--texte);
+  min-width:56px;text-align:center;font-variant-numeric:tabular-nums}
+.affichage-note{margin-top:.7rem;color:var(--texte-dim);
+  font-size:max(var(--t-min),.72rem);line-height:1.5}
+/* Les cinq tailles de texte : les rem grandissent, le plancher en pixels tient
+   — c'est lui qui empêche un texte secondaire de devenir illisible. */
+html[data-texte="87"]{font-size:87.5%}
+html[data-texte="100"]{font-size:100%}
+html[data-texte="112"]{font-size:112.5%}
+html[data-texte="125"]{font-size:125%}
+html[data-texte="137"]{font-size:137.5%}
+/* Sur un écran étroit, le panneau ne flotte plus : il se pose en feuille, et
+   il défile plutôt que de dépasser. */
+@media screen and (max-width:640px){
+  .affichage{margin-left:0}
+  .affichage-panneau{position:fixed;left:.6rem;right:.6rem;top:auto;bottom:.6rem;
+    width:auto;max-height:min(70vh,420px);overflow-y:auto;
+    border-radius:var(--rayon-4);box-shadow:0 18px 44px var(--ombre-modale)}
+  .affichage-ligne{align-items:flex-start;flex-direction:column;gap:5px}
+  .affichage-groupe{justify-content:flex-start;width:100%}
+  .affichage-choix{min-height:44px;display:inline-flex;align-items:center}
+}
 </style>
+<script>
+  /* Le thème, la densité et la taille du texte sont posés ici, dans l'en-tête :
+     c'est la seule façon d'éviter qu'une page s'ouvre dans le thème sombre puis
+     bascule en clair sous les yeux de qui lit. Aucun choix n'est envoyé : tout
+     reste dans le navigateur, et rien n'est rattaché à quelqu'un. */
+  (function () {
+    var racine = document.documentElement;
+    var lire = function (cle) {
+      try { return localStorage.getItem('simulateur-' + cle); } catch (e) { return null; }
+    };
+    var themes = ['soir', 'jour', 'creme', 'contraste'];
+    var densites = ['aere', 'compact'];
+    var textes = ['87', '100', '112', '125', '137'];
+    var theme = lire('theme');
+    if (themes.indexOf(theme) < 0) {
+      var appareilClair = typeof matchMedia === 'function'
+        && matchMedia('(prefers-color-scheme: light)').matches;
+      theme = appareilClair ? 'jour' : 'soir';
+    }
+    racine.setAttribute('data-theme', theme);
+    var densite = lire('densite');
+    racine.setAttribute('data-densite', densites.indexOf(densite) < 0 ? 'aere' : densite);
+    var texte = lire('texte');
+    racine.setAttribute('data-texte', textes.indexOf(texte) < 0 ? '100' : texte);
+  })();
+</script>
 <script>
   window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
 </script>
@@ -1186,12 +1421,47 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
       <span class="separateur" aria-hidden="true"></span>
       <button id="btn-export-json" disabled onclick="exporter('json')" data-aide="<b>Export JSON</b>Télécharge la simulation affichée : 5 étapes annuelles, 20 domaines, indicateurs, garde-fous et journal causal.">Export JSON</button>
       <button id="btn-export-csv" disabled onclick="exporter('csv')" data-aide="<b>Export CSV</b>Même contenu que l'export JSON, en tableau — pour retravailler les chiffres dans un tableur.">Export CSV</button>
+      <details class="affichage" id="affichage" data-aide="<b>Affichage</b>Quatre thèmes (soir, jour, crème, contraste renforcé), deux densités et cinq tailles de texte. Ces choix restent enregistrés sur votre appareil : rien n'est envoyé au serveur.">
+        <summary title="Options d'affichage">🎨 Affichage <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
+        <div class="affichage-panneau">
+          <p class="affichage-titre"><b>Ajuster la lecture</b></p>
+          <div class="affichage-ligne" role="group" aria-label="Thème d'affichage">
+            <span class="affichage-mot">Thème</span>
+            <span class="affichage-groupe">
+              <button class="affichage-choix" id="theme-soir" type="button" data-theme-choix="soir" aria-pressed="false" onclick="choisirTheme('soir')">Soir</button>
+              <button class="affichage-choix" id="theme-jour" type="button" data-theme-choix="jour" aria-pressed="false" onclick="choisirTheme('jour')">Jour</button>
+              <button class="affichage-choix" id="theme-creme" type="button" data-theme-choix="creme" aria-pressed="false" onclick="choisirTheme('creme')">Crème</button>
+              <button class="affichage-choix" id="theme-contraste" type="button" data-theme-choix="contraste" aria-pressed="false" onclick="choisirTheme('contraste')">Contraste</button>
+            </span>
+          </div>
+          <div class="affichage-ligne" role="group" aria-label="Densité de la page">
+            <span class="affichage-mot">Densité de la page</span>
+            <span class="affichage-groupe">
+              <button class="affichage-choix" id="densite-aere" type="button" data-densite-choix="aere" aria-pressed="true" title="Sections et cartes largement espacées" onclick="choisirDensite('aere')">Aéré</button>
+              <button class="affichage-choix" id="densite-compact" type="button" data-densite-choix="compact" aria-pressed="false" title="Sections, cartes et marges resserrées — le contenu reste entier" onclick="choisirDensite('compact')">Compact</button>
+            </span>
+          </div>
+          <div class="affichage-ligne" role="group" aria-label="Taille du texte">
+            <span class="affichage-mot">Texte</span>
+            <span class="affichage-groupe">
+              <button class="affichage-choix" id="texte-moins" type="button" aria-label="Réduire la taille du texte" title="Réduire le texte" onclick="changerTailleTexte(-1)">A−</button>
+              <span class="affichage-texte" id="affichage-niveau" role="status" aria-live="polite" aria-atomic="true">100 %</span>
+              <button class="affichage-choix" id="texte-plus" type="button" aria-label="Agrandir la taille du texte" title="Agrandir le texte" onclick="changerTailleTexte(1)">A+</button>
+            </span>
+          </div>
+          <p class="affichage-note">Ces choix restent enregistrés sur cet appareil ; le zoom du navigateur reste disponible. La « vue compacte » des leviers, elle, se règle dans « Vos réglages ».</p>
+        </div>
+      </details>
     </div>
     <p class="aide" id="avis-lien" hidden></p>
   </header>
 
   <section class="bloc resume" id="resume" aria-labelledby="resume-titre">
-    <h2 id="resume-titre">🧾 Votre plan en un coup d'œil <span class="aide">les chiffres qui comptent, repris de la balance — rien n'est recalculé ici</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Votre plan</p>
+      <h2 id="resume-titre">🧾 Votre plan en un coup d'œil</h2>
+      <p class="section-intro">Les chiffres qui comptent, repris de la balance — rien n'est recalculé ici.</p>
+    </header>
     <p class="resume-phrase" id="resume-phrase">Déplacez un curseur : le plan se pèse ici, en milliards d'euros par an.</p>
     <div class="grille metrics">
       <div class="carte metric"><div class="libelle">Solde du plan</div>
@@ -1292,13 +1562,21 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </div>
 
   <section class="bloc" id="section-contexte">
-    <h2>Contexte « instant T » <span class="aide">données publiques réellement collectées, avec provenance et licence</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Contexte daté</p>
+      <h2>Contexte « instant T »</h2>
+      <p class="section-intro">Données publiques réellement collectées, avec provenance et licence.</p>
+    </header>
     <div class="grille metrics" id="grid-metrics"></div>
   </section>
 
   <section class="bloc console" id="console-pilotage">
     <div class="console-entete">
-      <h2>Console de veille permanente <span class="aide">seuils tolérables → hors-sol, strate par strate, mis à jour à chaque réglage</span></h2>
+      <header class="section-entete">
+        <p class="eyebrow">Veille permanente</p>
+        <h2>Console de veille permanente</h2>
+        <p class="section-intro">Seuils tolérables → hors-sol, strate par strate, mis à jour à chaque réglage.</p>
+      </header>
       <div class="console-verdict" id="console-verdict">en attente de la première simulation…</div>
     </div>
     <div class="cout-global-veille">
@@ -1326,7 +1604,11 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </section>
 
   <section class="bloc" id="section-clair">
-    <h2>🧭 Lire le résultat <span class="aide">la même simulation, expliquée phrase par phrase — sans jargon, à partir des chiffres déjà calculés</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Lecture en clair</p>
+      <h2>🧭 Lire le résultat</h2>
+      <p class="section-intro">La même simulation, expliquée phrase par phrase — sans jargon, à partir des chiffres déjà calculés.</p>
+    </header>
     <div class="clair-resume" id="clair-resume">en attente de la première simulation…</div>
     <div class="clair-lignes" id="clair-lignes"></div>
     <ul class="clair-limites" id="clair-limites"></ul>
@@ -1341,22 +1623,38 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </div>
 
   <section class="bloc" id="section-impact">
-    <h2>Surface d'impact de vos choix <span class="aide">recettes, dépenses et solde des mesures activées (année terminale)</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Effets du plan</p>
+      <h2>Surface d'impact de vos choix</h2>
+      <p class="section-intro">Recettes, dépenses et solde des mesures activées (année terminale).</p>
+    </header>
     <div class="grille metrics" id="grid-impact"></div>
   </section>
 
   <section class="bloc" id="section-bilan-intergenerationnel">
-    <h2>Transmission entre générations <span class="aide">dette, besoins non couverts, investissements à maturité et risque climatique — composantes séparées, sans score synthétique</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Transmission</p>
+      <h2>Transmission entre générations</h2>
+      <p class="section-intro">Dette, besoins non couverts, investissements à maturité et risque climatique — composantes séparées, sans score synthétique.</p>
+    </header>
     <div class="grille metrics" id="bilan-intergenerationnel"></div>
   </section>
 
   <section class="bloc" id="section-cascade">
-    <h2>Cascade systémique des 5 échelons <span class="aide">locale → nationale → européenne → mondiale → géopolitique</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Les cinq échelons</p>
+      <h2>Cascade systémique des 5 échelons</h2>
+      <p class="section-intro">Locale → nationale → européenne → mondiale → géopolitique.</p>
+    </header>
     <div class="strates-cascade" id="strates-cascade"></div>
   </section>
 
   <section class="bloc" id="section-strates">
-    <h2>Effets comparés par strate <span class="aide">scénario contre référence — les valeurs simulées restent des écarts de modèle, pas une prévision</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Strates comparées</p>
+      <h2>Effets comparés par strate</h2>
+      <p class="section-intro">Scénario contre référence — les valeurs simulées restent des écarts de modèle, pas une prévision.</p>
+    </header>
     <p class="strate-intro">Parcourez les niveaux territoriaux, les comptes publics, l'Europe, les marchés, la géopolitique et un profil de ménage modifiable. Les observations réelles restent séparées des trajectoires simulées. Les seuls périmètres chiffrés sont ceux dont la source et l'hypothèse sont affichées.</p>
     <div class="onglets onglets-strates" role="tablist" aria-label="Vues par strate">
       <button type="button" role="tab" id="tab-strate-local" aria-selected="true" aria-controls="panneau-strate-local" class="actif" onclick="afficherOngletStrate('local')">Local</button>
@@ -1385,17 +1683,29 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </div>
 
   <section class="bloc" id="section-scenarios">
-    <h2>Scénarios types du dépôt <span class="aide">situations rejouées par le moteur d'origine, année par année — pour comparaison</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Situations rejouées</p>
+      <h2>Scénarios types du dépôt</h2>
+      <p class="section-intro">Situations rejouées par le moteur d'origine, année par année — pour comparaison.</p>
+    </header>
     <div class="grille scenarios" id="scenario-grid"></div>
   </section>
 
   <section class="bloc" id="section-presets">
-    <h2>Préréglages doctrinaux <span class="aide">des combinaisons cohérentes de leviers, chargées dans le simulateur puis ajustables curseur par curseur</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Combinaisons cohérentes</p>
+      <h2>Préréglages doctrinaux</h2>
+      <p class="section-intro">Des combinaisons cohérentes de leviers, chargées dans le simulateur puis ajustables curseur par curseur.</p>
+    </header>
     <div class="grille scenarios" id="preset-grid"></div>
   </section>
 
   <section class="bloc" id="section-classes">
-    <h2>🧩 Les 5 classes de leviers <span class="aide">la carte qui manquait : chaque levier porte une seule classe, un symbole, une couleur M.R.S.C et un motif — l'information reste lisible sans la couleur (impression, daltonisme, contraste renforcé)</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Méthode</p>
+      <h2>🧩 Les 5 classes de leviers</h2>
+      <p class="section-intro">La carte qui manquait : chaque levier porte une seule classe, un symbole, une couleur M.R.S.C et un motif — l'information reste lisible sans la couleur (impression, daltonisme, contraste renforcé).</p>
+    </header>
     <p class="strate-intro" id="classes-intro">Le catalogue s'organise en <b>5 classes</b> : <b>recettes</b> (ce qui entre), <b>économies d'efficacité</b> (ce qu'on arrête de payer à vide), <b>dépenses et investissements</b> (ce qui sort), <b>règles du jeu</b> (ce qui change la décision, pas les comptes) et <b>monde subi</b> (ce qui vient de l'extérieur). Chaque classe a sa couleur, son symbole, son motif de fond et sa phrase : cliquez une classe pour ne voir que ses leviers.</p>
     <div class="classes-legende" id="classes-legende" role="group" aria-label="Légende des 5 classes"></div>
     <div class="balance" id="balance-classes">
@@ -1442,7 +1752,11 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </section>
 
   <section class="bloc" id="section-leviers">
-    <h2>Vos leviers <span class="aide">tous les paramètres du catalogue, visibles et actionnables — chaque geste se répercute en direct ; la section « Nuances institutionnelles », juste en dessous, traduit chaque curseur en seuil et en délai de droit</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Vos réglages</p>
+      <h2>Vos leviers</h2>
+      <p class="section-intro">Tous les paramètres du catalogue, visibles et actionnables — chaque geste se répercute en direct ; la section « Nuances institutionnelles », juste en dessous, traduit chaque curseur en seuil et en délai de droit.</p>
+    </header>
     <div class="barre-leviers">
       <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre tous les leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
@@ -1456,7 +1770,11 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </section>
 
   <section class="bloc" id="section-nuances">
-    <h2>Nuances institutionnelles <span class="aide">ce que les curseurs ci-dessus changent au droit positif : seuils recalculés, délais de rigueur, fentes verrouillées, quatre indices et cinq strates. Calcul de la couche <code>simulateur/nuances_institutionnelles.py</code>, pas une opinion — chaque ligne rappelle l'article et la règle telle qu'elle est écrite.</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Droit positif</p>
+      <h2>Nuances institutionnelles</h2>
+      <p class="section-intro">Ce que les curseurs ci-dessus changent au droit positif : seuils recalculés, délais de rigueur, fentes verrouillées, quatre indices et cinq strates. Calcul de la couche <code>simulateur/nuances_institutionnelles.py</code>, pas une opinion — chaque ligne rappelle l'article et la règle telle qu'elle est écrite.</p>
+    </header>
     <div class="nuances-intro" id="nuances-resume">Le tableau se met à jour avec la simulation.</div>
     <div id="nuances-corps"><div class="carte">Chargement du tableau institutionnel…</div></div>
     <p class="nuances-intro"><button type="button" class="bouton" onclick="rafraichirNuances()">Recalculer maintenant</button>
@@ -1464,7 +1782,11 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </section>
 
   <section class="bloc" id="section-verrous">
-    <h2>Verrous : ce qui tient, ce qui lâche <span class="aide">les 38 règles de blocage du registre <code>simulateur/gouvernance_contrepouvoir.py</code>, partagées en trois colonnes — touchées par le vecteur, intactes, hors de portée d'un curseur. Une quatrième liste rappelle les réglages déplacés et, pour chacun, la catégorie de connaissance qu'il atteint. Rien n'est saisi ici : tout vient de <code>POST /api/nuances</code>.</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Ce qui bloque</p>
+      <h2>Verrous : ce qui tient, ce qui lâche</h2>
+      <p class="section-intro">Les 38 règles de blocage du registre <code>simulateur/gouvernance_contrepouvoir.py</code>, partagées en trois colonnes — touchées par le vecteur, intactes, hors de portée d'un curseur. Une quatrième liste rappelle les réglages déplacés et, pour chacun, la catégorie de connaissance qu'il atteint. Rien n'est saisi ici : tout vient de <code>POST /api/nuances</code>.</p>
+    </header>
     <div class="nuances-intro" id="verrous-resume">Le bloc suit la simulation des nuances.</div>
     <div id="verrous-corps"><div class="carte">Chargement de l'état des verrous…</div></div>
     <h3 style="margin:14px 0 6px">Réglages déplacés et ce qu'ils touchent</h3>
@@ -1473,7 +1795,11 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
 
 
   <section class="bloc" id="section-contrepouvoirs">
-    <h2>Contre-pouvoirs, en chiffres <span class="aide">l'arithmétique servie par <code>/api/contrepouvoirs</code> et le temps des procédures servis par <code>/api/dynamiques</code> : voix, signatures, délais de rigueur et fentes non écrites — tels que le serveur les calcule</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Institutions</p>
+      <h2>Contre-pouvoirs, en chiffres</h2>
+      <p class="section-intro">L'arithmétique servie par <code>/api/contrepouvoirs</code> et le temps des procédures servis par <code>/api/dynamiques</code> : voix, signatures, délais de rigueur et fentes non écrites — tels que le serveur les calcule.</p>
+    </header>
     <div class="nuances-intro" id="contrepouvoirs-resume">L'arithmétique institutionnelle se charge quand la section approche de l'écran.</div>
     <div id="contrepouvoirs-corps"><div class="carte">Chargement de l'arithmétique institutionnelle…</div></div>
     <p class="nuances-intro">
@@ -1482,7 +1808,11 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
     </p>
   </section>
   <section class="bloc" id="section-comparaison">
-    <h2>Comparer <span class="aide">les préréglages du catalogue rejoués par le serveur (<code>/api/comparer</code>) à leur année finale : ce que chacun dégage, ce qu'il laisse de dette publique, son déficit, le risque pour la population et le nombre de seuils en alerte — tels que le serveur les calcule, sans recalcul dans la page</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Mise en perspective</p>
+      <h2>Comparer</h2>
+      <p class="section-intro">Les préréglages du catalogue rejoués par le serveur (<code>/api/comparer</code>) à leur année finale : ce que chacun dégage, ce qu'il laisse de dette publique, son déficit, le risque pour la population et le nombre de seuils en alerte — tels que le serveur les calcule, sans recalcul dans la page.</p>
+    </header>
     <div class="nuances-intro" id="comparaison-resume">La comparaison se charge quand la section approche de l'écran.</div>
     <div id="comparaison-corps"><div class="carte">Chargement de la comparaison…</div></div>
     <p class="aide cmp-legende">Lecture : le <b>solde des mesures</b> est ce que le scénario dégage ou coûte par an à l'année finale (recettes nouvelles moins dépenses nouvelles) ; la <b>dette</b> et le <b>déficit</b> sont en points de PIB ; le <b>risque population</b> va de 0 à 100 ; les <b>alertes</b> comptent les seuils franchis. La barre se mesure sur le plus fort montant servi ; le signe et l'unité disent le sens, jamais la couleur seule.</p>
@@ -1500,7 +1830,11 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </div>
 
   <section class="bloc" id="section-contradiction">
-    <h2>Objections, concessions et réponses <span class="aide">le registre de la contradiction (<code>simulateur/contradiction.py</code>) : pour chaque mesure et pour chaque hypothèse du modèle, la meilleure version de la critique, ce que le dépôt concède, ce qu'il maintient, le fait qui le ferait changer d'avis, ses sources et son statut. La portée des leviers est déduite du catalogue (<code>simulateur/parametres.py</code>), jamais saisie. Rien n'est rédigé ici : tout vient de <code>GET /api/objections</code>.</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Le débat</p>
+      <h2>Objections, concessions et réponses</h2>
+      <p class="section-intro">Le registre de la contradiction (<code>simulateur/contradiction.py</code>) : pour chaque mesure et pour chaque hypothèse du modèle, la meilleure version de la critique, ce que le dépôt concède, ce qu'il maintient, le fait qui le ferait changer d'avis, ses sources et son statut. La portée des leviers est déduite du catalogue (<code>simulateur/parametres.py</code>), jamais saisie. Rien n'est rédigé ici : tout vient de <code>GET /api/objections</code>.</p>
+    </header>
     <div class="nuances-intro" id="contradiction-resume">Chargement du registre…</div>
     <p class="nuances-intro">
       <button type="button" class="bouton" onclick="chargerObjections('')">Tout le registre</button>
@@ -1515,12 +1849,20 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </section>
 
   <section class="bloc" id="section-resultats">
-    <h2>Résultats année par année <span class="aide">tableau détaillé des 5 échelons</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Chiffres détaillés</p>
+      <h2>Résultats année par année</h2>
+      <p class="section-intro">Tableau détaillé des 5 échelons.</p>
+    </header>
     <div class="defilable"><table id="results-table"></table></div>
   </section>
 
   <section class="bloc" id="section-trajectoires">
-    <h2>Trajectoires clés <span class="aide">déficit, dette, taux OAT, tension sociale et confiance</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Trajectoires</p>
+      <h2>Trajectoires clés</h2>
+      <p class="section-intro">Déficit, dette, taux OAT, tension sociale et confiance.</p>
+    </header>
     <div class="graphique" id="graphique-trajectoires">
       <svg class="svg-chart" id="svg-chart" viewBox="0 0 900 210" preserveAspectRatio="none"
         role="img" aria-label="Courbes des trajectoires clés : déficit, dette, taux OAT, tension sociale et confiance, année par année"></svg>
@@ -1528,27 +1870,48 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
   </section>
 
   <section class="bloc" id="section-domaines">
-    <h2>Domaines d'action publique <span class="aide">score 0-100 (50 = aucun écart avec la référence) et indicateurs concrets</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Domaines</p>
+      <h2>Domaines d'action publique</h2>
+      <p class="section-intro">Score 0-100 (50 = aucun écart avec la référence) et indicateurs concrets.</p>
+    </header>
     <div class="grille domaines" id="domaines-grille"></div>
   </section>
 
   <section class="bloc" id="section-matrice">
-    <h2>Matrice croisée levier × domaine <span class="aide">effet marginal de chaque levier actif, calculé par le modèle (différences finies) — <span id="matrice-fraicheur">en attente d'une simulation complète</span></span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Croisements</p>
+      <h2>Matrice croisée levier × domaine</h2>
+      <p class="section-intro">Effet marginal de chaque levier actif, calculé par le modèle
+        (différences finies) — <span id="matrice-fraicheur">en attente d'une simulation complète</span>.</p>
+    </header>
     <div class="defilable"><table class="matrice" id="matrice-impacts"></table></div>
   </section>
 
   <section class="bloc" id="section-journal">
-    <h2>Journal causal du moteur <span class="aide">rétroactions générées année par année</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Rétroactions</p>
+      <h2>Journal causal du moteur</h2>
+      <p class="section-intro">Rétroactions générées année par année.</p>
+    </header>
     <div class="journal" id="journal"></div>
   </section>
 
   <section class="bloc" id="section-provenance">
-    <h2>Sources, licences et fraîcheur <span class="aide">ce que le simulateur sait, et ce qu'il ne sait pas</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">Traçabilité</p>
+      <h2>Sources, licences et fraîcheur</h2>
+      <p class="section-intro">Ce que le simulateur sait, et ce qu'il ne sait pas.</p>
+    </header>
     <div class="provenance" id="provenance"></div>
   </section>
 
   <section class="bloc audit" id="section-audit">
-    <h2>🔍 Audit &amp; traçabilité — à livre ouvert <span class="aide">pas de boîte noire : chaque chiffre, chaque formule, chaque seuil et chaque dynamique croisée est vérifiable à la source</span></h2>
+    <header class="section-entete">
+      <p class="eyebrow">À livre ouvert</p>
+      <h2>🔍 Audit &amp; traçabilité — à livre ouvert</h2>
+      <p class="section-intro">Pas de boîte noire : chaque chiffre, chaque formule, chaque seuil et chaque dynamique croisée est vérifiable à la source.</p>
+    </header>
     <p class="aide" style="margin-bottom:10px">
       Ce simulateur est un <b>modèle, pas une prophétie</b> : il rend explicites toutes ses
       hypothèses. Vous trouverez ici, de façon permanente et auditable : les sources officielles
@@ -1591,7 +1954,7 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
     les coefficients d'impact sont documentés dans chaque formule et modifiables.
     Créé par son auteur et mis gratuitement à disposition de toutes et tous : reproduction autorisée
     avec attribution, nul ne peut s'en attribuer le mérite.
-    <span class="aide" id="version-interface">Interface v1.10.2 (2026-10-08) — calibration des dépenses du foyer par source publique ou données personnelles; données personnelles locales à la page.</span>
+    <span class="aide" id="version-interface">Interface v1.11.0 (2026-10-14) — quatre thèmes (soir, jour, crème, contraste), deux densités et cinq tailles de texte, choisis par le visiteur et gardés sur son appareil ; sections aérées (sur-titre, titre, phrase).</span>
   </p>
 
   <p class="pied credit">
@@ -5002,6 +5365,109 @@ function contenuGuide(){
     + 'tout moment depuis les boutons en haut de page.</div>';
 }
 
+/* ── L'affichage : thème, densité, taille du texte ─────────────────────────
+   Trois réglages qui n'appartiennent qu'au visiteur. Ils vivent dans son
+   navigateur (`localStorage`) et jamais sur le serveur : rien n'est envoyé,
+   rien n'est rattaché à quelqu'un. Le script de l'en-tête les pose avant le
+   premier rendu ; ces fonctions-ci les changent, et retiennent le choix.
+
+   Le thème suit l'appareil tant que personne n'a rien choisi : qui lit en clair
+   reçoit « jour », qui lit en sombre reçoit « soir ». Un choix explicite gagne
+   toujours, et se garde jusqu'à ce qu'on en change. */
+const THEMES_AFFICHAGE = ['soir', 'jour', 'creme', 'contraste'];
+const DENSITES_AFFICHAGE = ['aere', 'compact'];
+const TAILLES_AFFICHAGE = ['87', '100', '112', '125', '137'];
+const NIVEAUX_AFFICHAGE = {'87':'87,5 %','100':'100 %','112':'112,5 %','125':'125 %','137':'137,5 %'};
+
+function preferenceAffichage(cle){
+  try { return localStorage.getItem('simulateur-' + cle); } catch (e) { return null; }
+}
+
+function retenirAffichage(cle, valeur){
+  // Navigation privée, ou stockage refusé : le choix vaut alors pour la page
+  // ouverte, sans casser l'affichage en cours.
+  try { localStorage.setItem('simulateur-' + cle, valeur); } catch (e) {}
+}
+
+function themeAffichage(){
+  const choisi = preferenceAffichage('theme');
+  if (THEMES_AFFICHAGE.indexOf(choisi) >= 0) return choisi;
+  const appareilClair = typeof matchMedia === 'function'
+    && matchMedia('(prefers-color-scheme: light)').matches;
+  return appareilClair ? 'jour' : 'soir';
+}
+
+function densiteAffichage(){
+  const choisi = preferenceAffichage('densite');
+  return DENSITES_AFFICHAGE.indexOf(choisi) >= 0 ? choisi : 'aere';
+}
+
+function tailleAffichage(){
+  const choisi = preferenceAffichage('texte');
+  return TAILLES_AFFICHAGE.indexOf(choisi) >= 0 ? choisi : '100';
+}
+
+function appliquerAffichage(){
+  const racine = document.documentElement;
+  if (!racine) return;
+  racine.setAttribute('data-theme', themeAffichage());
+  racine.setAttribute('data-densite', densiteAffichage());
+  racine.setAttribute('data-texte', tailleAffichage());
+  majBoutonsAffichage();
+}
+
+function choisirTheme(theme){
+  if (THEMES_AFFICHAGE.indexOf(theme) < 0) return;
+  retenirAffichage('theme', theme);
+  appliquerAffichage();
+}
+
+function choisirDensite(densite){
+  if (DENSITES_AFFICHAGE.indexOf(densite) < 0) return;
+  retenirAffichage('densite', densite);
+  appliquerAffichage();
+}
+
+function changerTailleTexte(pas){
+  const rang = TAILLES_AFFICHAGE.indexOf(tailleAffichage());
+  const suivant = Math.min(TAILLES_AFFICHAGE.length - 1, Math.max(0, rang + pas));
+  retenirAffichage('texte', TAILLES_AFFICHAGE[suivant]);
+  appliquerAffichage();
+}
+
+/* Les boutons disent l'état, pas seulement l'action : celui du thème en
+   vigueur et celui de la densité portent `aria-pressed="true"`, et le niveau de
+   texte est annoncé aux lecteurs d'écran (`role="status"`). */
+function majBoutonsAffichage(){
+  THEMES_AFFICHAGE.forEach(function (theme) {
+    const bouton = document.getElementById('theme-' + theme);
+    if (bouton) bouton.setAttribute('aria-pressed', theme === themeAffichage() ? 'true' : 'false');
+  });
+  DENSITES_AFFICHAGE.forEach(function (densite) {
+    const bouton = document.getElementById(densite === 'aere' ? 'densite-aere' : 'densite-compact');
+    if (bouton) bouton.setAttribute('aria-pressed', densite === densiteAffichage() ? 'true' : 'false');
+  });
+  const niveau = document.getElementById('affichage-niveau');
+  if (niveau) niveau.textContent = NIVEAUX_AFFICHAGE[tailleAffichage()];
+  const moins = document.getElementById('texte-moins');
+  if (moins) moins.disabled = tailleAffichage() === TAILLES_AFFICHAGE[0];
+  const plus = document.getElementById('texte-plus');
+  if (plus) plus.disabled = tailleAffichage() === TAILLES_AFFICHAGE[TAILLES_AFFICHAGE.length - 1];
+}
+
+function initialiserAffichage(){
+  appliquerAffichage();
+  // La préférence du système peut changer en cours de route (le soir tombe, le
+  // mode sombre s'active tout seul) : la page suit, tant qu'aucun choix
+  // explicite n'a été fait.
+  if (typeof matchMedia !== 'function') return;
+  const sombre = matchMedia('(prefers-color-scheme: dark)');
+  if (!sombre || typeof sombre.addEventListener !== 'function') return;
+  sombre.addEventListener('change', function () {
+    if (preferenceAffichage('theme') === null) appliquerAffichage();
+  });
+}
+
 function ouvrirGuide(){
   ouvrirModale('❓ Comment lire ce simulateur', contenuGuide());
 }
@@ -6401,6 +6867,9 @@ async function chargerObjections(filtre){
 (async function demarrer(){
   await chargerCatalogue();
   initialiserInfobulles();
+  // Thème, densité et taille du texte : trois préférences qui ne quittent
+  // pas le navigateur, appliquées dès la première image (voir l'en-tête).
+  initialiserAffichage();
   initialiserModale();
   renderScenarios();
   await chargerContexte(false);

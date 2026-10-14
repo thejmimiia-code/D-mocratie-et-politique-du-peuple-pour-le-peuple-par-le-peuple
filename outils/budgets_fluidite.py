@@ -144,7 +144,7 @@ BUDGETS: tuple[Budget, ...] = (
     Budget(
         "page",
         "la page entière (le document HTML)",
-        111_155,
+        119_995,
         "Le document part avant tout le reste : chaque kilo-octet y est payé par "
         "chaque visiteur, y compris celui qui repart aussitôt.",
         "regenere",
@@ -268,7 +268,7 @@ BUDGETS: tuple[Budget, ...] = (
     Budget(
         "premier_ecran",
         "ce que la page télécharge avant d'être utilisable",
-        256_372,
+        265_212,
         "La page, les sept charges du démarrage et la première simulation : le "
         "nombre qui décide si l'outil s'ouvre ou si l'on referme.",
         "section",

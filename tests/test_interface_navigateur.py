@@ -246,6 +246,36 @@ class TestInterfaceDansNode(unittest.TestCase):
         self.assertGreaterEqual(len(postes), 2,
                                 "le levier modifié n'a pas déclenché de nouvelle simulation")
 
+    def test_les_reglages_d_affichage_tiennent_le_parcours(self):
+        """Les trois réglages du visiteur, joués dans le navigateur pour de vrai.
+
+        Le contrôle statique (`tests/test_themes_en_page.py`) juge la feuille :
+        contrastes, jetons, densités. Celui-ci juge le geste — le script
+        d'en-tête qui pose le thème avant le premier pixel, le clic qui change
+        la page, le choix qui se garde, l'appareil qui ne l'emporte plus, et un
+        nom inconnu qui ne casse rien.
+        """
+        etapes = {etape["nom"]: etape["ok"] for etape in self.rapport.get("etapes", [])}
+        for nom in (
+            "l'en-tête pose un thème avant le premier rendu",
+            "sans choix enregistré, c'est l'appareil qui décide",
+            "un appareil qui préfère le clair reçoit le thème clair",
+            "la densité part d'aérée et la taille de 100 %",
+            "un choix enregistré est repris tel quel au chargement suivant",
+            "un choix inconnu est écarté, pas appliqué",
+            "le thème choisi est posé sur la racine et retenu sur l'appareil",
+            "un choix explicite résiste au réglage de l'appareil",
+            "sans choix, la page suit l'appareil",
+            "le bouton du thème en vigueur dit son état, les autres non",
+            "la densité compacte se pose sur la racine et se retient",
+            "un réglage inconnu ne change rien",
+            "la taille du texte monte par crans de 12,5 %",
+            "la taille du texte s'arrête à son plus haut cran",
+            "la taille du texte s'arrête à son plus bas cran",
+        ):
+            with self.subTest(etape=nom):
+                self.assertTrue(etapes.get(nom), f"étape absente ou fausse : {nom}")
+
     def test_les_exports_sont_produits(self):
         """Les deux boutons d'export déclenchent un téléchargement."""
         telechargements = self.rapport.get("telechargements", [])

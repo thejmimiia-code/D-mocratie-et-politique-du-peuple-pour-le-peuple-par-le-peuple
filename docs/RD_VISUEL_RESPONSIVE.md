@@ -467,6 +467,42 @@ sont décrits dans [`RD_CONTREPOUVOIRS_EN_PAGE.md`](RD_CONTREPOUVOIRS_EN_PAGE.md
   socle, la densité des tableaux d'audit. Une section neuve se range dans les
   règles existantes ; elle n'en invente pas.
 
+## Douzième incrément — quatre thèmes, une ligne éditoriale, un écran de poche
+
+La passe du 14 octobre 2026 ne touche pas au contenu : elle change **ce qui se
+passe entre le serveur et l'œil**. Le détail complet — relevé de la charte
+M.R.S.C., choix des palettes, contrastes mesurés, coût en octets et limites —
+est dans [`RD_AFFICHAGE_THEMES_ET_MOBILE.md`](RD_AFFICHAGE_THEMES_ET_MOBILE.md).
+Ce qui relève de l'affichage, ici :
+
+- **Quatre thèmes** (`soir`, `jour`, `crème`, `contraste renforcé`), **47 jetons
+  aux mêmes noms** dans chacun, `color-scheme` déclaré par thème. Le choix du
+  visiteur est posé sur `<html>` **avant le premier pixel** par un script
+  d'en-tête, gardé dans `localStorage`, et n'est jamais envoyé au serveur.
+- **Le défaut est le réglage de l'appareil** — et `prefers-color-scheme`
+  n'apparaît **pas** dans la feuille : une media query CSS aurait écrasé le choix
+  explicite du visiteur. Un contrôle refuse son retour dans le CSS.
+- **La ligne éditoriale empruntée au site M.R.S.C.** : vingt-quatre sections en
+  trois temps — un sur-titre en majuscules précédé du **trait vert de 25 × 3 px**
+  de la charte, un titre, puis une phrase. L'explication a quitté les titres.
+- **L'échelle d'espacement est branchée** : `--e-1…--e-6` et ses dérivés
+  (`--pad-bloc`, `--ecart-section`, `--ecart-carte`) commandent les sections et
+  les cartes ; la densité « Compact » ne fait que changer ces trois jetons.
+- **La largeur de lecture est bornée** : conteneur ramené à 1440 px, phrases
+  d'introduction limitées à `--mesure` (74 caractères) — les tableaux larges
+  gardent leur défilement plutôt que d'imposer une page étroite.
+- **Le panneau « Affichage » se replie en feuille** sous 640 px : fixé en bas,
+  défilement qui retient son geste, cibles de 44 px, hauteur bornée.
+- **Cinq tailles de texte** (87 → 137 %) agrandissent les `rem` sans jamais
+  toucher au plancher, qui reste en pixels : agrandir ne peut pas créer un texte
+  illisible.
+
+Deux erreurs d'affichage trouvées par la mesure, pas par l'œil : l'encre blanche
+figée sur la strate hors-sol (**3,76:1** en « soir », **2,02:1** en
+« contraste ») et le texte de l'onglet actif sur son dégradé de marque
+(**1,06:1** en « contraste »). Deux jetons neufs les réparent — `--encre-pleine`
+et `--sur-mrsc`.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si

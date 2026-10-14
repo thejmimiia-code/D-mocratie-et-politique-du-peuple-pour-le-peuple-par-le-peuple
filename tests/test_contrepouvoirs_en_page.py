@@ -62,8 +62,11 @@ class TestLaSectionDesContrePouvoirs(unittest.TestCase):
 
     def test_la_section_dit_d_ou_viennent_ses_chiffres(self):
         """L'entête nomme les deux routes : le lecteur peut les appeler lui-même."""
+        # Le sur-titre, le titre et la phrase d'introduction forment l'entête :
+        # la provenance des chiffres vit dans la phrase, donc on lit jusqu'à la
+        # fin du `<header>` et non jusqu'à la fin du titre.
         entete = self.page[self.page.index('id="section-contrepouvoirs"'):]
-        entete = entete[:entete.index("</h2>")]
+        entete = entete[:entete.index("</header>")]
         self.assertIn("/api/contrepouvoirs", entete)
         self.assertIn("/api/dynamiques", entete)
 
