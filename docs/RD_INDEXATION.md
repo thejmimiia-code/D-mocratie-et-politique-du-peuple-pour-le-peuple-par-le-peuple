@@ -347,18 +347,53 @@ Les 68 épreuves, sur les deux adresses :
 **Le piège de la copie de secours.** Elle s'endort quand personne ne l'appelle,
 puis répond **200 avec une page qui raconte qu'elle démarre**. Prendre cette page
 pour une réponse serait le pire des silences : la veille dirait que tout va bien
-au moment précis où rien ne répond. Elle insiste donc, en le disant, et refuse
-cette page comme une réponse.
+au moment précis où rien ne répond. Elle insiste donc — mais **seulement sur la
+page**, car c'est elle qui réveille, et en le disant.
+
+**Trois distinctions apprises le 14 octobre 2026**, quand la copie de secours est
+tombée en **502** (« Bad Gateway » : la passerelle répond, personne derrière) :
+
+| Ce qui arrive | Ce que c'est | Ce que fait la veille |
+|---|---|---|
+| La page dit « Application loading » | un **réveil** | elle attend, et recommence |
+| La passerelle répond 502, 503, 504 | une **panne** | elle le dit et passe — insister ne réveille rien |
+| Aucune réponse du tout (TLS coupé, délai dépassé) | un hôte **muet** | elle le dit **une fois**, puis arrête là cet hôte |
+
+La ligne « aucune réponse de l'hôte » n'est pas un détail : avant, une panne
+réseau **tuait le rapport** (`Réseau injoignable…`), c'est-à-dire que la veille
+devenait muette au moment où elle servait le plus. Et l'insistance appliquée à
+toutes les adresses faisait durer une veille sur un hôte suspendu **trois quarts
+d'heure** au lieu de deux minutes.
+
+**Le verdict se publie.** Le rapport est un commentaire **tenu à jour** sur une
+page du dépôt (« Veille en ligne », créée au premier passage, marqueur
+`<!-- veille-en-ligne -->`, mise à jour par `gh api -X PATCH`) — lisible sans rien
+installer, contrairement au résumé d'un run, qui vit à l'intérieur d'un workflow
+et disparaît avec lui. L'étape s'exécute **même quand la veille échoue**
+(`if: always()`) : sinon la panne la plus intéressante serait celle qu'on ne
+publie pas.
+
+**Deux poids, deux mesures.** L'adresse canonique est celle qu'on partage : son
+échec **fait rougir** la veille. La copie de secours peut être endormie, suspendue
+ou absente sans que le dépôt soit en faute : son échec est **publié, pas
+sanctionné**. Une veille rouge chaque semaine pour un service d'appoint cesse
+d'être lue, et une veille qu'on ne lit plus ne sert à rien.
 
 **Ce que la veille ne peut pas faire**, et qui reste manuel : elle constate
 qu'une adresse répond, pas qu'un moteur l'a indexée. Les gestes de Search
 Console et de Bing Webmaster Tools (§ 10) restent des gestes humains.
 
-Le workflow `.github/workflows/veille-en-ligne.yml` l'exécute à la demande et
-une fois par semaine — jamais à chaque poussée : une panne d'hébergeur ne doit
-pas faire rougir la contribution de quelqu'un d'autre. Le rapport s'écrit dans le
-résumé du run : un journal de job se télécharge, une page de run se lit. La
-veille tourne aussi à la main, sur n'importe quel poste :
+**Ce qu'elle ne peut pas réparer non plus** : le service de la copie de secours.
+Elle le constate et le publie. Le réveil, lui, se fait par un **crochet de
+déploiement** (`deploy-secours.yml`, secret `RENDER_DEPLOY_HOOK`) ou depuis le
+tableau de bord de l'hébergeur — le mode d'emploi est dans
+[`HEBERGEMENT.md`](HEBERGEMENT.md#quand-la-copie-de-secours-ne-répond-pas-502).
+
+Le workflow `.github/workflows/veille-en-ligne.yml` l'exécute à la demande, une
+fois par semaine, et à chaque poussée qui touche la veille elle-même (jamais à
+chaque poussée : une panne d'hébergeur ne doit pas faire rougir la contribution
+de quelqu'un d'autre). La veille tourne aussi à la main, sur n'importe quel
+poste :
 
 ```bash
 python3 outils/verifier-surface-en-ligne.py                # les deux hôtes

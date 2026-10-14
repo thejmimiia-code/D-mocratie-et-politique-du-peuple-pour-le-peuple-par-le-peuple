@@ -71,6 +71,16 @@ class FauxReseau:
         self.appels.append(f"{methode} {url}")
         reponse = self.veille.Reponse
         chemin = "/" + url.split("/", 3)[3].split("?", 1)[0] if url.count("/") >= 3 else "/"
+        if self.sabote.get("muet"):
+            # Ni statut, ni en-têtes : l'hôte n'a **rien** répondu. C'est ce que
+            # voit un coureur dont l'hôte est suspendu, ou dont la sortie réseau
+            # est fermée — la passerelle répond 502, mais le TLS se coupe avant.
+            return reponse(0, "", b"URLError: connection closed")
+        if self.sabote.get("panne"):
+            # La passerelle répond, mais personne derrière : le 502 d'un service
+            # suspendu. C'est un verdict, pas un réveil — il ne s'attend pas.
+            return reponse(502, "text/html; charset=utf-8",
+                           b"<html><body>502 Bad Gateway</body></html>")
         if self.sabote.get("demarrage"):
             return reponse(200, "text/html; charset=utf-8",
                            b"<html><body>Application loading</body></html>")
@@ -225,6 +235,68 @@ class TestEpreuves(unittest.TestCase):
         fautifs = [verdict for verdict in verdicts if not verdict.reussi]
         self.assertEqual([verdict.cible for verdict in fautifs], ["/api/catalogue"])
         self.assertIn("répond une erreur", fautifs[0].detail)
+
+    def test_un_502_est_un_verdict_pas_un_reveil(self):
+        """La passerelle sans service : on le dit, on n'attend pas.
+
+        Un 502 n'annonce aucun démarrage. L'attendre cinq fois par adresse, c'est
+        la quarantaine de minutes qui a fait qu'on ne lisait plus la veille.
+        """
+        faux = FauxReseau(self.veille, {"panne": "oui"})
+        vrai = self.veille._demander
+        self.veille._demander = faux
+        try:
+            verdicts = self.veille.sonder("canonique", self.veille.HOTES["canonique"], 5, 0.0)
+        finally:
+            self.veille._demander = vrai
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/"), 1,
+                         "la veille a attendu cinq fois une passerelle qui ne répond pas")
+        self.assertIn("passerelle", verdicts[0].detail)
+        self.assertIn("502", verdicts[0].detail)
+
+    def test_une_panne_reseau_devient_un_verdict_pas_un_arret(self):
+        """Un hôte muet ne doit pas emporter le rapport avec lui."""
+        import urllib.error
+
+        def explose(*_args, **_kw):
+            raise urllib.error.URLError("connexion refusée")
+
+        vrai = urllib.request.urlopen
+        urllib.request.urlopen = explose
+        try:
+            verdicts = self.veille.sonder("canonique", self.veille.HOTES["canonique"], 1, 0.0)
+        finally:
+            urllib.request.urlopen = vrai
+        self.assertEqual(len(verdicts), 2, "le silence de l'hôte n'a pas arrêté la veille")
+        self.assertIn("aucune réponse", verdicts[0].detail)
+
+    def test_un_hote_muet_est_dit_une_fois_pas_vingt_deux(self):
+        """Un hôte qui ne répond pas du tout : une ligne, et on passe.
+
+        Répéter la même panne sur chaque route n'ajoute pas d'information, mais
+        elle coûte une sonde à chaque fois — et c'est ainsi qu'une veille devient
+        si lente qu'on cesse de la lire.
+        """
+        verdicts, faux = self.sonder({"muet": "oui"})
+        self.assertEqual(len(verdicts), 2, "la veille a répété la même panne")
+        self.assertIn("non éprouvées", verdicts[1].detail)
+        self.assertLessEqual(len(faux.appels), 2, "des adresses ont été sondées pour rien")
+
+    def test_l_insistance_est_reservee_a_la_page(self):
+        """Elle réveille un service endormi : les autres suivent, sans attendre."""
+        faux = FauxReseau(self.veille, {"demarrage": "oui"})
+        vrai = self.veille._demander
+        self.veille._demander = faux
+        try:
+            self.veille.sonder("canonique", self.veille.HOTES["canonique"], 3, 0.0)
+        finally:
+            self.veille._demander = vrai
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/"), 3,
+                         "la page n'a pas été réessayée : un réveil passerait pour une panne")
+        self.assertEqual(faux.appels.count(f"GET {base}/api/lexique"), 1,
+                         "une adresse autre que la page a été réessayée : la veille s'allonge")
 
     def test_un_hebergeur_endormi_ne_passe_pas_pour_un_succes(self):
         """Le piège propre à la copie de secours : 200 + page d'attente.
