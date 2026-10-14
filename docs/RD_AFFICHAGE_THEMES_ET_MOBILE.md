@@ -245,3 +245,43 @@ mesure pas une intention, il refuse un dépassement.
 - **Rien de tout cela n'est mesuré sur un vrai téléphone.** Les cibles de 44 px
   et la feuille de bas d'écran sont des règles ; elles demandent un pouce pour
   être jugées.
+
+## 10. Ce qui a été importé du site M.R.S.C., et ce qui reste dehors
+
+La demande portait sur **le meilleur compromis visuel** entre les deux dépôts.
+Voici la liste, tenue à jour pour la prochaine passe.
+
+**Importé le 14 octobre 2026** : le sur-titre `.eyebrow` et son **trait vert de
+25 × 3 px** ; les **titres à échelle fluide** (`clamp`) et l'interligne de
+lecture (1,7 pour le corps, 1,65 pour les phrases) ; la **largeur de lecture
+bornée** (730 px chez M.R.S.C., `--mesure:74ch` ici) ; le **conteneur ramené de
+1560 à 1440 px** ; les **rayons** (20 px de carte, 9 px de bouton) ; les
+**cibles de 48 px** de la charte (44 px ici, plancher tactile) ; et le **panneau
+« Affichage »** sous le même nom, avec les mêmes mots — « Ajuster la lecture »,
+« ces choix restent enregistrés sur cet appareil ». Les quatre thèmes du
+simulateur naissent de là : « Jour » reprend les jetons de la charte
+(`#f5f7fa`, `#18243b`, `#1d3268`, `#2958a2`, `#456d29`).
+
+**Déjà importé aux passes précédentes** : la palette `--mrsc-*` (navy, bleu,
+vert, or, rouge et leurs clairs), le vert des recettes et le rouge des dépenses
+pour les classes de leviers, les crédits « © 2026 Mouvement Représentatif de la
+Société Civile (M.R.S.C) » avec le lien vers le site, le sigle et le logo, et la
+mention « valeur citoyenne non vérifiée par le M.R.S.C ».
+
+**Ce qui n'est pas repris, et pourquoi** :
+
+| Élément du site M.R.S.C. | Pourquoi il reste dehors |
+|---|---|
+| La navigation générale (Accueil, IA & société, Apprendre, Documents, Liens utiles, Localisation, Transparence, Nous contacter) | Le simulateur est **une page**, servie par deux hébergeurs et recopiée dans le site. Une navigation renverrait vers des pages qui n'existent pas dans ce dépôt — et le lien vers le site est déjà dans les crédits |
+| Le bandeau de chiffres clés (5 échelons · 100+ leviers · 20 domaines · 11 scénarios · 52 indicateurs · 0 compte) | La page porte ces chiffres **en direct** (leviers actifs, comptes de la balance, 20 domaines, 11 scénarios). Un bandeau figé mentirait dès le premier réglage |
+| Le bloc « Ce qu'il fait — et ce qu'il ne fait pas » | Le simulateur a plus précis : « Traçabilité », « Audit & traçabilité », et les sections servies par le moteur (nuances, contre-pouvoirs, objections) |
+| Les fiches « Apprendre » (dossier documentaire) | Ce sont les documents de `docs/`. Les recopier dans la page la ferait grossir de plusieurs centaines de kilo-octets — le budget de page les refuserait — et figerait des contenus qui vivent dans le dépôt |
+| Le formulaire « Nous contacter » | Il n'existe aucun service de messagerie côté simulateur : un formulaire qui ne mène nulle part vaut moins qu'une absence |
+| L'`iframe` d'intégration du site | C'est le site qui intègre le simulateur, pas l'inverse ; en intégrer un ici ferait une page dans la page |
+| `html[data-layout="lecture"|"panorama"]` (940 / 1480 px) | **Piste retenue pour une passe suivante.** Le réglage est proche de la densité, mais la question « à quoi sert la largeur de lecture ? » n'a pas encore d'usage mesuré ici : les tableaux larges ont leur propre défilement, et les phrases sont déjà bornées |
+
+*Vérifié en ligne le 14 octobre 2026 : le site sert toujours « Simulateur
+macro-politique » avec son bandeau de chiffres clés et sa copie embarquée du
+simulateur (révision lisible dans la page). Rien ici n'en dépend — la copie
+embarquée est sortie de ce dépôt par décision de son auteur — mais la langue
+visuelle, elle, est partagée.*
