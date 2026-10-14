@@ -244,7 +244,12 @@ class TestEpreuves(unittest.TestCase):
             chemin = Path(dossier) / "sous" / "veille.md"
             verdicts, _ = self.sonder()
             ecrits = self.veille.rapporter(verdicts, ["canonique"], [str(chemin)])
-            self.assertEqual(ecrits, [chemin])
+            # Pas d'égalité stricte : **en intégration continue**,
+            # `GITHUB_STEP_SUMMARY` existe, et le rapport s'écrit alors aussi
+            # dans le résumé de l'étape. Un contrôle qui suppose l'absence de
+            # cette variable passe ici et échoue là-bas — vérifié le
+            # 15 octobre 2026, quatre versions de Python d'accord pour le dire.
+            self.assertIn(chemin, ecrits)
             texte = chemin.read_text(encoding="utf-8")
         self.assertIn("Veille en ligne", texte)
         self.assertIn("| hôte | cible | statut | résultat |", texte)
@@ -274,6 +279,35 @@ class TestEpreuves(unittest.TestCase):
             self.assertTrue(chemin.exists(),
                             "--rapport n'a pas été transmis : la page de suivi resterait vide")
             self.assertIn("Veille en ligne", chemin.read_text(encoding="utf-8"))
+
+    def test_le_rapport_vole_aussi_vers_le_resume_de_l_etape(self):
+        """En intégration continue, la variable existe : deux destinations.
+
+        Ce n'est pas une bizarrerie, c'est la raison d'être du doublon : sur un
+        coureur, le rapport doit **à la fois** remplir le résumé de l'étape — que
+        GitHub affiche sans rien installer — et atterrir dans le fichier que
+        l'étape suivante publie. Nier la variable, c'est ce qui a fait échouer
+        quatre versions de Python d'un coup le 15 octobre 2026.
+        """
+        import os
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as dossier:
+            resume = Path(dossier) / "resume.md"
+            demande = Path(dossier) / "demande.md"
+            ancien = os.environ.get("GITHUB_STEP_SUMMARY")
+            os.environ["GITHUB_STEP_SUMMARY"] = str(resume)
+            try:
+                verdicts, _ = self.sonder()
+                ecrits = self.veille.rapporter(verdicts, ["canonique"], [str(demande)])
+            finally:
+                if ancien is None:
+                    os.environ.pop("GITHUB_STEP_SUMMARY", None)
+                else:
+                    os.environ["GITHUB_STEP_SUMMARY"] = ancien
+            self.assertEqual(sorted(map(str, ecrits)), sorted([str(demande), str(resume)]))
+            self.assertIn("Veille en ligne", resume.read_text(encoding="utf-8"))
+            self.assertIn("Veille en ligne", demande.read_text(encoding="utf-8"))
 
     def test_sans_rapport_demande_il_ne_se_plaint_pas(self):
         """Un poste sans GitHub : le script doit rester utilisable tel quel."""
