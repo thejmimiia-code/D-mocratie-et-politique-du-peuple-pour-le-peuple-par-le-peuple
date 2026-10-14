@@ -67,16 +67,18 @@ async function regler(page, reglages) {
   }, reglages);
 }
 
-async function photographier(nom, { theme, largeur, preparation }) {
+async function photographier(nom, { theme, largeur, preparation, url, garderGuide }) {
   const page = await navigateur.newPage();
-  await page.setViewport({ width: largeur, height: largeur <= 640 ? 780 : 900, deviceScaleFactor: 1 });
+  const hauteurEcran = largeur <= 640 ? 780 : 900;
+  await page.setViewport({ width: largeur, height: hauteurEcran, deviceScaleFactor: 1 });
   await regler(page, { theme, densite: "aere", presentation: "equilibree" });
-  await page.goto(adresse, { waitUntil: "networkidle2", timeout: 90000 });
+  await page.goto(url || adresse, { waitUntil: "networkidle2", timeout: 90000 });
   await page.waitForFunction(() => typeof window.simuler === "function", { timeout: 60000 });
   /* Le guide de première visite s'ouvre par-dessus la page (c'est sa raison
      d'être). La mesure des cadres, elle, porte sur la page : on le referme — et
-     une vue lui est consacrée, pour qu'il soit vu lui aussi. */
-  const guide = await page.$("#overlay.visible, #overlay.ouvert");
+     des vues lui sont consacrées, pour qu'il soit vu lui aussi. Une vue peut
+     demander à le garder ouvert : c'est ainsi qu'un téléphone le reçoit. */
+  const guide = garderGuide ? null : await page.$("#overlay.visible, #overlay.ouvert");
   if (guide) {
     await page.evaluate(() => {
       if (typeof window.fermerModale === "function") window.fermerModale();
@@ -252,10 +254,11 @@ async function photographier(nom, { theme, largeur, preparation }) {
       boites: [".entete", ".entete .barre-contexte", ".entete .barre-contexte button",
         ".entete .etat-contexte", ".sommaire", ".sommaire-liste", ".ruban-veille",
         ".ruban-veille .ruban-actions", "#resume .resume-actions", ".affichage-panneau",
-        ".outils-panneau", ".conteneur"].map(boite).filter(Boolean),
+        ".outils-panneau", ".conteneur", ".modale", ".modale-corps",
+        ".modale-entete"].map(boite).filter(Boolean),
     };
   });
-  rapport.push({ nom, theme, largeur, ...mesures });
+  rapport.push({ nom, theme, largeur, hauteur_ecran: hauteurEcran, ...mesures });
   await page.close();
   console.log("  ·", nom, `${largeur} px — page de ${mesures.hauteur_page} px`,
     mesures.debordement_horizontal ? "⚠ DÉBORDEMENT HORIZONTAL" : "",
@@ -285,13 +288,14 @@ for (const largeur of [1280, 380]) {
   });
 }
 
-// 3. Le guide de première visite, tel qu'un visiteur le reçoit.
-await photographier("guide-premiere-visite-jour-1280", {
-  theme: "jour", largeur: 1280,
-  preparation: (page) => page.evaluate(() => {
-    if (typeof window.ouvrirGuide === "function") window.ouvrirGuide();
-  }),
-});
+// 3. Le guide de première visite, tel qu'un visiteur le reçoit — demandé par
+// l'adresse (« ?guide=1 »), la voie que la page offre désormais, et sur les
+// quatre largeurs : une fenêtre qui ne tient pas sur un téléphone ne sert à rien.
+for (const largeur of [1280, 640, 380]) {
+  await photographier(`guide-premiere-visite-jour-${largeur}`, {
+    theme: "jour", largeur, url: `${adresse}?guide=1`, garderGuide: true,
+  });
+}
 
 // 4. Les états : survol, focus, densité resserrée.
 await photographier("etat-survol-jour-1280", {
@@ -314,6 +318,74 @@ for (const cible of ["resume", "section-classes", "console-pilotage"]) {
     }, cible),
   });
 }
+
+/* ── Le voyage au clavier ────────────────────────────────────────────────
+   Une fenêtre qui s'ouvre doit prendre le focus, le retenir tant qu'elle est
+   ouverte, et le rendre à qui l'a ouverte. Cela se joue touche par touche : la
+   suite de tests le fait avec une doublure, ici c'est Chromium qui répond.
+   L'adresse « ?guide=1 » ouvre la fenêtre comme un visiteur la reçoit. */
+async function verifierLeClavier() {
+  const page = await navigateur.newPage();
+  await page.setViewport({ width: 1280, height: 900, deviceScaleFactor: 1 });
+  const trace = [];
+  const etat = () => page.evaluate(() => {
+    const overlay = document.getElementById("overlay");
+    const fenetre = document.getElementById("modale");
+    const actif = document.activeElement;
+    const nom = actif ? (actif.id || actif.className || actif.tagName) : "aucun";
+    return {
+      ouvert: !!overlay && overlay.classList.contains("visible"),
+      dedans: !!(actif && fenetre && fenetre.contains(actif)),
+      sur: String(nom).trim().slice(0, 40),
+    };
+  });
+  try {
+    await page.goto(`${adresse}?guide=1`, { waitUntil: "networkidle2", timeout: 90000 });
+    await page.waitForFunction(() => typeof window.simuler === "function", { timeout: 60000 });
+    await new Promise((r) => setTimeout(r, 400));
+    const ouverture = await etat();
+    let sorties = 0;
+    for (let rang = 0; rang < 14; rang += 1) {
+      await page.keyboard.press("Tab");
+      const pas = await etat();
+      trace.push(pas.sur);
+      if (!pas.dedans) sorties += 1;
+    }
+    let sortiesArriere = 0;
+    /* La tabulation arrière se joue en trois gestes : Puppeteer ne connaît pas
+       « Shift+Tab » comme nom de touche — il faut tenir Maj, presser Tab, la
+       relâcher. Le premier essai a échoué là-dessus, et l'échec s'est lu dans le
+       résumé : mieux vaut une mesure qui dit qu'elle n'a pas pu se faire. */
+    for (let rang = 0; rang < 3; rang += 1) {
+      await page.keyboard.down("Shift");
+      await page.keyboard.press("Tab");
+      await page.keyboard.up("Shift");
+      const pas = await etat();
+      trace.push("‹ " + pas.sur);
+      if (!pas.dedans) sortiesArriere += 1;
+    }
+    await page.keyboard.press("Escape");
+    const fermeture = await etat();
+    return {
+      fenetre_ouverte: ouverture.ouvert,
+      focus_entrant: ouverture.dedans,
+      focus_sur: ouverture.sur,
+      tabulations: trace.length,
+      sorties,
+      sorties_arriere: sortiesArriere,
+      trace: [...new Set(trace)],
+      fermee_par_echap: !fermeture.ouvert,
+      focus_rendu_a: fermeture.sur,
+    };
+  } catch (erreur) {
+    return { erreur: String(erreur).slice(0, 200) };
+  } finally {
+    await page.close();
+  }
+}
+
+const clavier = await verifierLeClavier();
+console.log("  · clavier :", JSON.stringify(clavier));
 
 await writeFile(path.join(DOSSIER, "rapport.json"), JSON.stringify(rapport, null, 1), "utf8");
 
@@ -384,6 +456,37 @@ if (plans.length) {
     }
   }
 }
+/* Le guide de première visite : c'est une fenêtre, et une fenêtre doit tenir
+   sur l'écran qui la reçoit. */
+const guides = rapport.filter((vue) => vue.nom.startsWith("guide-premiere-visite"));
+if (guides.length) {
+  lignes.push("");
+  lignes.push("**Le guide de première visite** (il s'ouvre par-dessus la page) :");
+  for (const vue of guides) {
+    const fenetre = boite(vue, ".modale");
+    const corps = boite(vue, ".modale-corps");
+    lignes.push(`- ${vue.nom} — fenêtre ${nombre(fenetre?.largeur)} × ${nombre(fenetre?.hauteur)} `
+      + `(corps ${nombre(corps?.hauteur)}), tient dans la fenêtre : `
+      + `${fenetre && fenetre.hauteur <= vue.hauteur_ecran ? "oui" : "non"}`);
+  }
+}
+if (clavier && !clavier.erreur) {
+  lignes.push("");
+  lignes.push("**Le clavier, joué touche par touche dans Chromium** "
+    + `(${clavier.tabulations} tabulations, puis 3 en arrière, puis Échap) :`);
+  lignes.push(`- la fenêtre s'ouvre par « ?guide=1 » : ${clavier.fenetre_ouverte ? "oui" : "NON"}` + "");
+  lignes.push(`- le focus entre dans la fenêtre : ${clavier.focus_entrant ? "oui" : "NON"}`
+    + ` (sur « ${clavier.focus_sur} »)`);
+  lignes.push(`- tabulations sorties de la fenêtre : **${clavier.sorties}**`
+    + ` (${clavier.sorties_arriere} en arrière)`);
+  lignes.push(`- commandes traversées : ${(clavier.trace || []).join(" → ")}`);
+  lignes.push(`- Échap ferme : ${clavier.fermee_par_echap ? "oui" : "NON"}`
+    + `, et le focus va à « ${clavier.focus_rendu_a} »`);
+} else if (clavier?.erreur) {
+  lignes.push("");
+  lignes.push(`**Le clavier** : la vérification a échoué — ${clavier.erreur}`);
+}
+
 const glisse = rapport.filter((vue) => vue.boites.some((b) => b.deborde_largeur));
 lignes.push("");
 lignes.push(glisse.length

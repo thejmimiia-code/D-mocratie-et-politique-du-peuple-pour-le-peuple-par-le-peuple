@@ -92,7 +92,9 @@ class Element {
     if (!this._enfants[selecteur]) this._enfants[selecteur] = new Element(selecteur, "span");
     return this._enfants[selecteur];
   }
-  querySelectorAll() { return []; }
+  /* Les commandes d'un cadre : la doublure n'en connaît qu'une, la fenêtre
+     modale, et c'est celle dont l'ordre de tabulation se vérifie. */
+  querySelectorAll() { return this._commandes || []; }
   appendChild(enfant) { this.children.push(enfant); enfant.parentElement = this; return enfant; }
   setAttribute(cle, valeur) { this.attributs[cle] = valeur; }
   getAttribute(cle) { return this.attributs[cle] ?? null; }
@@ -118,6 +120,14 @@ class Element {
     return false;
   }
   click() { rapport.telechargements.push({ href: this.href, download: this.download }); }
+  /* Le focus : le vrai navigateur le pose sur un nœud et le retient ; la
+     doublure l'enregistre — sinon aucune étape ne peut dire où le clavier se
+     trouve, la question même d'une fenêtre qui s'ouvre et se referme. */
+  focus() {
+    globalThis.document.activeElement = this;
+    this._focalise = (this._focalise || 0) + 1;
+    return true;
+  }
 }
 
 /* L'affichage se règle sur trois préférences qui n'appartiennent qu'au
@@ -164,6 +174,8 @@ globalThis.document = {
   body: new Element("body"),
   documentElement: racineDocument,
 };
+// Au chargement, le clavier est sur la page — comme dans un vrai navigateur.
+globalThis.document.activeElement = globalThis.document.body;
 globalThis.window = globalThis;
 /* Un écran de bureau, celui sur lequel le visiteur lit : c'est lui qui décide
    où l'infobulle trouve de la place. */
@@ -901,6 +913,26 @@ function noeudAide(balise, attributs, classes) {
   for (const classe of (classes || [])) noeud.classList.add(classe);
   return noeud;
 }
+/* ── La fenêtre, au clavier ───────────────────────────────────────────────
+   Une fenêtre qui s'ouvre doit prendre le focus, le garder tant qu'elle est
+   ouverte, et le rendre à qui l'a ouverte. Ces étapes jouent les touches,
+   événement par événement, comme les précédentes jouent la souris. */
+let cleEmpechee = false;
+function jouerClavier(touche, options) {
+  cleEmpechee = false;
+  const evenement = Object.assign({
+    key: touche,
+    preventDefault: () => { cleEmpechee = true; },
+  }, options || {});
+  for (const gestionnaire of (ecoutes.get("keydown") || [])) gestionnaire(evenement);
+  return evenement;
+}
+const fenetreModale = parId("modale");
+const premierBoutonFenetre = noeudAide("button", {}, []);
+const dernierBoutonFenetre = noeudAide("button", {}, []);
+fenetreModale._commandes = [premierBoutonFenetre, dernierBoutonFenetre];
+const boutonOuvreur = noeudAide("button", { id: "btn-guide" }, []);
+
 const tiroirAide = noeudAide("details", { id: "affichage" }, ["affichage"]);
 const boutonTiroir = tiroirAide.appendChild(noeudAide("summary", { "data-aide": "<b>Affichage</b>Quatre thèmes" }));
 const panneauTiroir = tiroirAide.appendChild(noeudAide("div", {}, ["affichage-panneau"]));
@@ -933,6 +965,39 @@ noter("aucune aide ne recouvre le champ qu'elle annonce",
 jouerSouris("mouseover", motEtiquette);
 noter("le mot de l'étiquette, lui, garde son aide",
       elements.get("infobulle")?.classList.contains("visible") === true);
+
+// 4. La fenêtre, au clavier : le focus entre, ne sort pas, revient.
+apiPage.fermerModale();          // au cas où le guide de première visite est ouvert
+boutonOuvreur.focus();
+apiPage.ouvrirModale("Essai", "<p>corps</p>");
+noter("ouvrir la fenêtre donne le focus à la fenêtre",
+      globalThis.document.activeElement === fenetreModale,
+      `focus sur ${globalThis.document.activeElement?.id}`);
+dernierBoutonFenetre.focus();
+jouerClavier("Tab");
+noter("la tabulation depuis la dernière commande revient à la première",
+      globalThis.document.activeElement === premierBoutonFenetre && cleEmpechee);
+premierBoutonFenetre.focus();
+jouerClavier("Tab", { shiftKey: true });
+noter("la tabulation arrière depuis la première va à la dernière",
+      globalThis.document.activeElement === dernierBoutonFenetre && cleEmpechee);
+globalThis.document.activeElement = globalThis.document.body;
+jouerClavier("Tab");
+noter("un focus perdu hors de la fenêtre y revient",
+      globalThis.document.activeElement === premierBoutonFenetre && cleEmpechee);
+let sorties = 0;
+for (let rang = 0; rang < 4; rang += 1) {
+  jouerClavier("Tab");
+  if (fenetreModale._commandes.indexOf(globalThis.document.activeElement) === -1) sorties += 1;
+}
+noter("quatre tabulations de plus ne sortent jamais de la fenêtre", sorties === 0,
+      `${sorties} sortie(s)`);
+jouerClavier("Escape");
+noter("Échap referme la fenêtre et rend le focus à qui l'a ouverte",
+      elements.get("overlay")?.classList.contains("visible") === false
+      && globalThis.document.activeElement === boutonOuvreur);
+jouerClavier("Escape");
+noter("Échap, quand rien n'est ouvert, reste au navigateur", cleEmpechee === false);
 jouerSouris("mouseout", motEtiquette, racineDocument);
 
 // 4. La bulle ne se pose jamais sur la cible : elle est sous ou au-dessus.

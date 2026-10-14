@@ -679,6 +679,62 @@ cadre paraissait grand » est un jugement — et c'est le visiteur qui l'avait
 porté. Les images restent dans l'artefact, pour l'œil ; les chiffres, dans le
 commentaire de demande de fusion, pour la revue.
 
+## Seizième incrément — le clavier, et la fenêtre qui l'ignore
+
+Le visiteur ne l'a pas signalé : personne, sur un écran tactile ou à la souris,
+ne s'en aperçoit. C'est en relisant le parcours de la modale — trois façons de la
+fermer, aucune d'ouvrir le clavier — que le défaut est apparu, et il était
+complet.
+
+### Ce qui n'allait pas
+
+| Le geste | Ce qui se passait |
+|---|---|
+| la fenêtre s'ouvre | le focus reste sur la page, **derrière** |
+| on tabule | on traverse les curseurs de la page, invisibles et pourtant actionnables |
+| on tabule encore | on sort par le bas du document, fenêtre toujours ouverte |
+| la fenêtre se referme | le curseur reste où il était — souvent au pied de page |
+| Échap, rien d'ouvert | la touche est captée pour rien : plus de sortie de champ |
+
+### Ce que la fenêtre fait maintenant
+
+Le focus **entre** — le dialogue porte `tabindex="-1"`, sans quoi un navigateur
+refuse de le viser ; c'est la seule chose que la doublure de Node ne sait pas
+vérifier, d'où un contrôle statique exprès. Il **ne sort pas** : les six familles
+de commandes sont énumérées (`a[href]`, `button`, `summary`, `input`, `select`,
+`textarea`), la tabulation est circulaire aux deux bouts, et un focus perdu hors
+de la fenêtre y est ramené. Il **revient** à qui l'a ouverte — ou à la commande
+principale quand personne ne l'a ouverte, car le guide de première visite se
+montre tout seul et rendrait sinon le focus au corps du document. Échap ne ferme
+plus que ce qui est ouvert.
+
+L'adresse peut demander le guide : `?guide=1`. C'est un lien de démonstration,
+une classe, une capture — et le moyen, pour `outils/captures_ecran.mjs`, d'ouvrir
+la fenêtre comme un visiteur la reçoit, plutôt qu'en appelant une fonction
+interne.
+
+### Les épreuves, et l'épreuve de l'épreuve
+
+23 contrôles neufs et 7 étapes de harnais (les touches sont jouées événement par
+événement ; la doublure du document sait désormais poser et suivre le focus).
+Six sabotages posés, six attrapés ; trois posés sur les gestes, trois attrapés.
+
+La **première campagne ne prouvait rien** : les trois sabotages passaient, tous
+les trois. La raison est instructive — `tests/test_interface_navigateur.py`
+importe le serveur, qui lit la page **au moment de l'import** : patcher le
+fichier puis jouer dans le même processus revient à mesurer l'ancienne version.
+Le lanceur d'épreuve ouvre désormais un **processus neuf** pour chaque sabotage.
+Une épreuve qui ne peut pas échouer ne dit rien : elle se vérifie elle-même.
+
+### Ce que la mesure a fait de plus
+
+Le guide est photographié dans un vrai Chromium **à 1280, 640 et 380 px** — une
+fenêtre qui ne tient pas sur un téléphone ne sert à rien — et le voyage au clavier
+y est joué pour de bon : la fenêtre est ouverte par `?guide=1`, quatorze
+tabulations puis trois en arrière sont comptées hors de la fenêtre, la touche
+Échap est pressée, et le nom du porteur du focus est publié dans le résumé de la
+demande de fusion.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si

@@ -1685,7 +1685,8 @@ html[data-texte="137"]{font-size:137.5%}
   <div class="infobulle" id="infobulle" role="tooltip" aria-hidden="true"></div>
 
   <div class="overlay" id="overlay" aria-hidden="true" onclick="siClicDehors(event)">
-    <div class="modale" role="dialog" aria-modal="true" aria-labelledby="modale-titre" id="modale">
+    <div class="modale" role="dialog" aria-modal="true" aria-labelledby="modale-titre"
+         id="modale" tabindex="-1">
       <div class="modale-entete">
         <h2 id="modale-titre">Lexique</h2>
         <button class="discret" onclick="fermerModale()" data-aide="<b>Fermer</b>Revient au simulateur ; le réglage en cours n'est pas perdu.">Fermer ✕</button>
@@ -5443,16 +5444,101 @@ function marquerTextes(){
 }
 
 /* ── Modale : lexique et guide ──────────────────────────────────────────── */
+/* Ce qu'une fenêtre doit à qui l'a ouverte : le focus entre, il ne sort pas
+   tant qu'elle est là, et il revient d'où il venait. Trois gestes que la page
+   ne faisait pas — on pouvait tabuler derrière la fenêtre ouverte, jusqu'aux
+   curseurs de la page, et la refermer laissait le curseur trois sections plus
+   bas, à l'endroit où le navigateur l'avait laissé. */
+const COMMANDES_FENETRE = 'a[href],button:not([disabled]),summary,input:not([disabled]),'
+  + 'select:not([disabled]),textarea:not([disabled])';
+let fenetreOrigine = null;
+
+function fenetreVisible(){
+  const overlay = document.getElementById('overlay');
+  return !!(overlay && overlay.classList && overlay.classList.contains('visible'));
+}
+
+function estVisible(noeud){
+  if (!noeud || noeud.disabled) return false;
+  // Un nœud sans boîte (tiroir refermé) n'est pas une étape de tabulation.
+  return typeof noeud.getClientRects !== 'function' || noeud.getClientRects().length > 0;
+}
+
+function commandesDeLaFenetre(){
+  const fenetre = document.getElementById('modale');
+  if (!fenetre || typeof fenetre.querySelectorAll !== 'function') return [];
+  const trouvees = fenetre.querySelectorAll(COMMANDES_FENETRE) || [];
+  const liste = [];
+  for (let rang = 0; rang < trouvees.length; rang += 1){
+    if (estVisible(trouvees[rang])) liste.push(trouvees[rang]);
+  }
+  return liste;
+}
+
+function peutPrendreLeFocus(noeud){
+  if (!noeud || typeof noeud.focus !== 'function') return false;
+  if (noeud === document.body || noeud === document.documentElement) return false;
+  return estVisible(noeud);
+}
+
+function donnerLeFocusALaFenetre(){
+  const fenetre = document.getElementById('modale');
+  if (!fenetre || typeof fenetre.focus !== 'function') return;
+  try {
+    fenetre.focus();
+  } catch (erreur) { /* un focus refusé ne casse rien : la page reste utilisable */ }
+}
+
+function rendreLeFocus(){
+  const retour = fenetreOrigine;
+  fenetreOrigine = null;
+  if (peutPrendreLeFocus(retour)){
+    retour.focus();
+    return;
+  }
+  /* Personne à qui rendre le focus : le guide s'ouvre tout seul à la première
+     visite, quand aucun geste ne l'a demandé. Il va alors à la commande
+     principale — celle par où l'on commence, juste sous la fenêtre refermée. */
+  const principal = document.getElementById('btn-simuler');
+  if (peutPrendreLeFocus(principal)) principal.focus();
+}
+
+function retenirLeFocus(evenement){
+  const commandes = commandesDeLaFenetre();
+  if (!commandes.length){
+    donnerLeFocusALaFenetre();
+    return;
+  }
+  const premier = commandes[0];
+  const dernier = commandes[commandes.length - 1];
+  const actif = document.activeElement;
+  const dedans = !!(actif && commandes.indexOf(actif) !== -1);
+  const enArriere = !!evenement.shiftKey;
+  const retenir = () => {
+    if (typeof evenement.preventDefault === 'function') evenement.preventDefault();
+  };
+  if (!dedans){                       // le focus s'est perdu hors de la fenêtre
+    retenir();
+    (enArriere ? dernier : premier).focus();
+    return;
+  }
+  if (!enArriere && actif === dernier){ retenir(); premier.focus(); }
+  else if (enArriere && actif === premier){ retenir(); dernier.focus(); }
+}
+
 function ouvrirModale(titre, contenuHtml){
   const overlay = document.getElementById('overlay');
   const corps = document.getElementById('modale-corps');
   const titreModale = document.getElementById('modale-titre');
   if (!overlay || !corps) return;
+  // Qui a ouvert la fenêtre ? On le retient, pour le lui rendre à la fermeture.
+  if (!fenetreOrigine) fenetreOrigine = document.activeElement || null;
   if (titreModale) titreModale.textContent = titre;
   corps.innerHTML = contenuHtml || '';
   overlay.classList.add('visible');
   overlay.setAttribute('aria-hidden', 'false');
   masquerInfobulle();
+  donnerLeFocusALaFenetre();
 }
 
 function fermerModale(){
@@ -5460,6 +5546,7 @@ function fermerModale(){
   if (!overlay) return;
   overlay.classList.remove('visible');
   overlay.setAttribute('aria-hidden', 'true');
+  rendreLeFocus();
 }
 
 function siClicDehors(evenement){
@@ -5529,6 +5616,18 @@ async function ouvrirLexique(recherche){
 }
 
 /* ── Guide de démarrage : quatre étapes, pas de jargon ──────────────────── */
+/* L'adresse peut le demander — « ?guide=1 » : un lien de démonstration, une
+   classe, une capture, ou simplement quelqu'un qui veut revoir l'accueil de
+   l'outil sur un appareil qui l'a déjà lu. */
+function lienDemandeLeGuide(){
+  try {
+    if (typeof URLSearchParams === 'undefined' || !window.location) return false;
+    return new URLSearchParams(window.location.search).get('guide') === '1';
+  } catch (erreur){
+    return false;   // une adresse illisible n'ouvre rien
+  }
+}
+
 const ETAPES_GUIDE = [
   ['Vous êtes aux commandes',
    'Les réglages plus bas sont des décisions publiques possibles : un taux, une règle, une dépense. '
@@ -5800,7 +5899,16 @@ async function partagerReglages(){
 function initialiserModale(){
   if (!document.addEventListener) return;
   document.addEventListener('keydown', evenement => {
-    if (evenement && evenement.key === 'Escape') fermerModale();
+    if (!evenement) return;
+    const ouverte = fenetreVisible();
+    if (evenement.key === 'Escape'){
+      /* Échap ne ferme que ce qui est ouvert. Ailleurs la touche reste au
+         navigateur : elle sert à quitter un champ, à interrompre un
+         chargement — l'emprunter pour rien serait la prendre au visiteur. */
+      if (ouverte) fermerModale();
+      return;
+    }
+    if (ouverte && evenement.key === 'Tab') retenirLeFocus(evenement);
   });
 }
 
@@ -7107,8 +7215,11 @@ async function chargerObjections(filtre){
   activerExports();
   // Premier relevé de cotations séparé, sans retarder l'initialisation du moteur.
   rafraichirMarches(true);
-  // Guide de première visite : quatre étapes, jamais imposé deux fois.
-  if (!guideDejaVu()){
+  // Guide de première visite : quatre étapes, jamais imposé deux fois — sauf
+  // si l'adresse le demande, auquel cas on ne le note pas comme lu.
+  if (lienDemandeLeGuide()){
+    ouvrirGuide();
+  } else if (!guideDejaVu()){
     ouvrirGuide();
     marquerGuideVu();
   }
