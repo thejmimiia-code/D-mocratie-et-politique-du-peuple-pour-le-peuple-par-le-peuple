@@ -1,0 +1,153 @@
+// outils/captures_ecran.mjs — photographier la page, pour la regarder.
+//
+// La suite de tests sait mesurer des couleurs, des octets et des jetons : elle
+// ne sait pas voir. Ce script ouvre la page servie dans un vrai navigateur
+// (Chromium, via Puppeteer) et en fait des photographies — quatre thèmes,
+// quatre largeurs, les panneaux ouverts, les états, et une descente dans les
+// sections. Il écrit aussi un `rapport.json` : les rectangles réellement
+// occupés par les barres, les cadres et les panneaux.
+//
+// Il tourne là où un navigateur existe : dans l'intégration continue (voir
+// .github/workflows/captures.yml) ou sur une machine qui a déjà Chromium :
+//
+//     node outils/captures_ecran.mjs                       # tout
+//     node outils/captures_ecran.mjs --largeur 380         # une seule largeur
+//     node outils/captures_ecran.mjs --navigateur /usr/bin/chromium
+//
+// Les images sortent dans captures/ (non versionné : ce sont des mesures, pas
+// des sources).
+
+import { mkdir, writeFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const RACINE = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const DOSSIER = process.env.CAPTURES_DOSSIER || path.join(RACINE, "captures");
+const THEMES = ["soir", "jour", "creme", "contraste"];
+
+function lireOptions() {
+  const options = { largeurs: [1280, 900, 640, 380], navigateur: process.env.CHROMIUM_PATH || null };
+  const restes = process.argv.slice(2);
+  while (restes.length) {
+    const drapeau = restes.shift();
+    if (drapeau === "--largeur") options.largeurs = [Number(restes.shift())];
+    else if (drapeau === "--navigateur") options.navigateur = restes.shift();
+    else if (drapeau === "--url") options.url = restes.shift();
+  }
+  return options;
+}
+
+const options = lireOptions();
+const adresse = options.url || process.env.CAPTURES_URL || "http://127.0.0.1:8124/";
+
+let puppeteer;
+try {
+  ({ default: puppeteer } = await import("puppeteer"));
+} catch {
+  ({ default: puppeteer } = await import("puppeteer-core"));
+}
+
+await mkdir(DOSSIER, { recursive: true });
+const navigateur = await puppeteer.launch({
+  headless: "shell",
+  args: ["--no-sandbox", "--disable-dev-shm-usage"],
+  ...(options.navigateur ? { executablePath: options.navigateur } : {}),
+});
+
+const rapport = [];
+
+/** Les réglages du visiteur sont posés avant le premier pixel, comme un clic. */
+async function regler(page, reglages) {
+  await page.evaluateOnNewDocument((valeurs) => {
+    try {
+      for (const [cle, valeur] of Object.entries(valeurs)) {
+        if (valeur) localStorage.setItem("simulateur-" + cle, String(valeur));
+      }
+    } catch { /* un navigateur sans mémoire : la page prendra ses défauts */ }
+  }, reglages);
+}
+
+async function photographier(nom, { theme, largeur, preparation }) {
+  const page = await navigateur.newPage();
+  await page.setViewport({ width: largeur, height: largeur <= 640 ? 780 : 900, deviceScaleFactor: 1 });
+  await regler(page, { theme, densite: "aere", presentation: "equilibree" });
+  await page.goto(adresse, { waitUntil: "networkidle2", timeout: 90000 });
+  await page.waitForFunction(() => typeof window.simuler === "function", { timeout: 60000 });
+  if (preparation) await preparation(page);
+  await new Promise((r) => setTimeout(r, 400));
+  await page.screenshot({ path: path.join(DOSSIER, `${nom}.png`) });
+  const mesures = await page.evaluate(() => {
+    const boite = (selecteur) => {
+      const element = document.querySelector(selecteur);
+      if (!element) return null;
+      const r = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      return {
+        selecteur,
+        haut: Math.round(r.top + window.scrollY),
+        largeur: Math.round(r.width),
+        hauteur: Math.round(r.height),
+        tour: style.padding,
+        marge: style.margin,
+      };
+    };
+    return {
+      hauteur_page: document.documentElement.scrollHeight,
+      debordement_horizontal: document.documentElement.scrollWidth > window.innerWidth + 1,
+      boites: [".entete", ".entete .barre-contexte", ".entete .barre-contexte button",
+        ".entete .etat-contexte", ".sommaire", ".ruban-veille", ".ruban-veille .ruban-actions",
+        "#resume .resume-actions", ".affichage-panneau", ".outils-panneau",
+        ".conteneur"].map(boite).filter(Boolean),
+    };
+  });
+  rapport.push({ nom, theme, largeur, ...mesures });
+  await page.close();
+  console.log("  ·", nom, `${largeur} px — page de ${mesures.hauteur_page} px`,
+    mesures.debordement_horizontal ? "⚠ DÉBORDEMENT HORIZONTAL" : "");
+}
+
+// 1. Le premier écran : quatre thèmes, quatre largeurs.
+for (const largeur of options.largeurs) {
+  for (const theme of THEMES) {
+    if (largeur <= 380 && theme !== "soir" && theme !== "jour") continue;
+    await photographier(`accueil-${theme}-${largeur}`, { theme, largeur });
+  }
+}
+
+// 2. Les panneaux ouverts : c'est là que le visiteur règle l'affichage.
+for (const largeur of [1280, 380]) {
+  await photographier(`panneau-affichage-jour-${largeur}`, {
+    theme: "jour", largeur,
+    preparation: (page) => page.click(".affichage > summary"),
+  });
+  await photographier(`panneau-outils-jour-${largeur}`, {
+    theme: "jour", largeur,
+    preparation: (page) => page.click(".outils > summary"),
+  });
+}
+
+// 3. Les états : survol, focus, densité resserrée.
+await photographier("etat-survol-jour-1280", {
+  theme: "jour", largeur: 1280,
+  preparation: async (page) => {
+    await page.hover("#btn-simuler");
+  },
+});
+await photographier("etat-compact-jour-1280", {
+  theme: "jour", largeur: 1280,
+  preparation: (page) => page.evaluate(() => window.basculerDensite(true)),
+});
+
+// 4. Une descente dans la page : les temps forts.
+for (const cible of ["resume", "section-classes", "console-pilotage"]) {
+  await photographier(`section-${cible}-jour-1280`, {
+    theme: "jour", largeur: 1280,
+    preparation: (page) => page.evaluate((id) => {
+      document.getElementById(id)?.scrollIntoView({ block: "start" });
+    }, cible),
+  });
+}
+
+await writeFile(path.join(DOSSIER, "rapport.json"), JSON.stringify(rapport, null, 1), "utf8");
+await navigateur.close();
+console.log(`${rapport.length} captures écrites dans ${DOSSIER}`);

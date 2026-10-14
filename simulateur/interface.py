@@ -1457,8 +1457,8 @@ html[data-texte="137"]{font-size:137.5%}
     <div class="barre-contexte">
       <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule l'horizon sélectionné (5 ou 10 ans), les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Le modèle reste une exploration, pas une prévision.">▶ Simuler avec impacts croisés</button>
       <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données</button>
-      <details class="affichage" id="affichage" data-aide="<b>Affichage</b>Quatre thèmes (soir, jour, crème, contraste renforcé), deux densités et cinq tailles de texte. Ces choix restent enregistrés sur votre appareil : rien n'est envoyé au serveur.">
-        <summary title="Options d'affichage">🎨 Affichage <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
+      <details class="affichage" id="affichage">
+        <summary title="Options d'affichage" data-aide="<b>Affichage</b>Quatre thèmes (soir, jour, crème, contraste renforcé), trois présentations, deux densités et cinq tailles de texte. Ces choix restent enregistrés sur votre appareil : rien n'est envoyé au serveur.">🎨 Affichage <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
         <div class="affichage-panneau">
           <p class="affichage-titre"><b>Ajuster la lecture</b></p>
           <div class="affichage-ligne" role="group" aria-label="Thème d'affichage">
@@ -1496,8 +1496,8 @@ html[data-texte="137"]{font-size:137.5%}
           <p class="affichage-note">Ces choix restent enregistrés sur cet appareil ; le zoom du navigateur reste disponible. « Compact » resserre toute la page, catalogue des leviers compris ; « Lecture » resserre la colonne, « Panorama » l'élargit. Un réglage, un seul endroit.</p>
         </div>
       </details>
-      <details class="outils" id="outils-simulateur" data-aide="<b>Outils</b>Le lexique, le guide de démarrage, le partage des réglages, les exports et la remise à zéro. Ils restent là, mais seulement quand on ouvre le tiroir : la page garde la place pour ce qu'on lit.">
-        <summary title="Lexique, guide, partage, exports et remise à zéro">🧰 Outils <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
+      <details class="outils" id="outils-simulateur">
+        <summary title="Lexique, guide, partage, exports et remise à zéro" data-aide="<b>Outils</b>Le lexique, le guide de démarrage, le partage des réglages, les exports et la remise à zéro. Ils restent là, mais seulement quand on ouvre le tiroir : la page garde la place pour ce qu'on lit.">🧰 Outils <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
         <div class="affichage-panneau outils-panneau">
           <p class="affichage-titre"><b>Outils du simulateur</b></p>
           <button id="btn-lexique" onclick="ouvrirLexique()" data-aide="<b>Lexique</b>Chaque mot technique employé par la page, défini en français ordinaire, avec un repère chiffré. Les termes soulignés en pointillé dans la page s'expliquent aussi au survol.">📖 Lexique</button>
@@ -1514,8 +1514,8 @@ html[data-texte="137"]{font-size:137.5%}
       <span class="pastille" id="badge-contexte">contexte : chargement…</span>
       <span class="pastille" id="badge-date">—</span>
       <span class="pastille" id="badge-leviers">—</span>
-      <label class="select-horizon" data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">
-        Horizon <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
+      <label class="select-horizon">
+        <span data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">Horizon</span> <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
           <option value="5" selected>1 mandature · 5 ans</option>
           <option value="10">2 mandatures · 10 ans</option>
         </select>
@@ -1830,8 +1830,8 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
       <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre tous les leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
       <button class="discret" id="btn-classes-seules" onclick="basculerClasseSeules()" data-aide="<b>Mes leviers seulement</b>Masque tout le catalogue sauf les leviers que vous avez déplacés : on relit son propre plan sans se perdre dans les 156 curseurs.">Mes leviers seulement</button>
-      <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : le catalogue tient à l'écran tout en restant actionnable en direct.">
-        <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> Vue compacte (une ligne par levier)
+      <label>
+        <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> <span data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : le catalogue tient à l'écran tout en restant actionnable en direct.">Vue compacte (une ligne par levier)</span>
       </label>
     </div>
     <div class="classes-filtres" id="classes-filtres" role="group" aria-label="Filtrer les leviers par classe"></div>
@@ -3653,6 +3653,13 @@ function texteAideElement(cible){
   return cible.getAttribute('data-aide') || '';
 }
 function positionnerInfobulle(cible){
+  /* Trois placements, dans cet ordre — et jamais sur la cible :
+     1. sous la cible, si la bulle y tient entièrement ;
+     2. au-dessus, si elle y tient ;
+     3. à défaut, collée au bas de l'écran, sans recouvrir la commande.
+     Le troisième cas est celui qui manquait : faute de place en dessous, la
+     bulle se posait au-dessus du bouton — c'est-à-dire sur le panneau qu'il
+     venait d'ouvrir. */
   const bulle = elementInfobulle();
   if (!bulle) return;
   const rect = (cible && typeof cible.getBoundingClientRect === 'function')
@@ -3660,10 +3667,18 @@ function positionnerInfobulle(cible){
   if (!rect || (!rect.width && !rect.height)) return;
   const largeur = (typeof innerWidth === 'number') ? innerWidth : 1200;
   const hauteur = (typeof innerHeight === 'number') ? innerHeight : 900;
-  const gauche = Math.max(8, Math.min(rect.left, largeur - 364));
-  const enBas = rect.bottom + 12;
+  const largeurBulle = bulle.offsetWidth || 352;
+  const hauteurBulle = bulle.offsetHeight || 0;
+  const marge = 8;
+  const gauche = Math.max(marge, Math.min(rect.left, largeur - largeurBulle - marge));
+  const sousCible = rect.bottom + 12;
+  const surCible = rect.top - 12 - hauteurBulle;
+  let haut;
+  if (sousCible + hauteurBulle <= hauteur - marge) haut = sousCible;
+  else if (surCible >= marge) haut = surCible;
+  else haut = Math.max(marge, hauteur - hauteurBulle - marge);
   bulle.style.left = `${gauche}px`;
-  bulle.style.top = `${(enBas + 220 > hauteur ? Math.max(8, rect.top - 12) : enBas)}px`;
+  bulle.style.top = `${haut}px`;
 }
 function afficherInfobulle(html, cible){
   const bulle = elementInfobulle();
@@ -3691,17 +3706,39 @@ function survoler(cible){
   if (!texte){ masquerInfobulle(); return; }
   afficherInfobulle(texte, cible);
 }
+const COMMANDES_AIDE = 'button,a,input,select,textarea,summary,label';
+function estOuvert(noeud){
+  // Un `<details>` ouvert montre déjà son contenu : l'aide n'a plus à s'y
+  // superposer, et son bouton n'est plus un bouton qu'on cherche.
+  const parent = noeud && noeud.parentElement;
+  return !!(parent && parent.tagName === 'DETAILS' && parent.open);
+}
+function commandeInterne(cible, cibleSurvolee){
+  /* Une infobulle explique un **contenant** ; elle cède devant toute commande
+     qu'il porte. Sans cette règle, l'aide accrochée à un tiroir restait
+     affichée tant que le pointeur restait dedans : elle recouvrait le panneau
+     qu'on venait d'ouvrir, et cachait ses boutons. */
+  if (!cible || !cibleSurvolee || !cible.contains || !cibleSurvolee.closest) return false;
+  const commande = cibleSurvolee.closest(COMMANDES_AIDE);
+  if (!commande || commande === cible) return false;
+  return cible.contains(commande);
+}
 function initialiserInfobulles(){
   if (!document.addEventListener) return;
   const cherche = (noeud) => {
     if (!noeud || !noeud.closest) return null;
     // La bulle dépliée reste lisible : pas d'infobulle par-dessus son contenu.
     if (noeud.closest('.bulle-levier')) return null;
-    return noeud.closest('[data-aide], [data-aide-levier]');
+    const porteur = noeud.closest('[data-aide], [data-aide-levier]');
+    if (!porteur) return null;
+    if (commandeInterne(porteur, noeud)) return null;
+    if (estOuvert(porteur)) return null;
+    return porteur;
   };
   document.addEventListener('mouseover', (evenement) => {
     const cible = cherche(evenement.target);
     if (cible) survoler(cible);
+    else masquerInfobulle();
   });
   document.addEventListener('mouseout', (evenement) => {
     if (cherche(evenement.relatedTarget)) return;
@@ -3710,6 +3747,7 @@ function initialiserInfobulles(){
   document.addEventListener('focusin', (evenement) => {
     const cible = cherche(evenement.target);
     if (cible) survoler(cible);
+    else masquerInfobulle();
   });
   document.addEventListener('focusout', () => masquerInfobulle());
   document.addEventListener('mousedown', () => masquerInfobulle());
