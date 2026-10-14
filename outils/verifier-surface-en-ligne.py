@@ -131,9 +131,22 @@ class Reponse:
 
     @property
     def en_demarrage(self) -> bool:
-        return MARQUE_DEMARRAGE in self.texte or (
-            self.type_contenu.startswith("text/html") and self.statut != 200
-        )
+        """L'hôte dit-il lui-même qu'il est en train de démarrer ?
+
+        Uniquement s'il le dit : la page d'attente de la copie de secours
+        (« Application loading »). Tout autre non-200 — un **502** de passerelle,
+        un 503 — est une **panne**, pas un réveil. Les confondre coûtait cher :
+        un hôte tombé faisait insister chaque sonde cinq fois, et la veille
+        durait trois quarts d'heure au lieu de deux minutes.
+        """
+        return MARQUE_DEMARRAGE in self.texte
+
+    @property
+    def muet(self) -> bool:
+        """Aucune réponse du tout : le réseau a lâché, ou l'hôte n'a pas répondu
+        dans le délai. Cela, on le retente — c'est le cas d'un service qui se
+        réveille vraiment."""
+        return self.statut == 0
 
 
 def _demander(url: str, methode: str = "GET", corps: dict[str, object] | None = None,
@@ -157,7 +170,11 @@ def _demander(url: str, methode: str = "GET", corps: dict[str, object] | None = 
         return Reponse(erreur.code, erreur.headers.get("Content-Type", "") if erreur.headers else "",
                        erreur.read(200_000))
     except (urllib.error.URLError, TimeoutError, OSError) as erreur:
-        raise SystemExit(f"Réseau injoignable pour {url} : {erreur}") from erreur
+        # Un hôte qui ne répond pas est un **résultat**, pas une raison de tout
+        # arrêter : la veille doit pouvoir dire « celle-là ne répond pas » et
+        # continuer à vérifier les autres. Sans cela, une seule adresse muette
+        # rendait le rapport inutilisable — et le rapport est tout ce qu'on lit.
+        return Reponse(0, "", f"{type(erreur).__name__}: {erreur}".encode())
 
 
 def _insister(url: str, methode: str = "GET", corps: dict[str, object] | None = None,
@@ -167,7 +184,10 @@ def _insister(url: str, methode: str = "GET", corps: dict[str, object] | None = 
     derniere: Reponse | None = None
     for essai in range(1, essais + 1):
         reponse = _demander(url, methode, corps, delai)
-        if not reponse.en_demarrage or essai == essais:
+        # On insiste quand l'hôte annonce son démarrage, ou quand il n'a
+        # **rien** répondu (le temps du réveil). Un 502 est un verdict : le
+        # répéter cinq fois ne le change pas et fait durer la veille.
+        if not (reponse.en_demarrage or reponse.muet) or essai == essais:
             return reponse
         derniere = reponse
         if journal is not None:
@@ -199,6 +219,17 @@ class Verdict:
                 f"{self.detail}")
 
 
+def _reponse_lisible(reponse: Reponse) -> str:
+    """Ce qu'on écrit quand l'hôte n'a pas répondu 200 — sans jargon."""
+    if reponse.muet:
+        detail = reponse.texte.strip() or "aucune réponse"
+        return f"aucune réponse de l'hôte ({detail})"
+    if reponse.statut in (502, 503, 504):
+        return (f"la passerelle répond {reponse.statut} : le service n'est pas "
+                f"derrière (endormi, suspendu, ou démarrage en échec)")
+    return f"attendu 200, reçu {reponse.statut}"
+
+
 def _epreuve_texte(hote: str, base: str, chemin: str, essais: int,
                    attente: float) -> Verdict:
     """Le texte servi doit être **le même** que celui que le code engendre."""
@@ -208,7 +239,7 @@ def _epreuve_texte(hote: str, base: str, chemin: str, essais: int,
         return verdict.conclure(False, "chemin absent de la surface publique")
     reponse = _insister(base + chemin, essais=essais, attente=attente)
     if reponse.statut != 200:
-        return verdict.conclure(False, f"attendu 200, reçu {reponse.statut}", reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
     servi = reponse.texte
     if servi != attendu:
         ou = next((n for n, (a, b) in enumerate(zip(attendu, servi, strict=False), 1) if a != b),
@@ -230,7 +261,7 @@ def _epreuve_image(hote: str, base: str, chemin: str, essais: int, attente: floa
         return verdict.conclure(False, "chemin absent de la surface publique")
     reponse = _insister(base + chemin, essais=essais, attente=attente)
     if reponse.statut != 200:
-        return verdict.conclure(False, f"attendu 200, reçu {reponse.statut}", reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
     type_attendu = TYPES_IMAGES.get(chemin, ())
     if type_attendu and not any(reponse.type_contenu.startswith(t) for t in type_attendu):
         return verdict.conclure(
@@ -247,8 +278,10 @@ def _epreuve_page(hote: str, base: str, essais: int, attente: float) -> Verdict:
     verdict = Verdict(hote, "/", "page complète et déclarée")
     reponse = _insister(base + "/", essais=essais, attente=attente, delai=60.0)
     if reponse.statut != 200 or not reponse.type_contenu.startswith("text/html"):
+        if reponse.statut != 200:
+            return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
         return verdict.conclure(
-            False, f"attendu 200 en text/html, reçu {reponse.statut} {reponse.type_contenu}",
+            False, f"attendu du text/html, reçu {reponse.type_contenu or 'aucun type'}",
             reponse.statut)
     page = reponse.texte
     attendus = {
@@ -274,14 +307,16 @@ def _epreuve_json(hote: str, base: str, cible: str, essais: int, attente: float,
     reponse = _insister(base + cible, methode=methode, corps=corps, essais=essais,
                         attente=attente, delai=120.0)
     if reponse.statut != 200:
-        return verdict.conclure(False, f"attendu 200, reçu {reponse.statut}", reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
     if not reponse.type_contenu.startswith("application/json"):
         return verdict.conclure(
             False, f"type inattendu : {reponse.type_contenu or 'aucun'}", reponse.statut)
     try:
         charge = json.loads(reponse.texte)
-    except json.JSONDecodeError as erreur:
-        return verdict.conclure(False, f"JSON illisible : {erreur}", reponse.statut)
+    except json.JSONDecodeError:
+        debut = reponse.texte.strip().replace("\n", " ")[:80]
+        return verdict.conclure(False, f"ce n'est pas du JSON : « {debut} »",
+                                reponse.statut)
     if isinstance(charge, dict) and set(charge) == {"error"}:
         return verdict.conclure(False, f"le serveur répond une erreur : {charge['error']}",
                                 reponse.statut)
@@ -301,6 +336,8 @@ def _epreuve_refus(hote: str, base: str, cible: str, essais: int, attente: float
     if reponse.statut == 200:
         return verdict.conclure(False, "répond 200 : la route ne devrait pas exister",
                                 reponse.statut)
+    if reponse.statut == 0:
+        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
     if reponse.statut >= 500:
         return verdict.conclure(False, f"erreur serveur ({reponse.statut})", reponse.statut)
     return verdict.conclure(True, f"refus propre ({reponse.statut})", reponse.statut)
@@ -313,44 +350,77 @@ def _epreuve_post_refuse(hote: str, base: str, essais: int, attente: float) -> V
                         essais=essais, attente=attente)
     if reponse.statut in (200, 201):
         return verdict.conclure(False, "accepté (200) pour une route inconnue", reponse.statut)
+    if reponse.statut == 0:
+        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
     if reponse.statut >= 500:
         return verdict.conclure(False, f"erreur serveur ({reponse.statut})", reponse.statut)
     return verdict.conclure(True, f"refus propre ({reponse.statut})", reponse.statut)
 
 
 def sonder(hote: str, base: str, essais: int, attente: float) -> list[Verdict]:
-    """Toutes les épreuves d'un hôte, dans l'ordre où la page les expose."""
-    verdicts = [_epreuve_page(hote, base, essais, attente)]
-    verdicts += [_epreuve_texte(hote, base, chemin, essais, attente)
+    """Toutes les épreuves d'un hôte, dans l'ordre où la page les expose.
+
+    **L'insistance est réservée à la première sonde.** C'est la page qui réveille
+    un service endormi : elle seule mérite qu'on attende et qu'on recommence.
+    Les vingt et une autres suivent à un seul essai — un hôte déjà réveillé
+    répond du premier coup, et un hôte qui ne répond pas ne se réveille pas
+    davantage parce qu'on lui a demandé vingt-deux fois. Sans cette règle, une
+    copie de secours suspendue faisait durer la veille une quarantaine de
+    minutes, ce qui est exactement le genre de lenteur qui fait qu'on ne la lit
+    plus.
+
+    **Et si la page ne répond pas du tout**, l'hôte est déclaré muet une fois
+    pour toutes : répéter la même panne sur chaque route ajoute des lignes, pas
+    de l'information, et coûte une sonde à chaque fois.
+    """
+    page = _epreuve_page(hote, base, essais, attente)
+    verdicts = [page]
+    if page.statut == 0:
+        muet = Verdict(hote, "(toutes les autres adresses)", "répondre")
+        muet.conclure(False, "non éprouvées : l'hôte ne répond à aucune adresse", 0)
+        verdicts.append(muet)
+        return verdicts
+    une = 1
+    verdicts += [_epreuve_texte(hote, base, chemin, une, attente)
                  for chemin in surface.TEXTES]
-    verdicts += [_epreuve_image(hote, base, chemin, essais, attente)
+    verdicts += [_epreuve_image(hote, base, chemin, une, attente)
                  for chemin in surface.IMAGES]
-    verdicts += [_epreuve_json(hote, base, chemin, essais, attente)
+    verdicts += [_epreuve_json(hote, base, chemin, une, attente)
                  for chemin in ROUTES_GET]
-    verdicts += [_epreuve_json(hote, base, chemin, essais, attente)
+    verdicts += [_epreuve_json(hote, base, chemin, une, attente)
                  for chemin in ROUTES_GET_AVEC_PARAMETRES]
-    verdicts += [_epreuve_json(hote, base, chemin, essais, attente, corps=corps)
+    verdicts += [_epreuve_json(hote, base, chemin, une, attente, corps=corps)
                  for chemin, corps in ROUTES_POST]
-    verdicts.append(_epreuve_refus(hote, base, "/api/route-inconnue", essais, attente))
-    verdicts.append(_epreuve_refus(hote, base, "/api/proxy", essais, attente))
-    verdicts.append(_epreuve_post_refuse(hote, base, essais, attente))
+    verdicts.append(_epreuve_refus(hote, base, "/api/route-inconnue", une, attente))
+    verdicts.append(_epreuve_refus(hote, base, "/api/proxy", une, attente))
+    verdicts.append(_epreuve_post_refuse(hote, base, une, attente))
     return verdicts
 
 
-def rapporter(verdicts: list[Verdict], hotes: list[str]) -> None:
-    """Écrit le rapport dans la page du run, quand GitHub le demande.
+def rapporter(verdicts: list[Verdict], hotes: list[str],
+              fichiers: list[str] | None = None) -> list[Path]:
+    """Écrit le rapport là où on le lira — au moins un endroit.
 
-    Un journal de job se télécharge ; la page du run, elle, se lit. Sans cela,
-    la seule trace lisible de cette veille serait un `curl` dans un terminal —
-    c'est-à-dire rien pour qui ouvre le dépôt par son navigateur. GitHub appelle
-    cela le *résumé de l'étape* : le script s'y conforme sans dépendre de quoi
-    que ce soit d'autre que la variable d'environnement.
+    Un journal de job se télécharge ; la page du run, elle, se lit. GitHub offre
+    pour cela le *résumé de l'étape*, que le script remplit par la variable
+    `GITHUB_STEP_SUMMARY`.
+
+    **Cette variable ne se laisse pas rediriger.** Une étape de workflow a beau
+    la redéfinir dans son `env:`, le coureur garde la sienne : le rapport part
+    alors dans le résumé de l'étape, et l'étape suivante — qui doit le publier —
+    cherche un fichier qui n'existe pas. C'est précisément ce qui est arrivé le
+    15 octobre 2026 : la veille tournait, le verdict existait, et la page de
+    suivi restait vide. D'où `--rapport`, une adresse nommée par l'appelant, qui
+    ne dépend d'aucune convention de la plateforme.
     """
     import os
 
-    chemin = os.environ.get("GITHUB_STEP_SUMMARY")
-    if not chemin:
-        return
+    ecrits: list[Path] = []
+    for chemin in list(fichiers or []) + ([os.environ["GITHUB_STEP_SUMMARY"]]
+                                          if os.environ.get("GITHUB_STEP_SUMMARY") else []):
+        ecrits.append(Path(chemin))
+    if not ecrits:
+        return ecrits
     rates = [verdict for verdict in verdicts if not verdict.reussi]
     lignes = [
         f"## Veille en ligne — {'tout répond' if not rates else f'{len(rates)} échec(s)'}",
@@ -371,8 +441,12 @@ def rapporter(verdicts: list[Verdict], hotes: list[str]) -> None:
         statut = verdict.statut or "—"
         lignes.append(f"| {marque} {verdict.hote} | `{verdict.cible}` | {statut} | {detail} |")
     lignes += ["", "</details>", ""]
-    with Path(chemin).open("a", encoding="utf-8") as rapport:
-        rapport.write("\n".join(lignes) + "\n")
+    texte = "\n".join(lignes) + "\n"
+    for chemin in ecrits:
+        chemin.parent.mkdir(parents=True, exist_ok=True)
+        with chemin.open("a", encoding="utf-8") as rapport:
+            rapport.write(texte)
+    return ecrits
 
 
 def main() -> int:
@@ -383,6 +457,9 @@ def main() -> int:
                            help="tentatives par adresse, pour un hôte endormi (défaut : 3)")
     analyseur.add_argument("--attente", type=float, default=15.0,
                            help="secondes entre deux tentatives (défaut : 15)")
+    analyseur.add_argument("--rapport", action="append", metavar="FICHIER",
+                           help="où écrire le rapport (en plus du résumé GitHub) ; "
+                                "répétable, `-` pour la sortie standard")
     options = analyseur.parse_args()
 
     hotes = options.hote or sorted(HOTES)
@@ -395,7 +472,8 @@ def main() -> int:
             print(verdict.ligne())
         verdicts += trouves
 
-    rapporter(verdicts, hotes)
+    fichiers = [chemin for chemin in (options.rapport or []) if chemin != "-"]
+    rapporter(verdicts, hotes, fichiers)
     rates = [verdict for verdict in verdicts if not verdict.reussi]
     print()
     if rates:
