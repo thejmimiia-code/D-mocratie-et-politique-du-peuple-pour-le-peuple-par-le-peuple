@@ -352,9 +352,16 @@ async function verifierLeClavier() {
       if (!pas.dedans) sorties += 1;
     }
     let sortiesArriere = 0;
+    /* La tabulation arrière se joue en trois gestes : Puppeteer ne connaît pas
+       « Shift+Tab » comme nom de touche — il faut tenir Maj, presser Tab, la
+       relâcher. Le premier essai a échoué là-dessus, et l'échec s'est lu dans le
+       résumé : mieux vaut une mesure qui dit qu'elle n'a pas pu se faire. */
     for (let rang = 0; rang < 3; rang += 1) {
-      await page.keyboard.press("Shift+Tab");
+      await page.keyboard.down("Shift");
+      await page.keyboard.press("Tab");
+      await page.keyboard.up("Shift");
       const pas = await etat();
+      trace.push("‹ " + pas.sur);
       if (!pas.dedans) sortiesArriere += 1;
     }
     await page.keyboard.press("Escape");
