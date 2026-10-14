@@ -13,13 +13,18 @@ spécificité, héritage des jetons, `var()`, `color-mix()`, `@media` selon la
 largeur, dégradés et opacité composés, puis la formule WCAG 2.1 sur chaque
 texte de la page réellement servie.
 
-Ces contrôles-ci font deux choses :
+Ces contrôles-ci font trois choses :
 
 1. ils exécutent l'outil sur la page livrée — quatre thèmes, deux largeurs — et
    refusent le moindre texte sous le seuil ;
-2. ils **éprouvent l'instrument lui-même** sur de minuscules pages d'essai :
+2. ils **jouent les états** (`TestLesEtatsSeLisent`) : survol, focus,
+   enfoncement, et une passe « tout enfoncé » où chaque bascule est activée.
+   Le visiteur vit dans ces états-là ; les ignorer laissait hors de la mesure
+   exactement l'endroit où il a signalé un bouton illisible ;
+3. ils **éprouvent l'instrument lui-même** sur de minuscules pages d'essai :
    une dont la faute est certaine (un bouton sans encre), une qui est juste, une
-   dont un jeton manque. Un instrument qui ne voit rien passerait le point 1.
+   dont un jeton manque, une dont le survol efface le texte. Un instrument qui
+   ne voit rien passerait le point 1.
 """
 
 from __future__ import annotations
@@ -56,6 +61,29 @@ button.primaire{background:linear-gradient(135deg,#1d3268,#2958a2);border:0;padd
 #: taire.
 PAGE_JUSTE = PAGE_CASSEE.replace(
     "button.primaire{background", "button.primaire{color:#ffffff;background")
+
+#: Une page dont le **survol** efface le texte : la faute n'existe que dans un
+#: état, et un outil qui l'ignore la déclare inexistante.
+PAGE_SURVOL_MUET = """<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>essai</title><style>
+:root,[data-theme="jour"]{
+--texte:#18243b; --panel:#ffffff; --bg:#ffffff;
+}
+body{background:var(--bg);color:var(--texte)}
+button{background:var(--panel);color:var(--texte);border:1px solid #ccd}
+button:hover{background:#18243b;color:#1b2740}
+</style></head>
+<body><button id="essai">Réglages</button></body></html>
+"""
+
+#: La même page : l'état survolé reste lisible. Rien à signaler.
+PAGE_SURVOL_JUSTE = PAGE_SURVOL_MUET.replace("button:hover{background:#18243b;color:#1b2740}",
+                                             "button:hover{background:#18243b;color:#ffffff}")
+
+#: Un état qui ne pose qu'un contour : il ne change aucun contraste, donc il
+#: n'ouvre aucune passe — l'outil ne se donne pas de travail pour rien.
+PAGE_CONTOUR = PAGE_SURVOL_MUET.replace("button:hover{background:#18243b;color:#1b2740}",
+                                        "button:focus-visible{outline:3px solid #e7a126}")
 
 #: Un jeton employé mais jamais défini : la feuille d'un thème en cours
 #: d'écriture. L'outil ne peut pas résoudre cette encre — il ne doit ni tomber,
@@ -117,6 +145,65 @@ class TestLaPageLivreeSeLit(unittest.TestCase):
         bureau = len(self.rapport[("soir", 1280)]["mesures"])
         poche = len(self.rapport[("soir", 380)]["mesures"])
         self.assertNotEqual(bureau, poche, "les deux largeurs mesurent la même page")
+
+
+class TestLesEtatsSeLisent(unittest.TestCase):
+    """Ce que le visiteur déclenche : survol, focus, enfoncement, tout enfoncé."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rapport = contraste_ecran.auditer_etats(HTML_PAGE)
+
+    def test_aucun_etat_ne_passe_sous_le_seuil(self):
+        """Quatre thèmes, deux largeurs, 24 passes chacun : aucune faute."""
+        fautes = [f"{theme} / {largeur} px · {passe} : {mesure.ligne()}"
+                  for (theme, largeur), passes in self.rapport.items()
+                  for passe, mesures in passes.items() for mesure in mesures]
+        self.assertEqual(fautes, [], "états illisibles :\n" + "\n".join(fautes))
+
+    def test_la_passe_tout_enfonce_existe_et_change_quelque_chose(self):
+        """« Tout enfoncé » n'est pas un mot : les bascules sont réellement forcées."""
+        sommet = contraste_ecran.arbre(HTML_PAGE)
+        avant = sum(1 for noeud in contraste_ecran.parcourir(sommet)
+                    if noeud.attributs.get("aria-pressed") == "true"
+                    or "actif" in noeud.classes)
+        changees = contraste_ecran.forcer_les_etats(sommet)
+        apres = sum(1 for noeud in contraste_ecran.parcourir(sommet)
+                    if noeud.attributs.get("aria-pressed") == "true"
+                    or "actif" in noeud.classes)
+        self.assertGreaterEqual(changees, 15,
+                                "trop peu de bascules forcées pour que la passe prouve quoi que ce soit")
+        self.assertGreater(apres, avant, "l'état « tout enfoncé » ne change rien à la page")
+
+    def test_les_passes_viennent_de_la_feuille(self):
+        """Ni liste écrite à la main, ni passe inutile pour un simple contour."""
+        passes = contraste_ecran.mesurer_etats(HTML_PAGE, "jour", 1280)
+        self.assertIn("repos", passes)
+        self.assertIn("tout enfoncé", passes)
+        self.assertGreaterEqual(len(passes), 18, f"{len(passes)} passes seulement")
+        noms = " ".join(passes)
+        self.assertIn("survol ·", noms, "aucune passe de survol")
+        for nom, mesures in passes.items():
+            with self.subTest(passe=nom):
+                self.assertGreater(len(mesures), 0, f"{nom} ne mesure rien")
+
+    def test_il_attrape_un_texte_efface_au_survol(self):
+        """La faute qui n'existe que dans un état : l'outil doit la refuser."""
+        fautes = contraste_ecran.fautes_de(contraste_ecran.mesurer_etats(PAGE_SURVOL_MUET, "jour", 1280))
+        self.assertTrue(fautes, "le survol qui efface le texte n'a pas été vu")
+        self.assertTrue(any("survol" in passe for passe in fautes),
+                        f"la faute est attribuée à la mauvaise passe : {list(fautes)}")
+
+    def test_il_se_tait_sur_le_meme_survol_corrige(self):
+        """L'encre rétablie, et il n'y a plus rien à dire."""
+        fautes = contraste_ecran.fautes_de(contraste_ecran.mesurer_etats(PAGE_SURVOL_JUSTE, "jour", 1280))
+        self.assertEqual(fautes, {}, fautes)
+
+    def test_un_contour_de_focus_n_ouvre_pas_de_passe(self):
+        """Un état qui ne touche ni encre ni fond ne change aucun contraste."""
+        passes = contraste_ecran.mesurer_etats(PAGE_CONTOUR, "jour", 1280)
+        self.assertEqual(sorted(passes), ["repos", "tout enfoncé"],
+                         f"passes inutiles : {sorted(passes)}")
 
 
 class TestLInstrumentEstEprouve(unittest.TestCase):

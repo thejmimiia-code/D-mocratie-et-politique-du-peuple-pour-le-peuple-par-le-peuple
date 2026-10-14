@@ -821,11 +821,18 @@ def mesurer_etats(page: str, theme: str, largeur: int) -> dict[str, list[Mesure]
     feuille = Feuille(css, largeur)
     sommet = arbre(page, theme)
     passes: dict[str, list[Mesure]] = {"repos": _mesurer_arbre(sommet, feuille, palette)[0]}
+    # Ce qui ne s'affiche pas ne se mesure pas : le bandeau d'impression, l'overlay
+    # fermé, le bouton de sommaire qui n'existe qu'à 640 px. Une passe qui ne
+    # montre rien n'est pas une passe — elle gonflerait le rapport sans rien dire.
+    repos = Style(sommet, feuille, palette)
     for noeud in parcourir(sommet):
+        if repos.cache(noeud):
+            continue
         for etat in sorted(feuille.etats_portes(noeud)):
             mesures, _ = _mesurer_arbre(sommet, feuille, palette, noeud, etat,
                                         racine_mesure=noeud)
-            passes[f"{etat} · {_chemin(noeud)}"] = mesures
+            if mesures:
+                passes[f"{etat} · {_chemin(noeud)}"] = mesures
     forcer_les_etats(sommet)
     passes["tout enfoncé"] = _mesurer_arbre(sommet, feuille, palette)[0]
     return passes
