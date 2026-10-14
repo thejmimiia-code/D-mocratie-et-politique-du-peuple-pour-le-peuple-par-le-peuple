@@ -24,9 +24,18 @@ Cet outil fait ce qu'un navigateur fait, en plus petit :
     python3 outils/contraste_ecran.py --theme jour --largeur 380
     python3 outils/contraste_ecran.py --verbeux           # détaille aussi ce qui passe
 
-Ce qu'il ne mesure pas, et le dit : les règles qui ne s'appliquent qu'à un état
-(`:hover`, `:focus`, `:disabled`) ou à une pseudo-boîte (`::before`), et les
-commandes inactives, que la norme exempte. Le nombre de règles écartées est
+Depuis le 14 octobre 2026, il mesure aussi **les états** que le visiteur
+déclenche : `:hover`, `:focus`, `:active` sur chaque élément dont la feuille
+prévoit un état (`mesurer_etats`), plus une passe « tout enfoncé » où chaque
+commande `aria-pressed` et chaque bascule `.actif` est activée. Les valeurs
+écrites dans les champs et l'option choisie d'un `<select>` comptent comme les
+textes qu'elles sont : elles s'affichent, donc elles se mesurent.
+
+    python3 outils/contraste_ecran.py --etats            # + les états, thème par thème
+
+Ce qu'il ne mesure pas, et le dit : les pseudo-boîtes (`::before`, `::after`),
+`:has(` et `:target`, les commandes inactives (que la norme exempte) et les
+feuilles d'impression ou de contraste forcé. Le nombre de règles écartées est
 affiché : un contrôle qui cache ce qu'il ignore n'est pas un contrôle.
 """
 
@@ -54,9 +63,19 @@ VIDES = frozenset(
      "col", "embed", "param", "track", "wbr"}
 )
 
-#: Ce qui, dans un sélecteur, décrit un état et non la page au repos.
-ETATS = (":hover", ":focus-visible", ":focus", ":active", ":disabled", ":checked",
-         "::before", "::after", "::marker", ":has(", ":target")
+#: Ce que l'outil ne sait pas jouer : une pseudo-boîte n'est pas un texte, et
+#: `:has(` demanderait de choisir la variante qui l'active.
+ETATS = ("::before", "::after", "::marker", ":has(", ":target")
+
+#: Ce qui, dans une déclaration, peut changer un contraste. Un état qui ne pose
+#: qu'un contour (`outline`) ne change rien à ce que l'outil mesure : lui donner
+#: une passe multiplierait les relevés sans rien prouver.
+PROPRIETES_ENCRE = ("color", "background", "background-color", "background-image",
+                    "border-color", "opacity", "fill", "stroke")
+
+#: Les pseudos-classes d'état, et le nom de la passe qui les déclenche.
+ETATS_JOUES = {"hover": "survol", "focus": "focus", "focus-visible": "focus",
+               "active": "enfonce", "checked": "coche"}
 
 _MOTIFS_MEDIA_IGNORES = ("print", "forced-colors", "pointer:", "prefers-reduced",
                          "prefers-contrast", "orientation", "hover:")
@@ -215,12 +234,20 @@ def _decouper(sequence: str):
 
 _MOTIF_COMPOSE = re.compile(
     r"(?P<tag>[a-zA-Z][\w-]*|\*)?"
-    r"(?P<reste>(?:#[-\w]+|\.[-\w]+|\[[^\]]*\]|:(?:not\([^)]*\)|root|first-child|last-child|last-of-type|only-child|empty))*)"
+    r"(?P<reste>(?:#[-\w]+|\.[-\w]+|\[[^\]]*\]|:(?:not\([^)]*\)|root|"
+    r"first-child|last-child|last-of-type|only-child|empty|disabled|"
+    r"hover|focus-visible|focus|active|checked))*)"
 )
 _MOTIF_BOUT = re.compile(r"#[-\w]+|\.[-\w]+|\[[^\]]*\]|:[a-zA-Z-]+(?:\([^)]*\))?")
 
 
 def _analysable(selecteur: str) -> bool:
+    """Ce qui se lit dans l'arbre : tout sauf une pseudo-boîte ou `:has(`.
+
+    Un état est lisible : il ne s'applique qu'à l'élément qu'on décide de mettre
+    dans cet état. Un pseudo-classe inconnue, elle, rend le composé illisible —
+    la règle part alors dans ce que l'outil déclare écarter.
+    """
     return not any(etat in selecteur for etat in ETATS)
 
 
@@ -230,7 +257,7 @@ def _compose(morceau: str):
     if not trouve:
         return None
     compose = {"tag": trouve.group("tag"), "id": None, "classes": [], "attributs": [],
-               "interdits": [], "contraintes": []}
+               "interdits": [], "contraintes": [], "etats": set()}
     for bout in _MOTIF_BOUT.findall(trouve.group("reste") or ""):
         if bout.startswith("#"):
             compose["id"] = bout[1:]
@@ -250,6 +277,8 @@ def _compose(morceau: str):
             compose["interdits"].append(interdit)
         elif bout == ":root":
             compose["tag"] = "html"
+        elif bout[1:] in ETATS_JOUES:
+            compose["etats"].add(ETATS_JOUES[bout[1:]])
         else:
             compose["contraintes"].append(bout[1:])
     return compose
@@ -267,7 +296,12 @@ def _dernier_enfant(noeud: Noeud) -> bool:
     return noeud.parent.enfants[-1] is noeud
 
 
-def _correspond_compose(noeud: Noeud, compose) -> bool:
+def _correspond_compose(noeud: Noeud, compose, cible: Noeud | None = None,
+                        etat: str | None = None) -> bool:
+    exiges = compose.get("etats")
+    if exiges and (cible is None or noeud is not cible
+                   or (etat != "*" and etat not in exiges)):
+        return False
     if compose["tag"] not in (None, "*") and noeud.nom != compose["tag"]:
         return False
     if compose["id"] and noeud.identifiant() != compose["id"]:
@@ -289,6 +323,9 @@ def _correspond_compose(noeud: Noeud, compose) -> bool:
                         if e.nom == noeud.nom]
             if suivants and suivants[-1] is not noeud:
                 return False
+        if contrainte == "disabled":
+            if "disabled" not in noeud.attributs:
+                return False
         if contrainte in ("only-child", "empty"):
             return False
     for interdit in compose["interdits"]:
@@ -300,18 +337,19 @@ def _correspond_compose(noeud: Noeud, compose) -> bool:
     return True
 
 
-def _correspond(noeud: Noeud, chaines) -> bool:
+def _correspond(noeud: Noeud, chaines, cible: Noeud | None = None,
+                etat: str | None = None) -> bool:
     compose, relation = chaines[-1]
-    if not _correspond_compose(noeud, compose):
+    if not _correspond_compose(noeud, compose, cible, etat):
         return False
     if len(chaines) == 1:
         return True
     gauche = chaines[:-1]
     if relation == ">":
-        return noeud.parent is not None and _correspond(noeud.parent, gauche)
+        return noeud.parent is not None and _correspond(noeud.parent, gauche, cible, etat)
     ancetre = noeud.parent
     while ancetre is not None:
-        if _correspond(ancetre, gauche):
+        if _correspond(ancetre, gauche, cible, etat):
             return True
         ancetre = ancetre.parent
     return False
@@ -352,6 +390,7 @@ class Feuille:
     def __init__(self, css: str, largeur: int):
         self.largeur = largeur
         self.ecartees: list[str] = []
+        self.regles_etat: list[str] = []
         self.index: dict[str, list] = {}
         for numero, (contexte, selecteur, corps) in enumerate(_blocs(_sans_commentaires(css))):
             if not _media_s_applique(contexte, largeur):
@@ -363,6 +402,8 @@ class Feuille:
                 chaines = _decouper(sequence)
                 composes = [(compose, relation) for compose, relation in
                             ((_compose(morceau), relation) for morceau, relation in chaines)]
+                if any(compose and compose["etats"] for compose, _ in composes):
+                    self.regles_etat.append(sequence)
                 if any(compose is None for compose, _ in composes):
                     self.ecartees.append(sequence)
                     continue
@@ -370,7 +411,25 @@ class Feuille:
                 for cle in _cle_du_compose(composes[-1][0]):
                     self.index.setdefault(cle, []).append(regle)
 
-    def correspondantes(self, noeud: Noeud):
+    def etats_portes(self, noeud: Noeud) -> set[str]:
+        """Les états qui, sur cet élément, peuvent changer une encre ou un fond.
+
+        On interroge la feuille avec `etat="*"` — « si cet élément était dans un
+        état, quelles règles s'appliqueraient ? » — puis on ne garde que celles
+        qui touchent une propriété de couleur. C'est la feuille qui décide des
+        passes : ni une liste écrite à la main, ni une passe pour chaque contour
+        de focus, qui ne changerait aucun contraste.
+        """
+        trouves: set[str] = set()
+        for regle in self.correspondantes(noeud, noeud, "*"):
+            if not (set(regle[3]) & set(PROPRIETES_ENCRE)):
+                continue
+            for compose, _ in regle[2]:
+                trouves |= compose.get("etats") or set()
+        return trouves
+
+    def correspondantes(self, noeud: Noeud, cible: Noeud | None = None,
+                        etat: str | None = None):
         candidates = self.index.get("*", [])
         for cle in ["#" + noeud.identifiant()] if noeud.identifiant() else []:
             candidates = candidates + self.index.get(cle, [])
@@ -382,7 +441,7 @@ class Feuille:
             if id(regle) in vues:
                 continue
             vues.add(id(regle))
-            if _correspond(noeud, regle[2]):
+            if _correspond(noeud, regle[2], cible, etat):
                 sortie.append(regle)
         sortie.sort(key=lambda regle: (regle[0], regle[1]))
         return sortie
@@ -472,14 +531,16 @@ def _longueur_px(valeur: str, variables: dict, heritage: float | None) -> float 
 class Style:
     """L'encre, le fond et la taille tels que le navigateur les compose."""
 
-    def __init__(self, racine: Noeud, feuille: Feuille, palette: dict):
+    def __init__(self, racine: Noeud, feuille: Feuille, palette: dict,
+                 cible: Noeud | None = None, etat: str | None = None):
         self.feuille = feuille
         self.palette = palette
+        self.cible, self.etat = cible, etat
         self.voir: dict[int, dict] = {}
         self._preparer(racine, {})
 
     def _preparer(self, noeud: Noeud, variables_parent: dict):
-        regles = self.feuille.correspondantes(noeud)
+        regles = self.feuille.correspondantes(noeud, self.cible, self.etat)
         variables = dict(variables_parent)
         propre: dict[str, str] = {}
         for _, _, _, declarations in regles:
@@ -643,20 +704,53 @@ class Mesure:
                 f"{couleurs.vers_hexa(self.encre)} sur {couleurs.vers_hexa(self.fond)}")
 
 
-def mesurer(page: str, theme: str, largeur: int) -> tuple[list[Mesure], Feuille, dict]:  # noqa: D401
-    """Toutes les mesures d'une page : ce qui passe, ce qui échoue, ce qu'on écarte."""
-    css = feuille_de_la_page(page)
-    palette = _palette(css, theme)
-    feuille = Feuille(css, largeur)
-    sommet = arbre(page, theme)
-    style = Style(sommet, feuille, palette)
+def _sous_un_select(noeud: Noeud) -> bool:
+    """Le texte d'une `option` ne s'affiche pas : seul le choix se voit."""
+    courant = noeud.parent
+    while courant is not None:
+        if courant.nom == "select":
+            return True
+        courant = courant.parent
+    return False
+
+
+def _texte_visible(noeud: Noeud) -> str:
+    """Ce que cet élément montre — y compris ce qu'aucun nœud de texte ne porte.
+
+    Un `<input>` n'a pas d'enfant texte : sa valeur s'affiche pourtant. Un
+    `<select>` montre l'option choisie, pas toutes ses options. Les ignorer
+    laissait hors de la mesure exactement les textes les plus denses de la page.
+    """
+    if noeud.nom == "input":
+        genre = (noeud.attributs.get("type") or "text").lower()
+        if genre in ("text", "search", "number", "tel", "url", "email"):
+            return noeud.attributs.get("value") or noeud.attributs.get("placeholder") or ""
+        return ""
+    if noeud.nom == "select":
+        options = [enfant for enfant in noeud.enfants if enfant.nom == "option"]
+        choisie = next((option for option in options if "selected" in option.attributs),
+                       options[0] if options else None)
+        return " ".join(choisie.texte) if choisie is not None else ""
+    return " ".join(noeud.texte)
+
+
+def _mesurer_arbre(sommet: Noeud, feuille: Feuille, palette: dict,
+                   cible: Noeud | None = None, etat: str | None = None,
+                   racine_mesure: Noeud | None = None):
+    """Les mesures d'un arbre dans un état donné : le cœur de l'outil.
+
+    `racine_mesure` borne la promenade : pour un état, seule la cible et ses
+    descendants peuvent changer d'apparence — mesurer les 284 textes de la page
+    à chaque passe coûterait des minutes pour rien.
+    """
+    style = Style(sommet, feuille, palette, cible, etat)
     mesures, exemptes = [], []
-    for noeud in parcourir(sommet):
-        if not noeud.texte:
+    for noeud in parcourir(racine_mesure if racine_mesure is not None else sommet):
+        if _sous_un_select(noeud):
             continue
         if style.cache(noeud):
             continue
-        texte = " ".join(noeud.texte)
+        texte = _texte_visible(noeud)
         if not texte.strip():
             continue
         encre = style.encre(noeud)
@@ -677,7 +771,87 @@ def mesurer(page: str, theme: str, largeur: int) -> tuple[list[Mesure], Feuille,
             continue
         mesure = Mesure(_chemin(noeud), texte, pire[1], pire[2], pire[0], seuil, style.inactif(noeud))
         (exemptes if mesure.exempte else mesures).append(mesure)
-    return mesures, feuille, {"exemptes": exemptes, "regles_ecartees": feuille.ecartees}
+    return mesures, exemptes
+
+
+def mesurer(page: str, theme: str, largeur: int) -> tuple[list[Mesure], Feuille, dict]:  # noqa: D401
+    """Toutes les mesures d'une page au repos — et ce que l'outil écarte."""
+    css = feuille_de_la_page(page)
+    palette = _palette(css, theme)
+    feuille = Feuille(css, largeur)
+    sommet = arbre(page, theme)
+    mesures, exemptes = _mesurer_arbre(sommet, feuille, palette)
+    return mesures, feuille, {"exemptes": exemptes, "regles_ecartees": feuille.ecartees,
+                              "regles_etat": feuille.regles_etat}
+
+
+def forcer_les_etats(sommet: Noeud) -> int:
+    """Met la page dans le pire cas : tout ce qui peut être enfoncé l'est.
+
+    Deux familles de bascules : l'attribut `aria-pressed` (le panneau
+    d'affichage, les filtres de classes, les groupes parlementaires) et la classe
+    `actif` (onglets, cartes de scénario, sommaire). Les deux se forcent ici —
+    un visiteur peut cliquer n'importe laquelle de ces commandes, et rien ne
+    garantit que l'état enfoncé reste lisible : c'est à vérifier, pas à espérer.
+    """
+    noeuds = list(parcourir(sommet))
+    changements = 0
+    for noeud in noeuds:
+        if noeud.attributs.get("aria-pressed") == "false":
+            noeud.attributs["aria-pressed"] = "true"
+            changements += 1
+    for noeud in noeuds:
+        parent = noeud.parent
+        if parent is None or "actif" in noeud.classes:
+            continue
+        for frere in parent.enfants:
+            if frere is noeud or frere.nom != noeud.nom or "actif" not in frere.classes:
+                continue
+            if set(frere.classes) - {"actif"} == set(noeud.classes):
+                noeud.attributs["class"] = " ".join([*noeud.classes, "actif"])
+                changements += 1
+                break
+    return changements
+
+
+def mesurer_etats(page: str, theme: str, largeur: int) -> dict[str, list[Mesure]]:
+    """Chaque état que le visiteur peut déclencher, mesuré séparément."""
+    css = feuille_de_la_page(page)
+    palette = _palette(css, theme)
+    feuille = Feuille(css, largeur)
+    sommet = arbre(page, theme)
+    passes: dict[str, list[Mesure]] = {"repos": _mesurer_arbre(sommet, feuille, palette)[0]}
+    # Ce qui ne s'affiche pas ne se mesure pas : le bandeau d'impression, l'overlay
+    # fermé, le bouton de sommaire qui n'existe qu'à 640 px. Une passe qui ne
+    # montre rien n'est pas une passe — elle gonflerait le rapport sans rien dire.
+    repos = Style(sommet, feuille, palette)
+    for noeud in parcourir(sommet):
+        if repos.cache(noeud):
+            continue
+        for etat in sorted(feuille.etats_portes(noeud)):
+            mesures, _ = _mesurer_arbre(sommet, feuille, palette, noeud, etat,
+                                        racine_mesure=noeud)
+            if mesures:
+                passes[f"{etat} · {_chemin(noeud)}"] = mesures
+    forcer_les_etats(sommet)
+    passes["tout enfoncé"] = _mesurer_arbre(sommet, feuille, palette)[0]
+    return passes
+
+
+def fautes_de(passes: dict[str, list[Mesure]]) -> dict[str, list[Mesure]]:
+    """Ce qui, dans un relevé de passes, passe sous son seuil — et rien d'autre."""
+    fautes = {nom: [mesure for mesure in mesures if mesure.rapport < mesure.seuil - 1e-9]
+              for nom, mesures in passes.items()}
+    return {nom: liste for nom, liste in fautes.items() if liste}
+
+
+def auditer_etats(page: str, themes=THEMES, largeurs=LARGEURS):
+    """Le rapport des états : une entrée par passe, avec ses fautes."""
+    rapport = {}
+    for theme in themes:
+        for largeur in largeurs:
+            rapport[(theme, largeur)] = fautes_de(mesurer_etats(page, theme, largeur))
+    return rapport
 
 
 def auditer(page: str, themes=THEMES, largeurs=LARGEURS):
@@ -706,6 +880,8 @@ def main(argv=None) -> int:
     analyseur.add_argument("--largeur", type=int, help="une seule largeur d'écran")
     analyseur.add_argument("--verbeux", action="store_true", help="détaille aussi ce qui passe")
     analyseur.add_argument("--page", help="un autre fichier que index.html")
+    analyseur.add_argument("--etats", action="store_true",
+                           help="mesure aussi les états : survol, focus, enfoncement")
     options = analyseur.parse_args(argv)
 
     page = Path(options.page).read_text(encoding="utf-8") if options.page else _page_par_defaut()
@@ -713,8 +889,22 @@ def main(argv=None) -> int:
     largeurs = (options.largeur,) if options.largeur else LARGEURS
 
     total_fautes = 0
+    total_fautes_etats = 0
     for theme in themes:
         for largeur in largeurs:
+            if options.etats:
+                passes = mesurer_etats(page, theme, largeur)
+                fautes = fautes_de(passes)
+                nombre_mesures = sum(len(mesures) for mesures in passes.values())
+                total_fautes_etats += sum(len(liste) for liste in fautes.values())
+                print(f"═══ thème « {theme} » · écran de {largeur} px · états ═══")
+                print(f"    {len(passes)} passes · {nombre_mesures} mesures · "
+                      f"{sum(len(liste) for liste in fautes.values())} sous le seuil")
+                for nom, liste in fautes.items():
+                    for mesure in liste:
+                        print(f"  ✗ [{nom}] {mesure.ligne()}")
+                if not any(fautes.values()):
+                    print("  ✓ tous les états se lisent")
             mesures, feuille, details = mesurer(page, theme, largeur)
             fautes = [mesure for mesure in mesures if mesure.rapport < mesure.seuil - 1e-9]
             total_fautes += len(fautes)
@@ -730,7 +920,7 @@ def main(argv=None) -> int:
                         print("  ✓ " + mesure.ligne())
             if not fautes:
                 print("  ✓ tout se lit")
-    return 1 if total_fautes else 0
+    return 1 if (total_fautes or total_fautes_etats) else 0
 
 
 if __name__ == "__main__":

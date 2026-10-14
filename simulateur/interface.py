@@ -309,6 +309,47 @@ header.entete .etat-contexte{margin-top:var(--e-1)}
 .barre-contexte,.etat-contexte,.ruban-veille,.resume-actions{
   display:flex;flex-wrap:wrap;align-items:center;gap:var(--gap-barre)}
 .barre-contexte{margin-top:var(--e-2)}
+/* Au large, le bandeau se lit en deux colonnes : le sur-titre, le titre et la
+   phrase d'un côté, les quatre commandes de l'autre. Empilées, elles
+   ajoutaient leur hauteur (34 px) et leur marge (9 px) sous un bloc de texte
+   qui faisait déjà deux fois leur taille — le cadre paraissait donc bien plus
+   grand que ce qu'il portait. Côte à côte, la hauteur du bandeau est celle de
+   son texte, et les commandes se posent à sa droite, là où l'œil les cherche
+   après avoir lu le titre.
+   Le seuil est à **1200 px**, et la barre n'a pas de largeur maximale : mesuré
+   dans un vrai navigateur, un plafond de 46 % cassait les quatre commandes en
+   trois rangées (115 px de haut) là où elles tiennent sur une (34 px). Deux
+   colonnes ne valent que si les commandes tiennent en ligne. En dessous de
+   1200 px, la colonne unique reprend ses droits — la barre y dispose de toute
+   la largeur — et les quatre paliers restent la loi.
+
+   Le plan coté du bandeau, relevé par Chromium à 1280 px, a montré ce que la
+   hauteur seule cachait : la colonne de texte faisait 528 px de large, le titre
+   y tenait en **trois lignes** (89 px), et sous la barre de commandes
+   (651 × 35 px) restaient **139 px de vide** — le cadre était haut de 296 px
+   pour 35 px de boutons. D'où la répartition actuelle : les commandes en
+   première rangée à droite, le titre étalé sur toute la largeur (une ligne au
+   lieu de trois), puis la phrase d'accroche et la ligne d'état côte à côte.
+   Rien n'a été retiré : tout a été replacé. */
+@media screen and (min-width:1200px){
+  header.entete{display:grid;grid-template-columns:minmax(0,1fr) auto;
+    gap:var(--e-1) var(--e-4);align-items:start}
+  header.entete .eyebrow{grid-column:1;grid-row:1}
+  header.entete h1{grid-column:1 / -1;grid-row:2;margin-top:0}
+  header.entete .accroche{grid-column:1;grid-row:3}
+  header.entete .barre-contexte{grid-column:2;grid-row:1;margin-top:0;
+    justify-content:flex-end;flex-wrap:nowrap}
+  /* La ligne d'état est un chapelet de pastilles : sans borne, sa demande de
+     largeur (1179 px mesurés) écrasait la colonne du titre à zéro et le
+     sur-titre s'empilait lettre par lettre — un bandeau de 2955 px. Bornée par
+     la mesure de lecture, comme la phrase d'accroche, elle tient dans la
+     colonne des commandes sans la commander. */
+  header.entete .etat-contexte{grid-column:2;grid-row:3;margin-top:0;
+    align-self:start;max-width:var(--mesure)}
+}
+/* Entre 901 et 1199 px, les deux barres collantes se partageaient le haut de
+   l'écran : le sommaire puise dans la largeur, le ruban passe dessous. C'est
+   déjà l'ordre du document — on ne fait que le dire. */
 .etat-contexte{margin-top:var(--e-1);color:var(--texte-dim);
   font-size:max(var(--t-min),.74rem)}
 .barre-contexte button,.barre-contexte summary,.ruban-veille .ruban-actions button,
@@ -966,7 +1007,8 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 /* ── Sommaire : lire la page dans l'ordre ──────────────────────────────────
    La page est longue : ce bandeau dit où l'on est et dans quel ordre lire.
    Il reprend la logique du parcours : comprendre, régler, mesurer, vérifier. */
-.sommaire{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:12px;padding:8px 10px;
+.sommaire{display:flex;flex-wrap:wrap;gap:var(--gap-barre);align-items:center;
+  margin-bottom:var(--e-2);padding:var(--e-1) var(--e-2);
   background:var(--panel);border:1px solid var(--border);border-radius:12px}
 .sommaire .titre-sommaire{font-size:max(var(--t-min),.68rem);text-transform:uppercase;letter-spacing:.6px;color:var(--texte-dim)}
 .sommaire a{font-size:.75rem;text-decoration:none;color:var(--texte-dim);background:var(--panel-2);
@@ -1031,6 +1073,12 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .guide-etape p{font-size:.82rem;color:var(--texte)}
 .guide-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
+  /* Le bandeau d'un téléphone occupait 576 px, dont 41 px de marges intérieures
+     pour 35 px de boutons. Les écarts entre ses blocs se resserrent — le texte,
+     lui, garde son corps et son interligne. Le rembourrage, lui, suit l'écran
+     (`clamp` plus bas) : une seule règle, pas deux qui se contredisent. */
+  header.entete h1,header.entete .accroche,header.entete .etat-contexte,
+  header.entete .barre-contexte{margin-top:6px}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
   .levier.compact{grid-template-columns:1fr 70px auto}}
 /* ── Le résumé de tête : les chiffres, puis la phrase ─────────────────────
@@ -1139,7 +1187,10 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     box-shadow:7px 0 9px -9px var(--ombre-modale)}
   .tableau-defilant:focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
   body{padding:clamp(10px,1.6vw,18px);overflow-wrap:break-word}
-  header.entete{padding:clamp(14px,1.6vw,22px)}
+  /* Le plancher de ce rembourrage passait avant la règle du téléphone — la
+     mesure a montré 14 px de marge intérieure à 380 px, pour 35 px de boutons.
+     Une seule expression, du plus petit au plus large : 9 px, puis 22 px. */
+  header.entete{padding:clamp(9px,1.6vw,22px)}
   section.bloc{padding:var(--pad-bloc)}
   header.entete h1{font-size:clamp(1.15rem,.8vw + .78rem,1.52rem);line-height:1.3}
 
@@ -1457,8 +1508,8 @@ html[data-texte="137"]{font-size:137.5%}
     <div class="barre-contexte">
       <button class="primaire" id="btn-simuler" onclick="simuler(true)" data-aide="<b>Simuler avec impacts croisés</b>Recalcule l'horizon sélectionné (5 ou 10 ans), les 20 domaines et la matrice levier × domaine (un réglage isolé à la fois). Le modèle reste une exploration, pas une prévision.">▶ Simuler avec impacts croisés</button>
       <button class="primaire" id="btn-rafraichir" onclick="rafraichirDonnees()" data-aide="<b>Rafraîchir les données</b>Interroge Eurostat, la BCE, la Banque mondiale, le change et le pétrole depuis votre navigateur ; les sources sans en-tête CORS passent par le relais du serveur. Le contexte « instant T » et les scores sont ensuite recalculés.">Rafraîchir les données</button>
-      <details class="affichage" id="affichage" data-aide="<b>Affichage</b>Quatre thèmes (soir, jour, crème, contraste renforcé), deux densités et cinq tailles de texte. Ces choix restent enregistrés sur votre appareil : rien n'est envoyé au serveur.">
-        <summary title="Options d'affichage">🎨 Affichage <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
+      <details class="affichage" id="affichage">
+        <summary title="Options d'affichage" data-aide="<b>Affichage</b>Quatre thèmes (soir, jour, crème, contraste renforcé), trois présentations, deux densités et cinq tailles de texte. Ces choix restent enregistrés sur votre appareil : rien n'est envoyé au serveur.">🎨 Affichage <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
         <div class="affichage-panneau">
           <p class="affichage-titre"><b>Ajuster la lecture</b></p>
           <div class="affichage-ligne" role="group" aria-label="Thème d'affichage">
@@ -1496,8 +1547,8 @@ html[data-texte="137"]{font-size:137.5%}
           <p class="affichage-note">Ces choix restent enregistrés sur cet appareil ; le zoom du navigateur reste disponible. « Compact » resserre toute la page, catalogue des leviers compris ; « Lecture » resserre la colonne, « Panorama » l'élargit. Un réglage, un seul endroit.</p>
         </div>
       </details>
-      <details class="outils" id="outils-simulateur" data-aide="<b>Outils</b>Le lexique, le guide de démarrage, le partage des réglages, les exports et la remise à zéro. Ils restent là, mais seulement quand on ouvre le tiroir : la page garde la place pour ce qu'on lit.">
-        <summary title="Lexique, guide, partage, exports et remise à zéro">🧰 Outils <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
+      <details class="outils" id="outils-simulateur">
+        <summary title="Lexique, guide, partage, exports et remise à zéro" data-aide="<b>Outils</b>Le lexique, le guide de démarrage, le partage des réglages, les exports et la remise à zéro. Ils restent là, mais seulement quand on ouvre le tiroir : la page garde la place pour ce qu'on lit.">🧰 Outils <span class="affichage-chevron" aria-hidden="true">⌄</span></summary>
         <div class="affichage-panneau outils-panneau">
           <p class="affichage-titre"><b>Outils du simulateur</b></p>
           <button id="btn-lexique" onclick="ouvrirLexique()" data-aide="<b>Lexique</b>Chaque mot technique employé par la page, défini en français ordinaire, avec un repère chiffré. Les termes soulignés en pointillé dans la page s'expliquent aussi au survol.">📖 Lexique</button>
@@ -1514,8 +1565,8 @@ html[data-texte="137"]{font-size:137.5%}
       <span class="pastille" id="badge-contexte">contexte : chargement…</span>
       <span class="pastille" id="badge-date">—</span>
       <span class="pastille" id="badge-leviers">—</span>
-      <label class="select-horizon" data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">
-        Horizon <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
+      <label class="select-horizon">
+        <span data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">Horizon</span> <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
           <option value="5" selected>1 mandature · 5 ans</option>
           <option value="10">2 mandatures · 10 ans</option>
         </select>
@@ -1588,9 +1639,9 @@ html[data-texte="137"]{font-size:137.5%}
     <a href="#section-strates" class="discret" data-aide="<b>Vues par strate</b>Local, national, Europe, monde, géopolitique, ménages, bourse.">Strates</a>
     <a href="#section-domaines" class="discret" data-aide="<b>Domaines</b>Les 20 secteurs de l'action publique, notés par écart à la référence.">Domaines</a>
     <a href="#section-matrice" class="discret" data-aide="<b>Matrice</b>L'effet de chaque levier sur chaque domaine, mesuré par différences finies.">Matrice</a>
-    <a href="#section-contradiction" class="discret" data-aide="<b>Objections</b>    <a href="#section-contrepouvoirs" class="discret" data-aide="<b>Contre-pouvoirs</b>De combien de voix, de signatures et de jours chaque manœuvre institutionnelle a besoin — et ce qui peut la faire échouer. La composition des deux chambres s'y coche.">Contre-pouvoirs</a>
+    <a href="#section-contradiction" class="discret" data-aide="<b>Objections</b>Le registre de la contradiction : la meilleure version de chaque critique, ce que le dépôt concède, ce qu'il maintient, ce qui le ferait changer d'avis — et les quatre contre-modèles auxquels il se mesure.">Objections</a>
+    <a href="#section-contrepouvoirs" class="discret" data-aide="<b>Contre-pouvoirs</b>De combien de voix, de signatures et de jours chaque manœuvre institutionnelle a besoin — et ce qui peut la faire échouer. La composition des deux chambres s'y coche.">Contre-pouvoirs</a>
     <a href="#section-comparaison" class="discret" data-aide="<b>Comparer</b>Les préréglages du catalogue rejoués par le serveur, côte à côte à leur année finale : ce que chacun dégage, la dette, le déficit, le risque et les alertes. Le tableau se range en cliquant un titre de colonne.">Comparer</a>
-Le registre de la contradiction : la meilleure version de chaque critique, ce que le dépôt concède, ce qu'il maintient, ce qui le ferait changer d'avis — et les quatre contre-modèles auxquels il se mesure.">Objections</a>
   </div>
   </nav>
 
@@ -1830,8 +1881,8 @@ Le registre de la contradiction : la meilleure version de chaque critique, ce qu
       <input class="recherche" id="recherche-levier" placeholder="Rechercher un levier (ex. TVA, défense, RIC, retraites…)" oninput="filtrerLeviers(this.value)" data-aide="<b>Rechercher un réglage</b>Filtre tous les leviers par libellé, description ou clé technique. Le compteur affiche le nombre de leviers visibles et modifiés.">
       <span class="pastille" id="compteur-leviers">—</span>
       <button class="discret" id="btn-classes-seules" onclick="basculerClasseSeules()" data-aide="<b>Mes leviers seulement</b>Masque tout le catalogue sauf les leviers que vous avez déplacés : on relit son propre plan sans se perdre dans les 156 curseurs.">Mes leviers seulement</button>
-      <label data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : le catalogue tient à l'écran tout en restant actionnable en direct.">
-        <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> Vue compacte (une ligne par levier)
+      <label>
+        <input type="checkbox" id="case-densite" onchange="basculerDensite(this.checked)"> <span data-aide="<b>Vue compacte</b>Une ligne par levier, sans description : le catalogue tient à l'écran tout en restant actionnable en direct.">Vue compacte (une ligne par levier)</span>
       </label>
     </div>
     <div class="classes-filtres" id="classes-filtres" role="group" aria-label="Filtrer les leviers par classe"></div>
@@ -3653,6 +3704,13 @@ function texteAideElement(cible){
   return cible.getAttribute('data-aide') || '';
 }
 function positionnerInfobulle(cible){
+  /* Trois placements, dans cet ordre — et jamais sur la cible :
+     1. sous la cible, si la bulle y tient entièrement ;
+     2. au-dessus, si elle y tient ;
+     3. à défaut, collée au bas de l'écran, sans recouvrir la commande.
+     Le troisième cas est celui qui manquait : faute de place en dessous, la
+     bulle se posait au-dessus du bouton — c'est-à-dire sur le panneau qu'il
+     venait d'ouvrir. */
   const bulle = elementInfobulle();
   if (!bulle) return;
   const rect = (cible && typeof cible.getBoundingClientRect === 'function')
@@ -3660,10 +3718,18 @@ function positionnerInfobulle(cible){
   if (!rect || (!rect.width && !rect.height)) return;
   const largeur = (typeof innerWidth === 'number') ? innerWidth : 1200;
   const hauteur = (typeof innerHeight === 'number') ? innerHeight : 900;
-  const gauche = Math.max(8, Math.min(rect.left, largeur - 364));
-  const enBas = rect.bottom + 12;
+  const largeurBulle = bulle.offsetWidth || 352;
+  const hauteurBulle = bulle.offsetHeight || 0;
+  const marge = 8;
+  const gauche = Math.max(marge, Math.min(rect.left, largeur - largeurBulle - marge));
+  const sousCible = rect.bottom + 12;
+  const surCible = rect.top - 12 - hauteurBulle;
+  let haut;
+  if (sousCible + hauteurBulle <= hauteur - marge) haut = sousCible;
+  else if (surCible >= marge) haut = surCible;
+  else haut = Math.max(marge, hauteur - hauteurBulle - marge);
   bulle.style.left = `${gauche}px`;
-  bulle.style.top = `${(enBas + 220 > hauteur ? Math.max(8, rect.top - 12) : enBas)}px`;
+  bulle.style.top = `${haut}px`;
 }
 function afficherInfobulle(html, cible){
   const bulle = elementInfobulle();
@@ -3691,17 +3757,39 @@ function survoler(cible){
   if (!texte){ masquerInfobulle(); return; }
   afficherInfobulle(texte, cible);
 }
+const COMMANDES_AIDE = 'button,a,input,select,textarea,summary,label';
+function estOuvert(noeud){
+  // Un `<details>` ouvert montre déjà son contenu : l'aide n'a plus à s'y
+  // superposer, et son bouton n'est plus un bouton qu'on cherche.
+  const parent = noeud && noeud.parentElement;
+  return !!(parent && parent.tagName === 'DETAILS' && parent.open);
+}
+function commandeInterne(cible, cibleSurvolee){
+  /* Une infobulle explique un **contenant** ; elle cède devant toute commande
+     qu'il porte. Sans cette règle, l'aide accrochée à un tiroir restait
+     affichée tant que le pointeur restait dedans : elle recouvrait le panneau
+     qu'on venait d'ouvrir, et cachait ses boutons. */
+  if (!cible || !cibleSurvolee || !cible.contains || !cibleSurvolee.closest) return false;
+  const commande = cibleSurvolee.closest(COMMANDES_AIDE);
+  if (!commande || commande === cible) return false;
+  return cible.contains(commande);
+}
 function initialiserInfobulles(){
   if (!document.addEventListener) return;
   const cherche = (noeud) => {
     if (!noeud || !noeud.closest) return null;
     // La bulle dépliée reste lisible : pas d'infobulle par-dessus son contenu.
     if (noeud.closest('.bulle-levier')) return null;
-    return noeud.closest('[data-aide], [data-aide-levier]');
+    const porteur = noeud.closest('[data-aide], [data-aide-levier]');
+    if (!porteur) return null;
+    if (commandeInterne(porteur, noeud)) return null;
+    if (estOuvert(porteur)) return null;
+    return porteur;
   };
   document.addEventListener('mouseover', (evenement) => {
     const cible = cherche(evenement.target);
     if (cible) survoler(cible);
+    else masquerInfobulle();
   });
   document.addEventListener('mouseout', (evenement) => {
     if (cherche(evenement.relatedTarget)) return;
@@ -3710,6 +3798,7 @@ function initialiserInfobulles(){
   document.addEventListener('focusin', (evenement) => {
     const cible = cherche(evenement.target);
     if (cible) survoler(cible);
+    else masquerInfobulle();
   });
   document.addEventListener('focusout', () => masquerInfobulle());
   document.addEventListener('mousedown', () => masquerInfobulle());

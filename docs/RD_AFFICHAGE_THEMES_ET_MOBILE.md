@@ -395,3 +395,114 @@ s'écrivent maintenant l'un l'autre — dans les deux sens — et l'état est re
 script levait à l'exécution —, et la densité du panneau, que rien ne vérifiait
 avant qu'une étape ne soit ajoutée. C'est le rôle de la campagne : elle a
 d'abord trouvé les trous des contrôles, pas celles du code.
+
+## 13. Le treizième incrément : le bandeau mesuré, la sonde réparée (14 octobre 2026)
+
+Troisième relèvement d'ancre de la journée, mais pas pour une fonctionnalité : le
+bandeau avait été déclaré « plus grand que ses boutons » par le visiteur, et la
+réponse devait être chiffrée. `outils/captures_ecran.mjs` publie le plan coté des
+cadres du bandeau ; il a montré, à 1280 px, un titre cassé en trois lignes dans
+une colonne de 528 px et **139 px de vide** sous la barre de commandes — 296 px
+de cadre pour 35 px de boutons.
+
+Répartition neuve : les quatre commandes en première rangée à droite, le titre
+étalé sur toute la largeur, la phrase d'accroche et la ligne d'état côte à côte.
+**296 → 248 px** à 1280 px, 576 → 566 px à 380, sans qu'un mot soit retiré. La
+ligne d'état, placée dans la colonne des commandes, ne doit pas commander la
+grille : sa demande de largeur (1179 px mesurés) écrasait la colonne du titre —
+un bandeau de 2955 px et un sur-titre empilé lettre par lettre ; elle est bornée
+par la mesure de lecture, le jeton qui borne déjà la phrase d'accroche.
+
+Le plan coté a livré un second verdict : le sommaire des accès rapides, **collant**,
+faisait **290 px de haut pour une rangée de pastilles de 25 px**. La cause était un
+balisage cassé — le `data-aide` du lien « Objections » avalait les deux liens
+suivants, et ses 217 caractères retombaient en nœud de texte dans la liste, où ils
+se repliaient en paragraphe : un enfant flex anonyme, invisible au plan comme à
+l'œil. **290 → 66 px** à 1280 px, 37 px à 900, et la hauteur annoncée au script
+(`--collant`) redevient juste : les ancres de la page atterrissaient 290 px trop
+bas. Trois contrôles neufs gardent la réparation (pas de texte en clair, aucun
+lien mort, aucune aide porteuse de balisage).
+
+Deux contrôles neufs gardent la répartition (le titre étalé, l'état sous les
+commandes), sabotés trois fois pour vérifier qu'ils mordent. Le seuil des deux
+colonnes reste **1200 px** : à 900 px, le plafond de 46 % cassait les quatre
+commandes en trois rangées (115 px) là où elles tiennent sur une (34 px).
+
+Deux mesures fausses ont été réparées dans la sonde le même jour — les
+« commandes recouvertes » (17 faux positifs par vue, dus aux panneaux fermés dont
+la géométrie subsiste) et le compte des rangées (les `offsetTop` distincts ne
+font pas des rangées) : le détail est dans le quinzième incrément de
+`docs/RD_VISUEL_RESPONSIVE.md`.
+
+## 12. Le douzième incrément : l'aide, le cadre, l'état (14 octobre 2026)
+
+Trois phrases du visiteur, trois chantiers — et une leçon commune : ce qui
+gêne à l'écran n'est presque jamais ce qu'on croit mesurer.
+
+> « La bulle d'information occulte le contenu et l'accès aux différents
+> boutons ! La bulle devrait uniquement s'afficher quand la souris passe le
+> bouton "Affichage" et disparaître quand elle n'est plus dessus. »
+
+### 12.1 Une infobulle explique un contenant, pas ses commandes
+
+L'aide du panneau « Affichage » était accrochée au **tiroir entier**
+(`<details data-aide=…>`). Trois conséquences, toutes mesurables :
+
+1. elle se déclenchait **partout dans le panneau ouvert** — le pointeur n'avait
+   qu'à entrer dans une des six commandes pour la faire venir ;
+2. le gestionnaire de sortie ne la cachait pas tant que le pointeur restait dans
+   le porteur (`if (cherche(evenement.relatedTarget)) return;`) : elle restait
+   donc affichée **pendant tout l'usage du panneau** ;
+3. `positionnerInfobulle` choisissait le dessus de la cible quand le bas ne
+   suffisait pas — pour un `<details>` ouvert, « le dessus » est **le panneau
+   lui-même**.
+
+La règle écrite maintenant tient en une phrase : *une infobulle cède devant
+toute commande que son contenant renferme*, et s'efface dès que ce contenant est
+ouvert. Elle vit dans `commandeInterne()` et `estOuvert()`, et le harnais la joue
+événement par événement — survol, sortie, focus, tiroir ouvert, champ annoncé.
+
+### 12.2 Ce qu'un état cache
+
+L'outil de contraste écartait les états, et **le disait** : « ce qu'il ne mesure
+pas : les règles qui ne s'appliquent qu'à un état ». C'était honnête, et c'était
+le trou : un visiteur vit dans ces états-là. `mesurer_etats` les joue :
+
+- pour chaque élément dont la feuille prévoit un état **qui touche une encre ou
+  un fond**, une passe est ouverte (l'élément est mis dans cet état, sa
+  descendance est mesurée) ;
+- une passe **« tout enfoncé »** active toutes les bascules : 19 sur la page
+  livrée (`aria-pressed`, onglets de strate, cartes de scénario, filtres de
+  classes, sommaire, année de la balance) ;
+- les **valeurs écrites dans les champs** et **l'option choisie d'un `select`**
+  sont mesurées comme des textes — elles s'affichent.
+
+Deux choix gardent l'outil utile : une règle d'état qui ne pose qu'un contour de
+focus n'ouvre **aucune** passe (193 passes pour rien n'auraient rien prouvé,
+19 suffisent), et une passe qui ne montre aucun texte n'est pas retenue. Coût :
+**2,5 s** par thème et par largeur, contre une minute avec les 193 passes.
+
+**Résultat** : 4 thèmes × 2 largeurs, 19 passes, 587 textes mesurés par
+combinaison, **0 faute**. La commande enfoncée, la carte active, l'onglet choisi,
+le filtre coché : tout se lit, dans les quatre palettes.
+
+### 12.3 Le cadre qui était plus grand que ses boutons
+
+Le bandeau empilait sur-titre, titre, phrase, puis les quatre commandes. Sa
+hauteur était donc celle de son texte **plus** 34 px de commandes **plus** 9 px
+de marge — alors que le texte fait déjà deux fois la hauteur des boutons. Dès
+900 px, il se lit maintenant en deux colonnes (texte à gauche, commandes à
+droite, ligne d'état en dessous) ; en dessous de 900 px, la colonne unique
+reprend ses droits et les quatre paliers restent la loi.
+
+### 12.4 Voir, enfin
+
+`outils/captures_ecran.mjs` ouvre la page dans Chromium et la photographie
+(4 thèmes × 4 largeurs, panneaux ouverts, états, sections), puis relève en texte
+ce qu'un doigt toucherait au centre de chaque commande (`elementFromPoint`) et
+la hauteur des cadres. Deux leçons de méthode :
+
+- **une image ne se lit pas par un agent** : le résumé chiffré, lui, passe par
+  l'artefact, le rapport de CI et le commentaire de la demande de fusion ;
+- **un relevé n'est pas un contrôle** : les contrôles, eux, restent dans
+  `tests/` — l'artefact sert à regarder, les tests à refuser.

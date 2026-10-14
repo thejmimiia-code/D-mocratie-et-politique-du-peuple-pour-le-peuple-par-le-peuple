@@ -26,3 +26,7 @@ dist/
 
 # Node.js dependencies
 node_modules/
+
+# Les captures d'écran sont des mesures, pas des sources : elles se
+# régénèrent à la demande (voir .github/workflows/captures.yml).
+captures/

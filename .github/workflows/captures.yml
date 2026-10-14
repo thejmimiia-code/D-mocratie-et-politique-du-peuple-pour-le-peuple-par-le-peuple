@@ -1,0 +1,116 @@
+name: Captures d'écran
+
+# Photographier la page dans un vrai navigateur, aux quatre largeurs et dans les
+# quatre thèmes, et garder les images en artefact. Ce n'est pas un contrôle qui
+# échoue : c'est une **mesure visuelle** — deux passes se comparent alors à
+# l'œil, ce qu'aucun test de couleur ni budget d'octets ne remplace.
+#
+# Déclenché à la demande, et sur toute branche sauf `main` (une poussée sur
+# `main` a déjà ses contrôles ; les images se demandent).
+
+on:
+  workflow_dispatch:
+  push:
+    branches-ignore: [main, master]
+
+jobs:
+  capturer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Installer Puppeteer (Chromium compris)
+        # Ni `package.json` ni `package-lock.json` ne sont versionnés ici : le
+        # manifeste est créé dans le coureur, pour la durée du travail. Le
+        # navigateur n'est pas une dépendance du paquet, c'est l'outil de la
+        # photographie.
+        run: |
+          npm init -y > /dev/null
+          npm install --no-save --no-audit --no-fund puppeteer@23
+
+      - name: Servir la page en mode hors ligne
+        run: |
+          SIMULATEUR_HORS_LIGNE=1 python3 -m simulateur.dashboard --host 127.0.0.1 --port 8124 \
+            > /tmp/serveur-captures.log 2>&1 &
+          for i in $(seq 1 40); do
+            curl -sf http://127.0.0.1:8124/ > /dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:8124/ | grep -q "Interface v" \
+            || { echo "Le serveur ne sert pas la page attendue" ; cat /tmp/serveur-captures.log ; exit 1 ; }
+
+      - name: Photographier
+        run: |
+          set -o pipefail
+          node outils/captures_ecran.mjs --url http://127.0.0.1:8124/ 2>&1 | tee /tmp/captures.log
+
+      - name: Publier les captures
+        uses: actions/upload-artifact@v4
+        with:
+          name: captures-ecran
+          path: captures/
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Résumer la mesure dans le rapport du travail
+        run: cat captures/resume.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publier le résumé sur la demande de fusion
+        # Seule surface lisible sans navigateur : les images vivent dans
+        # l'artefact (que l'humain ouvre), le résumé chiffré vit ici — et la
+        # demande de fusion le relit à chaque poussée.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -s captures/resume.md ]; then echo "Résumé absent" ; exit 0 ; fi
+          demande=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number' || true)
+          if [ -z "$demande" ]; then echo "Aucune demande de fusion pour cette branche" ; exit 0 ; fi
+          marqueur="<!-- captures-ecran -->"
+          corps=$(printf '%s\n\n%s\n%s' "$marqueur" "### Captures d'écran et mesure des cadres" "$(cat captures/resume.md)")
+          existant=$(gh api "repos/$GITHUB_REPOSITORY/issues/$demande/comments" \
+            --jq ".[] | select(.body | startswith(\"$marqueur\")) | .id" | head -1)
+          if [ -n "$existant" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existant" -f body="$corps" > /dev/null
+            echo "Commentaire $existant mis à jour"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$demande/comments" -f body="$corps" > /dev/null
+            echo "Commentaire publié sur la demande $demande"
+          fi
+
+      - name: Dire l'échec là où il se lit
+        # Les journaux d'un travail vivent derrière une adresse qu'un agent n'a
+        # pas toujours le droit d'ouvrir. L'échec, lui, doit se lire : il part
+        # donc dans le commentaire de la demande de fusion, en clair.
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          demande=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number' || true)
+          if [ -z "$demande" ]; then exit 0 ; fi
+          {
+            echo "<!-- captures-echec -->"
+            echo "### Captures d'écran : échec"
+            echo '```'
+            tail -30 /tmp/serveur-captures.log 2>/dev/null || echo "pas de journal de serveur"
+            echo "---"
+            tail -40 /tmp/captures.log 2>/dev/null || echo "pas de journal de captures"
+            echo '```'
+          } > /tmp/echec.md
+          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$demande/comments" -f body="$(cat /tmp/echec.md)" > /dev/null
+          echo "Échec publié sur la demande $demande"

@@ -93,11 +93,30 @@ class Element {
     return this._enfants[selecteur];
   }
   querySelectorAll() { return []; }
-  appendChild(enfant) { this.children.push(enfant); return enfant; }
+  appendChild(enfant) { this.children.push(enfant); enfant.parentElement = this; return enfant; }
   setAttribute(cle, valeur) { this.attributs[cle] = valeur; }
   getAttribute(cle) { return this.attributs[cle] ?? null; }
   addEventListener() {}
-  closest() { return null; }
+  /* Le vrai navigateur remonte la chaîne ; la doublure aussi, sinon aucun
+     contrôle ne peut dire si une infobulle va céder devant sa commande. */
+  closest(selecteur) {
+    const morceaux = String(selecteur).split(",").map((m) => m.trim());
+    for (let noeud = this; noeud; noeud = noeud.parentElement) {
+      const balise = String(noeud.tagName || "").toLowerCase();
+      for (const morceau of morceaux) {
+        if (morceau === balise) return noeud;
+        if (morceau.startsWith(".") && noeud._classes.has(morceau.slice(1))) return noeud;
+        if (morceau.startsWith("[") && noeud.attributs[morceau.slice(1, -1)] !== undefined) return noeud;
+      }
+    }
+    return null;
+  }
+  contains(noeud) {
+    for (const enfant of this.children) {
+      if (enfant === noeud || enfant.contains?.(noeud)) return true;
+    }
+    return false;
+  }
   click() { rapport.telechargements.push({ href: this.href, download: this.download }); }
 }
 
@@ -123,6 +142,9 @@ globalThis.localStorage = {
 
 
 const elements = new Map();
+/* Les écouteurs du document, retenus : le parcours joue lui-même la souris et
+   le clavier, au lieu de supposer ce que la page en fait. */
+const ecoutes = new Map();
 const parId = (id) => {
   if (!elements.has(id)) elements.set(id, new Element(id));
   return elements.get(id);
@@ -134,12 +156,19 @@ globalThis.document = {
   querySelector: (selecteur) => new Element(selecteur),
   querySelectorAll: () => [],
   createElement: (balise) => new Element("cree-" + balise, balise),
-  addEventListener: () => {},
+  addEventListener: (type, gestionnaire) => {
+    if (!ecoutes.has(type)) ecoutes.set(type, []);
+    ecoutes.get(type).push(gestionnaire);
+  },
   removeEventListener: () => {},
   body: new Element("body"),
   documentElement: racineDocument,
 };
 globalThis.window = globalThis;
+/* Un écran de bureau, celui sur lequel le visiteur lit : c'est lui qui décide
+   où l'infobulle trouve de la place. */
+globalThis.innerWidth = 1280;
+globalThis.innerHeight = 900;
 // Adresse de la page : le lien partageable s'y construit. Sans elle, le
 // script lèverait une erreur au lieu de fabriquer une adresse.
 globalThis.location = { origin: "http://127.0.0.1:8000", pathname: "/", search: "" };
@@ -278,7 +307,8 @@ const programme = `
                        'choisirTheme','choisirDensite','changerTailleTexte','appliquerAffichage',
                        'initialiserAffichage','majBoutonsAffichage','preferenceAffichage',
                        'themeAffichage','densiteAffichage','tailleAffichage',
-                       'choisirPresentation','presentationAffichage','PRESENTATIONS_AFFICHAGE']) {
+                       'choisirPresentation','presentationAffichage','PRESENTATIONS_AFFICHAGE',
+                       'positionnerInfobulle']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
@@ -857,6 +887,72 @@ noter("l'aide décrit plage, défaut et valeur courante",
       aideReglage.slice(0, 110));
 noter("l'aide annonce les effets déclarés au catalogue",
       aideReglage.includes("Effets déclarés"), aideReglage.slice(0, 110));
+/* Le défaut signalé par le visiteur : l'aide d'un tiroir restait affichée
+   pendant qu'on se servait du panneau, et le recouvrait. Ces étapes jouent la
+   souris, événement par événement, pour vérifier que l'aide cède la place. */
+function jouerSouris(type, cible, vers) {
+  for (const gestionnaire of (ecoutes.get(type) || [])) {
+    gestionnaire({ target: cible, relatedTarget: vers || null });
+  }
+}
+function noeudAide(balise, attributs, classes) {
+  const noeud = new Element("aide-" + balise, balise);
+  for (const [cle, valeur] of Object.entries(attributs || {})) noeud.attributs[cle] = valeur;
+  for (const classe of (classes || [])) noeud.classList.add(classe);
+  return noeud;
+}
+const tiroirAide = noeudAide("details", { id: "affichage" }, ["affichage"]);
+const boutonTiroir = tiroirAide.appendChild(noeudAide("summary", { "data-aide": "<b>Affichage</b>Quatre thèmes" }));
+const panneauTiroir = tiroirAide.appendChild(noeudAide("div", {}, ["affichage-panneau"]));
+const choixPanneau = panneauTiroir.appendChild(noeudAide("button", { "data-theme-choix": "jour" }));
+const etiquetteAide = noeudAide("label", {}, ["select-horizon"]);
+const motEtiquette = etiquetteAide.appendChild(noeudAide("span", { "data-aide": "<b>Horizon</b>5 ou 10 ans" }));
+const champEtiquette = etiquetteAide.appendChild(noeudAide("select", {}, []));
+
+// 1. Le bouton du tiroir fermé : l'aide vient, puis repart avec la souris.
+jouerSouris("mouseover", boutonTiroir);
+noter("l'aide d'un bouton vient au survol", elements.get("infobulle")?.classList.contains("visible") === true);
+jouerSouris("mouseout", boutonTiroir, racineDocument);
+noter("et repart dès que la souris le quitte",
+      elements.get("infobulle")?.classList.contains("visible") === false);
+
+// 2. Le même bouton, tiroir ouvert : l'aide s'efface — le panneau est la réponse.
+tiroirAide.open = true;
+jouerSouris("mouseover", boutonTiroir);
+noter("l'aide d'un tiroir ouvert s'efface devant son panneau",
+      elements.get("infobulle")?.classList.contains("visible") === false);
+tiroirAide.open = false;
+
+// 3. Une commande posée dans un porteur d'aide : la bulle cède.
+jouerSouris("mouseover", choixPanneau);
+noter("aucune aide ne recouvre une commande du panneau",
+      elements.get("infobulle")?.classList.contains("visible") === false);
+jouerSouris("mouseover", champEtiquette);
+noter("aucune aide ne recouvre le champ qu'elle annonce",
+      elements.get("infobulle")?.classList.contains("visible") === false);
+jouerSouris("mouseover", motEtiquette);
+noter("le mot de l'étiquette, lui, garde son aide",
+      elements.get("infobulle")?.classList.contains("visible") === true);
+jouerSouris("mouseout", motEtiquette, racineDocument);
+
+// 4. La bulle ne se pose jamais sur la cible : elle est sous ou au-dessus.
+const bulleAide = elements.get("infobulle");
+bulleAide.style = { left: "0px", top: "0px" };
+bulleAide.offsetWidth = 340;
+bulleAide.offsetHeight = 180;
+const cibleMesurable = new Element("mesurable", "button");
+cibleMesurable.getBoundingClientRect = () => ({ top: 700, left: 40, bottom: 760, width: 120, height: 60 });
+apiPage.positionnerInfobulle(cibleMesurable);
+const hautBulle = Number(String(bulleAide.style.top).replace("px", ""));
+noter("la bulle se pose hors de la commande qu'elle explique",
+      hautBulle >= 760 || hautBulle + 180 <= 700, "top = " + bulleAide.style.top);
+const cibleBasse = new Element("mesurable", "button");
+cibleBasse.getBoundingClientRect = () => ({ top: 840, left: 40, bottom: 890, width: 120, height: 50 });
+apiPage.positionnerInfobulle(cibleBasse);
+const hautBasse = Number(String(bulleAide.style.top).replace("px", ""));
+noter("faute de place en dessous, elle remonte sans couvrir la commande",
+      hautBasse + 180 <= 840, "top = " + bulleAide.style.top);
+
 const cibleAide = { getAttribute: (nom) => (nom === "data-aide-levier" ? cleLevier : null) };
 apiPage.survoler(cibleAide);
 noter("l'infobulle s'affiche au survol d'un réglage",

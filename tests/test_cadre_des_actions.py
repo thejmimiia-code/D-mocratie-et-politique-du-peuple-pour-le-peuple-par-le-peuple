@@ -42,6 +42,11 @@ COMMANDES_PRINCIPALES = ("btn-simuler", "btn-rafraichir", "affichage", "outils-s
 OUTILS_SECONDAIRES = ("btn-lexique", "btn-guide", "btn-partage",
                       "btn-export-json", "btn-export-csv")
 
+#: Ce qu'une infobulle ne doit pas recouvrir : les commandes qu'un porteur d'aide
+#: peut renfermer. L'aide explique un **contenant** ; elle cède devant ce qu'il
+#: porte — sinon elle reste affichée pendant qu'on s'en sert, et le cache.
+COMMANDES = frozenset({"button", "a", "input", "select", "textarea", "summary", "label"})
+
 #: Les trois largeurs de la présentation, et ce qu'elles valent.
 PRESENTATIONS = {"equilibree": "1440px", "lecture": "1000px", "panorama": "1680px"}
 
@@ -156,6 +161,194 @@ class TestLaBarreDuBandeau(unittest.TestCase):
             self.assertIn(identifiant,
                           {noeud.identifiant() for noeud in contraste_ecran.parcourir(etat)},
                           f"{identifiant} a quitté la ligne d'état")
+
+
+class TestLAideNeCouvrePasSesCommandes(unittest.TestCase):
+    """Le défaut signalé : la bulle du menu « Affichage » cachait son panneau.
+
+    Trois causes, trois refus : une aide accrochée à un contenant qui porte des
+    commandes, une aide qui ne part pas, une bulle qui se pose sur sa cible.
+    """
+
+    def test_aucune_aide_ne_porte_de_commande(self):
+        """Le porteur d'une aide ne renferme aucune commande — sauf s'il en est une."""
+        fautifs = []
+        for noeud in contraste_ecran.parcourir(contraste_ecran.arbre(HTML_PAGE)):
+            if not ({"data-aide", "data-aide-levier"} & set(noeud.attributs)):
+                continue
+            dedans = [enfant.nom for enfant in contraste_ecran.parcourir(noeud)
+                      if enfant is not noeud and enfant.nom in COMMANDES]
+            if dedans:
+                nom = noeud.identifiant() or ".".join(noeud.classes) or noeud.nom
+                fautifs.append(f"{nom} renferme <{dedans[0]}>")
+        self.assertEqual(fautifs, [], "aides qui recouvrent leurs propres commandes : "
+                         + " ; ".join(fautifs))
+
+    def test_les_tiroirs_portent_leur_aide_sur_leur_bouton(self):
+        """C'est le bouton qu'on survole, pas le panneau : l'aide y est accrochée."""
+        for identifiant in ("affichage", "outils-simulateur"):
+            with self.subTest(tiroir=identifiant):
+                tiroir = None
+                for noeud in contraste_ecran.parcourir(contraste_ecran.arbre(HTML_PAGE)):
+                    if noeud.identifiant() == identifiant:
+                        tiroir = noeud
+                        break
+                self.assertIsNotNone(tiroir, f"#{identifiant} introuvable")
+                resume = next((enfant for enfant in tiroir.enfants if enfant.nom == "summary"), None)
+                self.assertIsNotNone(resume, f"#{identifiant} n'a plus de bouton")
+                self.assertIn("data-aide", resume.attributs,
+                              f"#{identifiant} : le bouton n'explique plus rien")
+                self.assertNotIn("data-aide", tiroir.attributs,
+                                 f"#{identifiant} : l'aide reste accrochée au tiroir entier")
+
+    def test_le_script_ecarte_l_aide_devant_une_commande(self):
+        """La règle est dans la page : le harnais la joue, ce contrôle la garde."""
+        page = HTML_PAGE
+        for morceau in ("function commandeInterne(", "function estOuvert(",
+                        "if (commandeInterne(porteur, noeud)) return null;",
+                        "if (estOuvert(porteur)) return null;"):
+            with self.subTest(morceau=morceau):
+                self.assertIn(morceau, page)
+
+    def test_la_bulle_ne_capte_aucun_clic(self):
+        """Même invisible ou mal placée, une infobulle ne prend jamais un clic."""
+        regle = _regle_de(".infobulle")
+        self.assertEqual(regle.get("pointer-events"), "none")
+
+    def test_la_bulle_cherche_trois_placements(self):
+        """Sous la cible, au-dessus, et à défaut au bas de l'écran — jamais dessus."""
+        page = HTML_PAGE
+        for morceau in ("const sousCible = rect.bottom + 12;",
+                        "const surCible = rect.top - 12 - hauteurBulle;",
+                        "haut = Math.max(marge, hauteur - hauteurBulle - marge);"):
+            with self.subTest(morceau=morceau):
+                self.assertIn(morceau, page)
+
+
+class TestLeBandeauEpouseSesCommandes(unittest.TestCase):
+    """Au large, le bandeau se lit en deux colonnes : le texte, puis les commandes.
+
+    Empilées, les quatre commandes ajoutaient leur hauteur et leur marge sous un
+    bloc de texte deux fois plus haut qu'elles : le cadre paraissait grand pour
+    ce qu'il portait. Côte à côte, sa hauteur est celle de son texte.
+    """
+
+    def test_le_bandeau_passe_en_deux_colonnes_au_large(self):
+        """La grille existe, et elle ne s'ouvre qu'à partir de 1200 px.
+
+        Mesuré dans Chromium : à 900 px, une barre plafonnée à 46 % cassait les
+        quatre commandes en trois rangées (115 px) au lieu d'une (34 px). Le
+        seuil est donc celui du palier, et la barre n'a plus de plafond.
+        """
+        regles = [corps for contexte, liste, corps in contraste_ecran.regles(_css())
+                  if "header.entete" in [morceau.strip() for morceau in liste.split(",")]
+                  and "min-width:1200px" in " ".join(contexte).replace(" ", "")]
+        self.assertEqual(len(regles), 1, "la grille du bandeau a disparu ou s'est dédoublée")
+        declarations = _declarations(regles[0])
+        self.assertIn("display", declarations)
+        self.assertEqual(declarations["display"], "grid")
+        self.assertIn("grid-template-columns", declarations)
+
+    def test_la_barre_se_pose_a_droite_et_ne_s_empile_plus(self):
+        """Les quatre commandes quittent le flux vertical du bandeau."""
+        pose = None
+        for contexte, liste, corps in contraste_ecran.regles(_css()):
+            if "min-width:1200px" not in " ".join(contexte).replace(" ", ""):
+                continue
+            if "header.entete .barre-contexte" in [morceau.strip() for morceau in liste.split(",")]:
+                pose = _declarations(corps)
+        self.assertIsNotNone(pose, "le bandeau large ne place plus ses commandes")
+        self.assertEqual(pose.get("margin-top"), "0")
+        self.assertEqual(pose.get("grid-column"), "2")
+        self.assertNotIn("max-width", pose, "la barre se plafonne et se casse en rangées")
+
+    def test_le_sommaire_ne_porte_pas_de_texte_en_clair(self):
+        """Un texte libre dans la liste du sommaire est un enfant flex anonyme.
+
+        Mesuré dans Chromium : 290 px de cadre pour une rangée de pastilles de
+        25 px. La cause n'était pas la feuille de style : le balisage du lien
+        « Objections » était cassé, et les 217 caractères de son aide
+        retombaient **en texte** dans la liste, où ils se repliaient en
+        paragraphe — centré verticalement, invisible au premier regard, mais
+        bien là : la barre collante faisait 290 px, et le script qui mesure la
+        barre (`--collant`) rangeait toutes les ancres 290 px trop bas.
+        """
+        liste = _noeud("sommaire-liste")
+        self.assertEqual(liste.texte, [],
+                         f"du texte traîne dans le sommaire : {liste.texte}")
+        texte = " ".join(enfant.texte[0] if enfant.texte else "" for enfant in liste.enfants)
+        self.assertIn("Objections", texte,
+                      "le sommaire ne mène plus au registre des objections")
+
+    def test_chaque_acces_rapide_mene_a_une_section(self):
+        """Un lien du sommaire qui ne mène nulle part est un lien mort."""
+        identifiants = {noeud.identifiant() for noeud in
+                        contraste_ecran.parcourir(contraste_ecran.arbre(HTML_PAGE))}
+        liste = _noeud("sommaire-liste")
+        liens = [enfant for enfant in liste.enfants if enfant.nom == "a"]
+        self.assertGreaterEqual(len(liens), 12, "le sommaire a perdu ses accès rapides")
+        for lien in liens:
+            cible = (lien.attributs.get("href") or "").lstrip("#")
+            with self.subTest(lien=cible):
+                self.assertTrue(cible, "un accès rapide n'a plus de destination")
+                self.assertIn(cible, identifiants,
+                              f"« {' '.join(lien.texte)} » mène à #{cible}, qui n'existe pas")
+
+    def test_aucune_aide_ne_porte_de_balisage_de_commande(self):
+        """Une aide peut mettre en gras ; elle ne peut pas ouvrir de balise.
+
+        Le balisage de commande dans une aide est le signe d'un attribut mal
+        fermé : c'est ainsi que le lien « Objections » a disparu du sommaire, le
+        temps que quelqu'un regarde de près.
+        """
+        page = HTML_PAGE
+        fautives = []
+        for aide in re.findall(r'data-aide="([^"]*)"', page):
+            for marque in ("<a ", "<button", "<summary", "<input", "<select",
+                           "href=", "class="):
+                if marque in aide:
+                    fautives.append((marque, aide[:60]))
+        self.assertEqual(fautives, [],
+                         f"aides qui contiennent du balisage : {fautives}")
+
+    def _pose_large(self, selecteur):
+        """La pose d'un élément du bandeau dans la feuille large (≥ 1200 px)."""
+        pose = None
+        for contexte, liste, corps in contraste_ecran.regles(_css()):
+            if "min-width:1200px" not in " ".join(contexte).replace(" ", ""):
+                continue
+            if selecteur in [morceau.strip() for morceau in liste.split(",")]:
+                pose = _declarations(corps)
+        self.assertIsNotNone(pose, f"{selecteur} a quitté la grille du bandeau large")
+        return pose
+
+    def test_le_titre_du_bandeau_s_etale_sur_toute_la_largeur(self):
+        """Le titre ne se casse plus dans une colonne trop étroite.
+
+        Mesuré dans Chromium à 1280 px : la colonne de texte faisait 528 px, le
+        titre y tenait en trois lignes (89 px) au lieu d'une sur toute la
+        largeur. Le cadre mesurait alors 296 px de haut — pour 35 px de boutons.
+        """
+        pose = self._pose_large("header.entete h1")
+        self.assertEqual(pose.get("grid-column"), "1 / -1",
+                         "le titre est revenu dans une colonne : il se casse en lignes")
+
+    def test_la_ligne_d_etat_ne_creuse_plus_de_vide_sous_la_barre(self):
+        """Sous les commandes, le vide de 139 px est occupé par la ligne d'état."""
+        etat = self._pose_large("header.entete .etat-contexte")
+        self.assertEqual(etat.get("grid-column"), "2",
+                         "la ligne d'état a quitté la colonne des commandes")
+        self.assertEqual(etat.get("grid-row"), "3",
+                         "la ligne d'état ne se range plus sous la barre")
+        accroche = self._pose_large("header.entete .accroche")
+        self.assertEqual(accroche.get("grid-row"), "3",
+                         "la phrase d'accroche ne partage plus la rangée de l'état")
+
+    def test_le_sommaire_se_resserre_sur_ses_pastilles(self):
+        """Le cadre des accès rapides se règle sur les jetons, pas sur des valeurs à lui."""
+        declarations = _regle_de(".sommaire")
+        self.assertEqual(declarations.get("padding"), "var(--e-1) var(--e-2)")
+        self.assertEqual(declarations.get("gap"), "var(--gap-barre)")
 
 
 class TestUneSeuleRecette(unittest.TestCase):

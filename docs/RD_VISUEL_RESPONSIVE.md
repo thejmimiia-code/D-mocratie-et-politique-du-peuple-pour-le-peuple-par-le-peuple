@@ -555,6 +555,110 @@ Rien n'est cassé aux quatre paliers : les contrôles de contraste tournent à
 vertes. Le pire cas mesuré est **4,58:1** (« soir »), **4,62:1** (« jour »),
 **4,76:1** (« crème »), **8,16:1** (« contraste »).
 
+## Quatorzième incrément — l'aide qui cachait le panneau, et l'état qu'on ne mesurait pas
+
+Deux défauts signalés le même jour, liés par la même cause : l'outil regardait
+une chose, le visiteur en vivait une autre.
+
+### La bulle qui recouvrait ses propres boutons
+
+Le panneau « Affichage » s'ouvrait sous une bulle qui ne partait pas : l'aide
+était accrochée au tiroir entier, le gestionnaire de sortie ne la cachait pas
+tant que le pointeur restait dans le porteur, et son placement de repli la
+posait **sur** le panneau. Corrigé par une règle : l'aide explique un contenant,
+elle cède devant toute commande qu'il renferme, et s'efface dès que le contenant
+est ouvert. Trois placements sont possibles (sous, dessus, bas de l'écran), et
+aucun ne recouvre la commande expliquée. Neuf étapes du harnais jouent la souris
+et le clavier ; le sabotage du repérage d'avant les fait échouer.
+
+### L'état, angle mort du contraste
+
+Le contraste était mesuré **au repos**, et l'outil disait écarter les états.
+C'est exactement là qu'un visiteur passe son temps : survol, focus, clic,
+bascule. Il mesure maintenant 19 passes par page et par largeur, dont « tout
+enfoncé » (19 bascules forcées) — 587 textes mesurés, 0 faute dans les quatre
+thèmes, aux deux largeurs. Sur un écran de poche, 551 textes.
+
+### Le cadre large
+
+Le bandeau passe en deux colonnes au-delà de 900 px : le texte à gauche (sur-
+titre, titre, phrase), les quatre commandes à droite, la ligne d'état en
+dessous. La hauteur du cadre devient celle de son contenu, au lieu d'être la
+somme de son texte et d'une rangée de boutons. Le sommaire des accès rapides se
+règle sur les jetons d'espacement, comme les trois barres.
+
+## Quinzième incrément — le plan coté, et deux mesures fausses
+
+Le visiteur l'avait dit en une phrase : « le cadre avec les boutons d'accès
+rapide est beaucoup plus grand que la place que prennent les boutons eux-mêmes ».
+L'outil de captures savait photographier la page et additionner des hauteurs ; il
+ne savait pas dire **où**. Il publie désormais le **plan coté de chaque cadre** :
+pour chaque enfant peint, sa position et sa taille relatives au cadre. C'est ce
+plan qui a répondu, et la réponse était plus précise que l'impression.
+
+### Ce que le plan a montré, à 1280 px
+
+| Ce qui occupe le bandeau | Avant | Après |
+|---|---:|---:|
+| la colonne de texte | 528 px | 571 px |
+| le titre | 3 lignes (89 px) | 2 lignes (59 px), sur toute la largeur |
+| la barre de commandes | 651 × 35 px | 651 × 35 px |
+| le vide sous la barre | 139 px | 0 |
+| la ligne d'état | 1201 × 69 px | 589 × 101 px, sous les commandes |
+| **le cadre** | **296 px** | **248 px** |
+
+Rien n'a été retiré : le titre a gagné la largeur de la page, et la rangée qui
+restait vide sous les quatre commandes porte maintenant la ligne d'état — ce
+qu'un cadre doit faire de sa place, la donner à son contenu. Sous 641 px, le
+rembourrage du bandeau suit l'écran (`clamp(9px, 1.6vw, 22px)`) : une seule
+règle, là où deux se contredisaient — la mesure avait montré 14 px de marge
+intérieure à 380 px pour 35 px de boutons, parce que la règle du grand écran,
+écrite plus bas, l'emportait.
+
+### Le sommaire : 290 px de cadre pour 25 px de pastilles
+
+Le même plan coté a rendu un second verdict, plus embarrassant : la liste du
+sommaire faisait **290 px de haut** — dix-huit pastilles de 25 px centrées
+verticalement dans du vide — et le sommaire est **collant**. La feuille de style
+n'a rien à se reprocher : le balisage du lien « Objections » était cassé, son
+attribut `data-aide` avalait le balisage des deux liens suivants, et les
+**217 caractères** de son texte retombaient **en nœud de texte** dans la liste,
+où ils se repliaient en paragraphe. Un enfant flex anonyme : il n'est pas dans
+`children`, donc le plan ne le voyait pas, et le navigateur le peignait
+sagement au milieu des pastilles.
+
+Trois conséquences, toutes réparées : un paragraphe fantôme dans la barre, un
+lien « Objections » qui n'existait pas, et `--collant` — la hauteur de barre que
+le script mesure pour y ranger les ancres — annoncée à **290 px**, donc **toutes
+les ancres de la page 290 px trop bas**. Aujourd'hui : **66 px** à 1280, **37 px**
+à 900, 58 px sur écran de poche. `index.html` brut ne bouge pas d'un octet
+(878 caractères remplacés par 878).
+
+### Deux mesures fausses, corrigées avant d'accuser la page
+
+**Les « commandes recouvertes » étaient un cri de dix-sept faux positifs par
+vue.** Un `<details>` fermé garde la géométrie de ses boutons — Chromium les
+garde en mémoire de mise en page sans les peindre —, leurs rectangles retombent
+sur le texte du bandeau, et la sonde accusait celui-ci. La règle est désormais
+stricte : la commande doit être **peinte**, c'est-à-dire apparaître **elle-même**
+dans la pile des éléments sous son centre, et ce qu'un panneau déplié, une
+fenêtre de dialogue ou une infobulle masque **volontairement** ne compte pas
+comme une gêne — un panneau ouvert est là pour ça.
+
+**Les rangées se comptaient mal.** Le premier compte prenait les `offsetTop`
+distincts pour des rangées : faux dès que des voisins ont des hauteurs
+différentes et sont centrés verticalement — un chapelet de pastilles et de
+séparateurs annonçait trois rangées là où il y en avait une. Le compte suit
+maintenant le **chevauchement vertical** (plus de la moitié du plus petit), et le
+sommaire des accès rapides, annoncé en trois rangées, se révèle sur **une**.
+
+### Ce que la mesure ne dira jamais
+
+Le plan dit les positions, pas la beauté. « 139 px de vide » est un fait, « le
+cadre paraissait grand » est un jugement — et c'est le visiteur qui l'avait
+porté. Les images restent dans l'artefact, pour l'œil ; les chiffres, dans le
+commentaire de demande de fusion, pour la revue.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
