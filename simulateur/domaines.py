@@ -981,13 +981,28 @@ class ResultatDomaine:
     tendance_reference: float | None = None
 
     def en_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "cle": self.cle,
+            "libelle": self.libelle,
+            "description": self.description,
+            "couleur": self.couleur,
+            "score": self.score,
+            "indicateurs": self.indicateurs,
+            "tendance_reference": self.tendance_reference,
+        }
+
+
+_SPECS_PAR_DOMAINE: dict[str, tuple[SpecIndicateur, ...]] = {
+    domaine.cle: tuple(s for s in SPECS if s.domaine == domaine.cle)
+    for domaine in DOMAINES
+}
 
 
 def evaluer_domaines(mediateurs_par_annee: list[MediateursAnnee],
                      contexte: ContexteInstant,
                      references: dict[str, list[float]] | None = None,
-                     tendances: dict[str, float] | None = None) -> list[ResultatDomaine]:
+                     tendances: dict[str, float] | None = None,
+                     valeurs: dict[str, list[float]] | None = None) -> list[ResultatDomaine]:
     """Évalue les 20 domaines sur l'horizon simulé.
 
     `references` : séries d'indicateurs de la trajectoire de référence (leviers
@@ -996,11 +1011,15 @@ def evaluer_domaines(mediateurs_par_annee: list[MediateursAnnee],
     """
     resultats: list[ResultatDomaine] = []
     for domaine in DOMAINES:
-        specs = [s for s in SPECS if s.domaine == domaine.cle]
+        specs = _SPECS_PAR_DOMAINE[domaine.cle]
         indicateurs: list[dict[str, Any]] = []
         series_pour_score: list[tuple[SpecIndicateur, list[float]]] = []
         for spec in specs:
-            serie = [evaluer_indicateur(spec, m, contexte) for m in mediateurs_par_annee]
+            serie = (
+                list(valeurs[spec.cle])
+                if valeurs is not None and spec.cle in valeurs
+                else [evaluer_indicateur(spec, m, contexte) for m in mediateurs_par_annee]
+            )
             series_pour_score.append((spec, serie))
             indicateurs.append({
                 "cle": spec.cle,

@@ -66,7 +66,12 @@ import traceback
 from collections.abc import Callable
 from typing import Any
 
-from .dashboard import DashboardHandler
+from .dashboard import (
+    MAX_REQUEST_BODY_BYTES,
+    MAX_REQUEST_TARGET_BYTES,
+    DashboardHandler,
+    contexte_courant,
+)
 
 #: En-têtes que le serveur WSGI (ou le proxy devant lui) doit fixer lui-même.
 #: ``Connection`` doit disparaître : laisser « Connection: close » remonter
@@ -115,7 +120,7 @@ def _corps(environ: dict[str, Any]) -> bytes:
         longueur = max(0, int(brut))
     except ValueError:
         longueur = 0
-    if longueur == 0:
+    if longueur == 0 or longueur > MAX_REQUEST_BODY_BYTES:
         return b""
     flux = environ.get("wsgi.input")
     if flux is None:
@@ -191,8 +196,22 @@ class _RequeteWSGI(DashboardHandler):
 
 def creer_application() -> Callable[[dict[str, Any], Any], list[bytes]]:
     """Fabrique l'application WSGI (une seule instance suffit par processus)."""
+    contexte_courant(rafraichir=False)
 
     def application(environ: dict[str, Any], start_response: Any) -> list[bytes]:
+        chemin = environ.get("PATH_INFO") or "/"
+        query = environ.get("QUERY_STRING") or ""
+        if len(f"{chemin}{f'?{query}' if query else ''}".encode("utf-8", "replace")) > MAX_REQUEST_TARGET_BYTES:
+            corps_414 = b'{"error": "URL de requ\\u00eate trop longue."}'
+            start_response(
+                "414 URI Too Long",
+                [
+                    ("Content-Type", "application/json; charset=utf-8"),
+                    ("X-Content-Type-Options", "nosniff"),
+                    ("Content-Length", str(len(corps_414))),
+                ],
+            )
+            return [corps_414]
         requete = _RequeteWSGI(environ)
         try:
             requete.handle_one_request()

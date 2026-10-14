@@ -35,4 +35,5 @@ HEALTHCHECK --interval=60s --timeout=10s --start-period=20s --retries=3 \
 urllib.request.urlopen('http://127.0.0.1:' + os.environ.get('PORT', '8080') + '/api/lexique').read()"
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "2", "--threads", "4", \
-     "--timeout", "120", "simulateur.wsgi:application"]
+     "--preload", "--timeout", "120", "--graceful-timeout", "30", "--keep-alive", "5", \
+     "simulateur.wsgi:application"]

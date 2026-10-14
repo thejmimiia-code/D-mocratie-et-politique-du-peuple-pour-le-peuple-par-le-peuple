@@ -2860,7 +2860,7 @@ async function rafraichirMarches(silencieux){
   if(bouton){bouton.disabled=true;bouton.textContent='Interrogation des places…';}
   if(status&&!silencieux)status.textContent='Demande de cotations en cours…';
   try{
-    const reponse=await fetch('/api/marches?refresh=1'),charge=await reponse.json();
+    const reponse=await fetch(`/api/marches${silencieux?'':'?refresh=1'}`),charge=await reponse.json();
     if(!reponse.ok)throw new Error(charge.error||`HTTP ${reponse.status}`);
     MARCHES=charge;initialiserStressMarches(MARCHES.indices||[]);renderOngletsStrates(SORTIE);
     if(status&&!silencieux)status.textContent=`${charge.statut_collecte||'relevé'} · ${new Date().toLocaleString('fr-FR')}`;

@@ -199,6 +199,20 @@ class TestModeHorsLigne(unittest.TestCase):
             if precedent is not None:
                 os.environ[VARIABLE_HORS_LIGNE] = precedent
 
+    def test_sans_rafraichissement_explicite_aucun_appel_reseau_au_demarrage(self):
+        """Sans cache ni rafraichir=True, le démarrage sert le snapshot sans bloquer sur le réseau."""
+        from unittest.mock import patch
+
+        precedent = os.environ.pop(VARIABLE_HORS_LIGNE, None)
+        try:
+            with patch("simulateur.donnees_live.collecter") as espion:
+                contexte = construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=False)
+            espion.assert_not_called()
+            self.assertEqual(contexte.mode, "reference")
+        finally:
+            if precedent is not None:
+                os.environ[VARIABLE_HORS_LIGNE] = precedent
+
 
 class TestReconciliationDuRepli(unittest.TestCase):
     """Le repli hors ligne doit être dans l'unité du modèle, pas dans celle de l'API.

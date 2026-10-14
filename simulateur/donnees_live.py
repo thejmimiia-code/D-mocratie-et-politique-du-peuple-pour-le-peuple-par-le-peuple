@@ -41,11 +41,13 @@ import csv
 import io
 import json
 import os
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 
@@ -58,11 +60,13 @@ from typing import Any  # noqa: E402
 # ────────────────────────────────────────────────────────────────────────────
 
 USER_AGENT = "simulateur-macro-politique/2.0 (projet citoyen open-source)"
+MAX_SOURCE_RESPONSE_BYTES = 8_388_608
 CACHE_DIR = Path(os.environ.get("SIMULATEUR_CACHE", ".simulateur_cache"))
 CACHE_FICHIER = CACHE_DIR / "donnees_live.json"
 
 #: Fournisseurs écartés tant qu'une lecture a échoué récemment (anti-rafale).
 _BLACKLIST: dict[str, float] = {}
+_VERROU_BLACKLIST = threading.Lock()
 DUREE_BLACKLIST_S = 300.0
 
 
@@ -70,12 +74,34 @@ class ErreurSource(RuntimeError):
     """Erreur de lecture d'une source de données publiques."""
 
 
+def _lire_reponse_bornee(reponse: Any) -> bytes:
+    """Lit au plus 8 Mio et refuse les réponses excessives."""
+    entetes = getattr(reponse, "headers", None)
+    longueur_brute = entetes.get("Content-Length") if entetes is not None else None
+    if longueur_brute not in (None, ""):
+        try:
+            longueur = int(longueur_brute)
+        except (TypeError, ValueError) as exc:
+            raise ErreurSource("longueur de réponse source invalide") from exc
+        if longueur < 0 or longueur > MAX_SOURCE_RESPONSE_BYTES:
+            raise ErreurSource("réponse source trop volumineuse")
+    try:
+        contenu = reponse.read(MAX_SOURCE_RESPONSE_BYTES + 1)
+    except TypeError:
+        contenu = reponse.read()
+    if len(contenu) > MAX_SOURCE_RESPONSE_BYTES:
+        raise ErreurSource("réponse source trop volumineuse")
+    return contenu
+
+
 def _http_texte(url: str, timeout: float = 12.0, entetes: dict[str, str] | None = None) -> str:
     """Lecture HTTP brute (stdlib uniquement, aucun téléchargement implicite)."""
     requete = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, **(entetes or {})})
     try:
         with urllib.request.urlopen(requete, timeout=timeout) as reponse:
-            return reponse.read().decode("utf-8", errors="replace")
+            return _lire_reponse_bornee(reponse).decode("utf-8", errors="replace")
+    except ErreurSource:
+        raise
     except (TimeoutError, urllib.error.URLError, OSError) as exc:  # pragma: no cover - réseau
         raise ErreurSource(f"{type(exc).__name__}: {exc}") from exc
 
@@ -934,9 +960,10 @@ _declarer(Indicateur(
 
 def _lire_source(source: Source, timeout: float = 12.0) -> Lecture:
     """Interroge une source unique ; toute erreur réseau est encapsulée."""
-    if source.fournisseur in _BLACKLIST:
-        if time.monotonic() - _BLACKLIST[source.fournisseur] < DUREE_BLACKLIST_S:
-            raise ErreurSource("source temporairement écartée après échec réseau")
+    with _VERROU_BLACKLIST:
+        ecarte_depuis = _BLACKLIST.get(source.fournisseur)
+    if ecarte_depuis is not None and time.monotonic() - ecarte_depuis < DUREE_BLACKLIST_S:
+        raise ErreurSource("source temporairement écartée après échec réseau")
     qualite_code = None
     try:
         brut = _http_texte(source.url, timeout=timeout)
@@ -983,7 +1010,8 @@ def interroger(cle: str, timeout: float = 12.0) -> Lecture:
         except ErreurSource as exc:
             erreurs.append(f"{source.fournisseur} → {exc}")
             if "réseau" in str(exc) or "Name or service" in str(exc):
-                _BLACKLIST[source.fournisseur] = time.monotonic()
+                with _VERROU_BLACKLIST:
+                    _BLACKLIST[source.fournisseur] = time.monotonic()
             continue
         lecture.cle = cle
         lecture.valeur = round(lecture.valeur * indicateur.conversion, 6)
@@ -1009,7 +1037,12 @@ def interroger(cle: str, timeout: float = 12.0) -> Lecture:
 
 def collecter(cles: list[str] | None = None, timeout: float = 12.0) -> dict[str, Lecture]:
     """Interroge un ensemble d'indicateurs (tous par défaut)."""
-    return {cle: interroger(cle, timeout=timeout) for cle in (cles or list(INDICATEURS))}
+    cibles = cles or list(INDICATEURS)
+    if len(cibles) <= 1:
+        return {cle: interroger(cle, timeout=timeout) for cle in cibles}
+    with ThreadPoolExecutor(max_workers=min(6, len(cibles))) as pool:
+        paires = list(pool.map(lambda cle: (cle, interroger(cle, timeout=timeout)), cibles))
+    return dict(paires)
 
 
 def reseau_disponible(timeout: float = 2.5) -> bool:
@@ -1112,10 +1145,33 @@ class ContexteInstant:
         return round(encours * taux_moyen / 100.0 * 0.62, 1)  # 0,62 ≈ part à taux de marché
 
     def en_dict(self) -> dict[str, Any]:
-        charge = asdict(self)
-        charge["spread_oat_bund_bps"] = self.spread_oat_bund_bps
-        charge["charge_dette_estimee_mde"] = self.charge_dette_estimee_mde
-        return charge
+        return {
+            "horodatage": self.horodatage,
+            "mode": self.mode,
+            "pib_nominal_mde": self.pib_nominal_mde,
+            "dette_publique_pct_pib": self.dette_publique_pct_pib,
+            "deficit_public_pct_pib": self.deficit_public_pct_pib,
+            "taux_oat_10ans": self.taux_oat_10ans,
+            "taux_bund_10ans": self.taux_bund_10ans,
+            "taux_bce_depot": self.taux_bce_depot,
+            "taux_credit_immobilier_menages_pct": self.taux_credit_immobilier_menages_pct,
+            "inflation_pct": self.inflation_pct,
+            "inflation_zone_euro_pct": self.inflation_zone_euro_pct,
+            "chomage_pct": self.chomage_pct,
+            "eur_usd": self.eur_usd,
+            "brent_usd": self.brent_usd,
+            "taux_pauvrete_pct": self.taux_pauvrete_pct,
+            "indice_gini": self.indice_gini,
+            "dette_locale_mde": self.dette_locale_mde,
+            "population": self.population,
+            "depenses_publiques_pct_pib": self.depenses_publiques_pct_pib,
+            "prelevements_obligatoires_pct_pib": self.prelevements_obligatoires_pct_pib,
+            "depenses_defense_pct_pib": self.depenses_defense_pct_pib,
+            "provenance": self.provenance,
+            "series_complementaires": self.series_complementaires,
+            "spread_oat_bund_bps": self.spread_oat_bund_bps,
+            "charge_dette_estimee_mde": self.charge_dette_estimee_mde,
+        }
 
 
 #: Valeurs de repli documentaires, alignées sur `model.py` (projet), quand ni
@@ -1224,10 +1280,10 @@ def construire_contexte(
         hors_ligne = hors_ligne_force()
     if lectures is None:
         lectures = charger_cache() if utiliser_cache else {}
-        if not hors_ligne and (rafraichir or not lectures):
+        if not hors_ligne and rafraichir:
             collecte = collecter(list(_CORRESPONDANCE.values()), timeout=timeout)
             lectures = {**lectures, **collecte}
-            if rafraichir and any(lec.statut != "indisponible" for lec in collecte.values()):
+            if any(lec.statut != "indisponible" for lec in collecte.values()):
                 try:
                     sauver_cache(lectures)
                 except OSError:  # disque non inscriptible : on continue sans cache

@@ -409,7 +409,89 @@ class SortieSimulation:
     classes_reference: list[dict[str, Any]] = field(default_factory=list)
 
     def en_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        return {
+            "horodatage": self.horodatage,
+            "contexte": self.contexte,
+            "parametres": self.parametres,
+            "etapes": self.etapes,
+            "domaines": self.domaines,
+            "synthese": self.synthese,
+            "impact_bandeau": self.impact_bandeau,
+            "journal": self.journal,
+            "avertissements": self.avertissements,
+            "impacts": self.impacts,
+            "diagnostic": self.diagnostic,
+            "horizon": self.horizon,
+            "etapes_reference": self.etapes_reference,
+            "flux_annuels": self.flux_annuels,
+            "flux_reference": self.flux_reference,
+            "domaines_reference": self.domaines_reference,
+            "classes_annuelles": self.classes_annuelles,
+            "classes_reference": self.classes_reference,
+        }
+
+
+_CACHE_TRAJECTOIRE_REFERENCE: dict[tuple[Any, ...], dict[str, Any]] = {}
+
+
+def _trajectoire_reference(contexte: ContexteInstant, horizon: int) -> dict[str, Any]:
+    """Calcule et mémoïse la trajectoire neutre pour un contexte et un horizon."""
+    cle = (
+        horizon,
+        contexte.horodatage,
+        contexte.mode,
+        contexte.pib_nominal_mde,
+        contexte.dette_publique_pct_pib,
+        contexte.deficit_public_pct_pib,
+        contexte.taux_oat_10ans,
+        contexte.taux_bund_10ans,
+        contexte.taux_bce_depot,
+        contexte.taux_credit_immobilier_menages_pct,
+        contexte.inflation_pct,
+        contexte.inflation_zone_euro_pct,
+        contexte.chomage_pct,
+        contexte.eur_usd,
+        contexte.brent_usd,
+        contexte.taux_pauvrete_pct,
+        contexte.indice_gini,
+        contexte.dette_locale_mde,
+        contexte.population,
+        contexte.depenses_publiques_pct_pib,
+        contexte.prelevements_obligatoires_pct_pib,
+        contexte.depenses_defense_pct_pib,
+    )
+    entree = _CACHE_TRAJECTOIRE_REFERENCE.get(cle)
+    if entree is not None:
+        return entree
+    moteur_ref, flux_ref = _executer_serie({}, contexte, horizon)
+    mediateurs_ref = [
+        _mediteurs_annee(resultat, flux_ref[i], contexte, i, 0.0, None)
+        for i, resultat in enumerate(moteur_ref.historique_etapes)
+    ]
+    valeurs_ref = _valeurs_indicateurs(mediateurs_ref, contexte)
+    domaines_ref = evaluer_domaines(mediateurs_ref, contexte, valeurs=valeurs_ref)
+    tendances = {d.cle: d.score for d in domaines_ref}
+    etapes_reference = [asdict(r) for r in moteur_ref.historique_etapes]
+    flux_reference = [{"annee": i + 1, **flux} for i, flux in enumerate(flux_ref)]
+    domaines_reference = [d.en_dict() for d in domaines_ref]
+    classes_reference = serie_classes(flux_reference)
+    entree = {
+        "contexte_dict": contexte.en_dict(),
+        "moteur_ref": moteur_ref,
+        "flux_ref": flux_ref,
+        "mediateurs_ref": mediateurs_ref,
+        "valeurs_ref": valeurs_ref,
+        "domaines_ref": domaines_ref,
+        "tendances": tendances,
+        "etapes_reference": etapes_reference,
+        "flux_reference": flux_reference,
+        "domaines_reference": domaines_reference,
+        "classes_reference": classes_reference,
+    }
+    if len(_CACHE_TRAJECTOIRE_REFERENCE) >= 16:
+        _CACHE_TRAJECTOIRE_REFERENCE.clear()
+    _CACHE_TRAJECTOIRE_REFERENCE[cle] = entree
+    return entree
 
 
 def simuler(parametres: dict[str, float] | None = None,
@@ -439,12 +521,11 @@ def simuler(parametres: dict[str, float] | None = None,
     )
 
     # 1) Trajectoire de référence (tous leviers neutres)
-    moteur_ref, flux_ref = _executer_serie({}, contexte, horizon)
-    mediateurs_ref = [
-        _mediteurs_annee(resultat, flux_ref[i], contexte, i, 0.0, None)
-        for i, resultat in enumerate(moteur_ref.historique_etapes)
-    ]
-    valeurs_ref = _valeurs_indicateurs(mediateurs_ref, contexte)
+    ref = _trajectoire_reference(contexte, horizon)
+    moteur_ref = ref["moteur_ref"]
+    mediateurs_ref = ref["mediateurs_ref"]
+    valeurs_ref = ref["valeurs_ref"]
+    tendances = ref["tendances"]
 
     # 2) Trajectoire choisie
     moteur, flux_annee = _executer_serie(parametres_normalises, contexte, horizon)
@@ -460,10 +541,8 @@ def simuler(parametres: dict[str, float] | None = None,
     #    * `tendances` : ce qui se passerait sans aucune politique (année 1 → 5) ;
     #    * `domaines`  : l'impact de la politique choisie, mesuré par écart à la
     #      trajectoire de référence (50 = aucun effet sur le domaine).
-    domaines_ref = evaluer_domaines(mediateurs_ref, contexte)
-    tendances = {d.cle: d.score for d in domaines_ref}
     domaines = evaluer_domaines(mediateurs, contexte, references=valeurs_ref,
-                                tendances=tendances)
+                                tendances=tendances, valeurs=valeurs)
     scores_ref = {d.cle: 50.0 for d in domaines}
     scores_base = {d.cle: d.score for d in domaines}
 
@@ -546,16 +625,23 @@ def simuler(parametres: dict[str, float] | None = None,
     for resultat in moteur.historique_etapes:
         journal.extend(resultat.commentaires)
 
+    etapes_dict = [asdict(r) for r in moteur.historique_etapes]
+    domaines_base = [d.en_dict() for d in domaines]
+    domaines_dict = [
+        {**d_dict, "score_reference": scores_ref.get(d_dict["cle"], 50.0)}
+        for d_dict in domaines_base
+    ]
+    flux_annuels = [{"annee": i + 1, **flux} for i, flux in enumerate(flux_annee)]
+
     # 6) Garde-fous : seuils tolérables, risqués et hors-sol, strate par strate.
     #    Le diagnostic voyage avec chaque simulation : l'interface affiche donc
     #    en permanence les conséquences d'un réglage, sans aller-retour réseau.
     return SortieSimulation(
         horodatage=contexte.horodatage,
-        contexte=contexte.en_dict(),
+        contexte=ref["contexte_dict"],
         parametres=parametres_normalises,
-        etapes=[asdict(r) for r in moteur.historique_etapes],
-        domaines=[{**d.en_dict(), **{"score_reference": scores_ref.get(d.cle, 50.0)}}
-                  for d in domaines],
+        etapes=etapes_dict,
+        domaines=domaines_dict,
         synthese=synthese,
         impact_bandeau={
             "recettes_nouvelles_mde": synthese["recettes_nouvelles_mde"],
@@ -568,19 +654,17 @@ def simuler(parametres: dict[str, float] | None = None,
         avertissements=avertissements,
         impacts=impacts,
         diagnostic=evaluer_sortie({
-            "etapes": [asdict(r) for r in moteur.historique_etapes],
-            "domaines": [d.en_dict() for d in domaines],
+            "etapes": etapes_dict,
+            "domaines": domaines_base,
             "synthese": synthese,
         }),
         horizon=horizon,
-        etapes_reference=[asdict(r) for r in moteur_ref.historique_etapes],
-        flux_annuels=[{"annee": i + 1, **flux} for i, flux in enumerate(flux_annee)],
-        flux_reference=[{"annee": i + 1, **flux} for i, flux in enumerate(flux_ref)],
-        domaines_reference=[d.en_dict() for d in domaines_ref],
-        classes_annuelles=serie_classes(
-            [{"annee": i + 1, **flux} for i, flux in enumerate(flux_annee)]),
-        classes_reference=serie_classes(
-            [{"annee": i + 1, **flux} for i, flux in enumerate(flux_ref)]),
+        etapes_reference=ref["etapes_reference"],
+        flux_annuels=flux_annuels,
+        flux_reference=ref["flux_reference"],
+        domaines_reference=ref["domaines_reference"],
+        classes_annuelles=serie_classes(flux_annuels),
+        classes_reference=ref["classes_reference"],
     )
 
 
@@ -597,16 +681,19 @@ def _scores_domaines(parametres: dict[str, float], contexte: ContexteInstant,
         _mediteurs_annee(r, flux[i], contexte, i, 0.0, None)
         for i, r in enumerate(moteur.historique_etapes)
     ]
-    mediateurs, _ = _boucle_mediateurs(mediateurs, {}, contexte, passes=2)
-    domaines = evaluer_domaine_depuis_mediateurs(mediateurs, contexte, references=references)
+    mediateurs, valeurs = _boucle_mediateurs(mediateurs, {}, contexte, passes=2)
+    domaines = evaluer_domaine_depuis_mediateurs(
+        mediateurs, contexte, references=references, valeurs=valeurs
+    )
     return {d.cle: d.score for d in domaines}
 
 
 def evaluer_domaine_depuis_mediateurs(mediateurs: list[MediateursAnnee],
                                       contexte: ContexteInstant,
-                                      references: dict[str, list[float]] | None = None):
+                                      references: dict[str, list[float]] | None = None,
+                                      valeurs: dict[str, list[float]] | None = None):
     """Évaluation légère des domaines, avec ou sans trajectoire de référence."""
-    return evaluer_domaines(mediateurs, contexte, references=references)
+    return evaluer_domaines(mediateurs, contexte, references=references, valeurs=valeurs)
 
 
 def _empreinte(parametres: dict[str, float], contexte: ContexteInstant, horizon: int) -> str:
