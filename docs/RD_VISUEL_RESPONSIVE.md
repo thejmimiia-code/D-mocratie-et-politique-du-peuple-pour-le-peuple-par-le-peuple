@@ -581,9 +581,10 @@ thèmes, aux deux largeurs. Sur un écran de poche, 551 textes.
 
 ### Le cadre large
 
-Le bandeau passe en deux colonnes au-delà de 900 px : le texte à gauche (sur-
-titre, titre, phrase), les quatre commandes à droite, la ligne d'état en
-dessous. La hauteur du cadre devient celle de son contenu, au lieu d'être la
+Le bandeau passe en deux colonnes au large : le texte à gauche (sur-titre,
+titre, phrase), les quatre commandes à droite, la ligne d'état en dessous. Le
+seuil, d'abord posé à 900 px, est relevé à 1200 px par la mesure du quinzième
+incrément — à 900 px, un plafond de 46 % cassait les commandes en trois rangées. La hauteur du cadre devient celle de son contenu, au lieu d'être la
 somme de son texte et d'une rangée de boutons. Le sommaire des accès rapides se
 règle sur les jetons d'espacement, comme les trois barres.
 
@@ -651,6 +652,25 @@ différentes et sont centrés verticalement — un chapelet de pastilles et de
 séparateurs annonçait trois rangées là où il y en avait une. Le compte suit
 maintenant le **chevauchement vertical** (plus de la moitié du plus petit), et le
 sommaire des accès rapides, annoncé en trois rangées, se révèle sur **une**.
+
+### Voir la page, pas seulement la mesurer
+
+Un plan coté ne remplace pas des yeux. `outils/captures_ecran.mjs` photographie la
+page dans un vrai Chromium, par la CI (`.github/workflows/captures.yml`) :
+**quatre thèmes × quatre largeurs** — 1280, 900, 640, 380 px —, plus les deux
+panneaux ouverts (Affichage, Outils) aux deux extrêmes, les états (survol,
+densité resserrée), trois sections visitées, et le guide de première visite dans
+la vue qui lui revient. La CI publie les images en artefact et, avec elles, un
+**résumé en texte** — hauteurs, rangées, enfants, plan coté — dans le rapport du
+travail et en commentaire de la demande de fusion : les images pour l'œil, les
+chiffres pour la revue, sans qu'aucune ne dépende de l'autre.
+
+Ce que cet outil a coûté, et ce qu'il a rapporté le jour même : un plafond de
+46 % qui cassait quatre commandes en trois rangées à 900 px, un bandeau de
+296 px pour 35 px de boutons, un sommaire collant de 290 px pour 25 px de
+pastilles, et un chevauchement de barres collantes à 900 px — aucun de ces
+défauts n'était visible dans une feuille de style, tous l'étaient dans une
+mesure de rendu.
 
 ### Ce que la mesure ne dira jamais
 
