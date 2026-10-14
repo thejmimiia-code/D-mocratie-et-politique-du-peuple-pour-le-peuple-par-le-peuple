@@ -268,7 +268,8 @@ class TestInterfaceDansNode(unittest.TestCase):
         etapes = {etape["nom"]: etape["ok"] for etape in self.rapport.get("etapes", [])}
         for nom in ("affiche chaque scénario que la route a calculé",
                     "le tableau s'ouvre sur le premier scénario du catalogue",
-                    "le montant affiché est celui que le serveur a calculé",
+                    "le montant de la ligne affichée est celui que le serveur a calculé",
+                    "la barre de cette ligne est à l'échelle du plus fort montant servi, pas d'un maximum écrit",
                     "les barres se mesurent sur le plus fort montant servi",
                     "le scénario de référence est signalé, sans être le seul marqué",
                     "le premier clic range la colonne par ordre croissant",

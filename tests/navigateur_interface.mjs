@@ -1132,14 +1132,30 @@ noter("le tableau s'ouvre sur le premier scénario du catalogue",
       teteDuTableau(corpsComparaison) === String(scenarios[0]?.libelle || "").trim(),
       `« ${teteDuTableau(corpsComparaison)} » — attendu « ${scenarios[0]?.libelle} »`);
 
-const soldeServi = Number(scenarios[0]?.synthese?.solde_mesures_mde);
+// Le contrôle porte sur la ligne du scénario **le plus dégagé ou le plus
+// coûteux**, et non sur le premier venu : le statut quo a un solde nul, donc un
+// « 0,0 » se retrouve ailleurs dans le tableau et l'étape serait vraie sans rien
+// prouver (vu à l'exécution, corrigé ici).
+const sansEspacesComparaison = (texte) => String(texte).replace(/[\u202f\u00a0\s]/g, "");
+const cible = scenarios.reduce((garde, ligne) =>
+  Math.abs(ligne.synthese?.solde_mesures_mde ?? 0) > Math.abs(garde.synthese?.solde_mesures_mde ?? 0)
+    ? ligne : garde, scenarios[0]);
+const soldeServi = Number(cible?.synthese?.solde_mesures_mde);
 const soldeAttendu = Math.abs(soldeServi)
-  .toLocaleString("fr-FR", {minimumFractionDigits: 1, maximumFractionDigits: 1})
-  .replace(/[\u202f\u00a0\s]/g, "");
-noter("le montant affiché est celui que le serveur a calculé",
-      Number.isFinite(soldeServi)
-      && corpsComparaison.replace(/[\u202f\u00a0\s]/g, "").includes(soldeAttendu),
-      `solde servi ${soldeServi} → écrit « ${soldeAttendu} »`);
+  .toLocaleString("fr-FR", {minimumFractionDigits: 1, maximumFractionDigits: 1});
+const ligneCible = corpsComparaison.split('<tr class="cmp-ligne')
+  .find((bloc) => bloc.includes(cible?.libelle ?? "\u0000")) ?? "";
+const largeurCible = Number((ligneCible.match(/style="width:(\d+)%"/) || [])[1]);
+const maximumServi = scenarios.reduce((plus, ligne) =>
+  Math.max(plus, Math.abs(ligne.synthese?.solde_mesures_mde ?? 0)), 0);
+noter("le montant de la ligne affichée est celui que le serveur a calculé",
+      Number.isFinite(soldeServi) && Math.abs(soldeServi) >= 100
+      && sansEspacesComparaison(ligneCible).includes(sansEspacesComparaison(soldeAttendu)),
+      `${sansEspacesComparaison(cible?.libelle).slice(0, 34)} : solde servi ${soldeServi} → écrit « ${sansEspacesComparaison(soldeAttendu)} »`);
+noter("la barre de cette ligne est à l'échelle du plus fort montant servi, pas d'un maximum écrit",
+      largeurCible === Math.round(100 * Math.abs(soldeServi) / maximumServi)
+      && largeurCible === 100,
+      `${largeurCible} % attendu ${Math.round(100 * Math.abs(soldeServi) / maximumServi)} %`);
 noter("les barres se mesurent sur le plus fort montant servi",
       largeursBarres.length === scenarios.length && Math.max(...largeursBarres) === 100,
       `${largeursBarres.length} barre(s), plus large ${Math.max(...largeursBarres)} %`);

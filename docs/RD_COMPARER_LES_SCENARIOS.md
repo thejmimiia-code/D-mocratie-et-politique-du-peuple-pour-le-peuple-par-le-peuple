@@ -128,16 +128,17 @@ règles de la maison. Quelques-uns méritent d'être nommés :
 - **le document annonce le nombre de contrôles du fichier** (31 aujourd'hui) :
   un chiffre écrit à la main dans un document se périme, sauf s'il est vérifié.
 
-### 9 étapes dans le harnais navigateur
+### 10 étapes dans le harnais navigateur
 
 Le parcours exécute la section pour de vrai (`tests/navigateur_interface.mjs`,
-199 étapes au total) : il compte les 16 lignes rendues, vérifie que **le premier
-montant affiché est celui que le serveur a calculé**, que la barre la plus longue
-atteint 100 % (donc que l'échelle est bien le plus fort montant servi), que **le
-scénario de référence est marqué une fois**, que le premier clic range en
-croissant (« Deux mandatures consécutives » — 27,6 de risque), le second en
-décroissant (« Escalade nucléaire tactique » — 70,4), le troisième rend l'ordre
-du catalogue, et qu'un **scénario hostile** (`libelle = "<img src=x
+200 étapes au total) : il compte les 16 lignes rendues, vérifie que **le montant
+de la ligne du scénario le plus coûteux est celui que le serveur a calculé**
+(« Assemblées souveraines » : −474,0 Md€/an servi, retrouvé dans sa propre
+ligne), que **sa barre vaut exactement le rapport servi** (100 % quand il est le
+plus fort), que **le scénario de référence est marqué une fois**, que le premier
+clic range en croissant (« Deux mandatures consécutives » — 27,6 de risque), le
+second en décroissant (« Escalade nucléaire tactique » — 70,4), le troisième rend
+l'ordre du catalogue, et qu'un **scénario hostile** (`libelle = "<img src=x
 onerror=alert(1)>"`) reste du texte.
 
 ### 10 sabotages, 10 attrapés
@@ -155,7 +156,16 @@ onerror=alert(1)>"`) reste du texte.
 | la légende qui perd la définition du solde | la légende dit ce que les colonnes mesurent |
 | le lien du sommaire retiré | le sommaire y mène |
 
-**Un sabotage a d'abord échappé au contrôle, et c'est le plus instructif.** Le
+**Deux contrôles ont dû être durcis, et c'est le plus instructif.** Le premier :
+une étape du harnais vérifiait que « le montant affiché est celui que le serveur
+a calculé » — mais elle portait sur le **premier** scénario, dont le solde est
+nul : elle cherchait « 0,0 » dans un tableau qui en contient partout. Elle était
+vraie, et vide de sens. Elle porte maintenant sur le scénario **le plus coûteux**
+(« Assemblées souveraines », −474,0 Md€/an), cherche le montant **dans sa propre
+ligne**, et vérifie en plus que sa barre vaut le rapport servi — deux assertions
+qui ne peuvent pas passer par accident. Le second :
+
+**Un sabotage a d'abord échappé au contrôle.** Le
 huitième — remplacer `var(--classe-recettes)` par `#22c55e` — n'a rien cassé :
 la vérification cherchait les deux variables **dans la feuille de style
 entière**, où elles apparaissent pour d'autres sections. Le contrôle a été
