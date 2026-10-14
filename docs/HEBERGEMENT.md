@@ -221,6 +221,68 @@ calcule rien, idéale pour le `healthCheckPath` d'un hébergeur.
 
 ---
 
+## Quand la copie de secours ne répond pas (502)
+
+Deux adresses servent ce dépôt, et **elles ne tombent pas ensemble** :
+
+| Adresse | Qui la sert | Rôle |
+|---|---|---|
+| <https://d-mocratie-et-politique-du-peuple-p.vercel.app/> | Vercel | **l'adresse canonique** : celle qu'on partage, celle que les moteurs indexent (elle est dans `rel="canonical"`, dans le sitemap et dans `robots.txt`) |
+| <https://simulateur-macro-politique.onrender.com/> | Render | la **copie de secours** : elle exécute le serveur Python, et sert la même page quand Vercel ne peut pas |
+
+Un **502** (« Bad Gateway ») sur la copie de secours veut dire une chose précise :
+la passerelle de Render répond, mais **personne ne répond derrière elle**. Ce n'est
+pas un défaut du code — l'application démarre en une seconde et sert toutes ses
+routes (`gunicorn … simulateur.wsgi:application`, vérifié). C'est le service
+lui-même qui n'est plus là :
+
+- **elle dort** — comportement normal de l'offre gratuite après une quinzaine de
+  minutes sans visite ; un appel la réveille en trente secondes environ ;
+- **elle est suspendue** — Render suspend un service gratuit qui dépense son
+  quota mensuel d'heures, ou quand une facturation n'aboutit pas ;
+- **le dernier démarrage a échoué** — la cause est alors dans *Logs*.
+
+### Réparer, dans l'ordre
+
+1. **Réveiller** : ouvrir l'adresse et attendre une minute. Si la page arrive,
+   c'était le sommeil — rien à faire de plus.
+2. **Redéployer** : [tableau de bord Render](https://dashboard.render.com) → le
+   service `simulateur-macro-politique` → **Manual Deploy** → **Deploy latest
+   commit**. C'est ce qui répare un démarrage en échec ou un service qui ne
+   répond plus. Si le service apparaît **Suspended**, le bouton **Resume** (ou
+   **Unsuspend**) vient d'abord.
+3. **Lire la cause** : la même page, onglet **Logs**. Un 502 après un
+   redéploiement qui échoue dit pourquoi (quota, mémoire, erreur Python).
+4. **Redéployer sans tableau de bord** — pour ne plus dépendre de quelqu'un
+   devant l'écran : créer un **Deploy Hook** dans Render → service →
+   *Settings → Deploy Hook* → **Create Deploy Hook**, puis coller l'adresse
+   dans le dépôt : GitHub → *Settings → Secrets and variables → Actions* →
+   **New repository secret**, nom **`RENDER_DEPLOY_HOOK`**. À partir de là,
+   chaque fusion sur `main` redéploie la copie de secours, et
+   [`.github/workflows/deploy-secours.yml`](../.github/workflows/deploy-secours.yml)
+   peut la redéployer à la demande (onglet **Actions** → *Réveiller la copie de
+   secours* → **Run workflow**). Sans ce secret, l'étape se contente de le dire :
+   ce n'est pas un échec.
+5. **Héberger ailleurs** — la copie de secours n'est qu'un confort : la section 2
+   (image Docker) et la section 3 (n'importe quel hébergeur Python) donnent la
+   même application, et `Procfile` est déjà écrit.
+
+### Comment le savoir avant qu'un visiteur le signale
+
+[`.github/workflows/veille-en-ligne.yml`](../.github/workflows/veille-en-ligne.yml)
+interroge **les deux** adresses — page, textes pour robots, images, vingt-deux
+routes — une fois par semaine, à chaque changement de la veille, et à la
+demande. Son verdict est publié dans un commentaire tenu à jour sur la page
+**« Veille en ligne »** du dépôt, lisible sans rien installer.
+
+**Deux poids, deux mesures** : l'adresse canonique est celle qu'on partage, donc
+son échec fait rougir la veille ; la copie de secours peut être endormie,
+suspendue ou absente sans que le dépôt soit en faute — son échec est **publié**,
+pas sanctionné. Une veille rouge toutes les semaines pour un service d'appoint
+cesse d'être lue, et une veille qu'on ne lit plus ne sert à rien.
+
+---
+
 ## Ce qu'il faut savoir avant de partager le lien
 
 - **Aucune donnée personnelle.** Le simulateur n'a ni base de données, ni
@@ -247,8 +309,8 @@ calcule rien, idéale pour le `healthCheckPath` d'un hébergeur.
 |---|---|
 | « Blueprint file `render.yaml` not found on main branch » | Render ne lit que la branche **par défaut** et garde l'arbre du dépôt en cache : le fichier n'existait pas encore sur `main` quand la page a été ouverte, ou vient tout juste d'y être fusionné. Fusionner d'abord, puis **Retry**. La création manuelle (New → Web Service) reste possible sans Blueprint. |
 | Le dépôt n'apparaît pas dans la liste des Blueprints | L'application GitHub de Render n'a pas accès à ce dépôt : l'autoriser dans **GitHub → Settings → Applications → Render → Configure**, puis recharger la page. |
-| « 502 Bad Gateway » juste après le déploiement | Le service n'écoute pas sur `$PORT` : vérifier la commande de démarrage. |
-| « 502 Bad Gateway » persistant sur Render (`Mauvaise passerelle` / `/robots.txt` renvoie `Disallow: /`) | Le service gratuit Render (`srv-db3m973ncjis73b01f90`) est suspendu pour le mois en cours (plafond de 750 h/mois ou de minutes de build gratuites atteint) ou mis en pause dans le tableau de bord Render (`https://dashboard.render.com/web/srv-db3m973ncjis73b01f90` → *Resume* / *Manual Deploy*). L'adresse canonique **Vercel** (`https://d-mocratie-et-politique-du-peuple-p.vercel.app/`) reste disponible en continu et `/api/verifier-source` y bascule automatiquement. |
+| « 502 Bad Gateway » sur **toutes** les adresses, sonde de disponibilité comprise | Personne ne répond derrière la passerelle : le service est **suspendu**, endormi depuis trop longtemps, ou son dernier démarrage a échoué. Voir « [Quand la copie de secours ne répond pas](#quand-la-copie-de-secours-ne-répond-pas-502) ». |
+| « 502 Bad Gateway » juste après le déploiement | Le service n'écoute pas sur `$PORT` : vérifier la commande de démarrage (celle du dépôt est bonne : `gunicorn --bind 0.0.0.0:$PORT …`). |
 | « No more than 12 Serverless Functions » au déploiement Vercel | `api/` contient plus de 12 fichiers `.py`. Ne garder que `[...path].py` et `verifier-source.py` ; `python3 outils/generer-fonctions-api.py` retire les fonctions générées route par route. S'il signale un fichier inconnu, le retirer ou le déplacer d'abord. |
 | « 404 » sur toutes les routes, page d'accueil comprise | L'application est montée sous un préfixe (`SCRIPT_NAME`) non géré par le proxy. Servir à la racine. |
 | La page s'ouvre vide | Premier réveil de l'offre gratuite : attendre ~30 s et recharger. |

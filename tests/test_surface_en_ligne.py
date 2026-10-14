@@ -71,6 +71,16 @@ class FauxReseau:
         self.appels.append(f"{methode} {url}")
         reponse = self.veille.Reponse
         chemin = "/" + url.split("/", 3)[3].split("?", 1)[0] if url.count("/") >= 3 else "/"
+        if self.sabote.get("muet"):
+            # Ni statut, ni en-têtes : l'hôte n'a **rien** répondu. C'est ce que
+            # voit un coureur dont l'hôte est suspendu, ou dont la sortie réseau
+            # est fermée — la passerelle répond 502, mais le TLS se coupe avant.
+            return reponse(0, "", b"URLError: connection closed")
+        if self.sabote.get("panne"):
+            # La passerelle répond, mais personne derrière : le 502 d'un service
+            # suspendu. C'est un verdict, pas un réveil — il ne s'attend pas.
+            return reponse(502, "text/html; charset=utf-8",
+                           b"<html><body>502 Bad Gateway</body></html>")
         if self.sabote.get("demarrage"):
             return reponse(200, "text/html; charset=utf-8",
                            b"<html><body>Application loading</body></html>")
@@ -225,6 +235,153 @@ class TestEpreuves(unittest.TestCase):
         fautifs = [verdict for verdict in verdicts if not verdict.reussi]
         self.assertEqual([verdict.cible for verdict in fautifs], ["/api/catalogue"])
         self.assertIn("répond une erreur", fautifs[0].detail)
+
+    def test_le_rapport_s_ecrit_ou_on_le_demande(self):
+        """`--rapport` existe parce que la variable du coureur ne se redirige pas."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as dossier:
+            chemin = Path(dossier) / "sous" / "veille.md"
+            verdicts, _ = self.sonder()
+            ecrits = self.veille.rapporter(verdicts, ["canonique"], [str(chemin)])
+            # Pas d'égalité stricte : **en intégration continue**,
+            # `GITHUB_STEP_SUMMARY` existe, et le rapport s'écrit alors aussi
+            # dans le résumé de l'étape. Un contrôle qui suppose l'absence de
+            # cette variable passe ici et échoue là-bas — vérifié le
+            # 15 octobre 2026, quatre versions de Python d'accord pour le dire.
+            self.assertIn(chemin, ecrits)
+            texte = chemin.read_text(encoding="utf-8")
+        self.assertIn("Veille en ligne", texte)
+        self.assertIn("| hôte | cible | statut | résultat |", texte)
+        self.assertIn("| ✓ canonique |", texte)
+
+    def test_la_ligne_de_commande_honore_l_option(self):
+        """Le vrai chemin : celui qu'emprunte la veille dans son étape."""
+        import contextlib
+        import io
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as dossier:
+            chemin = Path(dossier) / "veille.md"
+            faux = FauxReseau(self.veille)
+            vrai = self.veille._demander
+            self.veille._demander = faux
+            ancien = self.veille.sys.argv
+            self.veille.sys.argv = ["veille", "--hote", "canonique", "--essais", "1",
+                                    "--attente", "0", "--rapport", str(chemin)]
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = self.veille.main()
+            finally:
+                self.veille._demander = vrai
+                self.veille.sys.argv = ancien
+            self.assertEqual(code, 0)
+            self.assertTrue(chemin.exists(),
+                            "--rapport n'a pas été transmis : la page de suivi resterait vide")
+            self.assertIn("Veille en ligne", chemin.read_text(encoding="utf-8"))
+
+    def test_le_rapport_vole_aussi_vers_le_resume_de_l_etape(self):
+        """En intégration continue, la variable existe : deux destinations.
+
+        Ce n'est pas une bizarrerie, c'est la raison d'être du doublon : sur un
+        coureur, le rapport doit **à la fois** remplir le résumé de l'étape — que
+        GitHub affiche sans rien installer — et atterrir dans le fichier que
+        l'étape suivante publie. Nier la variable, c'est ce qui a fait échouer
+        quatre versions de Python d'un coup le 15 octobre 2026.
+        """
+        import os
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as dossier:
+            resume = Path(dossier) / "resume.md"
+            demande = Path(dossier) / "demande.md"
+            ancien = os.environ.get("GITHUB_STEP_SUMMARY")
+            os.environ["GITHUB_STEP_SUMMARY"] = str(resume)
+            try:
+                verdicts, _ = self.sonder()
+                ecrits = self.veille.rapporter(verdicts, ["canonique"], [str(demande)])
+            finally:
+                if ancien is None:
+                    os.environ.pop("GITHUB_STEP_SUMMARY", None)
+                else:
+                    os.environ["GITHUB_STEP_SUMMARY"] = ancien
+            self.assertEqual(sorted(map(str, ecrits)), sorted([str(demande), str(resume)]))
+            self.assertIn("Veille en ligne", resume.read_text(encoding="utf-8"))
+            self.assertIn("Veille en ligne", demande.read_text(encoding="utf-8"))
+
+    def test_sans_rapport_demande_il_ne_se_plaint_pas(self):
+        """Un poste sans GitHub : le script doit rester utilisable tel quel."""
+        import os
+
+        verdicts, _ = self.sonder()
+        ancien = os.environ.pop("GITHUB_STEP_SUMMARY", None)
+        try:
+            self.assertEqual(self.veille.rapporter(verdicts, ["canonique"], []), [])
+        finally:
+            if ancien is not None:
+                os.environ["GITHUB_STEP_SUMMARY"] = ancien
+
+    def test_un_502_est_un_verdict_pas_un_reveil(self):
+        """La passerelle sans service : on le dit, on n'attend pas.
+
+        Un 502 n'annonce aucun démarrage. L'attendre cinq fois par adresse, c'est
+        la quarantaine de minutes qui a fait qu'on ne lisait plus la veille.
+        """
+        faux = FauxReseau(self.veille, {"panne": "oui"})
+        vrai = self.veille._demander
+        self.veille._demander = faux
+        try:
+            verdicts = self.veille.sonder("canonique", self.veille.HOTES["canonique"], 5, 0.0)
+        finally:
+            self.veille._demander = vrai
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/"), 1,
+                         "la veille a attendu cinq fois une passerelle qui ne répond pas")
+        self.assertIn("passerelle", verdicts[0].detail)
+        self.assertIn("502", verdicts[0].detail)
+
+    def test_une_panne_reseau_devient_un_verdict_pas_un_arret(self):
+        """Un hôte muet ne doit pas emporter le rapport avec lui."""
+        import urllib.error
+
+        def explose(*_args, **_kw):
+            raise urllib.error.URLError("connexion refusée")
+
+        vrai = urllib.request.urlopen
+        urllib.request.urlopen = explose
+        try:
+            verdicts = self.veille.sonder("canonique", self.veille.HOTES["canonique"], 1, 0.0)
+        finally:
+            urllib.request.urlopen = vrai
+        self.assertEqual(len(verdicts), 2, "le silence de l'hôte n'a pas arrêté la veille")
+        self.assertIn("aucune réponse", verdicts[0].detail)
+
+    def test_un_hote_muet_est_dit_une_fois_pas_vingt_deux(self):
+        """Un hôte qui ne répond pas du tout : une ligne, et on passe.
+
+        Répéter la même panne sur chaque route n'ajoute pas d'information, mais
+        elle coûte une sonde à chaque fois — et c'est ainsi qu'une veille devient
+        si lente qu'on cesse de la lire.
+        """
+        verdicts, faux = self.sonder({"muet": "oui"})
+        self.assertEqual(len(verdicts), 2, "la veille a répété la même panne")
+        self.assertIn("non éprouvées", verdicts[1].detail)
+        self.assertLessEqual(len(faux.appels), 2, "des adresses ont été sondées pour rien")
+
+    def test_l_insistance_est_reservee_a_la_page(self):
+        """Elle réveille un service endormi : les autres suivent, sans attendre."""
+        faux = FauxReseau(self.veille, {"demarrage": "oui"})
+        vrai = self.veille._demander
+        self.veille._demander = faux
+        try:
+            self.veille.sonder("canonique", self.veille.HOTES["canonique"], 3, 0.0)
+        finally:
+            self.veille._demander = vrai
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/"), 3,
+                         "la page n'a pas été réessayée : un réveil passerait pour une panne")
+        self.assertEqual(faux.appels.count(f"GET {base}/api/lexique"), 1,
+                         "une adresse autre que la page a été réessayée : la veille s'allonge")
 
     def test_un_hebergeur_endormi_ne_passe_pas_pour_un_succes(self):
         """Le piège propre à la copie de secours : 200 + page d'attente.
