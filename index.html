@@ -360,8 +360,13 @@ header.entete .etat-contexte{margin-top:var(--e-1)}
   header.entete .accroche{grid-column:1;grid-row:3}
   header.entete .barre-contexte{grid-column:2;grid-row:1;margin-top:0;
     justify-content:flex-end;flex-wrap:nowrap}
-  header.entete .etat-contexte{grid-column:2;grid-row:3;margin-top:var(--e-1);
-    align-self:start}
+  /* La ligne d'état est un chapelet de pastilles : sans borne, sa demande de
+     largeur (1179 px mesurés) écrasait la colonne du titre à zéro et le
+     sur-titre s'empilait lettre par lettre — un bandeau de 2955 px. Bornée par
+     la mesure de lecture, comme la phrase d'accroche, elle tient dans la
+     colonne des commandes sans la commander. */
+  header.entete .etat-contexte{grid-column:2;grid-row:3;margin-top:0;
+    align-self:start;max-width:var(--mesure)}
 }
 /* Entre 901 et 1199 px, les deux barres collantes se partageaient le haut de
    l'écran : le sommaire puise dans la largeur, le ruban passe dessous. C'est
@@ -1090,9 +1095,9 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .guide-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
   /* Le bandeau d'un téléphone occupait 576 px, dont 41 px de marges intérieures
-     pour 35 px de boutons. Le cadre se resserre — pas le texte, qui garde son
-     corps et son interligne. */
-  header.entete{padding:var(--e-2) var(--e-3)}
+     pour 35 px de boutons. Les écarts entre ses blocs se resserrent — le texte,
+     lui, garde son corps et son interligne. Le rembourrage, lui, suit l'écran
+     (`clamp` plus bas) : une seule règle, pas deux qui se contredisent. */
   header.entete h1,header.entete .accroche,header.entete .etat-contexte,
   header.entete .barre-contexte{margin-top:6px}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
@@ -1203,7 +1208,10 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     box-shadow:7px 0 9px -9px var(--ombre-modale)}
   .tableau-defilant:focus-visible{outline:3px solid var(--mrsc-or);outline-offset:2px}
   body{padding:clamp(10px,1.6vw,18px);overflow-wrap:break-word}
-  header.entete{padding:clamp(14px,1.6vw,22px)}
+  /* Le plancher de ce rembourrage passait avant la règle du téléphone — la
+     mesure a montré 14 px de marge intérieure à 380 px, pour 35 px de boutons.
+     Une seule expression, du plus petit au plus large : 9 px, puis 22 px. */
+  header.entete{padding:clamp(9px,1.6vw,22px)}
   section.bloc{padding:var(--pad-bloc)}
   header.entete h1{font-size:clamp(1.15rem,.8vw + .78rem,1.52rem);line-height:1.3}
 
