@@ -339,11 +339,17 @@ if (plans.length) {
     }
     /* Le sommaire est collant : sa hauteur se paie à chaque défilement. */
     const sommaire = vue.plans?.sommaire || [];
-    if (sommaire.length) {
+    const cadreListe = boite(vue, ".sommaire-liste");
+    if (sommaire.length && cadreListe) {
       const haut = Math.max(...sommaire.map((e) => e.y + e.hauteur));
-      lignes.push(`    - liste du sommaire : ${sommaire.length} enfant(s), `
-        + `${new Set(sommaire.map((e) => e.y)).size} bande(s) verticale(s), `
+      lignes.push(`    - liste du sommaire : cadre ${cadreListe.largeur}×${cadreListe.hauteur} `
+        + `(tour ${cadreListe.tour}, client ${cadreListe.client}, défile ${cadreListe.scroll}), `
+        + `${sommaire.length} enfant(s), ${new Set(sommaire.map((e) => e.y)).size} bande(s), `
         + `bas le plus haut à y=${haut}`);
+      for (const enfant of sommaire) {
+        lignes.push(`      - x=${enfant.x} y=${enfant.y} ${enfant.largeur}×${enfant.hauteur} `
+          + `${enfant.nom} « ${enfant.texte} »`);
+      }
     }
   }
 }
