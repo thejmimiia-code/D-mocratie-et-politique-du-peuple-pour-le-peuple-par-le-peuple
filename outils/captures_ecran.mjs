@@ -77,6 +77,27 @@ async function photographier(nom, { theme, largeur, preparation }) {
   await new Promise((r) => setTimeout(r, 400));
   await page.screenshot({ path: path.join(DOSSIER, `${nom}.png`) });
   const mesures = await page.evaluate(() => {
+    /* Ce qu'un doigt toucherait : au centre de chaque commande, qui est le
+       dessus ? Un panneau, une bulle, un bandeau collant posé par-dessus — et
+       la commande devient inaccessible sans que rien ne le dise. C'est la
+       question du visiteur, posée en une ligne : « la bulle occulte l'accès aux
+       boutons ». */
+    const recouverts = [];
+    const commandes = document.querySelectorAll(
+      ".entete button, .entete summary, .sommaire a, .ruban-veille button, "
+      + ".resume-actions a, .resume-actions button, .affichage-panneau button, "
+      + ".outils-panneau button, .classes-filtres button");
+    for (const commande of commandes) {
+      const r = commande.getBoundingClientRect();
+      if (!r.width || !r.height || r.bottom < 0 || r.top > window.innerHeight) continue;
+      const dessus = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+      if (dessus && dessus !== commande && !commande.contains(dessus)) {
+        recouverts.push({
+          texte: (commande.textContent || "").trim().slice(0, 30).replace(/\s+/g, " "),
+          par: dessus.id || dessus.className || dessus.tagName,
+        });
+      }
+    }
     const boite = (selecteur) => {
       const element = document.querySelector(selecteur);
       if (!element) return null;
@@ -94,6 +115,7 @@ async function photographier(nom, { theme, largeur, preparation }) {
     return {
       hauteur_page: document.documentElement.scrollHeight,
       debordement_horizontal: document.documentElement.scrollWidth > window.innerWidth + 1,
+      recouverts,
       boites: [".entete", ".entete .barre-contexte", ".entete .barre-contexte button",
         ".entete .etat-contexte", ".sommaire", ".ruban-veille", ".ruban-veille .ruban-actions",
         "#resume .resume-actions", ".affichage-panneau", ".outils-panneau",
@@ -103,7 +125,11 @@ async function photographier(nom, { theme, largeur, preparation }) {
   rapport.push({ nom, theme, largeur, ...mesures });
   await page.close();
   console.log("  ·", nom, `${largeur} px — page de ${mesures.hauteur_page} px`,
-    mesures.debordement_horizontal ? "⚠ DÉBORDEMENT HORIZONTAL" : "");
+    mesures.debordement_horizontal ? "⚠ DÉBORDEMENT HORIZONTAL" : "",
+    mesures.recouverts.length
+      ? `⚠ ${mesures.recouverts.length} commande(s) recouverte(s) : `
+        + mesures.recouverts.map((r) => `« ${r.texte} » sous ${r.par}`).join(", ")
+      : `· ${mesures.boites.length} cadres mesurés, aucune commande recouverte`);
 }
 
 // 1. Le premier écran : quatre thèmes, quatre largeurs.
@@ -149,5 +175,38 @@ for (const cible of ["resume", "section-classes", "console-pilotage"]) {
 }
 
 await writeFile(path.join(DOSSIER, "rapport.json"), JSON.stringify(rapport, null, 1), "utf8");
+
+/* Le résumé : la même mesure, en texte, pour être lu sans ouvrir une image —
+   dans le journal de l'intégration continue, dans le rapport du travail, et
+   dans le commentaire de la demande de fusion. */
+const recouverts = rapport.filter((vue) => vue.recouverts.length);
+const debordent = rapport.filter((vue) => vue.debordement_horizontal);
+const lignes = [];
+lignes.push(`Captures : ${rapport.length} vues, ${options.largeurs.join(" / ")} px, quatre thèmes.`);
+lignes.push("");
+lignes.push("| Vue | Largeur | Page | Bandeau | Barre | Sommaire | Ruban |");
+lignes.push("|---|---:|---:|---:|---:|---:|---:|");
+const boite = (vue, selecteur) => vue.boites.find((b) => b.selecteur === selecteur);
+const nombre = (valeur) => (valeur === undefined ? "—" : String(valeur));
+for (const vue of rapport) {
+  lignes.push(`| ${vue.nom} | ${vue.largeur} | ${vue.hauteur_page} | `
+    + `${nombre(boite(vue, ".entete")?.hauteur)} | ${nombre(boite(vue, ".entete .barre-contexte")?.hauteur)} | `
+    + `${nombre(boite(vue, ".sommaire")?.hauteur)} | ${nombre(boite(vue, ".ruban-veille")?.hauteur)} |`);
+}
+lignes.push("");
+lignes.push(recouverts.length
+  ? `**Commandes recouvertes** : ${recouverts.map((vue) => `${vue.nom} (${vue.recouverts.length})`).join(", ")}`
+  : "**Aucune commande recouverte** dans les " + rapport.length + " vues.");
+if (recouverts.length) {
+  for (const vue of recouverts) {
+    for (const dessus of vue.recouverts) lignes.push(`- ${vue.nom} : « ${dessus.texte} » sous ${dessus.par}`);
+  }
+}
+lignes.push(debordent.length
+  ? `**Débordement horizontal** : ${debordent.map((vue) => vue.nom).join(", ")}`
+  : "**Aucun débordement horizontal** : la page ne glisse pas latéralement.");
+const resume = lignes.join("\n");
+await writeFile(path.join(DOSSIER, "resume.md"), resume, "utf8");
+console.log(resume);
 await navigateur.close();
 console.log(`${rapport.length} captures écrites dans ${DOSSIER}`);

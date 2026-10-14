@@ -61,3 +61,28 @@ jobs:
           path: captures/
           if-no-files-found: error
           retention-days: 30
+
+      - name: Résumer la mesure dans le rapport du travail
+        run: cat captures/resume.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publier le résumé sur la demande de fusion
+        # Seule surface lisible sans navigateur : les images vivent dans
+        # l'artefact (que l'humain ouvre), le résumé chiffré vit ici — et la
+        # demande de fusion le relit à chaque poussée.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -s captures/resume.md ]; then echo "Résumé absent" ; exit 0 ; fi
+          demande=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number' || true)
+          if [ -z "$demande" ]; then echo "Aucune demande de fusion pour cette branche" ; exit 0 ; fi
+          marqueur="<!-- captures-ecran -->"
+          corps=$(printf '%s\n\n%s\n%s' "$marqueur" "### Captures d'écran et mesure des cadres" "$(cat captures/resume.md)")
+          existant=$(gh api "repos/$GITHUB_REPOSITORY/issues/$demande/comments" \
+            --jq ".[] | select(.body | startswith(\"$marqueur\")) | .id" | head -1)
+          if [ -n "$existant" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existant" -f body="$corps" > /dev/null
+            echo "Commentaire $existant mis à jour"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$demande/comments" -f body="$corps" > /dev/null
+            echo "Commentaire publié sur la demande $demande"
+          fi
