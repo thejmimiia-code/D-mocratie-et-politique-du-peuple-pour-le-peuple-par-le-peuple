@@ -73,6 +73,17 @@ async function photographier(nom, { theme, largeur, preparation }) {
   await regler(page, { theme, densite: "aere", presentation: "equilibree" });
   await page.goto(adresse, { waitUntil: "networkidle2", timeout: 90000 });
   await page.waitForFunction(() => typeof window.simuler === "function", { timeout: 60000 });
+  /* Le guide de première visite s'ouvre par-dessus la page (c'est sa raison
+     d'être). La mesure des cadres, elle, porte sur la page : on le referme — et
+     une vue lui est consacrée, pour qu'il soit vu lui aussi. */
+  const guide = await page.$("#overlay.visible, #overlay.ouvert");
+  if (guide) {
+    await page.evaluate(() => {
+      if (typeof window.fermerModale === "function") window.fermerModale();
+      else document.getElementById("overlay")?.classList.remove("visible", "ouvert");
+    });
+    await new Promise((r) => setTimeout(r, 250));
+  }
   if (preparation) await preparation(page);
   await new Promise((r) => setTimeout(r, 400));
   await page.screenshot({ path: path.join(DOSSIER, `${nom}.png`) });
@@ -110,6 +121,9 @@ async function photographier(nom, { theme, largeur, preparation }) {
         hauteur: Math.round(r.height),
         tour: style.padding,
         marge: style.margin,
+        enfants: element.childElementCount,
+        range: style.flexWrap || style.gridTemplateColumns || "",
+        deborde_largeur: element.scrollWidth > element.clientWidth + 1,
       };
     };
     return {
@@ -117,9 +131,9 @@ async function photographier(nom, { theme, largeur, preparation }) {
       debordement_horizontal: document.documentElement.scrollWidth > window.innerWidth + 1,
       recouverts,
       boites: [".entete", ".entete .barre-contexte", ".entete .barre-contexte button",
-        ".entete .etat-contexte", ".sommaire", ".ruban-veille", ".ruban-veille .ruban-actions",
-        "#resume .resume-actions", ".affichage-panneau", ".outils-panneau",
-        ".conteneur"].map(boite).filter(Boolean),
+        ".entete .etat-contexte", ".sommaire", ".sommaire-liste", ".ruban-veille",
+        ".ruban-veille .ruban-actions", "#resume .resume-actions", ".affichage-panneau",
+        ".outils-panneau", ".conteneur"].map(boite).filter(Boolean),
     };
   });
   rapport.push({ nom, theme, largeur, ...mesures });
@@ -152,7 +166,15 @@ for (const largeur of [1280, 380]) {
   });
 }
 
-// 3. Les états : survol, focus, densité resserrée.
+// 3. Le guide de première visite, tel qu'un visiteur le reçoit.
+await photographier("guide-premiere-visite-jour-1280", {
+  theme: "jour", largeur: 1280,
+  preparation: (page) => page.evaluate(() => {
+    if (typeof window.ouvrirGuide === "function") window.ouvrirGuide();
+  }),
+});
+
+// 4. Les états : survol, focus, densité resserrée.
 await photographier("etat-survol-jour-1280", {
   theme: "jour", largeur: 1280,
   preparation: async (page) => {
@@ -184,15 +206,28 @@ const debordent = rapport.filter((vue) => vue.debordement_horizontal);
 const lignes = [];
 lignes.push(`Captures : ${rapport.length} vues, ${options.largeurs.join(" / ")} px, quatre thèmes.`);
 lignes.push("");
-lignes.push("| Vue | Largeur | Page | Bandeau | Barre | Sommaire | Ruban |");
-lignes.push("|---|---:|---:|---:|---:|---:|---:|");
 const boite = (vue, selecteur) => vue.boites.find((b) => b.selecteur === selecteur);
 const nombre = (valeur) => (valeur === undefined ? "—" : String(valeur));
+// Une hauteur ne dit pas tout : sous 640 px, le sommaire fait 58 px parce qu'il
+// est replié sur son bouton, et la barre du bandeau 76 px parce que ses quatre
+// commandes tiennent en deux rangées. Les deux colonnes qui suivent le disent.
+lignes.push("| Vue | Largeur | Page | Bandeau | Barre (rangées) | Sommaire (enfants) | Ruban |");
+lignes.push("|---|---:|---:|---:|---:|---:|---:|");
 for (const vue of rapport) {
+  const barre = boite(vue, ".entete .barre-contexte");
+  const sommaire = boite(vue, ".sommaire");
+  const rangées = barre ? Math.max(1, Math.round(barre.hauteur / 34)) : 0;
   lignes.push(`| ${vue.nom} | ${vue.largeur} | ${vue.hauteur_page} | `
-    + `${nombre(boite(vue, ".entete")?.hauteur)} | ${nombre(boite(vue, ".entete .barre-contexte")?.hauteur)} | `
-    + `${nombre(boite(vue, ".sommaire")?.hauteur)} | ${nombre(boite(vue, ".ruban-veille")?.hauteur)} |`);
+    + `${nombre(boite(vue, ".entete")?.hauteur)} | ${nombre(barre?.hauteur)} (${rangées}) | `
+    + `${nombre(sommaire?.hauteur)} (${nombre(sommaire?.enfants)}) | `
+    + `${nombre(boite(vue, ".ruban-veille")?.hauteur)} |`);
 }
+const glisse = rapport.filter((vue) => vue.boites.some((b) => b.deborde_largeur));
+lignes.push("");
+lignes.push(glisse.length
+  ? `**Cadres qui défilent latéralement** : ${glisse.map((vue) => vue.nom + " ("
+      + vue.boites.filter((b) => b.deborde_largeur).map((b) => b.selecteur).join(", ") + ")").join(" ; ")}`
+  : "**Aucun cadre ne défile latéralement** : tout tient dans la largeur.");
 lignes.push("");
 lignes.push(recouverts.length
   ? `**Commandes recouvertes** : ${recouverts.map((vue) => `${vue.nom} (${vue.recouverts.length})`).join(", ")}`

@@ -555,6 +555,38 @@ Rien n'est cassé aux quatre paliers : les contrôles de contraste tournent à
 vertes. Le pire cas mesuré est **4,58:1** (« soir »), **4,62:1** (« jour »),
 **4,76:1** (« crème »), **8,16:1** (« contraste »).
 
+## Quatorzième incrément — l'aide qui cachait le panneau, et l'état qu'on ne mesurait pas
+
+Deux défauts signalés le même jour, liés par la même cause : l'outil regardait
+une chose, le visiteur en vivait une autre.
+
+### La bulle qui recouvrait ses propres boutons
+
+Le panneau « Affichage » s'ouvrait sous une bulle qui ne partait pas : l'aide
+était accrochée au tiroir entier, le gestionnaire de sortie ne la cachait pas
+tant que le pointeur restait dans le porteur, et son placement de repli la
+posait **sur** le panneau. Corrigé par une règle : l'aide explique un contenant,
+elle cède devant toute commande qu'il renferme, et s'efface dès que le contenant
+est ouvert. Trois placements sont possibles (sous, dessus, bas de l'écran), et
+aucun ne recouvre la commande expliquée. Neuf étapes du harnais jouent la souris
+et le clavier ; le sabotage du repérage d'avant les fait échouer.
+
+### L'état, angle mort du contraste
+
+Le contraste était mesuré **au repos**, et l'outil disait écarter les états.
+C'est exactement là qu'un visiteur passe son temps : survol, focus, clic,
+bascule. Il mesure maintenant 19 passes par page et par largeur, dont « tout
+enfoncé » (19 bascules forcées) — 587 textes mesurés, 0 faute dans les quatre
+thèmes, aux deux largeurs. Sur un écran de poche, 551 textes.
+
+### Le cadre large
+
+Le bandeau passe en deux colonnes au-delà de 900 px : le texte à gauche (sur-
+titre, titre, phrase), les quatre commandes à droite, la ligne d'état en
+dessous. La hauteur du cadre devient celle de son contenu, au lieu d'être la
+somme de son texte et d'une rangée de boutons. Le sommaire des accès rapides se
+règle sur les jetons d'espacement, comme les trois barres.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si

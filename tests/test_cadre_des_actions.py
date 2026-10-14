@@ -234,10 +234,15 @@ class TestLeBandeauEpouseSesCommandes(unittest.TestCase):
     """
 
     def test_le_bandeau_passe_en_deux_colonnes_au_large(self):
-        """La grille existe, et elle tient à partir de 900 px."""
+        """La grille existe, et elle ne s'ouvre qu'à partir de 1200 px.
+
+        Mesuré dans Chromium : à 900 px, une barre plafonnée à 46 % cassait les
+        quatre commandes en trois rangées (115 px) au lieu d'une (34 px). Le
+        seuil est donc celui du palier, et la barre n'a plus de plafond.
+        """
         regles = [corps for contexte, liste, corps in contraste_ecran.regles(_css())
                   if "header.entete" in [morceau.strip() for morceau in liste.split(",")]
-                  and "min-width:900px" in " ".join(contexte).replace(" ", "")]
+                  and "min-width:1200px" in " ".join(contexte).replace(" ", "")]
         self.assertEqual(len(regles), 1, "la grille du bandeau a disparu ou s'est dédoublée")
         declarations = _declarations(regles[0])
         self.assertIn("display", declarations)
@@ -248,13 +253,14 @@ class TestLeBandeauEpouseSesCommandes(unittest.TestCase):
         """Les quatre commandes quittent le flux vertical du bandeau."""
         pose = None
         for contexte, liste, corps in contraste_ecran.regles(_css()):
-            if "min-width:900px" not in " ".join(contexte).replace(" ", ""):
+            if "min-width:1200px" not in " ".join(contexte).replace(" ", ""):
                 continue
             if "header.entete .barre-contexte" in [morceau.strip() for morceau in liste.split(",")]:
                 pose = _declarations(corps)
         self.assertIsNotNone(pose, "le bandeau large ne place plus ses commandes")
         self.assertEqual(pose.get("margin-top"), "0")
         self.assertEqual(pose.get("grid-column"), "2")
+        self.assertNotIn("max-width", pose, "la barre se plafonne et se casse en rangées")
 
     def test_le_sommaire_se_resserre_sur_ses_pastilles(self):
         """Le cadre des accès rapides se règle sur les jetons, pas sur des valeurs à lui."""

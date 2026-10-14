@@ -315,18 +315,26 @@ header.entete .etat-contexte{margin-top:var(--e-1)}
    qui faisait déjà deux fois leur taille — le cadre paraissait donc bien plus
    grand que ce qu'il portait. Côte à côte, la hauteur du bandeau est celle de
    son texte, et les commandes se posent à sa droite, là où l'œil les cherche
-   après avoir lu le titre. Rien ne change en dessous de 900 px : la colonne
-   unique reprend ses droits, et les quatre paliers restent la loi. */
-@media screen and (min-width:900px){
+   après avoir lu le titre.
+   Le seuil est à **1200 px**, et la barre n'a pas de largeur maximale : mesuré
+   dans un vrai navigateur, un plafond de 46 % cassait les quatre commandes en
+   trois rangées (115 px de haut) là où elles tiennent sur une (34 px). Deux
+   colonnes ne valent que si les commandes tiennent en ligne. En dessous de
+   1200 px, la colonne unique reprend ses droits — la barre y dispose de toute
+   la largeur — et les quatre paliers restent la loi. */
+@media screen and (min-width:1200px){
   header.entete{display:grid;grid-template-columns:minmax(0,1fr) auto;
     gap:var(--e-1) var(--e-4);align-items:start}
   header.entete .eyebrow{grid-column:1;grid-row:1}
   header.entete h1{grid-column:1;grid-row:2;margin-top:0}
   header.entete .accroche{grid-column:1;grid-row:3}
   header.entete .barre-contexte{grid-column:2;grid-row:1 / span 3;margin-top:0;
-    justify-content:flex-end;align-content:start;max-width:min(46%,440px)}
+    justify-content:flex-end;align-content:start;flex-wrap:nowrap}
   header.entete .etat-contexte{grid-column:1 / -1;grid-row:4;margin-top:var(--e-1)}
 }
+/* Entre 901 et 1199 px, les deux barres collantes se partageaient le haut de
+   l'écran : le sommaire puise dans la largeur, le ruban passe dessous. C'est
+   déjà l'ordre du document — on ne fait que le dire. */
 .etat-contexte{margin-top:var(--e-1);color:var(--texte-dim);
   font-size:max(var(--t-min),.74rem)}
 .barre-contexte button,.barre-contexte summary,.ruban-veille .ruban-actions button,
