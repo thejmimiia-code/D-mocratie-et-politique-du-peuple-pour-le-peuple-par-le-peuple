@@ -615,6 +615,25 @@ règle, là où deux se contredisaient — la mesure avait montré 14 px de marg
 intérieure à 380 px pour 35 px de boutons, parce que la règle du grand écran,
 écrite plus bas, l'emportait.
 
+### Le sommaire : 290 px de cadre pour 25 px de pastilles
+
+Le même plan coté a rendu un second verdict, plus embarrassant : la liste du
+sommaire faisait **290 px de haut** — dix-huit pastilles de 25 px centrées
+verticalement dans du vide — et le sommaire est **collant**. La feuille de style
+n'a rien à se reprocher : le balisage du lien « Objections » était cassé, son
+attribut `data-aide` avalait le balisage des deux liens suivants, et les
+**217 caractères** de son texte retombaient **en nœud de texte** dans la liste,
+où ils se repliaient en paragraphe. Un enfant flex anonyme : il n'est pas dans
+`children`, donc le plan ne le voyait pas, et le navigateur le peignait
+sagement au milieu des pastilles.
+
+Trois conséquences, toutes réparées : un paragraphe fantôme dans la barre, un
+lien « Objections » qui n'existait pas, et `--collant` — la hauteur de barre que
+le script mesure pour y ranger les ancres — annoncée à **290 px**, donc **toutes
+les ancres de la page 290 px trop bas**. Aujourd'hui : **66 px** à 1280, **37 px**
+à 900, 58 px sur écran de poche. `index.html` brut ne bouge pas d'un octet
+(878 caractères remplacés par 878).
+
 ### Deux mesures fausses, corrigées avant d'accuser la page
 
 **Les « commandes recouvertes » étaient un cri de dix-sept faux positifs par

@@ -413,6 +413,16 @@ grille : sa demande de largeur (1179 px mesurés) écrasait la colonne du titre 
 un bandeau de 2955 px et un sur-titre empilé lettre par lettre ; elle est bornée
 par la mesure de lecture, le jeton qui borne déjà la phrase d'accroche.
 
+Le plan coté a livré un second verdict : le sommaire des accès rapides, **collant**,
+faisait **290 px de haut pour une rangée de pastilles de 25 px**. La cause était un
+balisage cassé — le `data-aide` du lien « Objections » avalait les deux liens
+suivants, et ses 217 caractères retombaient en nœud de texte dans la liste, où ils
+se repliaient en paragraphe : un enfant flex anonyme, invisible au plan comme à
+l'œil. **290 → 66 px** à 1280 px, 37 px à 900, et la hauteur annoncée au script
+(`--collant`) redevient juste : les ancres de la page atterrissaient 290 px trop
+bas. Trois contrôles neufs gardent la réparation (pas de texte en clair, aucun
+lien mort, aucune aide porteuse de balisage).
+
 Deux contrôles neufs gardent la répartition (le titre étalé, l'état sous les
 commandes), sabotés trois fois pour vérifier qu'ils mordent. Le seuil des deux
 colonnes reste **1200 px** : à 900 px, le plafond de 46 % cassait les quatre
