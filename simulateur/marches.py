@@ -15,6 +15,7 @@ fiscalité ni tracking error.
 from __future__ import annotations
 
 import json
+import math
 import threading
 import urllib.error
 import urllib.parse
@@ -204,6 +205,29 @@ def _fraicheur_cotation(
     }
 
 
+MAX_COTATION_RESPONSE_BYTES = 1_048_576
+
+
+def _lire_reponse_bornee(reponse: Any) -> bytes:
+    """Lit au plus un Mio et rejette les longueurs annoncées invalides ou excessives."""
+    entetes = getattr(reponse, "headers", None)
+    longueur_brute = entetes.get("Content-Length") if entetes is not None else None
+    if longueur_brute not in (None, ""):
+        try:
+            longueur = int(longueur_brute)
+        except (TypeError, ValueError) as exc:
+            raise ValueError("longueur de réponse de marché invalide") from exc
+        if longueur < 0 or longueur > MAX_COTATION_RESPONSE_BYTES:
+            raise ValueError("réponse de marché trop volumineuse")
+    try:
+        contenu = reponse.read(MAX_COTATION_RESPONSE_BYTES + 1)
+    except TypeError:
+        contenu = reponse.read()
+    if len(contenu) > MAX_COTATION_RESPONSE_BYTES:
+        raise ValueError("réponse de marché trop volumineuse")
+    return contenu
+
+
 def _lire_cotation(marche: dict[str, str], timeout: float = DELAI_RESEAU_SECONDES) -> dict[str, Any]:
     url = _url_yahoo(marche["symbole"])
     requete = urllib.request.Request(
@@ -211,14 +235,19 @@ def _lire_cotation(marche: dict[str, str], timeout: float = DELAI_RESEAU_SECONDE
         headers={"User-Agent": "Mozilla/5.0 (compatible; SimulateurCitoyen/1.0)"},
     )
     with urllib.request.urlopen(requete, timeout=timeout) as reponse:
-        charge = json.loads(reponse.read().decode("utf-8"))
+        brut = _lire_reponse_bornee(reponse)
+    charge = json.loads(brut.decode("utf-8"))
+    if not isinstance(charge, dict):
+        raise ValueError("format de réponse de cotation invalide")
 
     resultat = ((charge.get("chart") or {}).get("result") or [None])[0]
-    if not resultat:
+    if not isinstance(resultat, dict):
         detail = ((charge.get("chart") or {}).get("error") or {}).get("description")
         raise ValueError(detail or "réponse de cotation vide")
-    meta = resultat.get("meta") or {}
-    cours = meta.get("regularMarketPrice")
+    meta = resultat.get("meta")
+    if not isinstance(meta, dict):
+        raise ValueError("métadonnées de cotation absentes")
+    cours = _nombre(meta.get("regularMarketPrice"))
     instant_cours = _date_utc(meta.get("regularMarketTime"))
     if cours is None or instant_cours is None:
         raise ValueError("cours ou horodatage de marché absent")
@@ -226,7 +255,7 @@ def _lire_cotation(marche: dict[str, str], timeout: float = DELAI_RESEAU_SECONDE
     maintenant = datetime.now(UTC)
     observation = {
         **marche,
-        "cours": float(cours),
+        "cours": cours,
         "devise": meta.get("currency") or marche["devise"],
         "variation_jour": _nombre(meta.get("regularMarketChange")),
         "variation_jour_pct": _nombre(meta.get("regularMarketChangePercent")),
@@ -252,9 +281,9 @@ def _lire_cotation(marche: dict[str, str], timeout: float = DELAI_RESEAU_SECONDE
 def _nombre(valeur: Any) -> float | None:
     try:
         resultat = float(valeur)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
-    return resultat if resultat == resultat else None
+    return resultat if math.isfinite(resultat) else None
 
 
 def obtenir_cotations(*, actualiser: bool = True, timeout: float = DELAI_RESEAU_SECONDES) -> dict[str, Any]:

@@ -12,13 +12,20 @@ services:
     branch: main
     buildCommand: pip install -r requirements.txt
     startCommand: >-
-      gunicorn --bind 0.0.0.0:$PORT --workers 2 --threads 4 --timeout 120
+      gunicorn --bind 0.0.0.0:$PORT --workers ${WEB_CONCURRENCY:-1} --threads ${GUNICORN_THREADS:-4}
+      --preload --timeout 120 --graceful-timeout 30 --keep-alive 5
       simulateur.wsgi:application
     # Sonde de disponibilité : une route JSON qui ne calcule rien.
     healthCheckPath: /api/lexique
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: GUNICORN_THREADS
+        value: "4"
+      - key: SIMULATEUR_CACHE
+        value: "/tmp/simulateur_cache"
       # Journaux d'accès : décommenter pour diagnostiquer un déploiement.
       # - key: SIMULATEUR_LOG
       #   value: "1"

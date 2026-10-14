@@ -890,6 +890,8 @@ def bulle_levier(cle: str, contexte=None, avec_mesure: bool = True,
             for mesure in bulle["mesures"]
         ]
         bulle["lecture"].pop("strates", None)
+    if len(_CACHE) >= 512:
+        _CACHE.clear()
     _CACHE[memo_cle] = bulle
     return bulle
 

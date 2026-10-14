@@ -32,6 +32,8 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler
 from pathlib import Path
 
+from simulateur.surface_publique import HOTE_SECOURS, URL_CANONIQUE_PAR_DEFAUT
+
 RACINE = Path(__file__).resolve().parent.parent
 PAGE_DU_SITE = RACINE / "simulateur.html"
 DELAI = 8.0  # secondes, par requête
@@ -47,14 +49,14 @@ _cache: dict[str, tuple[float, dict[str, object]]] = {}
 
 
 def adresse_configurée() -> str:
-    """Adresse de la source distante : variable d'environnement, sinon la page."""
+    """Adresse de la source distante : variable d'environnement, sinon la page ou l'hôte canonique."""
     forcee = os.environ.get("SIMULATEUR_SOURCE_DISTANTE", "").strip()
     if forcee:
         return forcee
     try:
         page = PAGE_DU_SITE.read_text(encoding="utf-8")
     except OSError:
-        return ""
+        return URL_CANONIQUE_PAR_DEFAUT if PAGE_DU_SITE == RACINE / "simulateur.html" else ""
     trouve = re.search(r'data-source-distante="([^"]+)"', page)
     return trouve.group(1).strip() if trouve else ""
 
@@ -83,8 +85,8 @@ def _indice_api(contenu: bytes, cles: tuple[str, ...]) -> bool:
     return isinstance(charge, dict) and any(cle in charge for cle in cles)
 
 
-def verifier(source: str) -> dict[str, object]:
-    """Interroge la source : page d'abord, API ensuite."""
+def _verifier_une_source(source: str) -> dict[str, object]:
+    """Interroge une source unique : page d'abord, API ensuite."""
     resultat: dict[str, object] = {
         "source": source,
         "disponible": False,
@@ -126,6 +128,26 @@ def verifier(source: str) -> dict[str, object]:
         "La page répond, mais aucune API de calcul n'est exposée à cette adresse : la version en "
         "ligne ne peut pas simuler, la copie locale du site M.R.S.C est utilisée."
     )
+    return resultat
+
+
+def verifier(source: str) -> dict[str, object]:
+    """Interroge la source configurée et bascule sur l'hôte canonique si le miroir Render est en panne."""
+    resultat = _verifier_une_source(source)
+    if (
+        not resultat["disponible"]
+        and source
+        and source.rstrip("/") == HOTE_SECOURS.rstrip("/")
+        and URL_CANONIQUE_PAR_DEFAUT.rstrip("/") != source.rstrip("/")
+    ):
+        repli = _verifier_une_source(URL_CANONIQUE_PAR_DEFAUT)
+        if repli["disponible"]:
+            repli["source_initiale"] = source
+            repli["page_initiale"] = resultat["page"]
+            repli["message"] = (
+                "Miroir Render indisponible ; bascule automatique sur l'adresse canonique Vercel."
+            )
+            return repli
     return resultat
 
 

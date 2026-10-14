@@ -68,6 +68,7 @@ import io
 import json
 import os
 import sys
+import time
 import traceback
 from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -187,7 +188,14 @@ SCENARIOS: dict[str, dict[str, Any]] = {
 }
 
 #: Référence de contexte réutilisée entre les requêtes (mise en cache mémoire).
-_CONTEXTE_CACHE: dict[str, Any] = {"contexte": None}
+_CONTEXTE_CACHE: dict[str, Any] = {"contexte": None, "rafraichi_a": 0.0}
+_VERROU_CONTEXTE = Lock()
+DUREE_CACHE_CONTEXTE_SECONDES = 60.0
+
+#: Limites applicatives des requêtes, communes au serveur HTTP et au pont WSGI.
+MAX_REQUEST_BODY_BYTES = 1_048_576
+MAX_REQUEST_TARGET_BYTES = 16_384
+MAX_QUERY_FIELDS = 128
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -210,14 +218,101 @@ def run_simulation_api(scenario: str) -> dict[str, Any]:
 
 
 def contexte_courant(rafraichir: bool = False):
-    """Retourne le contexte « instant T » (cache mémoire, sinon collecte)."""
-    if _CONTEXTE_CACHE["contexte"] is None or rafraichir:
-        _CONTEXTE_CACHE["contexte"] = construire_contexte(rafraichir=rafraichir)
-    return _CONTEXTE_CACHE["contexte"]
+    """Retourne le contexte « instant T » (cache mémoire, sinon snapshot/cache).
+
+    Sans `rafraichir=True`, aucun appel réseau n'est déclenché : le serveur
+    répond immédiatement avec le cache ou le snapshot daté vérifié. Lorsqu'un
+    rafraîchissement explicite est demandé, un verrou et un délai de garde
+    évitent toute rafale de requêtes sortantes concurrentes.
+    """
+    if not rafraichir:
+        contexte = _CONTEXTE_CACHE.get("contexte")
+        if contexte is not None:
+            return contexte
+        with _VERROU_CONTEXTE:
+            if _CONTEXTE_CACHE.get("contexte") is None:
+                _CONTEXTE_CACHE["contexte"] = construire_contexte(rafraichir=False)
+            return _CONTEXTE_CACHE["contexte"]
+
+    maintenant = time.monotonic()
+    dernier = float(_CONTEXTE_CACHE.get("rafraichi_a") or 0.0)
+    if (
+        _CONTEXTE_CACHE.get("contexte") is not None
+        and dernier > 0.0
+        and maintenant - dernier < DUREE_CACHE_CONTEXTE_SECONDES
+    ):
+        return _CONTEXTE_CACHE["contexte"]
+    if not _VERROU_CONTEXTE.acquire(blocking=False):
+        return _CONTEXTE_CACHE.get("contexte") or construire_contexte(rafraichir=False)
+    try:
+        maintenant = time.monotonic()
+        dernier = float(_CONTEXTE_CACHE.get("rafraichi_a") or 0.0)
+        if (
+            _CONTEXTE_CACHE.get("contexte") is not None
+            and dernier > 0.0
+            and maintenant - dernier < DUREE_CACHE_CONTEXTE_SECONDES
+        ):
+            return _CONTEXTE_CACHE["contexte"]
+        _CONTEXTE_CACHE["contexte"] = construire_contexte(rafraichir=True, timeout=5.0)
+        _CONTEXTE_CACHE["rafraichi_a"] = time.monotonic()
+        return _CONTEXTE_CACHE["contexte"]
+    finally:
+        _VERROU_CONTEXTE.release()
 
 
 _CACHE_BULLES: dict[tuple, Any] = {}
 _VERROU_BULLES = Lock()
+_CACHE_PROXY: dict[str, tuple[float, Any]] = {}
+_VERROU_PROXY = Lock()
+DUREE_CACHE_PROXY_SECONDES = 60.0
+_CACHE_MARCHES_API: tuple[float, dict[str, Any]] | None = None
+_VERROU_MARCHES_API = Lock()
+DUREE_CACHE_MARCHES_SECONDES = 60.0
+
+
+def cotations_api(actualiser: bool = False) -> dict[str, Any]:
+    """Limite à un rafraîchissement des marchés par minute et processus."""
+    global _CACHE_MARCHES_API
+    if not actualiser:
+        return obtenir_cotations(actualiser=False)
+    maintenant = time.monotonic()
+    if (
+        _CACHE_MARCHES_API is not None
+        and maintenant - _CACHE_MARCHES_API[0] < DUREE_CACHE_MARCHES_SECONDES
+    ):
+        return _CACHE_MARCHES_API[1]
+    if not _VERROU_MARCHES_API.acquire(blocking=False):
+        return _CACHE_MARCHES_API[1] if _CACHE_MARCHES_API is not None else obtenir_cotations(actualiser=False)
+    try:
+        maintenant = time.monotonic()
+        if (
+            _CACHE_MARCHES_API is not None
+            and maintenant - _CACHE_MARCHES_API[0] < DUREE_CACHE_MARCHES_SECONDES
+        ):
+            return _CACHE_MARCHES_API[1]
+        resultat = obtenir_cotations(actualiser=True, timeout=4.5)
+        _CACHE_MARCHES_API = (time.monotonic(), resultat)
+        return resultat
+    finally:
+        _VERROU_MARCHES_API.release()
+
+
+def lecture_proxy(cle: str, timeout: float = 8.0):
+    """Mémoïse 60 s les relais et évite les collectes concurrentes identiques."""
+    maintenant = time.monotonic()
+    entree = _CACHE_PROXY.get(cle)
+    if entree is not None and maintenant - entree[0] < DUREE_CACHE_PROXY_SECONDES:
+        return entree[1]
+    with _VERROU_PROXY:
+        maintenant = time.monotonic()
+        entree = _CACHE_PROXY.get(cle)
+        if entree is not None and maintenant - entree[0] < DUREE_CACHE_PROXY_SECONDES:
+            return entree[1]
+        lecture = interroger(cle, timeout=timeout)
+        if len(_CACHE_PROXY) >= 128:
+            _CACHE_PROXY.clear()
+        _CACHE_PROXY[cle] = (time.monotonic(), lecture)
+        return lecture
 
 
 def catalogue_bulles(contexte, cles=None, avec_mesure: bool = True, detail: str = "resume"):
@@ -237,15 +332,14 @@ def catalogue_bulles(contexte, cles=None, avec_mesure: bool = True, detail: str 
     with _VERROU_BULLES:
         if cle_cache in _CACHE_BULLES:
             return _CACHE_BULLES[cle_cache]
-    resultat = bulles_catalogue(contexte, cles=cles, avec_mesure=avec_mesure, detail=detail)
-    with _VERROU_BULLES:
+        resultat = bulles_catalogue(contexte, cles=cles, avec_mesure=avec_mesure, detail=detail)
         # Petit cache : au-delà de 6 entrées on repart de zéro (les variantes
         # « résumé / complet » et les sous-ensembles de leviers sont en nombre
         # fini, mais un usage soutenu ne doit pas faire croître la mémoire).
         if len(_CACHE_BULLES) >= 6:
             _CACHE_BULLES.clear()
         _CACHE_BULLES[cle_cache] = resultat
-    return resultat
+        return resultat
 
 
 def _avec_lecture(sortie) -> dict[str, Any]:
@@ -441,7 +535,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             longueur = int(self.headers.get("Content-Length", "0"))
         except ValueError:
             return None
-        if longueur <= 0:
+        if longueur <= 0 or longueur > MAX_REQUEST_BODY_BYTES:
             return None
         brut = self.rfile.read(longueur)
         try:
@@ -604,7 +698,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
 
         elif chemin == "/api/marches":
             actualiser = query.get("refresh", ["0"])[0] in ("1", "true", "oui")
-            self._send_json(obtenir_cotations(actualiser=actualiser))
+            self._send_json(cotations_api(actualiser=actualiser))
 
         elif chemin == "/api/simuler":
             parametres = self._parametres_depuis_requete(None, query)
@@ -894,7 +988,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 self._send_json({"error": f"indicateur inconnu : {cle}"}, status=400)
                 return
             try:
-                lecture = interroger(cle, timeout=12.0)
+                lecture = lecture_proxy(cle, timeout=12.0)
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
                 return

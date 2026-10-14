@@ -320,20 +320,30 @@ def _epreuve_post_refuse(hote: str, base: str, essais: int, attente: float) -> V
 
 def sonder(hote: str, base: str, essais: int, attente: float) -> list[Verdict]:
     """Toutes les épreuves d'un hôte, dans l'ordre où la page les expose."""
-    verdicts = [_epreuve_page(hote, base, essais, attente)]
-    verdicts += [_epreuve_texte(hote, base, chemin, essais, attente)
+    premier = _epreuve_page(hote, base, essais, attente)
+    # Si la page d'accueil reste en erreur passerelle/réseau après toutes les
+    # tentatives de réveil, inutile de redormir `attente` secondes sur chacune
+    # des 39 routes suivantes : on les sonde en un seul essai pour garder le
+    # tableau complet sans bloquer la veille pendant vingt minutes.
+    essais_suite = (
+        1
+        if (not premier.reussi and (premier.statut in (None, 0) or premier.statut >= 500))
+        else essais
+    )
+    verdicts = [premier]
+    verdicts += [_epreuve_texte(hote, base, chemin, essais_suite, attente)
                  for chemin in surface.TEXTES]
-    verdicts += [_epreuve_image(hote, base, chemin, essais, attente)
+    verdicts += [_epreuve_image(hote, base, chemin, essais_suite, attente)
                  for chemin in surface.IMAGES]
-    verdicts += [_epreuve_json(hote, base, chemin, essais, attente)
+    verdicts += [_epreuve_json(hote, base, chemin, essais_suite, attente)
                  for chemin in ROUTES_GET]
-    verdicts += [_epreuve_json(hote, base, chemin, essais, attente)
+    verdicts += [_epreuve_json(hote, base, chemin, essais_suite, attente)
                  for chemin in ROUTES_GET_AVEC_PARAMETRES]
-    verdicts += [_epreuve_json(hote, base, chemin, essais, attente, corps=corps)
+    verdicts += [_epreuve_json(hote, base, chemin, essais_suite, attente, corps=corps)
                  for chemin, corps in ROUTES_POST]
-    verdicts.append(_epreuve_refus(hote, base, "/api/route-inconnue", essais, attente))
-    verdicts.append(_epreuve_refus(hote, base, "/api/proxy", essais, attente))
-    verdicts.append(_epreuve_post_refuse(hote, base, essais, attente))
+    verdicts.append(_epreuve_refus(hote, base, "/api/route-inconnue", essais_suite, attente))
+    verdicts.append(_epreuve_refus(hote, base, "/api/proxy", essais_suite, attente))
+    verdicts.append(_epreuve_post_refuse(hote, base, essais_suite, attente))
     return verdicts
 
 
