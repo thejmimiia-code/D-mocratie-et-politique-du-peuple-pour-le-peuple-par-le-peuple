@@ -1,0 +1,68 @@
+name: Réveiller la copie de secours
+
+# Render (la copie de secours, qui exécute le serveur Python) se redéploie tout
+# seul à chaque fusion sur `main` — quand le service est branché sur ce dépôt,
+# ce qui est le cas du Blueprint `render.yaml`. Cette étape-ci ne le remplace
+# pas : elle sert quand le lien automatique ne suffit plus (service suspendu,
+# déploiement en échec, crochet à réveiller à la main).
+#
+# Elle ne fait rien tant qu'aucun crochet n'est configuré. Pour l'activer :
+#
+#   1. Render → le service `simulateur-macro-politique` → **Settings** ;
+#   2. section **Deploy Hook** → **Create Deploy Hook** → copier l'adresse ;
+#   3. GitHub → ce dépôt → **Settings → Secrets and variables → Actions** →
+#      **New repository secret**, nom `RENDER_DEPLOY_HOOK`, valeur collée.
+#
+# À partir de là, chaque fusion sur `main` redéploie la copie de secours, et le
+# bouton **Run workflow** de cette page la redéploie à la demande — sans passer
+# par le tableau de bord. Ce que la veille en ligne vérifie ensuite : ce qui est
+# réellement servi (`.github/workflows/veille-en-ligne.yml`).
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Réveiller la copie de secours (Render)
+        env:
+          CROCHET: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        run: |
+          if [ -z "$CROCHET" ]; then
+            {
+              echo "## Copie de secours : rien à faire"
+              echo
+              echo "Aucun crochet de déploiement n'est configuré. La copie de"
+              echo "secours se redéploie par son propre lien avec ce dépôt"
+              echo "(fusion sur \`main\`). Pour pouvoir la réveiller d'ici, créer"
+              echo "un crochet dans Render → *Settings → Deploy Hook*, puis le"
+              echo "coller dans un secret de dépôt nommé \`RENDER_DEPLOY_HOOK\`."
+              echo "Le mode d'emploi est répété dans \`docs/HEBERGEMENT.md\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "Aucun crochet configuré : étape ignorée (ce n'est pas un échec)."
+            exit 0
+          fi
+          # Le crochet répond un identifiant de déploiement : on le dit, pour
+          # que l'étape ne soit pas un succès muet.
+          reponse=$(curl -fsS -X POST "$CROCHET" || true)
+          if [ -z "$reponse" ]; then
+            echo "Le crochet n'a pas répondu : vérifier qu'il est toujours valide."
+            exit 1
+          fi
+          echo "Déploiement demandé : $reponse"
+          {
+            echo "## Copie de secours : déploiement demandé"
+            echo
+            echo "Réponse du crochet : \`$reponse\`"
+            echo
+            echo "Render reconstruit puis redémarre le service (une à deux"
+            echo "minutes). Ce qui est réellement servi ensuite est mesuré par"
+            echo "la veille en ligne."
+          } >> "$GITHUB_STEP_SUMMARY"

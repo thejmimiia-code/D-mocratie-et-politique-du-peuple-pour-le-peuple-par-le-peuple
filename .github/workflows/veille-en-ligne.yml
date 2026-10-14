@@ -3,17 +3,40 @@ name: Veille en ligne
 # Ce que servent réellement les deux hébergeurs, vérifié pour de vrai : le
 # dépôt ne peut pas le savoir, et un dépôt vert peut servir une page cassée.
 #
-# Déclenchée à la main, et une fois par semaine — jamais à chaque poussée : une
-# panne d'hébergeur ne doit pas faire rougir la contribution de quelqu'un
-# d'autre, et une veille qui crie à chaque fusion ne se lit plus.
+# Déclenchée à la main, une fois par semaine, et à chaque poussée qui touche ce
+# qu'elle interroge — jamais à chaque poussée ordinaire : une panne d'hébergeur
+# ne doit pas faire rougir la contribution de quelqu'un d'autre, et une veille
+# qui crie à chaque fusion ne se lit plus.
 #
 # La copie de secours s'endort quand personne ne l'appelle : le script insiste
 # donc cinq fois, en le disant, au lieu de confondre un réveil avec une panne.
+#
+# Le verdict est **publié**, pas seulement journalisé : un commentaire tenu à
+# jour sur une page du dépôt, que tout le monde peut lire sans ouvrir un
+# journal de machine. C'est ce qui manquait — la veille existait, personne ne la
+# lisait, et une panne de la copie de secours est restée invisible.
+#
+# Deux poids, deux mesures, et c'est voulu : l'adresse **canonique** est celle
+# qu'on partage ; son échec fait rougir la veille. La **copie de secours** peut
+# être endormie, suspendue ou absente sans que le dépôt soit en faute : son
+# échec est publié, pas sanctionné. Une veille qui devient rouge toutes les
+# semaines pour un service d'appoint cesse d'être lue — et une veille qu'on ne
+# lit plus ne sert à rien.
 
 on:
   workflow_dispatch:
   schedule:
     - cron: "17 6 * * 1"
+  push:
+    branches-ignore: [main]
+    paths:
+      - "outils/verifier-surface-en-ligne.py"
+      - "simulateur/surface_publique.py"
+      - ".github/workflows/veille-en-ligne.yml"
+
+permissions:
+  contents: read
+  issues: write
 
 jobs:
   surfaces:
@@ -28,4 +51,66 @@ jobs:
           python-version: "3.13"
 
       - name: Interroger les deux adresses publiques
-        run: python3 outils/verifier-surface-en-ligne.py --essais 5 --attente 20
+        id: veille
+        continue-on-error: true
+        env:
+          # Le rapport part dans le résumé du run par la variable standard, et
+          # dans un fichier : c'est ce fichier qui sera publié plus bas.
+          GITHUB_STEP_SUMMARY: /tmp/veille.md
+        run: |
+          python3 outils/verifier-surface-en-ligne.py --essais 5 --attente 20
+          code=$?
+          echo "code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+
+      - name: Publier le verdict dans la page du run
+        if: always()
+        run: |
+          if [ -s /tmp/veille.md ]; then cat /tmp/veille.md ; else echo "Aucun rapport produit." ; fi
+
+      - name: Publier le verdict sur la page « Veille en ligne »
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -s /tmp/veille.md ]; then echo "Rien à publier : pas de rapport." ; exit 0 ; fi
+          marqueur="<!-- veille-en-ligne -->"
+          titre="Veille en ligne — l'état des adresses publiques"
+          entete=$(printf '%s\n\n### %s\n\n**Run du %s** — `%s`\n' \
+            "$marqueur" "Ce que les hébergeurs servent vraiment" \
+            "$(date -u '+%Y-%m-%d %H:%M UTC')" "${GITHUB_SHA:0:7}")
+          corps=$(printf '%s\n%s' "$entete" "$(cat /tmp/veille.md)")
+
+          # La page de suivi : créée la première fois, tenue à jour ensuite. Un
+          # rapport qui s'empile quelque part n'est pas un rapport.
+          numero=$(gh issue list --state all --search "in:title \"Veille en ligne\"" \
+            --json number,title --jq '.[] | select(.title == "'"$titre"'") | .number' | head -1)
+          if [ -z "$numero" ]; then
+            numero=$(gh issue create --title "$titre" \
+              --body "Page de suivi de la veille en ligne : ce que servent réellement l'adresse canonique (Vercel) et la copie de secours (Render). Elle est mise à jour à chaque passage de la veille — jamais commentée deux fois." \
+              | grep -oE '[0-9]+$')
+            echo "Page créée : #$numero"
+          fi
+
+          existant=$(gh api "repos/$GITHUB_REPOSITORY/issues/$numero/comments" \
+            --jq ".[] | select(.body | startswith(\"$marqueur\")) | .id" | head -1)
+          if [ -n "$existant" ]; then
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$existant" -f body="$corps" > /dev/null
+            echo "Verdict publié sur la page #$numero (commentaire $existant mis à jour)"
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$numero/comments" -f body="$corps" > /dev/null
+            echo "Verdict publié sur la page #$numero"
+          fi
+
+      - name: Rouge seulement si l'adresse canonique ne répond pas
+        if: always()
+        run: |
+          if [ ! -s /tmp/veille.md ]; then echo "Pas de rapport : la veille n'a rien pu vérifier." ; exit 1 ; fi
+          if grep -qE '^\| ✗ canonique ' /tmp/veille.md; then
+            echo "L'adresse canonique ne répond pas : voir le rapport." ; exit 1
+          fi
+          if grep -qE '^\| ✗ secours ' /tmp/veille.md; then
+            echo "L'adresse canonique répond ; la copie de secours, non (publié, non sanctionné)."
+          else
+            echo "Les deux adresses répondent."
+          fi
