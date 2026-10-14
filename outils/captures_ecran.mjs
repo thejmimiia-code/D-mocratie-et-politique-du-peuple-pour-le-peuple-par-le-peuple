@@ -119,22 +119,71 @@ async function photographier(nom, { theme, largeur, preparation }) {
     for (const commande of commandes) {
       const r = commande.getBoundingClientRect();
       if (!r.width || !r.height || r.bottom < 0 || r.top > window.innerHeight) continue;
-      const dessus = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-      if (dessus && dessus !== commande && !commande.contains(dessus)) {
-        recouverts.push({
-          texte: (commande.textContent || "").trim().slice(0, 30).replace(/\s+/g, " "),
-          par: etiqueter(dessus),
-          pile: pileSous(commande),
+      const x = r.left + r.width / 2, y = r.top + r.height / 2;
+      const pile = document.elementsFromPoint
+        ? document.elementsFromPoint(x, y) : [document.elementFromPoint(x, y)];
+      /* Une commande n'est « recouverte » que si elle est peinte **et**
+         enfouie sous autre chose. Le premier essai accusait n'importe quel
+         bouton absent de la pile — les panneaux fermés gardent une géométrie
+         (`content-visibility: hidden`) mais ne sont ni peints ni cliquables :
+         c'étaient 17 faux positifs par vue. */
+      const rang = pile.findIndex((noeud) => noeud
+        && (noeud === commande || commande.contains(noeud) || noeud.contains(commande)));
+      if (rang === -1) continue;            // pas peinte : le panneau est fermé
+      if (rang === 0) continue;             // au-dessus : accessible
+      recouverts.push({
+        texte: (commande.textContent || "").trim().slice(0, 30).replace(/\s+/g, " "),
+        par: etiqueter(pile[0]),
+        pile: pile.slice(0, 5).map(etiqueter),
+      });
+    }
+    /* Un nœud est-il peint ? `checkVisibility` répond pour de bon, en tenant
+       compte de `content-visibility` — ce qu'un rectangle non nul ne dit pas. */
+    const peint = (element) => (element.checkVisibility
+      ? element.checkVisibility({ checkVisibilityCSS: true, contentVisibilityAuto: true })
+      : element.getClientRects().length > 0);
+    /* Combien de rangées occupe vraiment le contenu : deux enfants sont de la
+       même rangée quand leurs bandes verticales se chevauchent sur plus de la
+       moitié du plus petit. Compter les `offsetTop` distincts était faux — des
+       voisins de hauteurs différentes, centrés, n'ont pas le même bord haut. */
+    const nombreDeRanges = (element) => {
+      const bandes = [];
+      for (const enfant of element.children) {
+        if (!peint(enfant)) continue;
+        const r = enfant.getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        bandes.push([r.top, r.bottom]);
+      }
+      bandes.sort((a, b) => a[0] - b[0]);
+      const rangees = [];
+      for (const [haut, bas] of bandes) {
+        const rangee = rangees.find(([h, b]) => Math.min(b, bas) - Math.max(h, haut) > (bas - haut) / 2);
+        if (rangee) { rangee[0] = Math.min(rangee[0], haut); rangee[1] = Math.max(rangee[1], bas); }
+        else rangees.push([haut, bas]);
+      }
+      return rangees.length;
+    };
+    /* Le plan coté d'un cadre : la place de chaque enfant peint, relative au
+       cadre. C'est lui qui dit si le cadre dépasse son contenu, et de combien. */
+    const plan = (selecteur) => {
+      const element = document.querySelector(selecteur);
+      if (!element) return [];
+      const cadre = element.getBoundingClientRect();
+      const enfants = [];
+      for (const enfant of element.children) {
+        if (!peint(enfant)) continue;
+        const r = enfant.getBoundingClientRect();
+        if (!r.width || !r.height) continue;
+        const classe = (typeof enfant.className === "string" && enfant.className)
+          ? "." + enfant.className.trim().split(/\s+/).slice(0, 2).join(".") : "";
+        enfants.push({
+          nom: `${enfant.tagName.toLowerCase()}${enfant.id ? "#" + enfant.id : ""}${classe}`,
+          x: Math.round(r.left - cadre.left), y: Math.round(r.top - cadre.top),
+          largeur: Math.round(r.width), hauteur: Math.round(r.height),
+          texte: (enfant.textContent || "").trim().replace(/\s+/g, " ").slice(0, 28),
         });
       }
-    }
-    /* Combien de rangées occupe vraiment le contenu : les enfants d'une même
-       rangée partagent leur `offsetTop`. Une hauteur seule ne le dit pas — et
-       c'est la rangée qui fait la place perdue. */
-    const nombreDeRanges = (element) => {
-      const hauts = new Set();
-      for (const enfant of element.children) hauts.add(Math.round(enfant.offsetTop));
-      return hauts.size;
+      return enfants;
     };
     const boite = (selecteur) => {
       const element = document.querySelector(selecteur);
@@ -160,6 +209,11 @@ async function photographier(nom, { theme, largeur, preparation }) {
       hauteur_page: document.documentElement.scrollHeight,
       debordement_horizontal: document.documentElement.scrollWidth > window.innerWidth + 1,
       recouverts,
+      plans: {
+        entete: plan(".entete"),
+        barre: plan(".entete .barre-contexte"),
+        etat: plan(".entete .etat-contexte"),
+      },
       boites: [".entete", ".entete .barre-contexte", ".entete .barre-contexte button",
         ".entete .etat-contexte", ".sommaire", ".sommaire-liste", ".ruban-veille",
         ".ruban-veille .ruban-actions", "#resume .resume-actions", ".affichage-panneau",
@@ -252,6 +306,27 @@ for (const vue of rapport) {
     + `${resumeBoite(vue, ".entete .barre-contexte")} | ${resumeBoite(vue, ".entete .etat-contexte")} | `
     + `${resumeBoite(vue, ".sommaire")} | ${resumeBoite(vue, ".sommaire-liste")} | `
     + `${resumeBoite(vue, ".ruban-veille")} |`);
+}
+/* Le plan coté du bandeau : c'est là que la place se perd ou se gagne. Une
+   hauteur seule ne dirait pas *qui* occupe le cadre — ni ce qui reste vide. */
+const plans = rapport.filter((vue) => vue.theme === "jour" && vue.nom.startsWith("accueil-"));
+if (plans.length) {
+  lignes.push("");
+  lignes.push("**Plan du bandeau** (position relative au cadre, en px) :");
+  for (const vue of plans) {
+    const cadre = boite(vue, ".entete");
+    const enfants = vue.plans?.entete || [];
+    lignes.push(`- ${vue.nom} — cadre ${nombre(cadre?.largeur)} × ${nombre(cadre?.hauteur)}, `
+      + `${enfants.length} enfant(s) peint(s) :`);
+    for (const enfant of enfants) {
+      lignes.push(`  - x=${enfant.x} y=${enfant.y} ${enfant.largeur}×${enfant.hauteur} `
+        + `${enfant.nom} « ${enfant.texte} »`);
+    }
+    for (const enfant of vue.plans?.barre || []) {
+      lignes.push(`    - barre : x=${enfant.x} y=${enfant.y} ${enfant.largeur}×${enfant.hauteur} `
+        + `${enfant.nom} « ${enfant.texte} »`);
+    }
+  }
 }
 const glisse = rapport.filter((vue) => vue.boites.some((b) => b.deborde_largeur));
 lignes.push("");
