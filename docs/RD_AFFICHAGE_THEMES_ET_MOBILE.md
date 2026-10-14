@@ -396,6 +396,26 @@ script levait à l'exécution —, et la densité du panneau, que rien ne vérif
 avant qu'une étape ne soit ajoutée. C'est le rôle de la campagne : elle a
 d'abord trouvé les trous des contrôles, pas celles du code.
 
+## 14. Le quatorzième incrément : la fenêtre et le clavier (14 octobre 2026)
+
+Quatrième relèvement d'ancre de la journée, et le seul qui ne touche à aucun
+pixel : la fenêtre du lexique et du guide ne prenait pas le focus, ne le retenait
+pas et ne le rendait pas. Au clavier, la première tabulation menait aux curseurs
+de la page **derrière** la fenêtre ouverte, et la refermer laissait le curseur au
+pied du document. Les trois gestes sont désormais tenus : le focus entre
+(`tabindex="-1"` sur le dialogue), il ne sort pas (six familles de commandes,
+tabulation circulaire, retour forcé si le focus s'est perdu), et il revient à qui
+a ouvert — ou à la commande principale quand personne ne l'a ouvert, le guide de
+première visite se montrant tout seul.
+
+`?guide=1` ouvre le guide à la demande, sans le noter comme vu : un lien de
+démonstration, une classe, une capture. Les images empruntent cette voie plutôt
+qu'une fonction interne, et le guide est photographié à 1280, 640 et 380 px.
+
+Ce que ça change pour le poids : **123 997 → 125 284 o** compressés, plafond
+**137 813 o**. Vingt-trois contrôles neufs, sept étapes de harnais, et neuf
+sabotages éprouvés — dont la première campagne, qui ne prouvait rien et l'a dit.
+
 ## 13. Le treizième incrément : le bandeau mesuré, la sonde réparée (14 octobre 2026)
 
 Troisième relèvement d'ancre de la journée, mais pas pour une fonctionnalité : le
