@@ -133,13 +133,22 @@ prix de trente-et-une fiches lisibles, et il se paie une fois.
 | une excuse qui ne nomme pas ce qui remplace la route | « inutile » n'apprend rien |
 | une citation prise pour un usage | `<code>/api/scenarios</code>` dans une phrase d'aide ne fait rien, elle parle |
 
-Les sept routes excusées aujourd'hui : `bulles` (la page demande une bulle à la
-fois), `comparer` (exercée par la veille en ligne et les tests du serveur),
-`instances` (vue courte de `dynamiques`, chargée en entier), `presets` (portés
-par `/api/catalogue`), `scenarios` (embarqués dans la page à sa construction),
-`export` (fabriqué dans le navigateur), `proxy` (appelée avec l'adresse que le
-serveur donne). L'excuse du relais est **vérifiée là où elle se fabrique** :
-`proxy_url` existe bien dans `simulateur/donnees_live.py`.
+Les six routes excusées à ce jour : `bulles` (la page demande une bulle à la
+fois), `instances` (vue courte de `dynamiques`, chargée en entier), `presets`
+(portés par `/api/catalogue`), `scenarios` (embarqués dans la page à sa
+construction), `export` (fabriqué dans le navigateur), `proxy` (appelée avec
+l'adresse que le serveur donne). L'excuse du relais est **vérifiée là où elle se
+fabrique** : `proxy_url` existe bien dans `simulateur/donnees_live.py`.
+
+  > **Suite, 14 octobre 2026.** `comparer` était la septième, avec la raison
+  > « les préréglages se rejouent un par un dans la grille des scénarios, ce qui
+  > donne le même chiffre sans un second calcul complet ». Deux erreurs dans une
+  > phrase : la grille des scénarios montre les **11 scénarios historiques**, pas
+  > les **16 préréglages**, et la comparaison coûte **283 ms** pour
+  > **9 795 octets compressés** — moins que les contre-pouvoirs affichés dans
+  > cette même passe. La route a désormais son écran (`docs/RD_COMPARER_LES_SCENARIOS.md`),
+  > et l'excuse a été retirée du contrôle : c'est le contrôle qui a demandé la
+  > preuve, et la preuve qui a démenti la raison.
 
 ### Les contrôles de la section (`tests/test_contrepouvoirs_en_page.py`, 17 contrôles)
 
@@ -189,10 +198,11 @@ genre d'erreur que ce dépôt préfère écrire que cacher.
   aux seuils de la chambre. Passer des seuils de la chambre aux chances d'un
   texte demanderait d'articuler chaque manœuvre à la composition réelle — c'est
   le travail du moteur, pas celui de la page, et la page le dit à l'écran.
-- **Deux routes restent sans écran**, avec leur raison écrite : `/api/comparer`
-  (les préréglages se rejouent un par un dans la grille des scénarios) et
-  `/api/instances` (vue courte de `/api/dynamiques`, chargée en entier). Ce ne
-  sont plus des trous silencieux : ce sont des choix, et le contrôle les tient.
+- **Une route reste sans écran**, avec sa raison écrite : `/api/instances` (vue
+  courte de `/api/dynamiques`, chargée en entier). Ce ne sont plus des trous
+  silencieux : ce sont des choix, et le contrôle les tient. (`/api/comparer` a
+  quitté cette liste le 14 octobre 2026 : elle est affichée, donc l'excuse a dû
+  disparaître — une excuse périmée est un mensonge.)
 - **La date du registre n'est pas une veille.** `date_etat_des_assemblees` est
   écrite dans le module ; la page l'affiche, elle ne la rafraîchit pas. Un
   remaniement ne se verrait pas tout seul — c'est le même angle mort que les
@@ -203,11 +213,14 @@ genre d'erreur que ce dépôt préfère écrire que cacher.
 ## 6. Ce qui reste ouvert
 
 1. **Le taux de couverture comme mesure permanente** : le contrôle compte
-   aujourd'hui 15 routes mises en œuvre pour 7 excusées. Une passe future
-   pourrait refuser une baisse sans décision écrite — mais un chiffre de
-   couverture qui ne bouge jamais est un chiffre qu'on cesse de regarder.
-2. **`/api/comparer` en écran** : les 16 préréglages comparés à l'année finale
-   feraient un tableau utile, à condition de ne pas dupliquer la grille des
-   scénarios. À instruire avant de coder.
+   aujourd'hui **16 routes mises en œuvre pour 6 excusées** (au 14 octobre 2026).
+   Une passe future pourrait refuser une baisse sans décision écrite — mais un
+   chiffre de couverture qui ne bouge jamais est un chiffre qu'on cesse de
+   regarder.
+2. ~~**`/api/comparer` en écran**~~ — **fait le 14 octobre 2026** : le tableau des
+   16 préréglages est en ligne, avec son rangement par colonne et ses barres
+   mesurées sur le plus fort montant servi (`docs/RD_COMPARER_LES_SCENARIOS.md`).
+   La crainte de dupliquer la grille des scénarios était fondée sur une erreur de
+   lecture : les deux ne montrent pas le même catalogue.
 3. **Une relecture humaine** de la section sur téléphone et au lecteur d'écran :
    c'est la seule mesure que ce document ne peut pas fournir.

@@ -880,7 +880,7 @@ python3 outils/mesurer_fluidite.py --verifier # plafonds de poids, code de sorti
 Les mesures sont locales et hors ligne : le gain de volume est structurel, les
 durées dépendent de la machine.
 
-Depuis le 14 octobre 2026, ces mesures sont **opposables** : quinze plafonds sont
+Depuis le 14 octobre 2026, ces mesures sont **opposables** : seize plafonds sont
 écrits dans [`outils/budgets_fluidite.py`](outils/budgets_fluidite.py) — chacun
 avec son ancre datée, son motif et sa sortie, une marge de 10 %, et une raison
 écrite pour les cinq routes appelées et volontairement non plafonnées. La page

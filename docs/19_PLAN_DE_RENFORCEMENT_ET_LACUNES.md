@@ -205,7 +205,7 @@ Chaque chantier porte sa preuve de fin : ce qu'il faudra montrer pour dire « c'
 | P2‑4 | **Budgéter le poids de la page** : `index.html` pèse 249 416 caractères, et la page charge catalogues et scénarios au démarrage | la fluidité est une qualité politique : une page lente n'est pas lue | `python3 outils/mesurer_fluidite.py` fixe un budget, et la CI échoue au-delà de +10 % — **fait le 14 octobre 2026** ; règles, table et limites dans `docs/RD_BUDGETS_DE_FLUIDITE.md` |
 
 > **Suite, 14 octobre 2026 — les plafonds de poids (P2‑4), et une ligne périmée du plan.**
-> `outils/budgets_fluidite.py` tient quinze plafonds ancrés sur les mesures du jour,
+> `outils/budgets_fluidite.py` tient seize plafonds ancrés sur les mesures du jour,
 > `outils/mesurer_fluidite.py --verifier` refuse un dépassement (c'est une étape de la
 > CI), et 45 contrôles pesent la page à chaque poussée, dont la version hors ligne qui
 > n'a besoin d'aucun serveur. Le plan demandait « la CI échoue au-delà de +10 % » : la

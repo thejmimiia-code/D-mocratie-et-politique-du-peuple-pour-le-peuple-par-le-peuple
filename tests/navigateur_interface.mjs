@@ -254,7 +254,8 @@ const programme = `
                        'renderRythme','changerAnneeClasses',
                        'classeAnneeAffichee','classeReferenceAffichee',
                        'chargerContrepouvoirs','rendreContrepouvoirs',
-                       'filtrerContrepouvoirs','basculerGroupeParlementaire']) {
+                       'filtrerContrepouvoirs','basculerGroupeParlementaire',
+                       'chargerComparaison','rendreComparaison','trierComparaison']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
@@ -1114,6 +1115,96 @@ noter("un registre hostile est échappé, jamais interprété",
                     : "les balises du registre restent du texte");
 api["GET /api/contrepouvoirs"] = arithmetiqueServie;
 await apiPage.chargerContrepouvoirs();
+
+/* 13. Comparer : les scénarios servis, côte à côte, rangés sur demande. */
+const comparaison = api["GET /api/comparer"];
+const scenarios = comparaison?.comparaison || [];
+await apiPage.chargerComparaison();
+const corpsComparaison = contenu("comparaison-corps");
+const teteDuTableau = (rendu) => ((rendu.match(/class="cmp-nom">([^<]*)/) || [])[1] || "").trim();
+const largeursBarres = (corpsComparaison.match(/style="width:(\d+)%"/g) || [])
+  .map((morceau) => Number(morceau.match(/(\d+)/)[1]));
+noter("affiche chaque scénario que la route a calculé",
+      (corpsComparaison.match(/class="cmp-ligne/g) || []).length === scenarios.length
+      && scenarios.length > 0,
+      `${(corpsComparaison.match(/class="cmp-ligne/g) || []).length} ligne(s) sur ${scenarios.length}`);
+noter("le tableau s'ouvre sur le premier scénario du catalogue",
+      teteDuTableau(corpsComparaison) === String(scenarios[0]?.libelle || "").trim(),
+      `« ${teteDuTableau(corpsComparaison)} » — attendu « ${scenarios[0]?.libelle} »`);
+
+// Le contrôle porte sur la ligne du scénario **le plus dégagé ou le plus
+// coûteux**, et non sur le premier venu : le statut quo a un solde nul, donc un
+// « 0,0 » se retrouve ailleurs dans le tableau et l'étape serait vraie sans rien
+// prouver (vu à l'exécution, corrigé ici).
+const sansEspacesComparaison = (texte) => String(texte).replace(/[\u202f\u00a0\s]/g, "");
+const cible = scenarios.reduce((garde, ligne) =>
+  Math.abs(ligne.synthese?.solde_mesures_mde ?? 0) > Math.abs(garde.synthese?.solde_mesures_mde ?? 0)
+    ? ligne : garde, scenarios[0]);
+const soldeServi = Number(cible?.synthese?.solde_mesures_mde);
+const soldeAttendu = Math.abs(soldeServi)
+  .toLocaleString("fr-FR", {minimumFractionDigits: 1, maximumFractionDigits: 1});
+const ligneCible = corpsComparaison.split('<tr class="cmp-ligne')
+  .find((bloc) => bloc.includes(cible?.libelle ?? "\u0000")) ?? "";
+const largeurCible = Number((ligneCible.match(/style="width:(\d+)%"/) || [])[1]);
+const maximumServi = scenarios.reduce((plus, ligne) =>
+  Math.max(plus, Math.abs(ligne.synthese?.solde_mesures_mde ?? 0)), 0);
+noter("le montant de la ligne affichée est celui que le serveur a calculé",
+      Number.isFinite(soldeServi) && Math.abs(soldeServi) >= 100
+      && sansEspacesComparaison(ligneCible).includes(sansEspacesComparaison(soldeAttendu)),
+      `${sansEspacesComparaison(cible?.libelle).slice(0, 34)} : solde servi ${soldeServi} → écrit « ${sansEspacesComparaison(soldeAttendu)} »`);
+noter("la barre de cette ligne est à l'échelle du plus fort montant servi, pas d'un maximum écrit",
+      largeurCible === Math.round(100 * Math.abs(soldeServi) / maximumServi)
+      && largeurCible === 100,
+      `${largeurCible} % attendu ${Math.round(100 * Math.abs(soldeServi) / maximumServi)} %`);
+noter("les barres se mesurent sur le plus fort montant servi",
+      largeursBarres.length === scenarios.length && Math.max(...largeursBarres) === 100,
+      `${largeursBarres.length} barre(s), plus large ${Math.max(...largeursBarres)} %`);
+noter("le scénario de référence est signalé, sans être le seul marqué",
+      (corpsComparaison.match(/cmp-repere/g) || []).length === 1
+      && corpsComparaison.includes("référence (inertie)"),
+      `${(corpsComparaison.match(/cmp-repere/g) || []).length} repère(s) de référence`);
+
+const parRisque = scenarios.slice().sort((a, b) =>
+  (a.diagnostic?.risque_population ?? 0) - (b.diagnostic?.risque_population ?? 0));
+apiPage.trierComparaison("risque");
+const apresTri = contenu("comparaison-corps");
+noter("le premier clic range la colonne par ordre croissant",
+      teteDuTableau(apresTri) === String(parRisque[0]?.libelle || "").trim()
+      && (apresTri.match(/aria-sort="ascending"/g) || []).length === 1,
+      `tête « ${teteDuTableau(apresTri)} », attendu « ${parRisque[0]?.libelle} »`);
+apiPage.trierComparaison("risque");
+const apresTriInverse = contenu("comparaison-corps");
+noter("le second clic inverse le rangement",
+      teteDuTableau(apresTriInverse) === String(parRisque[parRisque.length - 1]?.libelle || "").trim()
+      && (apresTriInverse.match(/aria-sort="descending"/g) || []).length === 1,
+      `tête « ${teteDuTableau(apresTriInverse)} »`);
+apiPage.trierComparaison("risque");
+const apresRemise = contenu("comparaison-corps");
+noter("le troisième clic rend l'ordre du catalogue",
+      teteDuTableau(apresRemise) === String(scenarios[0]?.libelle || "").trim()
+      && (apresRemise.match(/aria-sort="(ascending|descending)"/g) || []).length === 0,
+      `tête « ${teteDuTableau(apresRemise)} »`);
+
+/* 14. Échappement : un scénario hostile ne peut pas injecter une balise. */
+const comparaisonServie = api["GET /api/comparer"];
+api["GET /api/comparer"] = {
+  horodatage: "2026-10-14T00:00:00+00:00",
+  comparaison: [{
+    cle: "hostile", libelle: "<img src=x onerror=alert(1)>",
+    synthese: {solde_mesures_mde: 5, dette_finale_pct: 90, deficit_final_pct: -3},
+    diagnostic: {risque_population: 20, nombre_alertes: 2},
+  }],
+};
+await apiPage.chargerComparaison();
+const zoneHostileComparaison = contenu("comparaison-corps");
+const baliseOuverteComparaison =
+  (zoneHostileComparaison.match(/<(img|script|svg)\b[^>]*>/g) || [])[0] || "";
+noter("un scénario hostile est échappé, jamais interprété",
+      baliseOuverteComparaison === "" && zoneHostileComparaison.includes("&lt;img"),
+      baliseOuverteComparaison ? "balise ouverte dans le rendu : " + baliseOuverteComparaison.slice(0, 60)
+                               : "les balises du scénario restent du texte");
+api["GET /api/comparer"] = comparaisonServie;
+await apiPage.chargerComparaison();
 
 /* ── Rapport ────────────────────────────────────────────────────────────── */
 rapport.elements = Object.fromEntries(
