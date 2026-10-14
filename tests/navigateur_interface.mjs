@@ -101,6 +101,27 @@ class Element {
   click() { rapport.telechargements.push({ href: this.href, download: this.download }); }
 }
 
+/* L'affichage se règle sur trois préférences qui n'appartiennent qu'au
+   visiteur. Pour que la page puisse les lire, trois doublures de plus :
+   la racine du document (c'est elle qui porte `data-theme`), `matchMedia`
+   (le réglage de l'appareil) et `localStorage` (la mémoire du choix). */
+const racineDocument = new Element("html", "html");
+const preferences = { clair: false };
+globalThis.matchMedia = (requete) => ({
+  media: requete,
+  matches: requete.includes("light") ? preferences.clair : !preferences.clair,
+  addEventListener: () => {},
+  removeEventListener: () => {},
+});
+const memoire = new Map();
+globalThis.localStorage = {
+  getItem: (cle) => (memoire.has(cle) ? memoire.get(cle) : null),
+  setItem: (cle, valeur) => memoire.set(cle, String(valeur)),
+  removeItem: (cle) => memoire.delete(cle),
+  clear: () => memoire.clear(),
+};
+
+
 const elements = new Map();
 const parId = (id) => {
   if (!elements.has(id)) elements.set(id, new Element(id));
@@ -116,11 +137,13 @@ globalThis.document = {
   addEventListener: () => {},
   removeEventListener: () => {},
   body: new Element("body"),
+  documentElement: racineDocument,
 };
 globalThis.window = globalThis;
 // Adresse de la page : le lien partageable s'y construit. Sans elle, le
 // script lèverait une erreur au lieu de fabriquer une adresse.
 globalThis.location = { origin: "http://127.0.0.1:8000", pathname: "/", search: "" };
+
 globalThis.alert = (message) => { rapport.alertes.push(String(message)); };
 globalThis.Blob = class Blob {
   constructor(parties) { this.parties = parties; this.contenu = parties.join(""); }
@@ -196,10 +219,6 @@ globalThis.fetch = async (url, options = {}) => {
 };
 
 /* ── Extraction et exécution du script de la page ───────────────────────── */
-// La page porte plusieurs blocs <script> (un micro-séquenceur de mesure
-// d'audience, puis le noyau de l'application) : viser le bloc qui démarre
-// l'application, pas le premier venu — sinon le harnais n'exécute que trois
-// lignes et accuse la page d'être vide.
 const blocs = [...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
 const brut =
   blocs.find((b) => b.includes("async function demarrer(")) ??
@@ -255,7 +274,10 @@ const programme = `
                        'classeAnneeAffichee','classeReferenceAffichee',
                        'chargerContrepouvoirs','rendreContrepouvoirs',
                        'filtrerContrepouvoirs','basculerGroupeParlementaire',
-                       'chargerComparaison','rendreComparaison','trierComparaison']) {
+                       'chargerComparaison','rendreComparaison','trierComparaison',
+                       'choisirTheme','choisirDensite','changerTailleTexte','appliquerAffichage',
+                       'initialiserAffichage','majBoutonsAffichage','preferenceAffichage',
+                       'themeAffichage','densiteAffichage','tailleAffichage']) {
       api[nom] = eval(nom);
     }
     api.etat = () => ({ PARAMS: PARAMS, CATALOGUE: CATALOGUE, CONTEXTE: CONTEXTE,
@@ -266,6 +288,60 @@ const programme = `
     return api;
   })()
 `;
+/* ── Le script d'en-tête : le thème posé avant le premier pixel ─────────── */
+// Il vit dans `<head>`, avant le corps : c'est lui qui évite qu'une page
+// s'ouvre en sombre puis bascule en clair. Il est donc exécuté ici avant le
+// script principal, dans l'ordre du document.
+const entete = blocs.find((b) => b.includes("data-theme"));
+if (!entete) {
+  rapport.erreurs.push("le script d'en-tête qui pose le thème est absent");
+} else {
+  eval(entete);
+  noter("l'en-tête pose un thème avant le premier rendu",
+        ["soir", "jour", "creme", "contraste"].includes(racineDocument.getAttribute("data-theme")),
+        "thème posé : " + racineDocument.getAttribute("data-theme"));
+  noter("sans choix enregistré, c'est l'appareil qui décide",
+        racineDocument.getAttribute("data-theme") === (preferences.clair ? "jour" : "soir"),
+        "appareil clair=" + preferences.clair + " → " + racineDocument.getAttribute("data-theme"));
+  noter("la densité part d'aérée et la taille de 100 %",
+        racineDocument.getAttribute("data-densite") === "aere"
+        && racineDocument.getAttribute("data-texte") === "100",
+        "densité=" + racineDocument.getAttribute("data-densite")
+        + " texte=" + racineDocument.getAttribute("data-texte"));
+  // Les deux réglages de l'appareil, l'un après l'autre : un appareil qui
+  // annonce préférer le clair doit recevoir le thème clair, et non le sombre
+  // par défaut.
+  preferences.clair = true;
+  eval(entete);
+  noter("un appareil qui préfère le clair reçoit le thème clair",
+        racineDocument.getAttribute("data-theme") === "jour",
+        "thème posé : " + racineDocument.getAttribute("data-theme"));
+  preferences.clair = false;
+  memoire.set("simulateur-theme", "creme");
+  memoire.set("simulateur-densite", "compact");
+  memoire.set("simulateur-texte", "125");
+  eval(entete.replace(/^/gm, ""));
+  noter("un choix enregistré est repris tel quel au chargement suivant",
+        racineDocument.getAttribute("data-theme") === "creme"
+        && racineDocument.getAttribute("data-densite") === "compact"
+        && racineDocument.getAttribute("data-texte") === "125",
+        "thème=" + racineDocument.getAttribute("data-theme")
+        + " densité=" + racineDocument.getAttribute("data-densite")
+        + " texte=" + racineDocument.getAttribute("data-texte"));
+  memoire.set("simulateur-theme", "fluo");
+  eval(entete);
+  noter("un choix inconnu est écarté, pas appliqué",
+        ["soir", "jour"].includes(racineDocument.getAttribute("data-theme")),
+        "thème posé : " + racineDocument.getAttribute("data-theme"));
+  memoire.clear();
+  preferences.clair = false;
+  eval(entete);
+}
+
+// La page porte plusieurs blocs <script> (un micro-séquenceur de mesure
+// d'audience, puis le noyau de l'application) : viser le bloc qui démarre
+// l'application, pas le premier venu — sinon le harnais n'exécute que trois
+// lignes et accuse la page d'être vide.
 globalThis.__elements = elements;
 
 const tourner = () => new Promise((suite) => setImmediate(suite));
@@ -1205,6 +1281,77 @@ noter("un scénario hostile est échappé, jamais interprété",
                                : "les balises du scénario restent du texte");
 api["GET /api/comparer"] = comparaisonServie;
 await apiPage.chargerComparaison();
+
+/* 15. L'affichage : les trois réglages du visiteur, de bout en bout.
+   Ce qu'on vérifie ici n'est pas la feuille de style — elle se lit dans les
+   contrôles de `tests/test_themes_en_page.py` — mais le geste : le clic change
+   la page, le choix se garde, l'appareil ne l'emporte plus, et un nom inconnu
+   ne casse rien. */
+memoire.clear();
+apiPage.choisirTheme("contraste");
+noter("le thème choisi est posé sur la racine et retenu sur l'appareil",
+      racineDocument.getAttribute("data-theme") === "contraste"
+      && memoire.get("simulateur-theme") === "contraste",
+      "racine=" + racineDocument.getAttribute("data-theme")
+      + " mémoire=" + memoire.get("simulateur-theme"));
+preferences.clair = true;
+apiPage.appliquerAffichage();
+noter("un choix explicite résiste au réglage de l'appareil",
+      racineDocument.getAttribute("data-theme") === "contraste",
+      "appareil clair=oui → " + racineDocument.getAttribute("data-theme"));
+memoire.clear();
+noter("sans choix, la page suit l'appareil",
+      apiPage.themeAffichage() === "jour",
+      "appareil clair=oui → " + apiPage.themeAffichage());
+preferences.clair = false;
+apiPage.choisirTheme("soir");
+apiPage.choisirTheme("creme");
+apiPage.majBoutonsAffichage();
+noter("le bouton du thème en vigueur dit son état, les autres non",
+      elements.get("theme-creme")?.getAttribute("aria-pressed") === "true"
+      && elements.get("theme-soir")?.getAttribute("aria-pressed") === "false"
+      && elements.get("theme-contraste")?.getAttribute("aria-pressed") === "false",
+      "crème=" + elements.get("theme-creme")?.getAttribute("aria-pressed")
+      + " soir=" + elements.get("theme-soir")?.getAttribute("aria-pressed"));
+apiPage.choisirDensite("compact");
+noter("la densité compacte se pose sur la racine et se retient",
+      racineDocument.getAttribute("data-densite") === "compact"
+      && memoire.get("simulateur-densite") === "compact",
+      "densité=" + racineDocument.getAttribute("data-densite"));
+apiPage.choisirTheme("fluo");
+apiPage.choisirDensite("serree");
+noter("un réglage inconnu ne change rien",
+      racineDocument.getAttribute("data-theme") === "creme"
+      && racineDocument.getAttribute("data-densite") === "compact",
+      "thème=" + racineDocument.getAttribute("data-theme")
+      + " densité=" + racineDocument.getAttribute("data-densite"));
+apiPage.choisirDensite("aere");
+apiPage.changerTailleTexte(1);
+const apresUnCran = racineDocument.getAttribute("data-texte");
+apiPage.changerTailleTexte(1);
+noter("la taille du texte monte par crans de 12,5 %",
+      apresUnCran === "112" && racineDocument.getAttribute("data-texte") === "125"
+      && elements.get("affichage-niveau")?.textContent === "125 %",
+      "niveaux : " + apresUnCran + " puis " + racineDocument.getAttribute("data-texte")
+      + " (" + elements.get("affichage-niveau")?.textContent + ")");
+for (let i = 0; i < 4; i++) apiPage.changerTailleTexte(1);
+noter("la taille du texte s'arrête à son plus haut cran",
+      racineDocument.getAttribute("data-texte") === "137"
+      && elements.get("texte-plus")?.disabled === true,
+      "niveau=" + racineDocument.getAttribute("data-texte")
+      + " bouton désactivé=" + elements.get("texte-plus")?.disabled);
+for (let i = 0; i < 6; i++) apiPage.changerTailleTexte(-1);
+noter("la taille du texte s'arrête à son plus bas cran",
+      racineDocument.getAttribute("data-texte") === "87"
+      && elements.get("texte-moins")?.disabled === true
+      && memoire.get("simulateur-texte") === "87",
+      "niveau=" + racineDocument.getAttribute("data-texte")
+      + " bouton désactivé=" + elements.get("texte-moins")?.disabled);
+apiPage.changerTailleTexte(1);
+apiPage.choisirTheme("soir");
+apiPage.choisirDensite("aere");
+apiPage.changerTailleTexte(-1);
+memoire.clear();
 
 /* ── Rapport ────────────────────────────────────────────────────────────── */
 rapport.elements = Object.fromEntries(

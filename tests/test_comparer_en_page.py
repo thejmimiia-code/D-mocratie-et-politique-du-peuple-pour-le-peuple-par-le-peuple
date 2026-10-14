@@ -100,8 +100,11 @@ class TestLaSectionComparer(unittest.TestCase):
         self.assertIn("data-aide=", entree, "une entrée de sommaire sans aide à la lecture")
 
     def test_l_entete_nomme_la_route_et_l_annee(self):
+        # L'entête éditorial tient en trois lignes — sur-titre, titre, phrase —
+        # et la phrase porte la provenance : on lit donc jusqu'à la fin du
+        # `<header>`, pas jusqu'à la fin du titre.
         entete = self.page[self.page.index('id="section-comparaison"'):]
-        entete = entete[:entete.index("</h2>")]
+        entete = entete[:entete.index("</header>")]
         self.assertIn("/api/comparer", entete,
                       "l'entête doit dire d'où viennent les chiffres")
         self.assertIn("année finale", entete)

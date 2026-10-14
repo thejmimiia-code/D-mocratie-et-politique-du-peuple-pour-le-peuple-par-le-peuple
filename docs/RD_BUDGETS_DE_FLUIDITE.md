@@ -19,7 +19,7 @@ transmis après compression (`gzip -6`, le niveau que sert `simulateur/compressi
 
 | Charge | Brut | Compressé | Ce que c'est |
 |---|---:|---:|---|
-| la page entière | 407 163 o | **111 155 o** | `index.html`, publié et servi à l'identique |
+| la page entière | 439 540 o | **119 995 o** | `index.html`, publié et servi à l'identique |
 | le catalogue des leviers | 275 363 o | 44 526 o | 156 leviers, leurs bornes et leurs textes courts |
 | une simulation, 5 ans | — | 44 014 o | le va-et-vient de chaque curseur |
 | une simulation, 10 ans | — | 48 239 o | le même, horizon double |
@@ -87,11 +87,22 @@ directs et un budget dérivé (le premier écran) —, seize ancres datées des 
 14 octobre 2026, la marge de 10 % par défaut (20 % pour les cotations, dont la
 base — sept lignes — rendrait un plafond trop serré cassant au premier ajout).
 
+### Le relèvement du 14 octobre 2026 (passe « affichage »)
+
+La passe « afficher sans submerger » a **voulu** cette croissance : quatre thèmes
+complets, un panneau de réglages, vingt-quatre en-têtes éditoriaux et une échelle
+d'espacement branchée. L'ancre de la page passe donc de **111 155 o à
+119 995 o** (mesure du `index.html` régénéré, `gzip -6`), son plafond de
+**122 271 o à 131 995 o**, et l'ancre du premier écran suit mécaniquement
+(256 372 → **265 212 o**, plafond 291 734 o). C'est exactement l'acte de revue
+prévu par la règle : une croissance assumée se paie d'un relèvement d'ancre
+daté, pas d'un silence.
+
 | Budget | Ancre | Plafond | Marge |
 |---|---:|---:|---:|
-| la page entière | 111 155 o | 122 271 o | 11 116 o |
+| la page entière | 119 995 o | 131 995 o | 11 985 o |
 | le catalogue des leviers | 44 526 o | 48 979 o | 4 453 o |
-| ce que la page télécharge avant d'être utilisable | 256 372 o | 282 010 o | 25 638 o |
+| ce que la page télécharge avant d'être utilisable | 265 212 o | 291 734 o | 26 507 o |
 | les bulles | 169 866 o | 186 853 o | 16 987 o |
 | une simulation, 10 ans | 48 239 o | 53 063 o | 4 824 o |
 | une simulation, 5 ans | 44 014 o | 48 416 o | 4 402 o |

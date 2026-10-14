@@ -155,6 +155,19 @@ La page servie est un **simulateur paramétrable complet**, et non un jeu de car
   les leviers réellement déplacés voyagent (jamais les 156 paramètres), et une
   adresse reçue n'est jamais crue : seules les clés connues du catalogue et les
   valeurs numériques sont reprises ;
+- **lisible à sa façon** : le panneau **« 🎨 Affichage »** propose **quatre
+  thèmes** (soir, jour, crème, contraste renforcé), **deux densités** (aéré par
+  défaut, compact) et **cinq tailles de texte** — posés avant le premier pixel,
+  gardés **sur votre appareil** (`localStorage`, rien n'est envoyé au serveur) et
+  sans effet sur le plancher de lisibilité. Par défaut, la page suit le réglage
+  de votre appareil : qui lit en clair reçoit « jour », qui lit en sombre reçoit
+  « soir ». Les contrastes de chaque thème sont **calculés** (WCAG 2.1) par les
+  contrôles, pas jugés à l'œil ;
+- **une ligne éditoriale, pas un mur de texte** : vingt-quatre sections en trois
+  temps — un sur-titre au trait vert de la charte M.R.S.C., un titre, une phrase
+  —, explications sorties des titres, densité et largeur de lecture réglées
+  (`--mesure`, 74 caractères par ligne), et des tableaux larges qui défilent
+  plutôt que d'écraser la page ;
 - **fluidité mesurée** : réponses compressées à la demande (**une simulation
   passe de 255 Kio à 37 Kio**, soit 85 % de moins), onglets de strate rendus à
   l'ouverture seulement, matrice levier × domaine conservée pendant les réglages,

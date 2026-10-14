@@ -317,7 +317,9 @@ class TestClassesEtCascadeDuPlan(unittest.TestCase):
                     f"seuls les voiles neutres sont admis ici, pas {couleur}")
 
     def test_les_plateaux_de_la_balance_suivent_la_variable_de_classe(self):
-        for variable in ("--classe-recettes-fond", "--classe-depenses-fond"):
+        # Le fond des deux plateaux se calcule à partir de la variable de
+        # classe : aucune teinte figée, et le thème en vigueur est suivi.
+        for variable in ("--classe-recettes", "--classe-depenses"):
             with self.subTest(variable=variable):
                 self.assertIn(f"{variable}:", self.page)
         for cote in ("entrees", "sorties"):
@@ -372,7 +374,8 @@ class TestControlesUtilisateur(unittest.TestCase):
         self.assertIn("defauts[cle]", compteur)
         # Deux grilles, deux usages : scénarios du dépôt (moteur d'origine) et
         # préréglages doctrinaux (simulateur paramétrable).
-        self.assertIn("situations rejouées par le moteur d'origine", self.page)
+        self.assertIn('<p class="section-intro">Situations rejouées par le moteur d\'origine',
+                          self.page)
         self.assertIn("chargées dans le simulateur puis ajustables", self.page)
         self.assertIn("preset-grid", self.page)
 
@@ -478,8 +481,12 @@ class TestDonneesPubliquesDansLaPage(unittest.TestCase):
         self.assertIn("if (BULLE_OUVERTE === cle)", maj)
         self.assertIn("Mesure du coût / gain réel", maj)
         # Rouge / vert en transparence, comme le bandeau hors-sol.
-        self.assertIn(".cout-gain.gain{background:linear-gradient(90deg,rgba(34,197,94,.34)", self.page)
-        self.assertIn(".cout-gain.cout{background:linear-gradient(90deg,rgba(239,68,68,.34)", self.page)
+        self.assertIn(
+            ".cout-gain.gain{background:linear-gradient(90deg,"
+            "color-mix(in srgb,var(--vert) 34%,transparent)", self.page)
+        self.assertIn(
+            ".cout-gain.cout{background:linear-gradient(90deg,"
+            "color-mix(in srgb,var(--rouge) 34%,transparent)", self.page)
         # Le conseil stocké alimente la bulle et cite les sources officielles.
         self.assertIn("DERNIER_CONSEIL = conseil;", self.script)
         self.assertIn("sources officielles", self.script)
@@ -1000,8 +1007,15 @@ class TestOptimisationsDaffichage(unittest.TestCase):
     def test_le_contraste_renforce_est_honore(self):
         self.assertIn("@media screen and (prefers-contrast:more)", self.css)
         bloc = self.css[self.css.index("(prefers-contrast:more)"):]
-        self.assertIn("--border:", bloc[:120])
-        self.assertIn("--texte-dim:", bloc[:120])
+        bloc = bloc[:bloc.index("\n}") + 2]
+        # Le renfort est déclaré thème par thème : appliqué à tous, il
+        # imposerait les valeurs du thème sombre aux trois autres.
+        for selecteur in (':root,[data-theme="soir"]', '[data-theme="jour"],[data-theme="creme"]',
+                          '[data-theme="contraste"]'):
+            with self.subTest(selecteur=selecteur):
+                self.assertIn(selecteur, bloc)
+        self.assertIn("--border:", bloc)
+        self.assertIn("--texte-dim:", bloc)
 
     def test_les_tres_petits_ecrans_ont_leur_propre_grille(self):
         """Quatre chiffres en deux colonnes : chaque nombre garde sa place."""
@@ -1175,8 +1189,10 @@ class TestLePlanSeVoit(unittest.TestCase):
         self.assertIn("Part de chaque plateau", self.resume)
         self.assertEqual(self.resume.count('<span class="piste" aria-hidden="true">'), 2,
                          "les barres sont décoratives : la part est écrite à côté")
-        for motif in ("repeating-linear-gradient(45deg,rgba(0,0,0,.18)",
-                      "radial-gradient(rgba(0,0,0,.22)"):
+        # Un motif noir sur un thème noir ne se voit pas : c'est le texte qui
+        # s'inverse, donc le motif est un mélange de `--texte`.
+        for motif in ("repeating-linear-gradient(45deg,color-mix(in srgb,var(--texte) 18%,transparent)",
+                      "radial-gradient(color-mix(in srgb,var(--texte) 22%,transparent)"):
             self.assertIn(motif, self.css, "les deux plateaux se distinguent aussi par le motif")
 
     def test_les_parts_viennent_d_une_seule_fonction(self):
@@ -1327,12 +1343,20 @@ class TestCeQueLeNavigateurDecideToutSeul(unittest.TestCase):
         cls.css = cls.page[cls.page.index("<style>") + len("<style>"):cls.page.index("</style>")]
         cls.nu = re.sub(r"/\*.*?\*/", "", cls.css, flags=re.S)
 
-    def test_le_document_dit_qu_il_est_sombre(self):
-        self.assertEqual(self.nu.count("color-scheme:dark"), 1)
-        self.assertRegex(self.nu, r":root\{color-scheme:dark\}")
-        # La palette M.R.S.C. est la seule du document : elle ne bascule pas
-        # selon le réglage du système.
-        self.assertNotIn("prefers-color-scheme", self.nu)
+    def test_le_document_dit_son_theme_a_chaque_palette(self):
+        """Chaque thème annonce son sens : clair ou sombre, pour le navigateur.
+
+        `color-scheme` décide de la couleur des barres de défilement, des
+        curseurs et des champs natifs. Il est déclaré deux fois clair et deux
+        fois sombre — un par thème — et non plus une fois pour tout le
+        document : un thème clair sur des champs sombres se voit tout de suite.
+        """
+        self.assertEqual(self.nu.count("color-scheme:dark"), 2)
+        self.assertEqual(self.nu.count("color-scheme:light"), 2)
+        self.assertNotIn(":root{color-scheme:dark}", self.nu)
+        # La préférence du système est lue dans l'en-tête, avant le premier
+        # rendu, et seulement là : c'est elle qui décide quand rien n'est choisi.
+        self.assertIn("prefers-color-scheme: light", self.page)
 
     def test_le_texte_ne_change_pas_de_taille_tout_seul(self):
         self.assertIn("-webkit-text-size-adjust:100%", self.nu)
