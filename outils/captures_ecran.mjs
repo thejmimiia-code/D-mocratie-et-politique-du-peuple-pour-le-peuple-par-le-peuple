@@ -93,6 +93,24 @@ async function photographier(nom, { theme, largeur, preparation }) {
        la commande devient inaccessible sans que rien ne le dise. C'est la
        question du visiteur, posée en une ligne : « la bulle occulte l'accès aux
        boutons ». */
+    /* La pile complète sous un point : quand une commande est recouverte, il
+       faut savoir par quoi — et à quel étage. `elementsFromPoint` donne l'ordre
+       de peinture, donc la réponse. */
+    const etiqueter = (element) => {
+      const style = getComputedStyle(element);
+      const classe = (typeof element.className === "string" && element.className)
+        ? "." + element.className.trim().split(/\s+/)[0] : "";
+      return `${element.tagName.toLowerCase()}${element.id ? "#" + element.id : ""}${classe}`
+        + ` [z=${style.zIndex} pos=${style.position} opacité=${style.opacity}]`;
+    };
+    const pileSous = (element) => {
+      const r = element.getBoundingClientRect();
+      const x = r.left + r.width / 2, y = r.top + r.height / 2;
+      const pile = document.elementsFromPoint
+        ? document.elementsFromPoint(x, y).slice(0, 5).map(etiqueter)
+        : [document.elementFromPoint(x, y)].filter(Boolean).map(etiqueter);
+      return pile;
+    };
     const recouverts = [];
     const commandes = document.querySelectorAll(
       ".entete button, .entete summary, .sommaire a, .ruban-veille button, "
@@ -105,10 +123,19 @@ async function photographier(nom, { theme, largeur, preparation }) {
       if (dessus && dessus !== commande && !commande.contains(dessus)) {
         recouverts.push({
           texte: (commande.textContent || "").trim().slice(0, 30).replace(/\s+/g, " "),
-          par: dessus.id || dessus.className || dessus.tagName,
+          par: etiqueter(dessus),
+          pile: pileSous(commande),
         });
       }
     }
+    /* Combien de rangées occupe vraiment le contenu : les enfants d'une même
+       rangée partagent leur `offsetTop`. Une hauteur seule ne le dit pas — et
+       c'est la rangée qui fait la place perdue. */
+    const nombreDeRanges = (element) => {
+      const hauts = new Set();
+      for (const enfant of element.children) hauts.add(Math.round(enfant.offsetTop));
+      return hauts.size;
+    };
     const boite = (selecteur) => {
       const element = document.querySelector(selecteur);
       if (!element) return null;
@@ -124,6 +151,9 @@ async function photographier(nom, { theme, largeur, preparation }) {
         enfants: element.childElementCount,
         range: style.flexWrap || style.gridTemplateColumns || "",
         deborde_largeur: element.scrollWidth > element.clientWidth + 1,
+        rangees: nombreDeRanges(element),
+        client: element.clientWidth,
+        scroll: element.scrollWidth,
       };
     };
     return {
@@ -211,16 +241,17 @@ const nombre = (valeur) => (valeur === undefined ? "—" : String(valeur));
 // Une hauteur ne dit pas tout : sous 640 px, le sommaire fait 58 px parce qu'il
 // est replié sur son bouton, et la barre du bandeau 76 px parce que ses quatre
 // commandes tiennent en deux rangées. Les deux colonnes qui suivent le disent.
-lignes.push("| Vue | Largeur | Page | Bandeau | Barre (rangées) | Sommaire (enfants) | Ruban |");
-lignes.push("|---|---:|---:|---:|---:|---:|---:|");
+lignes.push("| Vue | Largeur | Bandeau | Barre | État | Sommaire | Liste du sommaire | Ruban |");
+lignes.push("|---|---:|---:|---:|---:|---:|---:|---:|");
+const resumeBoite = (vue, selecteur) => {
+  const b = boite(vue, selecteur);
+  return b ? `${b.hauteur} (${b.rangees} rangée${b.rangees > 1 ? "s" : ""})` : "—";
+};
 for (const vue of rapport) {
-  const barre = boite(vue, ".entete .barre-contexte");
-  const sommaire = boite(vue, ".sommaire");
-  const rangées = barre ? Math.max(1, Math.round(barre.hauteur / 34)) : 0;
-  lignes.push(`| ${vue.nom} | ${vue.largeur} | ${vue.hauteur_page} | `
-    + `${nombre(boite(vue, ".entete")?.hauteur)} | ${nombre(barre?.hauteur)} (${rangées}) | `
-    + `${nombre(sommaire?.hauteur)} (${nombre(sommaire?.enfants)}) | `
-    + `${nombre(boite(vue, ".ruban-veille")?.hauteur)} |`);
+  lignes.push(`| ${vue.nom} | ${vue.largeur} | ${resumeBoite(vue, ".entete")} | `
+    + `${resumeBoite(vue, ".entete .barre-contexte")} | ${resumeBoite(vue, ".entete .etat-contexte")} | `
+    + `${resumeBoite(vue, ".sommaire")} | ${resumeBoite(vue, ".sommaire-liste")} | `
+    + `${resumeBoite(vue, ".ruban-veille")} |`);
 }
 const glisse = rapport.filter((vue) => vue.boites.some((b) => b.deborde_largeur));
 lignes.push("");
@@ -233,9 +264,15 @@ lignes.push(recouverts.length
   ? `**Commandes recouvertes** : ${recouverts.map((vue) => `${vue.nom} (${vue.recouverts.length})`).join(", ")}`
   : "**Aucune commande recouverte** dans les " + rapport.length + " vues.");
 if (recouverts.length) {
+  const vues = new Set();
   for (const vue of recouverts) {
-    for (const dessus of vue.recouverts) lignes.push(`- ${vue.nom} : « ${dessus.texte} » sous ${dessus.par}`);
+    for (const dessus of vue.recouverts) {
+      lignes.push(`- ${vue.nom} : « ${dessus.texte} » sous ${dessus.par}`);
+      lignes.push(`  - pile : ${(dessus.pile || []).join(" › ")}`);
+    }
+    vues.add(vue.nom);
   }
+  lignes.push(`- Vues concernées : ${vues.size} sur ${rapport.length}`);
 }
 lignes.push(debordent.length
   ? `**Débordement horizontal** : ${debordent.map((vue) => vue.nom).join(", ")}`
