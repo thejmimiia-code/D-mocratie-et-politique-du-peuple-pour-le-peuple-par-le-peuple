@@ -75,8 +75,18 @@ class TestLaVeillePublieSonVerdict(unittest.TestCase):
         self.assertIn("if: always()", bloc[:400])
 
     def test_le_rapport_vient_du_verificateur_pas_d_un_texte_invente(self):
-        self.assertIn("GITHUB_STEP_SUMMARY: /tmp/veille.md", self.texte)
-        self.assertIn("afficher le rapport" if False else "cat /tmp/veille.md", self.texte)
+        self.assertIn("--rapport /tmp/veille.md", self.texte)
+        self.assertIn("cat /tmp/veille.md", self.texte)
+
+    def test_il_ne_redéfinit_pas_la_variable_reservee_du_coureur(self):
+        """`GITHUB_STEP_SUMMARY` ne se laisse pas rediriger par un `env:`.
+
+        Le 15 octobre 2026, la veille a tourné, le verdict existait, et la page
+        de suivi est restée **vide** : le rapport était parti dans le résumé de
+        l'étape, pas dans le fichier que l'étape suivante publiait. Le contrôle
+        interdit le retour de cette façon de faire — silencieuse par nature.
+        """
+        self.assertNotIn("GITHUB_STEP_SUMMARY:", self.texte)
         self.assertIn("--essais 5", self.texte,
                       "la copie de secours s'endort : sans insistance, un réveil "
                       "passerait pour une panne")

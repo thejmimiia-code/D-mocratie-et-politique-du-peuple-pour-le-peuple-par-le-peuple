@@ -397,20 +397,30 @@ def sonder(hote: str, base: str, essais: int, attente: float) -> list[Verdict]:
     return verdicts
 
 
-def rapporter(verdicts: list[Verdict], hotes: list[str]) -> None:
-    """Écrit le rapport dans la page du run, quand GitHub le demande.
+def rapporter(verdicts: list[Verdict], hotes: list[str],
+              fichiers: list[str] | None = None) -> list[Path]:
+    """Écrit le rapport là où on le lira — au moins un endroit.
 
-    Un journal de job se télécharge ; la page du run, elle, se lit. Sans cela,
-    la seule trace lisible de cette veille serait un `curl` dans un terminal —
-    c'est-à-dire rien pour qui ouvre le dépôt par son navigateur. GitHub appelle
-    cela le *résumé de l'étape* : le script s'y conforme sans dépendre de quoi
-    que ce soit d'autre que la variable d'environnement.
+    Un journal de job se télécharge ; la page du run, elle, se lit. GitHub offre
+    pour cela le *résumé de l'étape*, que le script remplit par la variable
+    `GITHUB_STEP_SUMMARY`.
+
+    **Cette variable ne se laisse pas rediriger.** Une étape de workflow a beau
+    la redéfinir dans son `env:`, le coureur garde la sienne : le rapport part
+    alors dans le résumé de l'étape, et l'étape suivante — qui doit le publier —
+    cherche un fichier qui n'existe pas. C'est précisément ce qui est arrivé le
+    15 octobre 2026 : la veille tournait, le verdict existait, et la page de
+    suivi restait vide. D'où `--rapport`, une adresse nommée par l'appelant, qui
+    ne dépend d'aucune convention de la plateforme.
     """
     import os
 
-    chemin = os.environ.get("GITHUB_STEP_SUMMARY")
-    if not chemin:
-        return
+    ecrits: list[Path] = []
+    for chemin in list(fichiers or []) + ([os.environ["GITHUB_STEP_SUMMARY"]]
+                                          if os.environ.get("GITHUB_STEP_SUMMARY") else []):
+        ecrits.append(Path(chemin))
+    if not ecrits:
+        return ecrits
     rates = [verdict for verdict in verdicts if not verdict.reussi]
     lignes = [
         f"## Veille en ligne — {'tout répond' if not rates else f'{len(rates)} échec(s)'}",
@@ -431,8 +441,12 @@ def rapporter(verdicts: list[Verdict], hotes: list[str]) -> None:
         statut = verdict.statut or "—"
         lignes.append(f"| {marque} {verdict.hote} | `{verdict.cible}` | {statut} | {detail} |")
     lignes += ["", "</details>", ""]
-    with Path(chemin).open("a", encoding="utf-8") as rapport:
-        rapport.write("\n".join(lignes) + "\n")
+    texte = "\n".join(lignes) + "\n"
+    for chemin in ecrits:
+        chemin.parent.mkdir(parents=True, exist_ok=True)
+        with chemin.open("a", encoding="utf-8") as rapport:
+            rapport.write(texte)
+    return ecrits
 
 
 def main() -> int:
@@ -443,6 +457,9 @@ def main() -> int:
                            help="tentatives par adresse, pour un hôte endormi (défaut : 3)")
     analyseur.add_argument("--attente", type=float, default=15.0,
                            help="secondes entre deux tentatives (défaut : 15)")
+    analyseur.add_argument("--rapport", action="append", metavar="FICHIER",
+                           help="où écrire le rapport (en plus du résumé GitHub) ; "
+                                "répétable, `-` pour la sortie standard")
     options = analyseur.parse_args()
 
     hotes = options.hote or sorted(HOTES)
@@ -455,7 +472,8 @@ def main() -> int:
             print(verdict.ligne())
         verdicts += trouves
 
-    rapporter(verdicts, hotes)
+    fichiers = [chemin for chemin in (options.rapport or []) if chemin != "-"]
+    rapporter(verdicts, hotes, fichiers)
     rates = [verdict for verdict in verdicts if not verdict.reussi]
     print()
     if rates:

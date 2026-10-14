@@ -236,6 +236,57 @@ class TestEpreuves(unittest.TestCase):
         self.assertEqual([verdict.cible for verdict in fautifs], ["/api/catalogue"])
         self.assertIn("répond une erreur", fautifs[0].detail)
 
+    def test_le_rapport_s_ecrit_ou_on_le_demande(self):
+        """`--rapport` existe parce que la variable du coureur ne se redirige pas."""
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as dossier:
+            chemin = Path(dossier) / "sous" / "veille.md"
+            verdicts, _ = self.sonder()
+            ecrits = self.veille.rapporter(verdicts, ["canonique"], [str(chemin)])
+            self.assertEqual(ecrits, [chemin])
+            texte = chemin.read_text(encoding="utf-8")
+        self.assertIn("Veille en ligne", texte)
+        self.assertIn("| hôte | cible | statut | résultat |", texte)
+        self.assertIn("| ✓ canonique |", texte)
+
+    def test_la_ligne_de_commande_honore_l_option(self):
+        """Le vrai chemin : celui qu'emprunte la veille dans son étape."""
+        import contextlib
+        import io
+        import tempfile
+
+        with tempfile.TemporaryDirectory() as dossier:
+            chemin = Path(dossier) / "veille.md"
+            faux = FauxReseau(self.veille)
+            vrai = self.veille._demander
+            self.veille._demander = faux
+            ancien = self.veille.sys.argv
+            self.veille.sys.argv = ["veille", "--hote", "canonique", "--essais", "1",
+                                    "--attente", "0", "--rapport", str(chemin)]
+            try:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    code = self.veille.main()
+            finally:
+                self.veille._demander = vrai
+                self.veille.sys.argv = ancien
+            self.assertEqual(code, 0)
+            self.assertTrue(chemin.exists(),
+                            "--rapport n'a pas été transmis : la page de suivi resterait vide")
+            self.assertIn("Veille en ligne", chemin.read_text(encoding="utf-8"))
+
+    def test_sans_rapport_demande_il_ne_se_plaint_pas(self):
+        """Un poste sans GitHub : le script doit rester utilisable tel quel."""
+        import os
+
+        verdicts, _ = self.sonder()
+        ancien = os.environ.pop("GITHUB_STEP_SUMMARY", None)
+        try:
+            self.assertEqual(self.veille.rapporter(verdicts, ["canonique"], []), [])
+        finally:
+            if ancien is not None:
+                os.environ["GITHUB_STEP_SUMMARY"] = ancien
+
     def test_un_502_est_un_verdict_pas_un_reveil(self):
         """La passerelle sans service : on le dit, on n'attend pas.
 

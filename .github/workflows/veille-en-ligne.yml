@@ -53,12 +53,12 @@ jobs:
       - name: Interroger les deux adresses publiques
         id: veille
         continue-on-error: true
-        env:
-          # Le rapport part dans le résumé du run par la variable standard, et
-          # dans un fichier : c'est ce fichier qui sera publié plus bas.
-          GITHUB_STEP_SUMMARY: /tmp/veille.md
         run: |
-          python3 outils/verifier-surface-en-ligne.py --essais 5 --attente 20
+          # `--rapport` et non `GITHUB_STEP_SUMMARY` : cette variable ne se
+          # laisse pas rediriger, et le rapport partait ailleurs — la page de
+          # suivi restait vide alors que la veille, elle, tournait.
+          python3 outils/verifier-surface-en-ligne.py --essais 5 --attente 20 \
+            --rapport /tmp/veille.md
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit $code
