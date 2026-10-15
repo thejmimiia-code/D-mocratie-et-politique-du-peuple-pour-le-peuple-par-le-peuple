@@ -325,11 +325,23 @@ class TestLeRendezVous(unittest.TestCase):
     def setUpClass(cls):
         cls.texte = WORKFLOW.read_text(encoding="utf-8")
 
-    def test_il_est_planifie_manuel_et_declenche_par_sa_propre_modification(self):
+    def test_il_est_planifie_manuel_et_declenche_par_toute_poussee(self):
+        """Trois déclencheurs, et le troisième est la leçon du 15 octobre 2026.
+
+        Le calendrier de GitHub n'avait livré aucun passage une heure après la
+        fusion : le réveil ne peut pas reposer sur lui seul. Toute poussée en
+        est un second — et il ne doit porter **aucun filtre**, sinon une fusion
+        ordinaire le manquerait.
+        """
         self.assertIn("schedule:", self.texte)
         self.assertIn("workflow_dispatch:", self.texte)
-        self.assertIn("branches-ignore: [main]", self.texte)
-        self.assertIn("outils/garde-veille.py", self.texte)
+        self.assertRegex(self.texte, r"\n  push:\n",
+                         "le rendez-vous doit réagir à toute poussée")
+        bloc = self.texte[self.texte.index("\n  push:\n"):self.texte.index("permissions:")]
+        self.assertNotIn("branches-ignore", bloc,
+                         "un filtre ferait manquer la poussée d'une fusion")
+        self.assertNotIn("paths:", bloc,
+                         "un filtre ferait manquer la poussée d'une fusion")
 
     def test_il_a_le_droit_de_commenter(self):
         self.assertIn("issues: write", self.texte)
@@ -396,6 +408,10 @@ class TestLaDocumentationExpliqueLeRendezVous(unittest.TestCase):
 
     def test_elle_renvoie_au_fichier_du_rendez_vous(self):
         self.assertIn("garde-veille.yml", self.doc)
+
+    def test_elle_dit_que_toute_poussee_reveille(self):
+        """Le second déclencheur, et la raison : le calendrier peut être en retard."""
+        self.assertIn("Toute poussée le déclenche aussi", self.doc)
 
     def test_elle_donne_la_porte_de_secours(self):
         """Le calendrier de GitHub est « au mieux » : une autre porte doit exister.
