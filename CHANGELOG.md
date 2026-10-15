@@ -6,6 +6,15 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Le bandeau d'un téléphone : la ligne d'état tient en deux rangées (15 octobre 2026)
+
+- **Le fait, mesuré.** À 380 px, le bandeau mesurait **436 px**, et sa ligne d'état **trois rangées** : trois pastilles ne tenaient plus côte à côte, la plus large étant l'horodatage — `2026-10-15 15:09 UTC`, **157 px** mesurés. Le titre et la phrase d'accroche faisaient quatre lignes chacun (96 et 85 px).
+- **Ce qui a changé.** L'horodatage porte **deux formes du même instant**, écrites depuis une seule lecture : `horodatage : 2026-10-15 15:09 UTC` sur un écran large, `15/10 15:09` (onze signes) sur la rangée d'un téléphone — le contexte (116 px) et les leviers (123 px) tiennent alors à côté, et la ligne d'état passe de trois rangées à deux. Les pastilles se resserrent d'un cran (rembourrage 2×7 → 2×6, écart 4 → 3 px) et la phrase d'accroche resserre son interligne (1,4 → 1,3) **sans changer de corps** : on ne rétrécit pas la lecture pour gagner une rangée.
+- **Résultat mesuré en CI** : à 380 px, le premier écran passe de **646 à 603 px** (bandeau 420 → 393, dont la ligne d'état de 91 → 64 px, **trois rangées → deux**) ; à 640 px, de 488 à **460**. Le cliquet suit : **673 → 630** et **515 → 487**, même marge d'une rangée — un gain qu'on ne relève pas se reperd.
+- **Et la pastille des leviers ne redit plus l'horizon du select voisin.** Mesuré à 380 px : `16 leviers · 5 ans` (121 px) ne tenait pas à côté du contexte (114) et de l'horodatage court (90) — 331 px pour 330 disponibles, à un pixel. La forme courte dit désormais le nombre (`16 leviers actifs`) ; la durée, c'est le select qui la porte, juste à côté. Même doctrine que la passe précédente — l'horizon se dit **une fois**.
+- **Trois contrôles neufs** : la forme courte de l'horodatage est construite (et ne reprend ni le mot `horodatage`, ni le fuseau), le titre ne descend pas sous le plancher de lecture, et les pastilles se resserrent **d'un palier à l'autre** — pas seulement « sont plus petites ».
+- **Cinq sabotages, cinq attrapés** : horodatage court qui reprend la forme longue, pastilles qui reprennent leur rembourrage, interligne qui ne se resserre plus, titre qui reprend son cran, et forme courte des leviers qui redit l'horizon.
+
 ### Les pastilles d'état tiennent en une rangée : la ligne d'état d'un téléphone perd 140 px (15 octobre 2026)
 
 - **Le défaut, mesuré.** À 380 px, la ligne d'état du bandeau prenait **140 px en quatre rangées** — pour des pastilles qui disent trois choses. L'une d'elles faisait **deux lignes** à elle seule : `16 leviers actifs · simulation 5 ans · score moyen 51,3 (référence 50,0)`, alors que le score figure **déjà** dans le résumé de tête, deux centimètres plus haut. Le téléphone relisait donc ce qu'il venait d'afficher, sur deux lignes, dans l'élément le plus étroit de la page.

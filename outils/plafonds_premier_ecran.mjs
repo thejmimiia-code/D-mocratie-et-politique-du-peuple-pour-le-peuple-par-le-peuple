@@ -31,13 +31,15 @@
 // l'a posé à 720 px (380) et 540 px (640), après avoir mesuré 693 et 517 — les
 // deux états anciens étaient à 863 et 614. La passe suivante, le même jour, a
 // porté les libellés courts aux pastilles d'état : mesuré 646 et 488, et le
-// cliquet est resserré à 673 et 515, même marge d'une rangée. Un gain qu'on ne
-// relève pas se reperd.
+// cliquet est resserré à 673 et 515, même marge d'une rangée. La troisième, le
+// même jour encore, a donné deux formes à l'horodatage et retiré de la forme
+// courte des leviers l'horizon que le select voisin dit déjà : mesuré 603 et
+// 460, cliquet à 630 et 487. Un gain qu'on ne relève pas se reperd.
 //
 // Le chemin qui reste est écrit ici pour la suite : un écran de téléphone fait
-// 780 px de haut, et le contenu doit y commencer. Ce qui reste à gagner à 380 px
-// tient au bandeau (436 px), dont le titre fait quatre lignes et la ligne d'état
-// trois rangées.
+// 780 px de haut, et le contenu doit y commencer. À 380 px, le bandeau fait
+// 393 px — un titre de quatre lignes (87), une phrase de quatre lignes (79),
+// quatre commandes (89) et une ligne d'état de deux rangées (64).
 
 /** La hauteur du premier écran : ce qu'un visiteur voit avant le contenu. */
 export const PLAFONDS = {
@@ -45,20 +47,20 @@ export const PLAFONDS = {
     //: La marge du plafond est **d'une rangée** (27 px ici) : assez pour les
     //: chiffres qui changent d'une simulation à l'autre — un verdict plus long,
     //: un montant à trois chiffres —, trop peu pour cacher une rangée de plus.
-    plafond: 673,
-    avant: 693,
-    mesure: 646,
+    plafond: 630,
+    avant: 646,
+    mesure: 603,
     quand: "15 octobre 2026",
-    quoi: "bandeau 436 + sommaire 58 + ruban 152 (avant la passe : 483 + 58 + 152 —"
-      + " les libellés courts des pastilles valent 47 px à eux seuls)",
+    quoi: "bandeau 393 + sommaire 58 + ruban 152 (avant la passe : 420 + 58 + 152,"
+      + " dont une ligne d'état de trois rangées — l'horodatage court et la forme"
+      + " courte des leviers la font tenir en deux)",
   },
   640: {
-    plafond: 515,
-    avant: 517,
-    mesure: 488,
+    plafond: 487,
+    avant: 488,
+    mesure: 460,
     quand: "15 octobre 2026",
-    quoi: "bandeau 306 + sommaire 58 + ruban 124 (avant la passe : 335 + 58 + 124 —"
-      + " les libellés courts des pastilles valent 29 px)",
+    quoi: "bandeau 278 + sommaire 58 + ruban 124 (avant la passe : 306 + 58 + 124)",
   },
 };
 

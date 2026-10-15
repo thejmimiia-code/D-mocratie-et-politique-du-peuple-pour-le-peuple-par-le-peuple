@@ -847,6 +847,44 @@ d'état, écriture du texte court supprimée, pastille écrite en clair sans son
 texte court, contexte sans texte court, ruban remis en deux colonnes, cible du
 doigt rabotée sous 44 px.
 
+## Dix-neuvième incrément — la dernière rangée du bandeau d'un téléphone
+
+### Le défaut, mesuré
+
+À 380 px, le bandeau faisait **436 px** — et sa ligne d'état **trois rangées**.
+Trois pastilles ne tenaient plus côte à côte : la plus large était l'horodatage,
+`2026-10-15 15:09 UTC`, **157 px** mesurés. Le titre et la phrase d'accroche
+prenaient quatre lignes chacun (96 et 85 px). Rien n'était cassé ; tout était long.
+
+### Ce qui a changé
+
+L'horodatage porte **deux formes du même instant**, écrites depuis une seule
+lecture du contexte : la forme longue pour l'écran large, `15/10 15:09` — onze
+signes — pour la rangée d'un téléphone. Le contexte et les leviers tiennent alors
+à côté, et la ligne d'état passe de trois rangées à deux. Les pastilles se
+resserrent d'un cran, et la phrase d'accroche resserre son interligne **sans
+changer de corps** : la lecture ne rétrécit pas pour gagner une rangée.
+
+### Le gain, mesuré, et le cliquet resserré
+
+| Largeur | Avant la passe | Après | Plafond (avant → après) |
+|---|---:|---:|---|
+| 380 px | 646 | **603** | 673 → **630** |
+| 640 px | 488 | **460** | 515 → **487** |
+
+À 380 px, la ligne d'état passe de **trois rangées (91 px) à deux (64)** : le
+contexte (114 px), l'horodatage court (90) et les leviers (113) tiennent sur la
+même rangée — `16 leviers actifs`, car le select voisin dit déjà la durée. Le
+bandeau passe de 420 à **393 px**. Le cliquet suit la mesure à marge constante.
+
+### Ce qui n'a pas changé, et pourquoi
+
+Le titre garde son corps. Le descendre d'un cran aurait gagné une ligne, mais
+c'est la première chose que l'œil lit, et la page dit depuis le premier jour
+qu'elle ne rétrécit pas la lecture pour tenir dans un écran. Ce qui cède ici, ce
+sont des **répétitions** — un horodatage qui redit son année et son fuseau sur
+l'écran le plus étroit — pas des corps de texte.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si
