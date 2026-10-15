@@ -1,0 +1,149 @@
+name: Garde-veille
+
+# Empêcher la copie de secours de s'endormir.
+#
+# L'offre gratuite de Render endort un service après une quinzaine de minutes
+# sans visite : le visiteur suivant attend une trentaine de secondes, et quand
+# le réveil échoue, il tombe sur la page d'erreur de l'hébergeur — un **502 Bad
+# Gateway**, « ce service est actuellement indisponible ». C'est exactement ce
+# qui est arrivé le 14 octobre 2026, et ce n'était pas notre code.
+#
+# Ce rendez-vous frappe donc à la porte toutes les dix minutes pendant les
+# heures où l'on consulte le site : le service n'a plus le temps de s'endormir.
+# Il ne fait rien d'autre — une adresse, une réponse attendue, et on s'en va.
+#
+# **Le calendrier de GitHub s'exprime en temps universel.** `5-22 UTC` couvre
+# 6 h → 23 h à Paris en hiver, 7 h → minuit en été. La nuit, le service dort :
+# c'est le comportement normal du palier gratuit, et c'est ce qui garde la
+# consommation sous les 750 heures offertes par mois (556 h estimées), parce
+# qu'un dépassement ne facture pas — il **suspend** les services.
+#
+# L'étape « Vérifier la fenêtre » refuse une expression qui dépasserait ce
+# plafond. La fenêtre est écrite **deux fois** ici (le calendrier, que GitHub
+# impose en clair, et la variable lue par le contrôle) : le contrôle de
+# `tests/test_garde_veille.py` refuse que les deux divergent.
+#
+# Ce que ce rendez-vous ne peut pas faire : remplacer un vrai réveil. Si le
+# service est **suspendu** (quota épuisé, facturation en échec), aucune visite
+# ne le relèvera — il faut le tableau de bord ou le crochet de déploiement
+# (`.github/workflows/deploy-secours.yml`). Voir `docs/HEBERGEMENT.md`.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 5-22 * * *"
+  push:
+    branches-ignore: [main]
+    paths:
+      - "outils/garde-veille.py"
+      - ".github/workflows/garde-veille.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  # La fenêtre, en un seul endroit pour les deux étapes. Doit être **identique**
+  # au calendrier ci-dessus : `tests/test_garde_veille.py` le vérifie.
+  FENETRE: "*/10 5-22 * * *"
+  PAGE: "Garde-veille — la copie de secours (Render)"
+
+jobs:
+  garde:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Vérifier la fenêtre du rendez-vous
+        run: |
+          # Refuse une fenêtre qui consommerait plus que le palier gratuit.
+          python3 outils/garde-veille.py --cron "$FENETRE"
+
+      - name: Lire l'état publié la dernière fois
+        id: etat
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # `|| true` : ce rendez-vous frappe à la porte avant tout le reste, et
+          # une lecture d'état ratée ne doit pas l'empêcher de le faire.
+          numero=$(gh issue list --state all --search "in:title \"$PAGE\"" \
+            --json number,title --jq '.[] | select(.title == "'"$PAGE"'") | .number' \
+            | head -1 || true)
+          echo "numero=$numero" >> "$GITHUB_OUTPUT"
+          marqueur=""
+          if [ -n "$numero" ]; then
+            marqueur=$(gh api "repos/$GITHUB_REPOSITORY/issues/$numero/comments" \
+              --jq '.[] | .body' | grep -oE '<!-- garde-veille: (ok|panne) -->' | head -1 || true)
+          fi
+          echo "precedent=$marqueur" >> "$GITHUB_OUTPUT"
+          echo "État publié la dernière fois : ${marqueur:-aucun}"
+
+      - name: Frapper à la porte
+        id: visite
+        run: |
+          # `set +e` : GitHub exécute chaque `run:` avec `bash -e`, et un script
+          # qui s'arrête à la ligne du ping n'écrirait **jamais** ses sorties —
+          # donc aucune publication de la panne, c'est-à-dire précisément le cas
+          # pour lequel ce rendez-vous existe. Trouvé en essayant de lire l'état
+          # depuis la ligne de commande, le 15 octobre 2026.
+          set +e
+          python3 outils/garde-veille.py --ping --essais 3 --attente 10 \
+            --etat-precedent "${{ steps.etat.outputs.precedent }}" \
+            --rapport /tmp/garde.md > /tmp/garde.txt
+          code=$?
+          set -e
+          cat /tmp/garde.txt || true
+          etat=$(grep -E '^etat=' /tmp/garde.txt | cut -d= -f2)
+          publier=$(grep -E '^publier=' /tmp/garde.txt | cut -d= -f2)
+          echo "etat=${etat:-inconnu}" >> "$GITHUB_OUTPUT"
+          echo "publier=${publier:-non}" >> "$GITHUB_OUTPUT"
+          echo "code de sortie du garde-veille : $code (1 = la copie de secours n'a pas répondu)"
+
+      - name: Publier seulement un changement d'état
+        if: always() && steps.visite.outputs.publier == 'oui'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ ! -s /tmp/garde.md ]; then echo "Rien à publier." ; exit 0 ; fi
+          marqueur="<!-- garde-veille: ${{ steps.visite.outputs.etat }} -->"
+          date=$(date -u '+%Y-%m-%d %H:%M UTC')
+
+          # La page de suivi : créée la première fois qu'il y a quelque chose à
+          # dire — jamais pour annoncer que tout va bien.
+          numero="${{ steps.etat.outputs.numero }}"
+          if [ -z "$numero" ]; then
+            numero=$(gh issue create --title "$PAGE" \
+              --body 'Page de suivi du garde-veille : la copie de secours (Render) est visitée toutes les dix minutes pendant les heures de consultation, pour qu'"'"'elle ne s'"'"'endorme plus. Un commentaire **n'"'"'est publié que lorsqu'"'"'un état change** — la panne, puis le retour à la normale. Jamais pour dire que tout va bien.' \
+              | grep -oE '[0-9]+$')
+            echo "Page créée : #$numero"
+          fi
+
+          corps=$(printf '%s\n\n%s\n' "$marqueur" "$(cat /tmp/garde.md)")
+          if [ "${{ steps.visite.outputs.etat }}" = "ok" ]; then
+            titre="Copie de secours : elle répond de nouveau"
+          else
+            titre="Copie de secours : elle ne répond plus"
+          fi
+          corps=$(printf '%s\n*%s — %s*\n' "$corps" "$titre" "$date")
+
+          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$numero/comments" \
+            -f body="$corps" > /dev/null
+          echo "État « ${{ steps.visite.outputs.etat }} » publié sur la page #$numero"
+
+      - name: "Conclure — ${{ steps.visite.outputs.etat }}"
+        if: always()
+        run: |
+          # Le rendez-vous ne fait pas rougir le dépôt pour un service d'appoint :
+          # la veille hebdomadaire a déjà ce rôle, pour l'adresse canonique
+          # seulement. Ici on **constate**, on publie un changement, et on part.
+          if [ "${{ steps.visite.outputs.etat }}" = "ok" ]; then
+            echo "La copie de secours répond."
+          else
+            echo "La copie de secours n'a pas répondu — publié (si l'état a changé)."
+          fi

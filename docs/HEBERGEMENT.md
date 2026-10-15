@@ -47,7 +47,10 @@ disponibilité, version de Python. Il ne reste qu'à valider.
   cache l'arbre du dépôt, le bouton **Retry** suffit alors à la rafraîchir.
 - L'offre gratuite **endort le service** après quelques minutes sans visite : la
   première ouverture suivante prend une trentaine de secondes, les suivantes
-  sont immédiates. C'est le comportement normal du palier gratuit, pas un bug.
+  sont immédiates. C'est le comportement normal du palier gratuit, pas un bug —
+  et c'est ce sommeil qui, quand le réveil échoue, montre au visiteur la page
+  **502** de l'hébergeur. Le dépôt visite donc la copie de secours toutes les
+  dix minutes pendant les heures de consultation : voir « Le garde-veille ».
 - Région `frankfurt` (la plus proche de la France), modifiable dans
   `render.yaml` avant le déploiement.
 - L'adresse fournie est en HTTPS, géré par la plateforme : aucun certificat à
@@ -125,6 +128,9 @@ python3 -m simulateur.dashboard --host 0.0.0.0 --port 8080
 | `render.yaml` | Recette du déploiement Render utilisée par le bouton. |
 | `Dockerfile` | Image de production, non-root, avec sonde de santé. |
 | `.github/workflows/image-docker.yml` | Publie l'image dans GHCR. |
+| `.github/workflows/veille-en-ligne.yml` | Vérifie ce que les deux hébergeurs servent vraiment, et publie son verdict. |
+| `.github/workflows/garde-veille.yml` | Empêche la copie de secours de s'endormir : une visite toutes les dix minutes. |
+| `outils/garde-veille.py` | La visite elle-même, et le calcul de ce que la fenêtre coûte. |
 
 ### Pourquoi un pont WSGI plutôt qu'un second serveur
 
@@ -280,6 +286,57 @@ son échec fait rougir la veille ; la copie de secours peut être endormie,
 suspendue ou absente sans que le dépôt soit en faute — son échec est **publié**,
 pas sanctionné. Une veille rouge toutes les semaines pour un service d'appoint
 cesse d'être lue, et une veille qu'on ne lit plus ne sert à rien.
+
+### Le garde-veille : empêcher le service de s'endormir
+
+Constater la panne ne suffit pas : mieux vaut qu'elle n'arrive pas.
+[`.github/workflows/garde-veille.yml`](../.github/workflows/garde-veille.yml)
+visite la copie de secours **toutes les dix minutes**, pendant les heures où
+l'on consulte le site — 108 visites par jour, chacune étant un seul appel à
+`/api/lexique` (la même adresse que la sonde de disponibilité de `render.yaml` :
+une route JSON qui ne calcule rien). Le service n'a plus le temps de s'endormir,
+donc le visiteur n'attend plus trente secondes, et il ne tombe plus sur un 502.
+
+**La fenêtre est calculée, pas choisie au hasard.** Le calendrier de GitHub
+s'exprime en **temps universel** — `*/10 5-22 * * *` couvre 6 h → 23 h à Paris
+en hiver, 7 h → minuit en été. La nuit, le service dort : c'est le comportement
+normal du palier gratuit, et c'est ce qui garde la consommation sous les
+**750 heures offertes par mois** (environ 556 h estimées, marge de 15 %). Ce
+n'est pas de l'avarice : un dépassement ne facture pas, il **suspend** les
+services — pire que le sommeil. `python3 outils/garde-veille.py --cron "…"` dit
+ce qu'une fenêtre couvre et refuse celles qui dépassent ; l'étape de CI
+« Vérifier la fenêtre » lance ce contrôle avant chaque visite. Une fenêtre 24 h/24
+consommerait 738 h par mois et est **refusée** par ce contrôle.
+
+**Il ne parle que quand ça change.** Chaque commentaire porte son état en
+marqueur (`<!-- garde-veille: ok -->` ou `<!-- garde-veille: panne -->`) : c'est
+le marqueur lui-même qui dit, au passage suivant, s'il y a quelque chose à
+publier. La panne se dit, le retour à la normale aussi — sinon la page
+raconterait une panne qui n'existe plus —, et tout le reste est silence. Un
+garde-veille qui commente toutes les dix minutes est un garde-veille qu'on
+coupe. Sa page est distincte de celle de la veille hebdomadaire :
+**« Garde-veille — la copie de secours (Render) »**.
+
+**Ce qu'il ne peut pas faire.**
+
+- **Relever un service suspendu.** Une visite ne règle pas un quota épuisé ni une
+  facturation en échec : il faut le tableau de bord ou le crochet de déploiement.
+- **Remplacer la veille.** Il regarde un chemin (`/api/lexique`) ; la veille
+  regarde soixante-huit (page, robots, sitemap, images, vingt-deux routes).
+- **Garantir la seconde près.** Le calendrier de GitHub est *au mieux* : un
+  passage peut être retardé de quelques minutes aux heures chargées — d'où une
+  visite toutes les dix minutes, et non toutes les quinze.
+- **Survivre à un dépôt endormi.** GitHub désactive les calendriers d'un dépôt
+  sans activité pendant soixante jours. Le dépôt est actif ; si cela arrivait,
+  l'onglet **Actions** → *Garde-veille* → **Run workflow** le relance, et un
+  simple clic sur **Enable workflow** suffit à réarmer le calendrier.
+
+Contrôle à la main, depuis n'importe quel poste :
+
+```bash
+python3 outils/garde-veille.py --ping          # frappe à la porte et raconte
+python3 outils/garde-veille.py --cron "*/10 5-22 * * *"   # ce que la fenêtre couvre
+```
 
 ---
 
