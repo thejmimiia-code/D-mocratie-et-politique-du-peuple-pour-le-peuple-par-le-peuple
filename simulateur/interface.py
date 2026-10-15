@@ -7218,7 +7218,11 @@ function auditPeseeHtml(){
       + 'de tests du dépôt.</p>';
   }
   const reseau = p.transfere > 0
-    ? ko(p.transfere) + ' transférés (compressés)'
+    // Ce que « transféré » veut dire, écrit noir sur blanc : `transferSize`
+    // compte **tout** l'échange — en-têtes de réponse compris —, alors que le
+    // plafond du dépôt mesure un corps de document en gzip -6. Deux nombres qui
+    // ne mesurent pas la même chose ne doivent pas avoir l'air d'en mesurer une.
+    ? ko(p.transfere) + ' transférés (compressés, en-têtes compris)'
     : 'aucun octet transféré : page servie depuis le cache de votre appareil, ou '
       + 'chiffre que le navigateur ne publie pas';
   const provenance = p.ailleurs > 0

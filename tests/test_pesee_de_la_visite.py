@@ -278,6 +278,20 @@ class TestLaPeseeExecutee(unittest.TestCase):
         self.assertIn("à justifier", html)
         self.assertNotIn("toutes chez elle", html)
 
+    def test_le_poids_transfere_dit_ce_qu_il_comprend(self):
+        """Le nombre doit dire ce qu'il mesure, sans quoi il se compare mal.
+
+        `transferSize` compte **tout** l'échange (en-têtes compris) ; le plafond du
+        dépôt mesure un corps de document en gzip -6. Confondre les deux ferait
+        croire à un dépassement qui n'existe pas — ou l'inverse.
+        """
+        for nom, rapport in self.rapports.items():
+            if "html" not in rapport or "transférés" not in rapport["html"]:
+                continue
+            with self.subTest(navigateur=nom):
+                self.assertIn("en-têtes compris", rapport["html"],
+                              "le poids transféré ne dit pas si les en-têtes sont comptés")
+
     def test_aucune_cellule_nowrap_ne_porte_une_phrase(self):
         """Le défaut attrapé en relisant la greffe du 15 octobre 2026.
 

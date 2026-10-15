@@ -190,12 +190,12 @@ une raison qui ne tient plus parce que la page n'appelle plus la route :
 Une mesure de poids compressé répond à « combien le réseau transporte ». Elle ne
 répond pas à deux questions qu'un téléphone pose, lui :
 
-1. **combien il décompresse et analyse.** Mesuré ce jour : **478 837 o bruts** pour
-   **129 569 o** transférés — la compression fait gagner le réseau, jamais la
+1. **combien il décompresse et analyse.** Mesuré ce jour : **479 190 o bruts** pour
+   **129 701 o** transférés — la compression fait gagner le réseau, jamais la
    mémoire de l'appareil. Le document brut a donc un plafond à lui,
    **505 000 o**, dans `outils/poids_de_la_page.py` ;
 2. **quelle part du document est du programme.** Le script en ligne pèse
-   **317 991 o**, soit **66,4 %** de la page : non cacheable séparément, non
+   **318 344 o**, soit **66,4 %** de la page : non cacheable séparément, non
    différable, payé à chaque visite même pour lire trois lignes. Le plafond écrit
    est **les trois quarts du document** (72 %) : au-delà, la question n'est plus
    « faut-il découper ? » mais « pourquoi ne l'a-t-on pas fait ? » ;
@@ -208,7 +208,7 @@ répond pas à deux questions qu'un téléphone pose, lui :
 **Et surtout : un seul juge par grandeur.** Ces deux plafonds-là ne touchent pas
 au poids transféré, qui reste tenu par la table ci-dessus : `outils/
 poids_de_la_page.py` **lit** l'ancre et le plafond de la page dans
-`outils/budgets_fluidite.py` et publie la réserve du jour (**8 244 o**, soit 6,0 %
+`outils/budgets_fluidite.py` et publie la réserve du jour (**8 112 o**, soit 5,9 %
 du plafond ; les 518 o de cette passe sont dedans). Il n'y a donc pas deux avis
 sur le même nombre — il y en a un, et un contrôle refuse qu'un second
 apparaisse.
