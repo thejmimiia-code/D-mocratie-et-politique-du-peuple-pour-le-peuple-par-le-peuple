@@ -413,10 +413,31 @@ class TestLaDocumentationExpliqueLeRendezVous(unittest.TestCase):
         cls.doc = HEBERGEMENT.read_text(encoding="utf-8")
 
     def test_elle_nomme_le_garde_veille_et_son_calendrier(self):
-        for mot in ("garde-veille", "toutes les dix minutes", "temps universel",
-                    "750", "heures"):
+        for mot in ("garde-veille", GARDE.SONDE, "temps universel", "750", "heures"):
             with self.subTest(mot=mot):
                 self.assertIn(mot, self.doc, f"la documentation ne dit pas « {mot} »")
+
+    def test_elle_dit_la_verite_mesuree_sur_le_calendrier(self):
+        """Le 15 octobre 2026, le calendrier n'a livré aucun passage : le dire.
+
+        Une documentation qui annonce un réveil périodique sans dire qu'il n'est
+        jamais arrivé est une documentation qui promet au nom de personne. Ce
+        contrôle exige la mesure, sa date, et la commande qui la reproduit.
+        """
+        # Les qualificatifs qui rendent la mesure crédible : sans eux, « ça ne
+        # marche pas » pourrait vouloir dire « le dépôt est archivé ».
+        for mot in ("jamais livré", "mesuré le 15 octobre 2026", "non archivé",
+                    "non désactivé", 'event=schedule',
+                    "promet pas un réveil qui n'arrive pas"):
+            with self.subTest(mot=mot):
+                self.assertIn(mot, self.doc, f"la documentation ne dit pas « {mot} »")
+
+    def test_elle_classe_les_declencheurs_par_fiabilite_mesuree(self):
+        """Le lecteur doit savoir sur quoi compter, et dans quel ordre."""
+        self.assertIn("par ordre de fiabilité", self.doc)
+        for mot in ("vérifié", "configuré, jamais livré", "recommandé"):
+            with self.subTest(mot=mot):
+                self.assertIn(mot, self.doc)
 
     def test_la_section_est_titree(self):
         """Un titre, pas seulement des mots qui traînent : c'est lui qu'on cherche."""
@@ -431,13 +452,19 @@ class TestLaDocumentationExpliqueLeRendezVous(unittest.TestCase):
         self.assertIn("garde-veille.yml", self.doc)
 
     def test_elle_dit_que_toute_poussee_reveille(self):
-        """Le second déclencheur, et la raison : le calendrier peut être en retard."""
-        self.assertIn("Toute poussée le déclenche aussi", self.doc)
+        """Le second déclencheur — celui qui a été vérifié cinq fois."""
+        self.assertIn("Toute poussée le déclenche", self.doc)
+        self.assertIn("une fusion comprise", self.doc)
 
     def test_elle_dit_pourquoi_le_pas_commence_a_quatre_minutes(self):
         """Un décalage de quatre minutes qui n'est expliqué nulle part se supprime."""
-        self.assertIn("jamais à l'heure pleine", self.doc)
+        self.assertIn("heure pleine", self.doc)
         self.assertIn("`:04`", self.doc)
+
+    def test_elle_donne_la_sortie_de_secours_de_la_sortie_de_secours(self):
+        """Héberger là où l'on ne dort pas : le seul sommeil impossible."""
+        self.assertIn("l'héberger là où l'on ne dort pas", self.doc)
+        self.assertIn("Dockerfile", self.doc)
 
     def test_elle_donne_la_porte_de_secours(self):
         """Le calendrier de GitHub est « au mieux » : une autre porte doit exister.
