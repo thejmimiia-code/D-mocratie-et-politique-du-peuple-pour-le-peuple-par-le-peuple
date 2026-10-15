@@ -297,6 +297,12 @@ l'on consulte le site — 108 visites par jour, chacune étant un seul appel à
 une route JSON qui ne calcule rien). Le service n'a plus le temps de s'endormir,
 donc le visiteur n'attend plus trente secondes, et il ne tombe plus sur un 502.
 
+**Six visites par heure, à `:04`, `:14`, `:24`, …** — jamais à l'heure pleine :
+GitHub prévient que la charge de ses coureurs est **maximale au début de chaque
+heure**, et que les passages programmés y sont retardés. Le décalage ne change
+rien à ce que la fenêtre couvre (108 visites par jour), il change seulement le
+moment où l'on demande.
+
 **Toute poussée le déclenche aussi** — une fusion comprise. Ce n'est pas du
 confort : le 15 octobre 2026, une heure après la fusion, le calendrier de GitHub
 n'avait livré **aucun** passage (un rendez-vous neuf met du temps à s'enregistrer,

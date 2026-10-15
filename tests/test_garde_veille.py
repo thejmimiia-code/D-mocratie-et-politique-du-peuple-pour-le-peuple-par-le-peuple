@@ -79,25 +79,46 @@ class TestLaFenetreTientDansLePalierGratuit(unittest.TestCase):
         contrôle qui valide une fenêtre, et un rendez-vous qui en suit une autre.
         """
         texte = WORKFLOW.read_text(encoding="utf-8")
-        calendrier = re.search(r'schedule:\s*\n\s*-\s*cron:\s*"([^"]+)"', texte)
+        # Le commentaire qui explique le décalage se trouve **entre** les deux :
+        # l'expression les saute, sinon elle ne verrait plus le calendrier.
+        calendrier = re.search(
+            r'schedule:\s*\n(?:\s*#[^\n]*\n)*\s*-\s*cron:\s*"([^"]+)"', texte)
         variable = re.search(r'^\s*FENETRE:\s*"([^"]+)"', texte, re.MULTILINE)
         self.assertIsNotNone(calendrier, "le workflow n'a pas de calendrier")
         self.assertIsNotNone(variable, "la fenêtre n'est pas déclarée en variable")
         self.assertEqual(calendrier.group(1), variable.group(1),
                          "la fenêtre du calendrier et celle du contrôle divergent")
+        # Et la fenêtre **réellement programmée** doit éviter l'heure pleine.
+        # Un exemple écrit dans le contrôle ne prouverait rien du fichier : il
+        # faut juger ce qui est programmé, pas ce qu'on a recopié.
+        self.assertNotIn(0, GARDE.Analyse(calendrier.group(1)).minutes,
+                         "une visite est programmée à l'heure pleine, "
+                         "l'instant de pointe de GitHub Actions")
         self.assertIn('--cron "$FENETRE"', texte,
                       "la fenêtre n'est pas vérifiée avant de servir")
 
     def test_la_fenetre_couvre_les_heures_de_consultation(self):
-        analyse = GARDE.Analyse("*/10 5-22 * * *")
+        analyse = GARDE.Analyse("4,14,24,34,44,54 5-22 * * *")
         self.assertEqual(analyse.passages_par_jour, 108)
         hiver, ete = analyse.couverture_locale(1), analyse.couverture_locale(2)
         self.assertEqual(hiver, (6, 23), "la fenêtre d'hiver n'est pas 6 h → 23 h")
         self.assertEqual(ete, (7, 24), "la fenêtre d'été n'est pas 7 h → minuit")
 
+    def test_la_fenetre_evite_l_heure_pleine(self):
+        """GitHub prévient : la charge est maximale **au début de chaque heure**.
+
+        Un passage programmé à `:00` est donc le premier retardé. Les six
+        visites de l'heure s'échelonnent à `:04`, `:14`, … — même couverture,
+        moins de risque d'attente.
+        """
+        analyse = GARDE.Analyse("4,14,24,34,44,54 5-22 * * *")
+        self.assertNotIn(0, analyse.minutes, "une visite tombe à l'heure pleine")
+        self.assertEqual(len(analyse.minutes), 6)
+        self.assertEqual(analyse.minutes[0], 4)
+
     def test_un_depassement_est_refuse(self):
         """Le palier gratuit **suspend** au-delà du quota : pire que le sommeil."""
-        jour = GARDE.Analyse("*/10 5-22 * * *")
+        jour = GARDE.Analyse("4,14,24,34,44,54 5-22 * * *")
         nuit = GARDE.Analyse("*/10 * * * *")
         self.assertFalse(jour.depasse)
         self.assertTrue(nuit.depasse, "une fenêtre 24 h/24 doit être refusée")
@@ -105,7 +126,7 @@ class TestLaFenetreTientDansLePalierGratuit(unittest.TestCase):
 
     def test_le_changement_d_heure_est_dans_le_calcul(self):
         """La France change d'heure : une même fenêtre UTC ne couvre pas pareil."""
-        analyse = GARDE.Analyse("*/10 5-22 * * *")
+        analyse = GARDE.Analyse("4,14,24,34,44,54 5-22 * * *")
         self.assertEqual(analyse.couverture_locale(2)[0] - analyse.couverture_locale(1)[0], 1)
         self.assertIn("été", GARDE.texte_analyse(analyse))
 
@@ -412,6 +433,11 @@ class TestLaDocumentationExpliqueLeRendezVous(unittest.TestCase):
     def test_elle_dit_que_toute_poussee_reveille(self):
         """Le second déclencheur, et la raison : le calendrier peut être en retard."""
         self.assertIn("Toute poussée le déclenche aussi", self.doc)
+
+    def test_elle_dit_pourquoi_le_pas_commence_a_quatre_minutes(self):
+        """Un décalage de quatre minutes qui n'est expliqué nulle part se supprime."""
+        self.assertIn("jamais à l'heure pleine", self.doc)
+        self.assertIn("`:04`", self.doc)
 
     def test_elle_donne_la_porte_de_secours(self):
         """Le calendrier de GitHub est « au mieux » : une autre porte doit exister.
