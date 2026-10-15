@@ -299,6 +299,26 @@ réveille un service endormi) ; les vingt et une autres adresses restent à un
 seul essai, sans quoi une veille sur un hôte tombé durerait quarante minutes au
 lieu de deux.
 
+**Un 502 isolé n'est pas un service absent.** Mesure du 15 octobre 2026, treize
+heures quarante-cinq, copie de secours : la veille publie « le service n'est pas
+derrière » pour `/api/bulles` — alors que, dans le **même passage**, soixante-sept
+autres adresses du même hôte venaient de répondre 200, la plus grosse comprise.
+L'explication était dans l'horodatage : Render redéployait la version qu'on
+venait de fusionner, et la route interrogée pendant ce redéploiement n'a pas
+abouti. Redemandée une seconde plus tard, elle répondait 200.
+
+D'où la règle, et ses deux bornes, exactement mesurées :
+
+| Situation | Ce que la veille fait |
+|---|---|
+| La passerelle répond 502/503/504 sur une adresse **et** l'hôte a répondu 200 ailleurs dans le même passage | **une reprise**, une seule, sur cette adresse — un hôte qui répond est debout |
+| L'hôte n'a répondu **nulle part** | **aucune reprise** : ce n'est pas un à-coup, c'est une panne. Soixante-huit adresses reprises seraient quarante minutes de veille |
+
+Et le verdict suit la mesure : il ne dit plus « le service n'est pas derrière »
+quand l'hôte vient de répondre soixante-sept fois — il dit que « c'est cette
+réponse-là qui n'arrive pas ». Un rapport qui se trompe sur ce qu'il a vu est
+pire qu'un rapport qui ne dit rien.
+
 **Deux poids, deux mesures** : l'adresse canonique est celle qu'on partage, donc
 son échec fait rougir la veille ; la copie de secours peut être endormie,
 suspendue ou absente sans que le dépôt soit en faute — son échec est **publié**,

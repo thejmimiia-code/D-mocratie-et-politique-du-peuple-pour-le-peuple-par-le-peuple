@@ -33,16 +33,28 @@ quelle que soit la réponse (c'est elle, aussi, qui réveille) ; les vingt et un
 autres adresses suivent à un seul essai, parce qu'un hôte déjà réveillé répond
 du premier coup et qu'un hôte qui ne répond pas ne se réveille pas davantage
 parce qu'on l'a demandé vingt-deux fois.
+
+**Et un 502 peut n'être qu'un à-coup.** Mesure du 15 octobre 2026, treize
+heures quarante-cinq, copie de secours : la veille publie « le service n'est pas
+derrière » pour `/api/bulles` — alors que, dans le **même passage**, soixante-sept
+autres adresses du même hôte venaient de répondre 200, la plus grosse comprise.
+Le service ne dormait donc pas : Render redéployait la version qu'on venait de
+fusionner, et c'est cette réponse-là qui n'était pas arrivée. Un hôte qui répond
+ailleurs est un hôte **debout** : c'est le seul cas où la veille se permet une
+reprise, une seule, sur la route fautive — et où son verdict cesse de dire
+« le service n'est pas derrière », parce que c'est faux.
 """
 
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import sys
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from pathlib import Path
 
 RACINE = Path(__file__).resolve().parent.parent
@@ -246,19 +258,34 @@ class Verdict:
                 f"{self.detail}")
 
 
-def _reponse_lisible(reponse: Reponse) -> str:
-    """Ce qu'on écrit quand l'hôte n'a pas répondu 200 — sans jargon."""
+#: Les statuts d'une passerelle qui répond à la place du service : ce sont les
+#: seuls où la question « le service est-il derrière ? » se pose.
+PASSERELLE = (502, 503, 504)
+
+
+def _reponse_lisible(reponse: Reponse, hote_debout: bool = False) -> str:
+    """Ce qu'on écrit quand l'hôte n'a pas répondu 200 — sans jargon.
+
+    `hote_debout` est la seule chose que la veille sache **de source sûre** :
+    d'autres adresses de ce même hôte ont répondu 200 dans ce passage. Le dire
+    évite la phrase fausse du 15 octobre 2026 — « le service n'est pas derrière »
+    écrit sur un service qui venait de répondre soixante-sept fois.
+    """
     if reponse.muet:
         detail = reponse.texte.strip() or "aucune réponse"
         return f"aucune réponse de l'hôte ({detail})"
-    if reponse.statut in (502, 503, 504):
+    if reponse.statut in PASSERELLE:
+        if hote_debout:
+            return (f"la passerelle répond {reponse.statut} sur cette adresse, alors que "
+                    f"l'hôte répondait par ailleurs : ce n'est pas le service qui dort, "
+                    f"c'est cette réponse-là qui n'arrive pas")
         return (f"la passerelle répond {reponse.statut} : le service n'est pas "
                 f"derrière (endormi, suspendu, ou démarrage en échec)")
     return f"attendu 200, reçu {reponse.statut}"
 
 
 def _epreuve_texte(hote: str, base: str, chemin: str, essais: int,
-                   attente: float) -> Verdict:
+                   attente: float, hote_debout: bool = False) -> Verdict:
     """Le texte servi doit être **le même** que celui que le code engendre."""
     verdict = Verdict(hote, chemin, "texte identique à celui engendré")
     attendu = surface.texte(chemin)
@@ -266,7 +293,7 @@ def _epreuve_texte(hote: str, base: str, chemin: str, essais: int,
         return verdict.conclure(False, "chemin absent de la surface publique")
     reponse = _insister(base + chemin, essais=essais, attente=attente)
     if reponse.statut != 200:
-        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse, hote_debout), reponse.statut)
     servi = reponse.texte
     if servi != attendu:
         ou = next((n for n, (a, b) in enumerate(zip(attendu, servi, strict=False), 1) if a != b),
@@ -280,7 +307,8 @@ def _epreuve_texte(hote: str, base: str, chemin: str, essais: int,
         True, f"{len(servi)} caractères, identique à celui engendré", reponse.statut)
 
 
-def _epreuve_image(hote: str, base: str, chemin: str, essais: int, attente: float) -> Verdict:
+def _epreuve_image(hote: str, base: str, chemin: str, essais: int, attente: float,
+                   hote_debout: bool = False) -> Verdict:
     """L'image servie doit être **le fichier versionné**, au type annoncé."""
     verdict = Verdict(hote, chemin, "fichier identique au fichier versionné")
     fichier = surface.chemin_image(chemin)
@@ -288,7 +316,7 @@ def _epreuve_image(hote: str, base: str, chemin: str, essais: int, attente: floa
         return verdict.conclure(False, "chemin absent de la surface publique")
     reponse = _insister(base + chemin, essais=essais, attente=attente)
     if reponse.statut != 200:
-        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse, hote_debout), reponse.statut)
     type_attendu = TYPES_IMAGES.get(chemin, ())
     if type_attendu and not any(reponse.type_contenu.startswith(t) for t in type_attendu):
         return verdict.conclure(
@@ -325,7 +353,8 @@ def _page_complete(reponse: Reponse) -> bool:
     return all(motif in reponse.texte for motif in ATTENDUS_PAGE)
 
 
-def _epreuve_page(hote: str, base: str, essais: int, attente: float) -> Verdict:
+def _epreuve_page(hote: str, base: str, essais: int, attente: float,
+                  hote_debout: bool = False) -> Verdict:
     """La page doit dire d'elle-même ce que la surface publique annonce."""
     verdict = Verdict(hote, "/", "page complète et déclarée")
     # `acceptable=_page_complete` : la page est ce qu'un déploiement remplace en
@@ -333,7 +362,7 @@ def _epreuve_page(hote: str, base: str, essais: int, attente: float) -> Verdict:
     reponse = _insister(base + "/", essais=essais, attente=attente, delai=60.0,
                         acceptable=_page_complete)
     if reponse.statut != 200:
-        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse, hote_debout), reponse.statut)
     if not reponse.type_contenu.startswith("text/html"):
         return verdict.conclure(
             False, f"attendu du text/html, reçu {reponse.type_contenu or 'aucun type'}",
@@ -347,14 +376,15 @@ def _epreuve_page(hote: str, base: str, essais: int, attente: float) -> Verdict:
 
 
 def _epreuve_json(hote: str, base: str, cible: str, essais: int, attente: float,
-                  corps: dict[str, object] | None = None) -> Verdict:
+                  corps: dict[str, object] | None = None,
+                  hote_debout: bool = False) -> Verdict:
     """Une route d'API doit répondre 200 **et** un JSON exploitable."""
     methode = "POST" if corps is not None else "GET"
     verdict = Verdict(hote, cible, f"{methode} 200 en JSON")
     reponse = _insister(base + cible, methode=methode, corps=corps, essais=essais,
                         attente=attente, delai=120.0)
     if reponse.statut != 200:
-        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse, hote_debout), reponse.statut)
     if not reponse.type_contenu.startswith("application/json"):
         return verdict.conclure(
             False, f"type inattendu : {reponse.type_contenu or 'aucun'}", reponse.statut)
@@ -371,7 +401,8 @@ def _epreuve_json(hote: str, base: str, cible: str, essais: int, attente: float,
     return verdict.conclure(True, f"JSON exploitable, {taille}", reponse.statut)
 
 
-def _epreuve_refus(hote: str, base: str, cible: str, essais: int, attente: float) -> Verdict:
+def _epreuve_refus(hote: str, base: str, cible: str, essais: int, attente: float,
+                   hote_debout: bool = False) -> Verdict:
     """Ce qui doit être refusé le soit : une route inconnue, un proxy sans cible.
 
     Un 200 inattendu ici est le signe d'une réécriture d'hébergeur qui répond à
@@ -384,13 +415,14 @@ def _epreuve_refus(hote: str, base: str, cible: str, essais: int, attente: float
         return verdict.conclure(False, "répond 200 : la route ne devrait pas exister",
                                 reponse.statut)
     if reponse.statut == 0:
-        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse, hote_debout), reponse.statut)
     if reponse.statut >= 500:
         return verdict.conclure(False, f"erreur serveur ({reponse.statut})", reponse.statut)
     return verdict.conclure(True, f"refus propre ({reponse.statut})", reponse.statut)
 
 
-def _epreuve_post_refuse(hote: str, base: str, essais: int, attente: float) -> Verdict:
+def _epreuve_post_refuse(hote: str, base: str, essais: int, attente: float,
+                         hote_debout: bool = False) -> Verdict:
     """Un POST sur une route qui n'existe pas doit être refusé, pas servi."""
     verdict = Verdict(hote, "POST /api/route-inconnue", "refusé sans erreur serveur")
     reponse = _insister(base + "/api/route-inconnue", methode="POST", corps={},
@@ -398,7 +430,7 @@ def _epreuve_post_refuse(hote: str, base: str, essais: int, attente: float) -> V
     if reponse.statut in (200, 201):
         return verdict.conclure(False, "accepté (200) pour une route inconnue", reponse.statut)
     if reponse.statut == 0:
-        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+        return verdict.conclure(False, _reponse_lisible(reponse, hote_debout), reponse.statut)
     if reponse.statut >= 500:
         return verdict.conclure(False, f"erreur serveur ({reponse.statut})", reponse.statut)
     return verdict.conclure(True, f"refus propre ({reponse.statut})", reponse.statut)
@@ -419,28 +451,76 @@ def sonder(hote: str, base: str, essais: int, attente: float) -> list[Verdict]:
     **Et si la page ne répond pas du tout**, l'hôte est déclaré muet une fois
     pour toutes : répéter la même panne sur chaque route ajoute des lignes, pas
     de l'information, et coûte une sonde à chaque fois.
+
+    Ces épreuves-ci sont rendues **rejouables** (voir `_sondes`) pour une seule
+    raison : `_reprendre_les_oublis`, juste après, reprend les 502 isolés d'un
+    hôte qui répond par ailleurs.
     """
-    page = _epreuve_page(hote, base, essais, attente)
-    verdicts = [page]
+    sondes = _sondes(hote, base, essais, attente)
+    page = sondes[0]()                       # la page d'abord : c'est elle qui réveille
     if page.statut == 0:
         muet = Verdict(hote, "(toutes les autres adresses)", "répondre")
         muet.conclure(False, "non éprouvées : l'hôte ne répond à aucune adresse", 0)
-        verdicts.append(muet)
-        return verdicts
+        return [page, muet]
+    verdicts = [page] + [sonde() for sonde in sondes[1:]]
+    return _reprendre_les_oublis(sondes, verdicts, attente)
+
+
+def _sondes(hote: str, base: str, essais: int,
+            attente: float) -> list[Callable[..., Verdict]]:
+    """Les épreuves d'un hôte, chacune sachant se rejouer.
+
+    Rendues sous forme d'appelables plutôt que jouées ici : reprendre une épreuve
+    demande de savoir **laquelle** reprendre, et de la reprendre en lui disant ce
+    qu'on a appris entre-temps — qu'une autre adresse du même hôte a répondu.
+    Une liste de verdicts ne se relance pas ; une liste de fonctions, si.
+    """
     une = 1
-    verdicts += [_epreuve_texte(hote, base, chemin, une, attente)
-                 for chemin in surface.TEXTES]
-    verdicts += [_epreuve_image(hote, base, chemin, une, attente)
-                 for chemin in surface.IMAGES]
-    verdicts += [_epreuve_json(hote, base, chemin, une, attente)
-                 for chemin in ROUTES_GET]
-    verdicts += [_epreuve_json(hote, base, chemin, une, attente)
-                 for chemin in ROUTES_GET_AVEC_PARAMETRES]
-    verdicts += [_epreuve_json(hote, base, chemin, une, attente, corps=corps)
-                 for chemin, corps in ROUTES_POST]
-    verdicts.append(_epreuve_refus(hote, base, "/api/route-inconnue", une, attente))
-    verdicts.append(_epreuve_refus(hote, base, "/api/proxy", une, attente))
-    verdicts.append(_epreuve_post_refuse(hote, base, une, attente))
+    sondes: list[Callable[..., Verdict]] = [
+        functools.partial(_epreuve_page, hote, base, essais, attente)]
+    sondes += [functools.partial(_epreuve_texte, hote, base, chemin, une, attente)
+               for chemin in surface.TEXTES]
+    sondes += [functools.partial(_epreuve_image, hote, base, chemin, une, attente)
+               for chemin in surface.IMAGES]
+    sondes += [functools.partial(_epreuve_json, hote, base, chemin, une, attente)
+               for chemin in ROUTES_GET]
+    sondes += [functools.partial(_epreuve_json, hote, base, chemin, une, attente)
+               for chemin in ROUTES_GET_AVEC_PARAMETRES]
+    sondes += [functools.partial(_epreuve_json, hote, base, chemin, une, attente, corps=corps)
+               for chemin, corps in ROUTES_POST]
+    sondes += [functools.partial(_epreuve_refus, hote, base, "/api/route-inconnue", une, attente),
+               functools.partial(_epreuve_refus, hote, base, "/api/proxy", une, attente),
+               functools.partial(_epreuve_post_refuse, hote, base, une, attente)]
+    return sondes
+
+
+def _reprendre_les_oublis(sondes: list[Callable[..., Verdict]], verdicts: list[Verdict],
+                          attente: float) -> list[Verdict]:
+    """Un 502 isolé sur un hôte qui répond : une reprise, une seule.
+
+    Ce n'est pas de l'indulgence, c'est une mesure. Un hôte qui a répondu 200
+    ailleurs dans le **même passage** n'est pas endormi : il redéploie peut-être,
+    ou il a lâché une réponse. Redemander cette adresse-là coûte une quinzaine de
+    secondes et évite de publier une panne qui n'existe pas — c'est exactement
+    ce qui est arrivé le 15 octobre 2026 à `/api/bulles` de la copie de secours,
+    revenue bonne dans la seconde, pendant que le rapport la disait morte.
+
+    **Et si l'hôte n'a rien répondu nulle part, il n'y a aucune reprise** : ce
+    n'est plus un à-coup, c'est une panne. Insister n'y changerait rien et une
+    veille sur un hôte suspendu durerait quarante minutes au lieu de deux.
+    """
+    if not any(verdict.reussi for verdict in verdicts):
+        return verdicts
+    for index, verdict in enumerate(verdicts):
+        if verdict.reussi or verdict.statut not in PASSERELLE:
+            continue
+        time.sleep(attente)
+        reprise = sondes[index](hote_debout=True)
+        if reprise.reussi:
+            reprise.detail += " — cette réponse-là manquait, pas le service"
+        else:
+            reprise.detail += " (reprise après un 502)"
+        verdicts[index] = reprise
     return verdicts
 
 
