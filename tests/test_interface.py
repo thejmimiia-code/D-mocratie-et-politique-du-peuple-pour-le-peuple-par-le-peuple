@@ -1532,16 +1532,18 @@ class TestLaBarreDeCommande(unittest.TestCase):
         Mesuré le 15 octobre 2026 : deux rangées de deux coûtaient 51 px de haut
         pour 44 px de boutons, et le ruban faisait 239 px à 380, 206 à 640. Sur
         une rangée, avec les libellés courts, il en fait 152 aux deux largeurs.
+        Le choix entre libellé long et libellé court n'est plus une affaire de
+        ruban : c'est une règle de la page (`.mot-long` / `.mot-court`), que les
+        pastilles d'état partagent — tenue par `tests/test_premier_ecran.py`.
         """
         bloc = self._regle("max-width:640px", ".ruban-veille .ruban-actions{")
-        self.assertIn("grid-template-columns:repeat(4,minmax(0,1fr))", bloc)
-        self.assertIn("min-height:44px", bloc, "quatre commandes, quatre cibles au doigt")
-        self.assertIn("white-space:normal", bloc,
-                      "le verdict porte le message : il ne se tronque plus")
-        self.assertIn(".ruban-veille .mot-court{display:inline}", bloc,
-                      "les libellés courts ne s'affichent plus sur un téléphone")
-        self.assertIn(".ruban-veille .mot-long{display:none}", bloc,
-                      "le libellé long reste peint : il ne tiendrait pas dans 80 px")
+        for regle, pourquoi in (
+                ("grid-template-columns:repeat(4,minmax(0,1fr))",
+                 "quatre commandes sur une rangée, pas deux rangées de deux"),
+                ("min-height:44px", "quatre commandes, quatre cibles au doigt"),
+                ("white-space:normal", "le verdict porte le message : il ne se tronque plus")):
+            with self.subTest(regle=regle):
+                self.assertIn(regle, bloc, pourquoi)
 
     def test_la_pastille_ne_s_imprime_pas(self):
         zones = [contenu for nom, contenu, _ in self.blocs if "print" in nom]

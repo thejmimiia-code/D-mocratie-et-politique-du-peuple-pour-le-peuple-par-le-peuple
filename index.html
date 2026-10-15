@@ -758,10 +758,12 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .ruban-pop b{font-variant-numeric:tabular-nums}
 .ruban-veille .ruban-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 .ruban-veille button{padding:5px 10px;font-size:max(var(--t-min),.74rem)}
-/* Deux libellés dans le même bouton : le long dit tout, le court tient
-   sur une rangée de téléphone. Un seul est peint à la fois ; l'autre
-   reste dans le document pour qui lit la page en texte. */
-.ruban-veille .mot-court{display:none}
+/* Deux textes dans le même élément : le long dit tout, le court tient sur la
+   rangée d'un téléphone. Un seul est peint — et comme `display:none` sort
+   l'autre de l'arbre d'accessibilité, ce qui est lu est exactement ce qui est
+   vu. Le long reste dans le document : l'impression, la recherche dans la page
+   et les lecteurs d'écran larges le retrouvent. */
+.mot-court{display:none}
 /* Barre d'outils des leviers et vues */
 .barre-leviers{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .barre-leviers .recherche{flex:1;min-width:240px;margin-bottom:0}
@@ -1325,6 +1327,12 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
    à être tronqué, c'est lui qui porte le message), puis les quatre commandes
    en deux colonnes égales, chacune assez haute pour le doigt. */
 @media screen and (max-width:640px){
+  /* Le palier du téléphone : le court prend la place du long — ici, et partout
+     où le couple est posé (le ruban, les pastilles d'état). */
+  .mot-long{display:none}
+  .mot-court{display:inline}
+}
+@media screen and (max-width:640px){
   /* Le ruban devient une carte : titre et verdict d'abord — quand le verdict
      est court il partage la rangée du titre, quand il est long il prend la
      largeur —, puis les quatre commandes sur **une** rangée. Deux rangées de
@@ -1342,8 +1350,6 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
   .ruban-veille .ruban-actions button{width:100%;min-height:44px;padding:6px 2px;
     white-space:normal;line-height:1.1}
-  .ruban-veille .mot-long{display:none}
-  .ruban-veille .mot-court{display:inline}
 }/* ── Le même tableau, en cartes, sur un écran étroit ──────────────────────
    Neuf colonnes ne se lisent pas dans 360 px : on fait glisser la ligne, et
    l'en-tête a disparu depuis longtemps. La ligne devient donc une carte, et
@@ -1621,11 +1627,14 @@ html[data-texte="137"]{font-size:137.5%}
     </div>
 
     <p class="etat-contexte">
-      <span class="pastille" id="badge-contexte">contexte : chargement…</span>
-      <span class="pastille" id="badge-date">—</span>
-      <span class="pastille" id="badge-leviers">—</span>
+      <span class="pastille" id="badge-contexte"><span class="mot-long">contexte :
+        chargement…</span><span class="mot-court">chargement…</span></span>
+      <span class="pastille" id="badge-date"><span class="mot-long" id="badge-date-long">—</span><span
+        class="mot-court" id="badge-date-court">—</span></span>
+      <span class="pastille" id="badge-leviers"><span class="mot-long" id="badge-leviers-long">—</span><span
+        class="mot-court" id="badge-leviers-court">—</span></span>
       <label class="select-horizon">
-        <span data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. Les dynamiques à maturation longue s'activent à partir du sixième exercice.">Horizon</span> <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
+        <span data-aide="<b>Horizon de simulation</b>Une mandature = 5 ans ; deux mandatures consécutives = 10 ans. C'est la durée du scénario qui ouvre les dynamiques à maturation longue — rattrapage du capital public non couvert, exposition climatique : sur 10 ans elles sont comptées dès le premier exercice, hors budget ; sur 5 ans elles restent nulles.">Horizon</span> <select id="horizon-simulation" aria-label="Horizon de simulation" onchange="changerHorizon(this.value)">
           <option value="5" selected>1 mandature · 5 ans</option>
           <option value="10">2 mandatures · 10 ans</option>
         </select>
@@ -2287,9 +2296,32 @@ function couleurDelta(valeur){
   if (Math.abs(valeur) < 0.05) return 'neutre';
   return valeur > 0 ? 'hausse' : 'baisse';
 }
+/* Une pastille d'état porte deux textes : le long, qui dit tout — « référence
+   datée du projet » —, et le court, qui tient sur la rangée d'un téléphone.
+   Les deux sont écrits **ensemble**, sinon une pastille annoncerait l'état
+   précédent, ou pire : elle resterait vide. Mesuré le 15 octobre 2026 : la
+   ligne d'état d'un téléphone faisait 140 px en quatre rangées, dont une
+   pastille de deux lignes pour dire « 16 leviers actifs · simulation 5 ans ·
+   score moyen 51,3 (référence 50,0) » — le score est déjà dans le résumé. */
+function direLaPastille(identifiant, long, court){
+  const noeud = document.getElementById(identifiant);
+  if (!noeud) return;
+  const longu = document.getElementById(identifiant + '-long');
+  const court_ = document.getElementById(identifiant + '-court');
+  if (longu && court_){
+    longu.textContent = long;
+    court_.textContent = court;
+    return;
+  }
+  noeud.textContent = long;
+}
 function pastille(mode){
-  const libelles = {live:'données live', reference:'référence datée du projet', mixte:'données mixtes'};
-  return `<span class="pastille ${mode}">${libelles[mode] || mode}</span>`;
+  const libelles = {live:['données live', 'live'],
+    reference:['référence datée du projet', 'référence datée'],
+    mixte:['données mixtes', 'mixtes']};
+  const [long, court] = libelles[mode] || [mode, mode];
+  return `<span class="pastille ${mode}"><span class="mot-long">${long}</span>`
+    + `<span class="mot-court">${court}</span></span>`;
 }
 
 /* ── Chargement du catalogue (leviers + domaines) ───────────────────────── */
@@ -2312,7 +2344,8 @@ async function chargerContexte(rafraichir){
 function renderContexte(){
   const c = CONTEXTE.contexte;
   document.getElementById('badge-contexte').outerHTML = pastille(c.mode).replace('<span', '<span id="badge-contexte"');
-  document.getElementById('badge-date').textContent = `horodatage : ${c.horodatage.replace('T',' ').slice(0,16)} UTC`;
+  direLaPastille('badge-date', `horodatage : ${c.horodatage.replace('T',' ').slice(0,16)} UTC`,
+    `${c.horodatage.replace('T',' ').slice(0,16)} UTC`);
   const metriques = [
     ['PIB nominal', fmt(c.pib_nominal_mde, 0) + ' Md€', ''],
     ['Dette publique', fmt(c.dette_publique_pct_pib, 1) + ' % PIB', ''],
@@ -5279,8 +5312,8 @@ function majLevier(cle, valeur){
 }
 let minuteur = null;
 function planifierSimulation(){
-  document.getElementById('badge-leviers').textContent =
-    `${nombreLeviersActifs()} leviers actifs — calcul en cours…`;
+  direLaPastille('badge-leviers', `${nombreLeviersActifs()} leviers actifs — calcul en cours…`,
+    `${nombreLeviersActifs()} leviers — calcul…`);
   if (minuteur) clearTimeout(minuteur);
   minuteur = setTimeout(() => simuler(false), 180);
 }
@@ -5386,8 +5419,8 @@ function afficherScenarioHistorique(donnees){
     note_methodologique: 'Composantes séparées, sans score synthétique ni pondération normative.'
   }}});
   changerHorizon(horizon, false);
-  document.getElementById('badge-leviers').textContent =
-    `scénario « ${donnees.nom} » — ${horizon} exercice(s) simulé(s)`;
+  direLaPastille('badge-leviers', `scénario « ${donnees.nom} » — ${horizon} exercice(s) simulé(s)`,
+    `${horizon} exercice(s) simulé(s)`);
   activerExports();
 }
 
@@ -6414,8 +6447,11 @@ async function simuler(avecImpacts){
     // La grille est reconstruite avec ses puces d'impact — sauf pendant qu'un
     // curseur est manipulé, pour ne pas le remplacer sous les doigts.
     if (!REGLAGE_EN_COURS) renderLeviers(filtreCourant());
-    document.getElementById('badge-leviers').textContent =
-      `${nombreLeviersActifs()} leviers actifs · simulation ${horizon} ans · score moyen ${fmt(donnees.synthese.score_moyen_domaines,1)} (référence ${fmt(donnees.synthese.score_moyen_reference,1)})`;
+    direLaPastille('badge-leviers',
+      `${nombreLeviersActifs()} leviers actifs · simulation ${horizon} ans · score moyen `
+        + `${fmt(donnees.synthese.score_moyen_domaines,1)} `
+        + `(référence ${fmt(donnees.synthese.score_moyen_reference,1)})`,
+      `${nombreLeviersActifs()} leviers · ${horizon} ans`);
     activerExports();
   } catch (erreur){
     alert('Le serveur n\'a pas répondu : ' + erreur);
