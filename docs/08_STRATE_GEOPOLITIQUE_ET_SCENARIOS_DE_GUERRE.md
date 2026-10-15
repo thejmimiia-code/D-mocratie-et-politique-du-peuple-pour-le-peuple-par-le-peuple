@@ -1,7 +1,10 @@
 # STRATE 5 — GÉOPOLITIQUE, SÉCURITÉ & CHAÎNES D'APPROVISIONNEMENT
 
 > **Note d'intégration PR #11 :** les scores d'escalade et nucléaires de la strate
-> annuelle sont des indices heuristiques non calibrés, et non des probabilités
+> annuelle sont des indices heuristiques non calibrés, et non des probabilités — **et c'est
+> désormais ce que la page affiche** : depuis le 15 octobre 2026, les deux garde-fous de la
+> strate 5 s'appellent « Indice heuristique d'escalade (/100, non calibré) » et « Indice
+> nucléaire tactique (/100, non calibré) », et non plus « Probabilité d'escalade mondiale (%) »
 > mesurées. Les paramètres post-nucléaires et l'évaluation PDE restent des
 > conventions simplifiées, pas des prévisions ni une décision juridique.
 > Le code annuel est désormais dans `simulateur/geopolitique_annuelle.py` ; le

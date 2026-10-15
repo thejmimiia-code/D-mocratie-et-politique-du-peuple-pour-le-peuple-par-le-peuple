@@ -6,6 +6,15 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### La page appelait « probabilité » ce que le moteur appelle « indice » (15 octobre 2026)
+
+- **Le fait, lu sur la page servie.** La strate 5 affichait « **Probabilité d'escalade mondiale (%)** · Escalade estimée à 17 % » et « Risque nucléaire tactique à 15 % ». Or le même nombre porte, dans `geopolitique_annuelle.py`, le commentaire `→ indice heuristique d'escalade 17.0/100` ; le CLI l'imprime « Indice heuristique d'escalade » ; et `docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md` ouvre sur « des indices heuristiques **non calibrés, et non des probabilités** ». La page disait donc l'inverse de la documentation du dépôt — et invitait à lire 17 % comme une probabilité de guerre.
+- **Ce qui a changé.** Les deux garde-fous s'appellent désormais « **Indice heuristique d'escalade (/100, non calibré)** » et « **Indice nucléaire tactique (/100, non calibré)** » ; leur unité est `/100`, leurs **bornes** disent chacune « heuristique non calibrée », et leur **source** dit ce que le chiffre n'est pas (la seconde ajoute que l'emploi est une **branche imposée**, conformément à l'audit). Le tableau du géopolitique dans la page suit le même vocabulaire.
+- **C'est la lacune P1 de l'audit, traitée pour ce qu'elle est** : « indice nucléaire non calibré → renommer et documenter les concepts, pas de probabilité d'emploi sans méthode défendable ». Rien n'est calculé autrement : c'est le **nom** qui cesse de promettre.
+- **Cinq contrôles neufs** (`tests/test_seuils.py`, 31 tests) : les deux libellés ne contiennent plus « Probabilité » et disent « non calibré » ; l'unité est `/100` (un pourcentage fait lire une probabilité) ; la source dit ce que le chiffre n'est pas ; la page n'affiche plus « Probabilité d'escalade » ni « Risque nucléaire tactique — proxy », et affiche les libellés neufs ; le moteur, lui, dit déjà « indice » — le contrôle le relit, pour que la page et lui ne puissent pas diverger en silence.
+- **Un contrôle requalifié plutôt qu'un mot interdit** : interdire le mot « probabilité » aurait fait rougir « pas une probabilité d'emploi », qui est exactement la phrase à écrire. Le contrôle lit donc la **négation** avant le mot.
+- **Cinq sabotages, cinq attrapés** : garde-fou qui se réappelle « probabilité », mention de non-calibration retirée, unité ramenée à `%`, source qui se tait, page qui reprend l'ancien vocabulaire.
+
 ### Le titre et la phrase du bandeau : deux textes, un seul peint (15 octobre 2026)
 
 - **Le fait, mesuré.** À 380 px, le titre faisait **quatre lignes (87 px)** et la phrase d'accroche **quatre lignes (79 px)** — 166 px du premier écran, plus que les quatre commandes réunies (89 px). Le bandeau mesurait 393 px.

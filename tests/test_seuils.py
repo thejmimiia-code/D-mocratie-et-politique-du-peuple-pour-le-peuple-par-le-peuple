@@ -10,9 +10,11 @@ détectées — sans crier au loup sur une trajectoire neutre.
 
 import re
 import unittest
+from pathlib import Path
 
 from simulateur.domaines import DOMAINES
 from simulateur.donnees_live import construire_contexte
+from simulateur.interface import HTML_PAGE
 from simulateur.moteur_parametrique import simuler
 from simulateur.parametres import PRESETS
 from simulateur.seuils import (
@@ -33,6 +35,99 @@ from simulateur.seuils import (
 
 def _contexte():
     return construire_contexte(utiliser_cache=False, rafraichir=False, hors_ligne=True)
+
+
+class TestLeVocabulaireDesIndices(unittest.TestCase):
+    """« Indice non calibré » — jamais « probabilité » — pour l'escalade et le nucléaire.
+
+    Mesuré le 15 octobre 2026 : la page servie annonçait « Probabilité d'escalade
+    mondiale (%) · Escalade estimée à 17 % », quand le moteur commente le même
+    nombre par « indice heuristique d'escalade 17.0/100 », le CLI l'imprime
+    « Indice heuristique d'escalade », et `docs/08_STRATE_GEOPOLITIQUE…` ouvre sur
+    « des indices heuristiques **non calibrés, et non des probabilités** ».
+
+    C'est la lacune P1 de l'audit : renommer les concepts, pas publier une
+    probabilité d'emploi sans méthode défendable. Un chiffre, un vocabulaire.
+    """
+
+    INDICES = ("probabilite_escalade_mondiale_pct", "risque_nucleaire_tactique_pct")
+
+    def _garde(self, cle):
+        for garde in GARDE_FOUS:
+            if garde.cle == cle:
+                return garde
+        self.fail(f"le garde-fou {cle} n'existe plus")
+
+    def test_les_deux_garde_fous_ne_s_appellent_plus_des_probabilites(self):
+        for cle in self.INDICES:
+            with self.subTest(cle=cle):
+                garde = self._garde(cle)
+                self.assertNotIn("Probabilité", garde.libelle,
+                                 "la page repromet une probabilité sans méthode de calibration")
+                self.assertIn("non calibré", garde.libelle,
+                              "le libellé ne dit plus que l'indice n'est pas calibré")
+                self.assertEqual(garde.unite, "/100",
+                                 "l'unité en pourcent fait lire le chiffre comme une probabilité")
+
+    def test_la_source_dit_ce_que_le_chiffre_n_est_pas(self):
+        for cle in self.INDICES:
+            with self.subTest(cle=cle):
+                source = self._garde(cle).source
+                self.assertTrue(source.strip(), "la source a disparu")
+                self.assertRegex(source, r"non calibr|pas une probabilité|branche imposée",
+                                 f"la source ne dit pas ce que le chiffre n'est pas : {source}")
+
+    def test_la_page_n_affiche_plus_le_mot_probabilite_pour_ces_indices(self):
+        """Le tableau de la strate 5, lu dans la page générée."""
+        for mot in ("Probabilité d’escalade", "Probabilité d'escalade",
+                    "Risque nucléaire tactique — proxy"):
+            with self.subTest(mot=mot):
+                self.assertNotIn(mot, HTML_PAGE,
+                                 "la page a repris le vocabulaire de la probabilité")
+        for attendu in ("Indice heuristique d’escalade — non calibré",
+                        "Indice nucléaire tactique — non calibré"):
+            with self.subTest(attendu=attendu):
+                self.assertIn(attendu, HTML_PAGE,
+                              "la page n'annonce plus le vocabulaire de l'indice")
+        self.assertIn("unite:'/100',precision:1,sens:-1}", HTML_PAGE,
+                      "les deux lignes ne sont plus lues sur 100")
+
+    def test_le_moteur_dit_deja_indice_et_la_page_le_suit(self):
+        """La source de vérité est le commentaire du moteur, pas le libellé d'hier."""
+        source = Path(__file__).resolve().parents[1] / "simulateur" / "geopolitique_annuelle.py"
+        texte = source.read_text(encoding="utf-8")
+        self.assertIn("indice heuristique d'escalade", texte,
+                      "le moteur ne dit plus « indice » : la page et lui divergent")
+        self.assertRegex(texte, r"indice nucléaire \{geo\.risque_usage_nucleaire_tactique_pct",
+                         "le moteur ne dit plus « indice nucléaire »")
+
+    def test_aucun_message_ne_promet_de_calibration(self):
+        """Le mot « probabilité » n'apparaît que pour dire qu'il ne s'applique pas.
+
+        Interdire le mot serait un contrôle qui lit la présence et pas la phrase :
+        « pas une probabilité » est exactement ce qu'un message doit dire. Ce qui
+        est interdit, c'est de la promettre — « probabilité d'escalade », « probabilité
+        d'emploi », « probabilité estimée ».
+        """
+        interdits = ("probabilité d'escalade", "probabilité d'emploi",
+                     "probabilité estimée", "probabilité de guerre")
+        for cle in self.INDICES:
+            garde = self._garde(cle)
+            for borne in garde.bornes:
+                with self.subTest(cle=cle, seuil=borne.seuil):
+                    message = borne.message.lower()
+                    for interdit in interdits:
+                        if interdit not in message:
+                            continue
+                        # La négation l'emporte : « pas une probabilité d'emploi »
+                        # est exactement la phrase qu'on veut lire.
+                        avant_le_mot = message.split(interdit, 1)[0]
+                        self.assertRegex(avant_le_mot, r"pas (une|de)|non calibr|jamais",
+                                         f"un message de seuil promet une {interdit}")
+                    if "probabilité" in message:
+                        self.assertRegex(message, r"pas une probabilité|non calibr",
+                                         "un message parle de probabilité sans dire "
+                                         "qu'elle ne s'applique pas")
 
 
 class TestStructureDesGardeFous(unittest.TestCase):
