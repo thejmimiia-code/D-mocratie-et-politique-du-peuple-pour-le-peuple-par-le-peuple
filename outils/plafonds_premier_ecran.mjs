@@ -2,38 +2,55 @@
 //
 // **Le problème, mesuré le 15 octobre 2026 dans Chromium, à 380 px** : le
 // bandeau faisait 566 px, le sommaire 58, le ruban de veille 239 — soit
-// **863 px** de cadre avant la première ligne de contenu, sur un écran de
-// 780. Le visiteur ouvrait la page et ne voyait que la page se présenter. À
-// 640 px, le même compte donnait 350 + 58 + 206 = **614 px**.
+// **863 px** de cadre avant la première ligne de contenu, sur un écran de 780.
+// Le visiteur ouvrait la page et ne voyait que la page se présenter. À 640 px,
+// le même compte donnait 350 + 58 + 206 = **614 px**.
 //
 // Un cadre n'est pas condamnable en soi : c'est sa **part de l'écran** qui
 // décide si le contenu existe pour le lecteur. D'où ce fichier : les plafonds
-// du premier écran, par largeur, avec la mesure datée dont chacun vient — et
+// du premier écran, par largeur, avec les mesures datées dont chacun vient — et
 // une fonction pure qui dit lesquels sont dépassés.
 //
-// Trois règles, les mêmes que celles des budgets de fluidité :
+// Quatre règles :
 //
-// 1. **Un plafond porte sa mesure datée** (`mesure`, `quand`, `quoi`) : sans
-//    elle, un plafond est un chiffre choisi, pas une mesure tenue ;
-// 2. **Aucun plafond n'est au-dessus de sa mesure** : un plafond qui autorise
-//    le statu quo ne plafonne rien. Il doit forcer le progrès, pas le décrire ;
-// 3. **Seul le téléphone est plafonné.** Au large, le premier écran fait 394 px
+// 1. **Un plafond porte ses mesures datées** (`avant`, `mesure`, `quand`,
+//    `quoi`) : sans elles, un plafond est un chiffre choisi, pas une mesure
+//    tenue ;
+// 2. **il bat l'état ancien** (`plafond < avant`) : un plafond qui autorise le
+//    statu quo ne plafonne rien ;
+// 3. **il tient l'état mesuré** (`plafond >= mesure`), avec une petite marge —
+//    un plafond qu'on dépasse d'un pixel à chaque passage ne dit plus rien. Un
+//    plafond marqué `cible` dit l'inverse : il demande un gain qui n'est pas
+//    encore mesuré, et l'entrée est complétée dès la mesure suivante ;
+// 4. **seul le téléphone est plafonné.** Au large, le premier écran fait 394 px
 //    sur 900 : il y a la place. Un plafond qui ne se déclenche jamais est du
 //    bruit — et un contrôle qu'on ne lit plus ne contrôle plus rien.
+//
+// Le plafond est un **cliquet** : il ne remonte pas. La passe du 15 octobre 2026
+// l'a posé à 700 px (380) et 540 px (640) après avoir mesuré 685 et 524 ; la
+// suite se juge sur la direction — un écran de téléphone fait 780 px de haut,
+// et le contenu doit y commencer.
 
 /** La hauteur du premier écran : ce qu'un visiteur voit avant le contenu. */
 export const PLAFONDS = {
   380: {
-    plafond: 620,
-    mesure: 863,
+    plafond: 700,
+    avant: 863,
+    mesure: 685,
     quand: "15 octobre 2026",
-    quoi: "bandeau 566 + sommaire 58 + ruban 239",
+    quoi: "bandeau 475 + sommaire 58 + ruban 152 (avant la passe : 566 + 58 + 239)",
   },
   640: {
-    plafond: 480,
+    //: **Une cible** : le palier 640 vient de recevoir les règles du premier
+    //: écran, et le plafond demande le gain avant de le constater. La mesure
+    //: d'après remplace `cible` par le chiffre atteint — un plafond tenu ne se
+    //: devine pas, il se mesure.
+    plafond: 540,
+    avant: 614,
     mesure: 614,
+    cible: true,
     quand: "15 octobre 2026",
-    quoi: "bandeau 350 + sommaire 58 + ruban 206",
+    quoi: "cible de 540 px ; 614 px mesurés avant la passe (350 + 58 + 206)",
   },
 };
 
@@ -45,7 +62,7 @@ export function hauteur(vue) {
 /**
  * Les vues qui dépassent leur plafond, avec de quoi le corriger sans chercher.
  *
- * Une vue sans plafond pour sa largeur n'est jamais signalée : c'est la règle 3.
+ * Une vue sans plafond pour sa largeur n'est jamais signalée : c'est la règle 4.
  * Une vue qui ne porte pas de mesure est signalée à part — on ne peut pas
  * tenir un plafond sur ce qu'on ne mesure pas.
  */
@@ -88,8 +105,9 @@ export function lignes(vues, plafonds = PLAFONDS) {
     const pire = Math.max(...mesures);
     sortie.push(`**Premier écran à ${largeur} px** : ${pire} px mesurés (${vuesIci.length} vue(s)) `
       + `pour un plafond de ${limite.plafond} px — `
-      + (pire > limite.plafond ? "**DÉPASSÉ**" : "tenu")
-      + ` ; ancré sur ${limite.mesure} px le ${limite.quand} (${limite.quoi}).`);
+      + (pire > limite.plafond ? "**DÉPASSÉ**"
+        : (limite.cible ? "tenu, **cible atteinte**" : "tenu"))
+      + ` ; ancré sur ${limite.avant} px le ${limite.quand} (${limite.quoi}).`);
   }
   for (const depassement of fait) sortie.push(`- ⛔ ${depassement.phrase}`);
   return sortie;

@@ -69,9 +69,14 @@ jobs:
           retention-days: 30
 
       - name: Résumer la mesure dans le rapport du travail
-        run: cat captures/resume.md >> "$GITHUB_STEP_SUMMARY"
+        # Même quand la photographie a échoué : c'est justement là qu'on veut
+        # lire les chiffres — un plafond dépassé sans la mesure qui l'a dépassé
+        # oblige à relancer pour savoir de combien.
+        if: always()
+        run: test -s captures/resume.md && cat captures/resume.md >> "$GITHUB_STEP_SUMMARY" || true
 
       - name: Publier le résumé sur la demande de fusion
+        if: always()
         # Seule surface lisible sans navigateur : les images vivent dans
         # l'artefact (que l'humain ouvre), le résumé chiffré vit ici — et la
         # demande de fusion le relit à chaque poussée.
@@ -79,6 +84,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ ! -s captures/resume.md ]; then echo "Résumé absent" ; exit 0 ; fi
+          cat captures/resume.md | head -5 > /dev/null
           demande=$(gh pr list --head "$GITHUB_REF_NAME" --json number --jq '.[0].number' || true)
           if [ -z "$demande" ]; then echo "Aucune demande de fusion pour cette branche" ; exit 0 ; fi
           marqueur="<!-- captures-ecran -->"

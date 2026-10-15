@@ -1079,8 +1079,28 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 @media(max-width:640px){body{padding:10px}header.entete h1{font-size:1.15rem}
   /* Le bandeau d'un téléphone occupait 576 px, dont 41 px de marges intérieures
      pour 35 px de boutons. Les écarts entre ses blocs se resserrent — le texte,
-     lui, garde son corps et son interligne. Le rembourrage, lui, suit l'écran
-     (`clamp` plus bas) : une seule règle, pas deux qui se contredisent. */
+     lui, garde son corps. Le rembourrage, lui, suit l'écran (`clamp` plus bas) :
+     une seule règle, pas deux qui se contredisent.
+     Mesuré le 15 octobre 2026, à 380 px : le bandeau faisait encore 566 px, dont
+     un titre de quatre lignes (96 px) et une ligne d'état de cinq rangées
+     (184 px) — 863 px de cadre avant la première ligne de contenu, pour un écran
+     de 780. Ce sont ces deux-là qui cèdent, et eux seuls : l'interligne du titre
+     et de la phrase (le corps ne change pas — on ne rétrécit pas la lecture pour
+     gagner de la place), la ligne d'état dont les pastilles se rapprochent, et
+     l'horizon qui se dit **une fois** — le select juste à côté le porte, la
+     pastille le répétait sur une rangée entière, depuis la même variable.
+     Les quatre commandes, elles, se rangent en deux colonnes : trois rangées
+     dont une trouée coûtaient 41 px pour un seul bouton. */
+  header.entete h1{line-height:1.2}
+  header.entete .accroche{line-height:1.4}
+  header.entete .barre-contexte{display:grid;gap:var(--gap-barre);
+    grid-template-columns:repeat(2,minmax(0,1fr))}
+  header.entete .barre-contexte>*{width:100%}
+  header.entete .barre-contexte button,header.entete .barre-contexte summary{
+    justify-content:center;text-align:center}
+  header.entete .etat-contexte{gap:4px}
+  header.entete .etat-contexte .pastille{padding:2px 7px}
+  #badge-horizon{display:none}
   header.entete h1,header.entete .accroche,header.entete .etat-contexte,
   header.entete .barre-contexte{margin-top:6px}
   .ruban-veille{position:static}.console-corps{grid-template-columns:1fr}
@@ -1272,34 +1292,11 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .resume .metric .valeur{font-size:1.2rem}
   .pastille{white-space:normal}
   .tableau-defilant table{font-size:max(var(--t-min),.76rem)}
-  /* ── Le premier écran : le contenu doit y exister ──────────────────────
-     Mesuré dans Chromium le 15 octobre 2026, à 380 px : bandeau 566 px,
-     sommaire 58, ruban 239 — **863 px** de cadre avant la première ligne de
-     contenu, pour un écran de 780. Le visiteur ouvrait la page et ne voyait
-     que la page se présenter. Rien n'est retiré ici : le titre se resserre (il
-     tenait en trois lignes de 32 px), la phrase d'accroche aussi, les quatre
-     commandes se rangent en deux colonnes au lieu de trois rangées dont une
-     trouée, les pastilles se rapprochent, et l'horizon se dit **une fois** — le
-     select le porte, la pastille le répétait sur une rangée entière. Le corps
-     du texte, lui, ne descend jamais sous --t-min : c'est la mise en page qui
-     se resserre, pas la lecture qui rétrécit. */
+  /* Un téléphone ne garde que ce qui lui est propre : le rembourrage du
+     bandeau, qui suit l'écran. Le reste — le titre, la phrase, les pastilles,
+     les quatre commandes, l'horizon — vit au palier 640, où il vaut pour les
+     deux largeurs. */
   header.entete{padding:var(--e-2) var(--e-3)}
-  /* La lecture ne rétrécit pas : le titre et la phrase gardent le corps du
-     palier 640. C'est l'interligne qui se resserre — un titre de quatre lignes
-     respirait 1,3 ligne par ligne de texte. */
-  header.entete h1{line-height:1.2}
-  header.entete .accroche{line-height:1.4}
-  header.entete .barre-contexte{display:grid;gap:var(--gap-barre);
-    grid-template-columns:repeat(2,minmax(0,1fr))}
-  header.entete .barre-contexte>*{width:100%}
-  header.entete .barre-contexte button,header.entete .barre-contexte summary{
-    justify-content:center;text-align:center}
-  header.entete .etat-contexte{gap:4px}
-  header.entete .etat-contexte .pastille{padding:2px 7px}
-  /* « une mandature · 5 ans » dit exactement ce que le select juste à côté
-     affiche, et les deux sont écrits par la même variable (`changerHorizon`).
-     Sur 340 px de large, la répétition coûte une rangée entière. */
-  #badge-horizon{display:none}
 }
 /* ── Le ruban de veille, en carte, sur un écran étroit ────────────────────
    Il n'est plus collant : plus de course avec le sommaire. Il se lit alors
@@ -1307,34 +1304,26 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
    à être tronqué, c'est lui qui porte le message), puis les quatre commandes
    en deux colonnes égales, chacune assez haute pour le doigt. */
 @media screen and (max-width:640px){
-  .ruban-veille{padding:9px 11px;gap:7px;align-items:flex-start}
-  .ruban-veille .ruban-titre{width:100%}
-  .ruban-veille .console-verdict{max-width:100%;flex:1 1 100%;white-space:normal;
+  /* Le ruban devient une carte : titre et verdict d'abord — quand le verdict
+     est court il partage la rangée du titre, quand il est long il prend la
+     largeur —, puis les quatre commandes sur **une** rangée. Deux rangées de
+     deux coûtaient 51 px de haut pour 44 px de boutons.
+     Mesuré le 15 octobre 2026 : 239 px → 152 px à 380, 206 px → 152 px à 640.
+     Le libellé court remplace le long, qui n'aurait pas tenu dans 80 px de
+     large ; le nom accessible ne change pas (`aria-label`), et le libellé long
+     reste dans le document. La cible du doigt, elle, ne bouge pas : 44 px. */
+  .ruban-veille{padding:7px 9px;gap:6px;align-items:flex-start}
+  .ruban-veille .ruban-titre{width:auto}
+  .ruban-veille .console-verdict{max-width:100%;flex:1 1 auto;white-space:normal;
     overflow:visible;text-overflow:clip;padding:3px 0}
   .ruban-pop{flex:1 1 auto}
   .ruban-veille .ruban-actions{margin-left:0;width:100%;display:grid;
-    grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
-  .ruban-veille .ruban-actions button{width:100%;min-height:44px;padding:8px 6px;
-    white-space:normal;line-height:1.2}
-}
-@media screen and (max-width:480px){
-  /* Le ruban d'un téléphone : la même carte, l'air en moins. Les commandes
-     gardent leurs 44 px — c'est la cible du doigt, pas du décor —, et les
-     quatre tiennent sur **une** rangée : deux rangées coûtaient 51 px de haut
-     pour 44 px de boutons. Le libellé court remplace le long, qui n'aurait pas
-     tenu dans 80 px de large ; le nom accessible, lui, ne change pas
-     (`aria-label`), et le libellé long reste dans le document. */
-  .ruban-veille{padding:7px 9px;gap:6px}
-  .ruban-veille .ruban-actions{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
-  .ruban-veille .ruban-actions button{padding:6px 2px;line-height:1.1}
-  /* Le titre et le verdict partagent leur rangée quand le verdict est court ;
-     quand il est long, il passe à la ligne — comme avant, sans rien perdre. */
-  .ruban-veille .ruban-titre{width:auto}
-  .ruban-veille .console-verdict{flex:1 1 auto}
+    grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .ruban-veille .ruban-actions button{width:100%;min-height:44px;padding:6px 2px;
+    white-space:normal;line-height:1.1}
   .ruban-veille .mot-long{display:none}
   .ruban-veille .mot-court{display:inline}
-}
-/* ── Le même tableau, en cartes, sur un écran étroit ──────────────────────
+}/* ── Le même tableau, en cartes, sur un écran étroit ──────────────────────
    Neuf colonnes ne se lisent pas dans 360 px : on fait glisser la ligne, et
    l'en-tête a disparu depuis longtemps. La ligne devient donc une carte, et
    chaque valeur porte le nom de sa colonne (`data-label`, écrit par

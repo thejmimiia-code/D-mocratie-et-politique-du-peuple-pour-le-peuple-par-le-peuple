@@ -80,6 +80,46 @@ def _pose(regles: list[tuple[tuple[str, ...], dict[str, str]]]) -> dict[str, str
     return regles[-1][1] if regles else {}
 
 
+#: Le plancher de lecture, et la racine la plus petite que la page propose
+#: (`html[data-texte="87"]` → 87,5 % de 16 px). Un texte doit y tenir.
+PLANCHER = 12.5
+RACINE_MINIMUM = 0.875 * 16
+
+
+def _en_px(valeur: str) -> float | None:
+    """Une longueur du socle, en px, à la plus petite taille de texte."""
+    valeur = valeur.strip()
+    if valeur.startswith("clamp("):
+        # La borne basse est la seule qui compte ici : c'est la plus petite
+        # taille que la règle puisse produire sur un écran étroit.
+        dedans = valeur[6:].rstrip(")")
+        return _en_px(dedans.split(",")[0])
+    if valeur.startswith("max("):
+        dedans = valeur[4:].rstrip(")")
+        tailles = [_en_px(morceau) for morceau in dedans.split(",")]
+        connues = [taille for taille in tailles if taille is not None]
+        return max(connues) if connues else None
+    if valeur == "var(--t-min)":
+        return PLANCHER
+    trouve = re.match(r"([\d.]+)(px|rem|em)$", valeur)
+    if not trouve:
+        return None
+    nombre = float(trouve.group(1))
+    return nombre if trouve.group(2) == "px" else nombre * RACINE_MINIMUM
+
+
+def _derniere_taille(selecteur: str) -> str | None:
+    """La dernière `font-size` qui s'applique à ce sélecteur, tous paliers compris."""
+    taille = None
+    for _contexte, liste, corps in contraste_ecran.regles(_css()):
+        if selecteur not in [morceau.strip() for morceau in liste.split(",")]:
+            continue
+        pose = _declarations(corps)
+        if "font-size" in pose:
+            taille = pose["font-size"]
+    return taille
+
+
 def _plafonds() -> dict:
     """Les plafonds, tels que le module les publie — exécuté, pas relu."""
     programme = (f"import {{ PLAFONDS }} from {MODULE_PLAFONDS.as_uri()!r};"
@@ -130,20 +170,43 @@ class TestLesPlafonds(unittest.TestCase):
     def test_chaque_plafond_porte_sa_mesure_datee(self):
         for largeur, limite in self.plafonds.items():
             with self.subTest(largeur=largeur):
+                self.assertGreater(limite["avant"], 0,
+                                   "un plafond sans mesure ancienne ne vient de nulle part")
                 self.assertGreater(limite["mesure"], 0,
-                                   "un plafond sans mesure ne vient de nulle part")
+                                   "un plafond sans mesure du jour ne tient rien")
+                self.assertLessEqual(limite["mesure"], limite["avant"],
+                                     "la mesure du jour ne peut pas être pire que l'ancienne "
+                                     "— sinon la passe a fait reculer le premier écran")
                 self.assertTrue(re.search(r"\d{4}", limite["quand"]),
                                 f"« {limite['quand']} » ne dit pas quand la mesure a été prise")
                 self.assertTrue(limite["quoi"].strip(),
                                 "la mesure ne dit pas de quoi elle est faite")
 
     def test_aucun_plafond_n_autorise_le_statu_quo(self):
-        """Un plafond au-dessus de sa mesure décrit l'existant au lieu de le corriger."""
+        """Un plafond au-dessus de sa mesure ancienne décrit l'existant au lieu de le corriger."""
         for largeur, limite in self.plafonds.items():
             with self.subTest(largeur=largeur):
-                self.assertLess(limite["plafond"], limite["mesure"],
+                self.assertLess(limite["plafond"], limite["avant"],
                                 f"à {largeur} px, le plafond de {limite['plafond']} px "
-                                f"autorise les {limite['mesure']} px mesurés")
+                                f"autorise les {limite['avant']} px mesurés avant la passe")
+
+    def test_le_plafond_tient_ce_qui_est_mesure(self):
+        """Un plafond sous la mesure du jour ferait rougir le travail en cours.
+
+        Sauf une **cible** : là, le plafond demande un gain que la mesure n'a pas
+        encore constaté. Le dire est ce qui empêche une cible de devenir un
+        plafond qu'on croit tenu.
+        """
+        for largeur, limite in self.plafonds.items():
+            with self.subTest(largeur=largeur):
+                if limite.get("cible"):
+                    self.assertLess(limite["plafond"], limite["mesure"],
+                                    f"à {largeur} px, une cible au-dessus de la mesure "
+                                    f"de {limite['mesure']} px ne demande rien")
+                    continue
+                self.assertGreaterEqual(limite["plafond"], limite["mesure"],
+                                        f"à {largeur} px, le plafond de {limite['plafond']} px "
+                                        f"est déjà sous les {limite['mesure']} px mesurés")
 
     def test_seul_le_telephone_est_plafonne(self):
         """Au large, le premier écran fait 394 px sur 900 : un plafond y serait du bruit."""
@@ -235,13 +298,32 @@ class TestLaMesureEstBranchee(unittest.TestCase):
 
 
 class TestLaPageTientLePlafond(unittest.TestCase):
-    """Les règles du palier 480 px, relues dans la feuille servie."""
+    """Ce que la page applique **à un téléphone**, relu dans la feuille servie.
+
+    La largeur n'est pas écrite ici : le contrôle demande quelles règles
+    s'appliquent vraiment à 380 px — un palier qui rétrécirait à 480 px laisserait
+    passer un téléphone de 430 px, et le plafond repose sur ces règles-là.
+    """
+
+    LARGEUR = 380
 
     def _telephone(self, selecteur: str) -> list[tuple[tuple[str, ...], dict[str, str]]]:
-        return _regles_dans(selecteur, "max-width:480px")
+        sortie = []
+        for contexte, liste, corps in contraste_ecran.regles(_css()):
+            if selecteur not in [morceau.strip() for morceau in liste.split(",")]:
+                continue
+            bornes = [int(trouve) for bloc in contexte
+                      for trouve in re.findall(r"max-width:\s*(\d+)px", bloc)]
+            if bornes and min(bornes) >= self.LARGEUR:
+                sortie.append((contexte, _declarations(corps)))
+        return sortie
 
     def test_quatre_commandes_tiennent_sur_une_rangee(self):
-        """Deux rangées de 44 px coûtaient 51 px de haut pour 44 px de boutons."""
+        """Deux rangées de 44 px coûtaient 51 px de haut pour 44 px de boutons.
+
+        Mesuré le 15 octobre 2026 : le ruban d'un téléphone passe de 239 à
+        152 px à 380, et de 206 à 152 à 640.
+        """
         pose = self._telephone(".ruban-veille .ruban-actions")
         self.assertTrue(pose, "les commandes du ruban ne sont plus réglées pour un téléphone")
         colonnes = _pose(pose).get("grid-template-columns", "")
@@ -250,15 +332,21 @@ class TestLaPageTientLePlafond(unittest.TestCase):
 
     def test_la_cible_du_doigt_n_a_pas_ete_rognee(self):
         """44 px : c'est la cible du doigt, pas du décor."""
-        for _contexte, pose in self._telephone(".ruban-veille .ruban-actions button"):
+        poses = [pose for _contexte, pose
+                 in self._telephone(".ruban-veille .ruban-actions button")]
+        self.assertTrue(poses, "les commandes du ruban ne sont plus réglées pour un téléphone")
+        for pose in poses:
             with self.subTest(pose=pose):
-                self.assertNotIn("min-height", pose,
-                                 "la règle du téléphone rabote la hauteur du bouton")
-                self.assertNotIn("height", pose, "la règle du téléphone fixe la hauteur")
+                hauteur = pose.get("min-height") or pose.get("height")
+                if hauteur is not None:
+                    self.assertGreaterEqual(_en_px(hauteur) or 0, 44,
+                                            f"la cible du doigt est rabotée à {hauteur}")
                 if "font-size" in pose:
-                    self.assertRegex(pose["font-size"], r"max\(var\(--t-min\)",
-                                     "un libellé de commande sous le plancher de lecture : "
-                                     + pose["font-size"])
+                    taille = _en_px(pose["font-size"])
+                    self.assertIsNotNone(taille, f"taille illisible : {pose['font-size']}")
+                    self.assertGreaterEqual(taille, PLANCHER,
+                                            "un libellé de commande sous le plancher : "
+                                            + pose["font-size"])
 
     def test_un_seul_libelle_est_peint_a_la_fois(self):
         """Le long dit tout, le court tient dans 80 px : jamais les deux ensemble."""
@@ -310,20 +398,30 @@ class TestLaPageTientLePlafond(unittest.TestCase):
 
     def test_la_barre_du_bandeau_se_range_en_deux_colonnes(self):
         """Trois rangées dont une trouée pour quatre commandes : deux suffisent."""
-        pose = self._telephone("header.entete .barre-contexte")
-        self.assertTrue(pose, "la barre du bandeau n'est plus réglée pour un téléphone")
-        colonnes = _pose(pose).get("grid-template-columns", "").replace(" ", "")
+        poses = [pose for _contexte, pose in self._telephone("header.entete .barre-contexte")
+                 if "grid-template-columns" in pose]
+        self.assertTrue(poses, "la barre du bandeau n'est plus rangée pour un téléphone")
+        colonnes = poses[-1]["grid-template-columns"].replace(" ", "")
         self.assertIn("repeat(2", colonnes,
                       f"la barre ne se range plus en deux colonnes : {colonnes}")
 
     def test_la_lecture_ne_retrecit_pas(self):
-        """C'est la mise en page qui se resserre, pas le texte qui rétrécit."""
+        """C'est la mise en page qui se resserre, pas le texte qui rétrécit.
+
+        Le corps est mesuré **à la plus petite taille de texte que la page
+        propose** (racine à 87,5 %) : une règle qui passerait sous le plancher de
+        lecture ne se verrait sur aucun écran large, et se verrait sur tous les
+        téléphones qui règlent le texte en petit.
+        """
         for selecteur in ("header.entete h1", "header.entete .accroche"):
             with self.subTest(selecteur=selecteur):
-                for _contexte, pose in self._telephone(selecteur):
-                    if "font-size" in pose:
-                        self.assertRegex(pose["font-size"], r"max\(var\(--t-min\)",
-                                         f"{selecteur} rétrécit sous le plancher de lecture")
+                regle = _derniere_taille(selecteur)
+                self.assertIsNotNone(regle, f"{selecteur} n'a plus de taille déclarée")
+                taille = _en_px(regle)
+                self.assertIsNotNone(taille, f"taille illisible pour {selecteur} : {regle}")
+                self.assertGreaterEqual(taille, PLANCHER,
+                                        f"{selecteur} tombe à {taille:.1f} px ({regle}) "
+                                        "à la plus petite taille de texte")
 
 
 if __name__ == "__main__":

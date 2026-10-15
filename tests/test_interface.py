@@ -1527,11 +1527,21 @@ class TestLaBarreDeCommande(unittest.TestCase):
                          "appelée avec le diagnostic, et sans lui quand il n'y en a pas")
 
     def test_le_ruban_devient_une_carte_lisible_sur_un_telephone(self):
+        """Quatre commandes sur une rangée, quatre cibles au doigt de 44 px.
+
+        Mesuré le 15 octobre 2026 : deux rangées de deux coûtaient 51 px de haut
+        pour 44 px de boutons, et le ruban faisait 239 px à 380, 206 à 640. Sur
+        une rangée, avec les libellés courts, il en fait 152 aux deux largeurs.
+        """
         bloc = self._regle("max-width:640px", ".ruban-veille .ruban-actions{")
-        self.assertIn("grid-template-columns:repeat(2,minmax(0,1fr))", bloc)
+        self.assertIn("grid-template-columns:repeat(4,minmax(0,1fr))", bloc)
         self.assertIn("min-height:44px", bloc, "quatre commandes, quatre cibles au doigt")
         self.assertIn("white-space:normal", bloc,
                       "le verdict porte le message : il ne se tronque plus")
+        self.assertIn(".ruban-veille .mot-court{display:inline}", bloc,
+                      "les libellés courts ne s'affichent plus sur un téléphone")
+        self.assertIn(".ruban-veille .mot-long{display:none}", bloc,
+                      "le libellé long reste peint : il ne tiendrait pas dans 80 px")
 
     def test_la_pastille_ne_s_imprime_pas(self):
         zones = [contenu for nom, contenu, _ in self.blocs if "print" in nom]
