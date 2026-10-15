@@ -70,8 +70,11 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # `|| true` : ce rendez-vous frappe à la porte avant tout le reste, et
+          # une lecture d'état ratée ne doit pas l'empêcher de le faire.
           numero=$(gh issue list --state all --search "in:title \"$PAGE\"" \
-            --json number,title --jq '.[] | select(.title == "'"$PAGE"'") | .number' | head -1)
+            --json number,title --jq '.[] | select(.title == "'"$PAGE"'") | .number' \
+            | head -1 || true)
           echo "numero=$numero" >> "$GITHUB_OUTPUT"
           marqueur=""
           if [ -n "$numero" ]; then
@@ -83,15 +86,24 @@ jobs:
 
       - name: Frapper à la porte
         id: visite
-        continue-on-error: true
         run: |
+          # `set +e` : GitHub exécute chaque `run:` avec `bash -e`, et un script
+          # qui s'arrête à la ligne du ping n'écrirait **jamais** ses sorties —
+          # donc aucune publication de la panne, c'est-à-dire précisément le cas
+          # pour lequel ce rendez-vous existe. Trouvé en essayant de lire l'état
+          # depuis la ligne de commande, le 15 octobre 2026.
+          set +e
           python3 outils/garde-veille.py --ping --essais 3 --attente 10 \
             --etat-precedent "${{ steps.etat.outputs.precedent }}" \
             --rapport /tmp/garde.md > /tmp/garde.txt
           code=$?
-          grep -E '^(etat|publier)=' /tmp/garde.txt >> "$GITHUB_OUTPUT" || true
-          cat /tmp/garde.md
-          exit $code
+          set -e
+          cat /tmp/garde.txt || true
+          etat=$(grep -E '^etat=' /tmp/garde.txt | cut -d= -f2)
+          publier=$(grep -E '^publier=' /tmp/garde.txt | cut -d= -f2)
+          echo "etat=${etat:-inconnu}" >> "$GITHUB_OUTPUT"
+          echo "publier=${publier:-non}" >> "$GITHUB_OUTPUT"
+          echo "code de sortie du garde-veille : $code (1 = la copie de secours n'a pas répondu)"
 
       - name: Publier seulement un changement d'état
         if: always() && steps.visite.outputs.publier == 'oui'
@@ -124,7 +136,7 @@ jobs:
             -f body="$corps" > /dev/null
           echo "État « ${{ steps.visite.outputs.etat }} » publié sur la page #$numero"
 
-      - name: Conclure
+      - name: "Conclure — ${{ steps.visite.outputs.etat }}"
         if: always()
         run: |
           # Le rendez-vous ne fait pas rougir le dépôt pour un service d'appoint :

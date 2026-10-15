@@ -285,9 +285,37 @@ class TestIlNeParleQueQuandCaChange(unittest.TestCase):
     def test_l_etat_est_lisible_par_une_machine(self):
         """Le workflow ne prend aucune décision : il lit `publier=oui|non`."""
         texte = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn('grep -E \'^(etat|publier)=\' /tmp/garde.txt', texte)
+        self.assertIn('grep -E \'^etat=\' /tmp/garde.txt', texte)
+        self.assertIn('echo "etat=${etat:-inconnu}"', texte,
+                      "un garde-veille muet laisserait l'état vide")
         self.assertIn("steps.visite.outputs.publier == 'oui'", texte,
                       "le workflow publierait à chaque passage")
+
+    def test_l_etape_du_ping_ne_s_arrete_pas_avant_d_ecrire_ses_sorties(self):
+        """`run:` est exécuté avec `bash -e` : un ping raté avorterait le script.
+
+        Et l'avortement aurait lieu **avant** l'écriture des sorties — donc au
+        moment précis où il faut publier (l'hôte ne répond pas), rien ne serait
+        publié. `set +e` est la ligne qui empêche cela.
+        """
+        texte = WORKFLOW.read_text(encoding="utf-8")
+        bloc = texte[texte.index("id: visite"):texte.index("Publier seulement")]
+        # **Commentaires retirés** avant de juger : le commentaire qui explique
+        # `set +e` contient ces quatre caractères, et le contrôle lisait donc sa
+        # propre explication au lieu du code — il avalait son sabotage.
+        bloc = "\n".join(ligne for ligne in bloc.splitlines()
+                         if not ligne.strip().startswith("#"))
+        self.assertIn("set +e", bloc, "le ping peut avorter avant d'écrire son état")
+        self.assertNotIn("exit $code", bloc, "un code de sortie ferait rougir le dépôt")
+        self.assertLess(bloc.index("set +e"), bloc.index("garde-veille.py --ping"),
+                        "`set +e` doit précéder l'appel, pas le suivre")
+        self.assertLess(bloc.index("garde-veille.py --ping"), bloc.index("GITHUB_OUTPUT"),
+                        "les sorties doivent être écrites **après** le ping")
+
+    def test_l_etat_est_dans_le_nom_de_l_etape(self):
+        """Le journal d'un run ne se télécharge pas : le nom de l'étape, si."""
+        self.assertIn('name: "Conclure — ${{ steps.visite.outputs.etat }}"',
+                      WORKFLOW.read_text(encoding="utf-8"))
 
 
 class TestLeRendezVous(unittest.TestCase):
@@ -307,10 +335,19 @@ class TestLeRendezVous(unittest.TestCase):
         self.assertIn("issues: write", self.texte)
 
     def test_il_ne_fait_pas_rougir_le_depot_pour_un_service_d_appoint(self):
-        """Un rendez-vous toutes les dix minutes ne doit pas crier à chaque fois."""
-        self.assertNotIn("exit 1\n", self.texte.replace("exit 1\r", ""))
-        self.assertIn("continue-on-error: true", self.texte)
-        self.assertNotIn("grep -qE '^\\| ✗ canonique '", self.texte,
+        """Un rendez-vous toutes les dix minutes ne doit pas crier à chaque fois.
+
+        Le code de sortie du garde-veille est **dit**, jamais propagé : un dépôt
+        rouge toutes les dix minutes pour un service d'appoint serait un dépôt
+        qu'on cesse de regarder. C'est la veille hebdomadaire qui juge — et
+        seulement l'adresse canonique.
+        """
+        bloc = self.texte[self.texte.index("id: visite"):self.texte.index("Publier seulement")]
+        self.assertNotIn("exit 1", bloc)
+        self.assertNotIn("exit $code", bloc)
+        self.assertIn("code de sortie du garde-veille", bloc,
+                      "le code doit être dit, pas propagé")
+        self.assertNotIn("✗ canonique", self.texte,
                          "le garde-veille n'est pas juge de l'adresse canonique")
 
     def test_il_n_ecrit_rien_dans_le_depot(self):
