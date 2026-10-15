@@ -291,28 +291,44 @@ cesse d'être lue, et une veille qu'on ne lit plus ne sert à rien.
 
 Constater la panne ne suffit pas : mieux vaut qu'elle n'arrive pas.
 [`.github/workflows/garde-veille.yml`](../.github/workflows/garde-veille.yml)
-visite la copie de secours **toutes les dix minutes**, pendant les heures où
-l'on consulte le site — 108 visites par jour, chacune étant un seul appel à
-`/api/lexique` (la même adresse que la sonde de disponibilité de `render.yaml` :
-une route JSON qui ne calcule rien). Le service n'a plus le temps de s'endormir,
-donc le visiteur n'attend plus trente secondes, et il ne tombe plus sur un 502.
+visite la copie de secours pendant les heures où l'on consulte le site, chacune
+de ses visites étant un seul appel à `/api/lexique` (la même adresse que la sonde
+de disponibilité de `render.yaml` : une route JSON qui ne calcule rien). Le
+service n'a plus le temps de s'endormir, donc le visiteur n'attend plus trente
+secondes, et il ne tombe plus sur un 502.
 
-**Six visites par heure, à `:04`, `:14`, `:24`, …** — jamais à l'heure pleine :
-GitHub prévient que la charge de ses coureurs est **maximale au début de chaque
-heure**, et que les passages programmés y sont retardés. Le décalage ne change
-rien à ce que la fenêtre couvre (108 visites par jour), il change seulement le
-moment où l'on demande.
+**Ce qui déclenche ces visites, par ordre de fiabilité *mesurée* :**
 
-**Toute poussée le déclenche aussi** — une fusion comprise. Ce n'est pas du
-confort : le 15 octobre 2026, une heure après la fusion, le calendrier de GitHub
-n'avait livré **aucun** passage (un rendez-vous neuf met du temps à s'enregistrer,
-et GitHub le retarde sous charge). Le réveil ne repose donc pas sur un seul
-mécanisme : chaque poussée en est un second, immédiat. Et comme le garde-veille
+| Déclencheur | État | Ce qu'on en sait |
+|---|---|---|
+| **Une poussée** (fusion comprise) | ✅ **vérifié** | cinq passages, tous « Conclure — **ok** » : la copie de secours a répondu son lexique, depuis un coureur |
+| **Le calendrier** `4,14,24,34,44,54 5-22 * * *` | ⚠️ **configuré, jamais livré** | voir la mesure ci-dessous |
+| **Un pinger externe** (UptimeRobot, cron-job.org) | ➕ **recommandé** | indépendant de GitHub : voir « Une seconde porte » |
+
+**Ce que le calendrier a fait, mesuré le 15 octobre 2026** : rien.
+Le workflow est `active`, il vit sur la branche par défaut d'un dépôt **public,
+actif, non archivé, non désactivé**, poussé le jour même — et **quatre-vingt-cinq
+minutes** après sa fusion, puis de nouveau **vingt-deux minutes** après la pose
+d'un témoin à cinq minutes de pas
+([`.github/workflows/calendrier-temoin.yml`](../.github/workflows/calendrier-temoin.yml),
+posé puis retiré), le dépôt comptait **zéro** passage `schedule` :
+
+```bash
+gh api "repos/<propriétaire>/<dépôt>/actions/runs?event=schedule" --jq '.total_count'   # 0
+```
+
+Un rendez-vous neuf met du temps à s'enregistrer, c'est entendu — mais **on ne
+promet pas un réveil qui n'arrive pas**. La garantie, aujourd'hui, ce sont les
+poussées et le pinger externe ; le calendrier reste en place, et s'il se met à
+livrer, tant mieux.
+
+**Toute poussée le déclenche** — une fusion comprise. Et comme le garde-veille
 ne publie que lorsqu'un état change, une visite de plus ne fait aucun bruit.
 
 **La fenêtre est calculée, pas choisie au hasard.** Le calendrier de GitHub
-s'exprime en **temps universel** — `*/10 5-22 * * *` couvre 6 h → 23 h à Paris
-en hiver, 7 h → minuit en été. La nuit, le service dort : c'est le comportement
+s'exprime en **temps universel** — `5-22` couvre 6 h → 23 h à Paris en hiver,
+7 h → minuit en été —, et ses six visites horaires partent de `:04`, jamais de
+l'heure pleine, l'instant de pointe de GitHub Actions. La nuit, le service dort : c'est le comportement
 normal du palier gratuit, et c'est ce qui garde la consommation sous les
 **750 heures offertes par mois** (environ 556 h estimées, marge de 15 %). Ce
 n'est pas de l'avarice : un dépassement ne facture pas, il **suspend** les
@@ -336,19 +352,24 @@ coupe. Sa page est distincte de celle de la veille hebdomadaire :
   facturation en échec : il faut le tableau de bord ou le crochet de déploiement.
 - **Remplacer la veille.** Il regarde un chemin (`/api/lexique`) ; la veille
   regarde soixante-huit (page, robots, sitemap, images, vingt-deux routes).
-- **Garantir la seconde près.** Le calendrier de GitHub est *au mieux* : un
-  passage peut être retardé de quelques minutes aux heures chargées — d'où une
-  visite toutes les dix minutes, et non toutes les quinze.
+- **Garantir la seconde près.** Un calendrier GitHub est *au mieux* — et ici, le
+  calendrier n'a rien livré du tout (mesure ci-dessus).
 - **Survivre à un dépôt endormi.** GitHub désactive les calendriers d'un dépôt
   sans activité pendant soixante jours. Le dépôt est actif ; si cela arrivait,
   l'onglet **Actions** → *Garde-veille* → **Run workflow** le relance, et un
   simple clic sur **Enable workflow** suffit à réarmer le calendrier.
+- **Se passer de tout cela.** Le seul moyen **certain** qu'un service ne dort
+  jamais est de l'héberger là où l'on ne dort pas : l'image Docker est prête
+  (`Dockerfile`, publiée dans GHCR, section 2) et les hébergeurs qui ne
+  suspendent pas — un VPS à 3 € par mois, une instance associatives — la font
+  tourner sans réveil ni quota d'heures. C'est la réponse si le sommeil du
+  palier gratuit devient gênant : le dépôt sait déjà se déployer ailleurs.
 
 Contrôle à la main, depuis n'importe quel poste :
 
 ```bash
 python3 outils/garde-veille.py --ping          # frappe à la porte et raconte
-python3 outils/garde-veille.py --cron "*/10 5-22 * * *"   # ce que la fenêtre couvre
+python3 outils/garde-veille.py --cron "4,14,24,34,44,54 5-22 * * *"   # la fenêtre
 ```
 
 **Le lire depuis l'onglet Actions** : le nom de l'étape finale porte l'état —
