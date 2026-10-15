@@ -32,11 +32,16 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "*/10 5-22 * * *"
+  # **Toute poussée**, sans filtre : une fusion réveille la copie de secours, et
+  # une poussée de branche aussi.
+  #
+  # Ce n'est pas du confort. Le 15 octobre 2026, une heure après la fusion, le
+  # calendrier de GitHub n'avait toujours livré **aucun** passage (`schedule`
+  # neuf : GitHub met jusqu'à une heure à l'enregistrer, et l'oublie sous
+  # charge). Le réveil ne doit donc pas reposer sur un seul mécanisme : chaque
+  # poussée en est un second, immédiat, et gratuit — le garde-veille ne publie
+  # que lorsqu'un état change, une visite de plus ne fait aucun bruit.
   push:
-    branches-ignore: [main]
-    paths:
-      - "outils/garde-veille.py"
-      - ".github/workflows/garde-veille.yml"
 
 permissions:
   contents: read

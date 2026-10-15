@@ -297,6 +297,13 @@ l'on consulte le site — 108 visites par jour, chacune étant un seul appel à
 une route JSON qui ne calcule rien). Le service n'a plus le temps de s'endormir,
 donc le visiteur n'attend plus trente secondes, et il ne tombe plus sur un 502.
 
+**Toute poussée le déclenche aussi** — une fusion comprise. Ce n'est pas du
+confort : le 15 octobre 2026, une heure après la fusion, le calendrier de GitHub
+n'avait livré **aucun** passage (un rendez-vous neuf met du temps à s'enregistrer,
+et GitHub le retarde sous charge). Le réveil ne repose donc pas sur un seul
+mécanisme : chaque poussée en est un second, immédiat. Et comme le garde-veille
+ne publie que lorsqu'un état change, une visite de plus ne fait aucun bruit.
+
 **La fenêtre est calculée, pas choisie au hasard.** Le calendrier de GitHub
 s'exprime en **temps universel** — `*/10 5-22 * * *` couvre 6 h → 23 h à Paris
 en hiver, 7 h → minuit en été. La nuit, le service dort : c'est le comportement
