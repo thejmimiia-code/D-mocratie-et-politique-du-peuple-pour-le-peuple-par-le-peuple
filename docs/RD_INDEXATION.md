@@ -389,6 +389,16 @@ déploiement** (`deploy-secours.yml`, secret `RENDER_DEPLOY_HOOK`) ou depuis le
 tableau de bord de l'hébergeur — le mode d'emploi est dans
 [`HEBERGEMENT.md`](HEBERGEMENT.md#quand-la-copie-de-secours-ne-répond-pas-502).
 
+**Empêcher la panne, maintenant qu'on sait la voir.** La veille constate ; elle
+ne peut pas empêcher la copie de secours de s'endormir — c'est le comportement
+du palier gratuit, et c'est ce sommeil qui montre un 502 au visiteur. Un second
+rendez-vous, `.github/workflows/garde-veille.yml`, frappe donc à la porte
+**toutes les dix minutes** pendant les heures de consultation, avec un seul
+appel (la sonde de l'hébergeur). Il ne commente **que lorsqu'un état change** —
+la panne, puis le retour —, sa page est distincte, et sa fenêtre est calculée
+pour rester sous le quota d'heures du palier gratuit : voir
+[`HEBERGEMENT.md`](HEBERGEMENT.md#le-garde-veille--empêcher-le-service-de-sendormir).
+
 Le workflow `.github/workflows/veille-en-ligne.yml` l'exécute à la demande, une
 fois par semaine, et à chaque poussée qui touche la veille elle-même (jamais à
 chaque poussée : une panne d'hébergeur ne doit pas faire rougir la contribution
