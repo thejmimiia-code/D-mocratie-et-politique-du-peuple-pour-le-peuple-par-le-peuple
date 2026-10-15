@@ -24,6 +24,15 @@ La copie de secours s'endort quand personne ne l'appelle : ses relances sont
 donc normales, et le script le dit au lieu de crier à la panne. Le réseau est la
 seule dépendance du script, et son absence est un échec — pas un silence : une
 veille qui ne dit rien quand elle n'a rien pu vérifier ne sert à rien.
+
+**Deux moments où la réponse n'est pas encore la bonne.** Un service endormi met
+une trentaine de secondes à se lever ; un déploiement, une à deux minutes à
+arriver. Dans les deux cas, ce qui est servi n'est pas encore ce que le dépôt
+engendre — et « pas encore » n'est pas « faux ». **La page** est donc réessayée
+quelle que soit la réponse (c'est elle, aussi, qui réveille) ; les vingt et une
+autres adresses suivent à un seul essai, parce qu'un hôte déjà réveillé répond
+du premier coup et qu'un hôte qui ne répond pas ne se réveille pas davantage
+parce qu'on l'a demandé vingt-deux fois.
 """
 
 from __future__ import annotations
@@ -179,19 +188,37 @@ def _demander(url: str, methode: str = "GET", corps: dict[str, object] | None = 
 
 def _insister(url: str, methode: str = "GET", corps: dict[str, object] | None = None,
               essais: int = 3, attente: float = 15.0, delai: float = 30.0,
-              journal: list[str] | None = None) -> Reponse:
-    """Interroge, en laissant à un hôte endormi le temps de se réveiller."""
+              journal: list[str] | None = None, acceptable=None) -> Reponse:
+    """Interroge, en laissant à un hôte endormi — ou à un déploiement — le temps.
+
+    Sans `acceptable`, on insiste quand l'hôte annonce son démarrage ou quand il
+    n'a **rien** répondu : c'est le temps du réveil, et un 502 est un verdict.
+
+    Avec `acceptable`, on insiste **tant que** la réponse ne satisfait pas ce
+    critère. C'est le cas de la page, et d'elle seule : juste après une fusion,
+    un déploiement est en vol, et la page est exactement ce qu'un déploiement
+    remplace en dernier. Attendre, c'est laisser à Vercel ou à Render le temps
+    d'arriver ; ne pas attendre, c'est appeler « faux » ce qui n'est que « pas
+    encore » — et faire rougir une fusion pour un déploiement en cours.
+
+    Une réponse **satisfaisante** s'arrête là, sans attendre : une veille qui
+    demanderait cinq fois une page déjà bonne ajouterait quatre-vingts secondes
+    à chaque passage pour rien.
+    """
     derniere: Reponse | None = None
-    for essai in range(1, essais + 1):
-        reponse = _demander(url, methode, corps, delai)
-        # On insiste quand l'hôte annonce son démarrage, ou quand il n'a
-        # **rien** répondu (le temps du réveil). Un 502 est un verdict : le
-        # répéter cinq fois ne le change pas et fait durer la veille.
-        if not (reponse.en_demarrage or reponse.muet) or essai == essais:
-            return reponse
-        derniere = reponse
+    for essai in range(1, max(1, essais) + 1):
+        derniere = _demander(url, methode, corps, delai)
+        if essai == max(1, essais):
+            return derniere
+        if acceptable is not None:
+            bonne = bool(acceptable(derniere))
+        else:
+            bonne = not (derniere.en_demarrage or derniere.muet)
+        if bonne:
+            return derniere
         if journal is not None:
-            journal.append(f"endormi, relance {essai}/{essais - 1} dans {attente:g} s")
+            journal.append(f"pas encore prêt, relance {essai}/{max(1, essais) - 1} "
+                           f"dans {attente:g} s")
         time.sleep(attente)
     assert derniere is not None
     return derniere
@@ -273,26 +300,46 @@ def _epreuve_image(hote: str, base: str, chemin: str, essais: int, attente: floa
         True, f"{len(reponse.corps)} octets, identique au fichier versionné", reponse.statut)
 
 
+#: Ce que la page doit dire d'elle-même. Chaque motif porte son nom lisible :
+#: un échec qui dit « absents : adresse canonique » se corrige ; « page
+#: incomplète » se cherche.
+ATTENDUS_PAGE: dict[str, str] = {
+    f'rel="canonical" href="{surface.URL_CANONIQUE}"': "adresse canonique",
+    'name="description"': "description",
+    f'property="og:image" content="{surface.URL_CANONIQUE}{surface.IMAGE_APERCU}"':
+        "aperçu de partage",
+    '"@type": "WebApplication"': "données structurées",
+    'name="robots"': "directives d'indexation",
+}
+
+
+def _page_complete(reponse: Reponse) -> bool:
+    """La page est-elle arrivée **entière** ?
+
+    Sert de critère à `_insister` : tant que la page est incomplète, on attend —
+    c'est ce que fait un déploiement en vol. Le critère dit « entière », le
+    verdict dira « ce qui manque ».
+    """
+    if reponse.statut != 200 or not reponse.type_contenu.startswith("text/html"):
+        return False
+    return all(motif in reponse.texte for motif in ATTENDUS_PAGE)
+
+
 def _epreuve_page(hote: str, base: str, essais: int, attente: float) -> Verdict:
     """La page doit dire d'elle-même ce que la surface publique annonce."""
     verdict = Verdict(hote, "/", "page complète et déclarée")
-    reponse = _insister(base + "/", essais=essais, attente=attente, delai=60.0)
-    if reponse.statut != 200 or not reponse.type_contenu.startswith("text/html"):
-        if reponse.statut != 200:
-            return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+    # `acceptable=_page_complete` : la page est ce qu'un déploiement remplace en
+    # dernier, et c'est elle aussi qui réveille un service endormi. Voir `_insister`.
+    reponse = _insister(base + "/", essais=essais, attente=attente, delai=60.0,
+                        acceptable=_page_complete)
+    if reponse.statut != 200:
+        return verdict.conclure(False, _reponse_lisible(reponse), reponse.statut)
+    if not reponse.type_contenu.startswith("text/html"):
         return verdict.conclure(
             False, f"attendu du text/html, reçu {reponse.type_contenu or 'aucun type'}",
             reponse.statut)
     page = reponse.texte
-    attendus = {
-        f'rel="canonical" href="{surface.URL_CANONIQUE}"': "adresse canonique",
-        'name="description"': "description",
-        f'property="og:image" content="{surface.URL_CANONIQUE}{surface.IMAGE_APERCU}"':
-            "aperçu de partage",
-        '"@type": "WebApplication"': "données structurées",
-        'name="robots"': "directives d'indexation",
-    }
-    manquants = [libelle for motif, libelle in attendus.items() if motif not in page]
+    manquants = [libelle for motif, libelle in ATTENDUS_PAGE.items() if motif not in page]
     if manquants:
         return verdict.conclure(False, "absents : " + ", ".join(manquants), reponse.statut)
     return verdict.conclure(
