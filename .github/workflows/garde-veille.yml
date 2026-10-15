@@ -13,7 +13,9 @@ name: Garde-veille
 # Il ne fait rien d'autre — une adresse, une réponse attendue, et on s'en va.
 #
 # **Le calendrier de GitHub s'exprime en temps universel.** `5-22 UTC` couvre
-# 6 h → 23 h à Paris en hiver, 7 h → minuit en été. La nuit, le service dort :
+# 6 h → 23 h à Paris en hiver, 7 h → minuit en été, et le pas de dix minutes
+# démarre à `:04` — jamais à l'heure pleine, qui est l'instant de pointe de
+# GitHub Actions. La nuit, le service dort :
 # c'est le comportement normal du palier gratuit, et c'est ce qui garde la
 # consommation sous les 750 heures offertes par mois (556 h estimées), parce
 # qu'un dépassement ne facture pas — il **suspend** les services.
@@ -31,7 +33,12 @@ name: Garde-veille
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/10 5-22 * * *"
+    # `:04`, `:14`, … et non `*/10` : GitHub prévient que la charge des coureurs
+    # est maximale **au début de chaque heure**, et que les passages programmés
+    # peuvent y être retardés. Six visites par heure, aux mêmes heures, mais
+    # jamais à l'instant où tout le monde se réveille. Le décalage ne change
+    # rien à ce que la fenêtre couvre : 108 visites par jour.
+    - cron: "4,14,24,34,44,54 5-22 * * *"
   # **Toute poussée**, sans filtre : une fusion réveille la copie de secours, et
   # une poussée de branche aussi.
   #
@@ -50,7 +57,7 @@ permissions:
 env:
   # La fenêtre, en un seul endroit pour les deux étapes. Doit être **identique**
   # au calendrier ci-dessus : `tests/test_garde_veille.py` le vérifie.
-  FENETRE: "*/10 5-22 * * *"
+  FENETRE: "4,14,24,34,44,54 5-22 * * *"
   PAGE: "Garde-veille — la copie de secours (Render)"
 
 jobs:
