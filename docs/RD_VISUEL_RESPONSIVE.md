@@ -904,6 +904,18 @@ forme longue reste dans le `<h1>` — donc dans `textContent`, dans le `<title>`
 dans les métadonnées sociales et dans le JSON-LD — et **aucun corps ne descend**.
 Ce qui cède ici, ce sont des mots ; la lecture, elle, ne rétrécit pas.
 
+### Le gain, mesuré, et le cliquet resserré
+
+| Largeur | Avant la passe | Après | Plafond (avant → après) |
+|---|---:|---:|---|
+| 380 px | 603 | **561** | 630 → **588** |
+| 640 px | 460 | **460** | 487 (inchangé) |
+
+À 380 px, le titre passe de quatre lignes à trois (87 → 65 px) et la phrase de
+quatre à trois (79 → 59) : le bandeau fait 351 px. À 640 px, le texte tenait déjà
+en trois lignes — la forme courte ne change rien à cette largeur, et la mesure le
+dit au lieu de le supposer. Le cliquet suit la mesure à marge constante.
+
 ### Deux textes, deux usages — et pourquoi pas `aria-label` ici
 
 Aux commandes du ruban, le nom accessible est tenu à part par `aria-label`, parce

@@ -256,10 +256,24 @@ class TestLeVerdict(unittest.TestCase):
                           "le verdict ne dit pas où la place se perd")
 
     def test_une_vue_sous_le_plafond_passe(self):
-        code, verdict = _verdict([_vue(380, 400, 58, 150)])
+        """La vue d'essai se construit **sous** le plafond du jour, quel qu'il soit.
+
+        Un jeu figé s'est retrouvé au-dessus du jour où le cliquet a été
+        resserré : c'est le test qui avait vieilli, pas la mesure. Le contrôle
+        refuse toute vue d'un seul pixel au-dessus — et accepte celle d'un pixel
+        en dessous.
+        """
+        largeur, limite = sorted(_plafonds().items())[0]
+        plafond = limite["plafond"]
+        #: Un pixel en moins que le plafond : sommaire et ruban comptent aussi.
+        bandeau = plafond - 3
+        code, verdict = _verdict([_vue(largeur, bandeau, 1, 1)])
         self.assertEqual(code, 0, "une vue sous le plafond a été refusée")
         self.assertEqual(verdict["depassements"], [])
         self.assertTrue(any("tenu" in ligne for ligne in verdict["lignes"]))
+        code, verdict = _verdict([_vue(largeur, bandeau + 2, 1, 1)])
+        self.assertEqual(code, 1, "une vue d'un pixel au-dessus du plafond est passée")
+        self.assertEqual(verdict["depassements"][0]["exces"], 1)
 
     def test_une_largeur_sans_plafond_n_est_jamais_signalee(self):
         """Le grand écran n'est pas plafonné : 394 px sur 900, il y a la place."""
