@@ -282,6 +282,23 @@ class TestLaMesureEstBranchee(unittest.TestCase):
         self.assertIn("total: bandeau + sommaire + ruban", source,
                       "le premier écran n'est plus la somme de ses cadres")
 
+    def test_le_rapport_montre_le_texte_peint(self):
+        """`textContent` lit aussi ce qui est masqué : le rapport s'y est trompé.
+
+        Une commande porte deux libellés — le long au large, le court sur un
+        téléphone — et un seul est peint. Lire `textContent` les additionnait :
+        le rapport annonçait « référence datée du projetréf » là où l'écran ne
+        montre qu'un texte. Un rapport qu'on lit pour savoir ce qui est à
+        l'écran doit lire ce qui est à l'écran.
+        """
+        source = CAPTURES.read_text(encoding="utf-8")
+        for extrait in ('texte: (commande.textContent', 'texte: (enfant.textContent'):
+            with self.subTest(extrait=extrait):
+                self.assertNotIn(extrait, source,
+                                 "le rapport étiquette un nœud par du texte masqué")
+        self.assertGreaterEqual(source.count("innerText"), 2,
+                                "les deux étiquettes du rapport ne lisent plus ce qui est peint")
+
     def test_l_outil_echoue_quand_un_plafond_est_depasse(self):
         source = CAPTURES.read_text(encoding="utf-8")
         self.assertIn("depassements(rapport)", source,
