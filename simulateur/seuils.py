@@ -418,27 +418,51 @@ GARDE_FOUS: tuple[GardeFou, ...] = (
             "{valeur} chokepoints bloqués : hors-sol — l'économie mondiale fonctionne au ralenti, "
             "avec effet immédiat sur les prix et l'emploi."),
        ]),
-    _g(cle="probabilite_escalade_mondiale_pct", libelle="Probabilité d'escalade mondiale (%)",
-       strate=5, sens="max", unite="%", precision=0, famille="geopolitique",
-       source="Modèle d'escalade documenté dans docs/08_STRATE_GEOPOLITIQUE",
+    # Le champ s'appelle `probabilite_…` pour l'histoire du code : le chiffre est
+    # un **indice heuristique** sur 100, non calibré. La page dit ce que le
+    # moteur dit (`geopolitique_annuelle.py` : « indice heuristique d'escalade »),
+    # et `docs/08_STRATE_GEOPOLITIQUE…` ouvre sur « non calibrés, et non des
+    # probabilités » : un chiffre, un vocabulaire.
+    _g(cle="probabilite_escalade_mondiale_pct",
+       libelle="Indice heuristique d'escalade (/100, non calibré)",
+       strate=5, sens="max", unite="/100", precision=0, famille="geopolitique",
+       source="Modèle d'escalade documenté dans docs/08_STRATE_GEOPOLITIQUE — "
+              "indices heuristiques non calibrés, jamais des probabilités",
        bornes=[
-           (10.0, "tolerable", "Escalade mondiale estimée à {valeur} % : risque de queue maîtrisé."),
-           (25.0, "vigilance", "Escalade estimée à {valeur} % : le risque devient un paramètre d'arbitrage des investisseurs."),
-           (45.0, "risque", "Escalade estimée à {valeur} % : les plans de continuité deviennent le cœur de la politique publique."),
+           (10.0, "tolerable",
+            "Indice d'escalade {valeur}/100 : risque de queue maîtrisé "
+            "(heuristique non calibrée, pas une probabilité)."),
+           (25.0, "vigilance",
+            "Indice d'escalade {valeur}/100 : le risque devient un paramètre "
+            "d'arbitrage des investisseurs (heuristique non calibrée)."),
+           (45.0, "risque",
+            "Indice d'escalade {valeur}/100 : les plans de continuité deviennent "
+            "le cœur de la politique publique (heuristique non calibrée)."),
            (float("inf"), "hors_sol",
-            "Escalade estimée à {valeur} % : hors-sol — la projection budgétaire perd son sens, "
-            "les décisions se prennent en mode crise."),
+            "Indice d'escalade {valeur}/100 : hors-sol — la projection budgétaire perd son sens, "
+            "les décisions se prennent en mode crise (heuristique non calibrée)."),
        ]),
-    _g(cle="risque_nucleaire_tactique_pct", libelle="Risque nucléaire tactique (%)", strate=5,
-       sens="max", unite="%", precision=0, famille="geopolitique",
-       source="Modèle d'escalade ; seuils issus de la doctrine publiée",
+    # Même règle : un indice de stress, pas une probabilité d'emploi. Le dépôt
+    # dit depuis le début que l'emploi nucléaire est une **branche imposée** qui
+    # arrête le calcul (voir docs/AUDIT_LACUNES_GEOPOLITIQUES.md, section 3).
+    _g(cle="risque_nucleaire_tactique_pct",
+       libelle="Indice nucléaire tactique (/100, non calibré)", strate=5,
+       sens="max", unite="/100", precision=0, famille="geopolitique",
+       source="Modèle d'escalade ; seuils issus de la doctrine publiée — "
+              "aucune probabilité d'emploi n'est calculée : l'emploi est une branche imposée",
        bornes=[
-           (8.0, "tolerable", "Risque nucléaire tactique estimé à {valeur} %."),
-           (20.0, "vigilance", "Risque nucléaire tactique à {valeur} % : dissuasion affaiblie, négociations sous chantage."),
-           (35.0, "risque", "Risque nucléaire tactique à {valeur} % : seuil de rupture du tabou, l'Europe entière bascule."),
+           (8.0, "tolerable",
+            "Indice nucléaire tactique {valeur}/100 : le tabou tient "
+            "(indice heuristique, pas une probabilité d'emploi)."),
+           (20.0, "vigilance",
+            "Indice nucléaire tactique {valeur}/100 : dissuasion affaiblie, négociations "
+            "sous chantage (indice heuristique non calibré)."),
+           (35.0, "risque",
+            "Indice nucléaire tactique {valeur}/100 : seuil de rupture du tabou, "
+            "l'Europe entière bascule (indice heuristique non calibré)."),
            (float("inf"), "hors_sol",
-            "Risque nucléaire tactique à {valeur} % : hors-sol — plus aucune hypothèse économique "
-            "n'est valable, seule la survie compte."),
+            "Indice nucléaire tactique {valeur}/100 : hors-sol — plus aucune hypothèse économique "
+            "n'est valable, seule la survie compte (indice heuristique non calibré)."),
        ]),
     _g(cle="effort_defense_pct_pib", libelle="Effort de défense (% du PIB)", strate=5, sens="min",
        unite="% du PIB", precision=2, famille="defense",

@@ -2637,8 +2637,8 @@ function afficherGeopolitique(donnees){
   return `<p class="strate-intro">Indicateurs de stress géopolitique du modèle. Les probabilités et indices sont des conventions de stress-test; ils ne constituent ni une évaluation du renseignement ni une probabilité officielle d'événement.</p>
     ${tableauComparatif(donnees.etapes, donnees.etapes_reference, [
       {cle:'indice_tension_geopolitique',libelle:'Indice de tension géopolitique',unite:'/100',precision:1,sens:-1},
-      {cle:'probabilite_escalade_mondiale_pct',libelle:'Probabilité d’escalade — proxy',unite:'%',precision:1,sens:-1},
-      {cle:'risque_nucleaire_tactique_pct',libelle:'Risque nucléaire tactique — proxy',unite:'%',precision:1,sens:-1},
+      {cle:'probabilite_escalade_mondiale_pct',libelle:'Indice heuristique d’escalade — non calibré',unite:'/100',precision:1,sens:-1},
+      {cle:'risque_nucleaire_tactique_pct',libelle:'Indice nucléaire tactique — non calibré',unite:'/100',precision:1,sens:-1},
       {cle:'disponibilite_semiconducteurs_pct',libelle:'Disponibilité des semi-conducteurs',unite:'%',precision:1,sens:1},
       {cle:'effort_defense_pct_pib',libelle:'Effort de défense',unite:'% PIB',precision:2,sens:0},
       {cle:'depenses_defense_mde',libelle:'Dépenses de défense',unite:'Md€',precision:1,sens:0},
