@@ -735,6 +735,57 @@ tabulations puis trois en arrière sont comptées hors de la fenêtre, la touche
 Échap est pressée, et le nom du porteur du focus est publié dans le résumé de la
 demande de fusion.
 
+## Dix-septième incrément — le premier écran d'un téléphone
+
+### Le défaut, mesuré
+
+Le visiteur demandait une « lecture claire et confortable sur un smartphone ».
+La mesure, dans Chromium le 15 octobre 2026, a dit autre chose : à **380 px**, la
+page prenait **863 px** avant la première ligne de contenu — bandeau 566,
+sommaire 58, ruban de veille 239 — sur un écran de 780. À **640 px**, 614 px. Le
+contenu existait ; il n'était pas visible. Le plan du bandeau disait où : un
+titre de quatre lignes (96 px), une phrase de quatre lignes (97 px), quatre
+commandes en trois rangées dont une trouée par un seul bouton (116 px), et une
+ligne d'état de cinq rangées de pastilles (184 px, dont une pastille qui répétait
+mot pour mot l'horizon du select juste à côté).
+
+### Ce qui a changé
+
+Rien n'a été retiré. Le titre et la phrase **gardent leur corps** — c'est
+l'interligne qui se resserre, parce qu'on ne rétrécit pas la lecture pour gagner
+de la place. Les quatre commandes du bandeau se rangent en deux colonnes au lieu
+de trois rangées. Les pastilles se rapprochent, et l'horizon se dit **une fois**
+(le select le porte, `changerHorizon` écrit les deux depuis la même variable).
+Le ruban devient une carte plus dense : quatre commandes sur **une** rangée, au
+lieu de deux rangées de deux qui coûtaient 51 px de haut pour 44 px de boutons.
+Chaque commande y porte un libellé **long** (écran large) et un libellé **court**
+(téléphone, où « Masquer le détail des seuils » n'aurait pas tenu dans 80 px) :
+`direLeBouton` écrit les deux **ensemble**, sinon le premier clic remettrait le
+long et le ruban regonflerait sous les doigts. Le nom accessible ne change pas
+(`aria-label`), et la cible du doigt reste à 44 px.
+
+| Largeur | Avant | Après | Détail |
+|---|---:|---:|---|
+| 380 px | **863** | **693** | bandeau 566 → 483, ruban 239 → 152, sommaire 58 |
+| 640 px | **614** | **517** | bandeau 350 → 335, ruban 206 → 124, sommaire 58 |
+
+### Le plafond, et pourquoi il est ancré
+
+Un gain non tenu se reperd. `outils/plafonds_premier_ecran.mjs` porte donc les
+plafonds du premier écran — **720 px à 380**, **540 px à 640** —, chacun avec la
+mesure datée dont il vient et l'état ancien qu'il doit battre. La photographie
+échoue si un plafond est dépassé, et le résumé publie le verdict : la marge est
+**d'une rangée**, assez pour les chiffres qui changent d'une simulation à
+l'autre, trop peu pour cacher une rangée de plus. Trois règles tenues par les
+contrôles : aucun plafond au-dessus de l'état ancien (il décrirait le statu quo
+au lieu de le corriger), aucun plafond sous la mesure du jour (il ferait rougir
+un travail en cours), et **seul le téléphone est plafonné** — au large, le
+premier écran fait 394 px sur 900, la place n'y manque pas.
+
+Le résumé des captures publie désormais aussi le **plan du ruban** et celui de la
+**ligne d'état** : mesurés depuis le début, jamais montrés. C'est là que la
+hauteur se perdait sans qu'on sache qui la prenait.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si

@@ -19,38 +19,39 @@
 // 2. **il bat l'état ancien** (`plafond < avant`) : un plafond qui autorise le
 //    statu quo ne plafonne rien ;
 // 3. **il tient l'état mesuré** (`plafond >= mesure`), avec une petite marge —
-//    un plafond qu'on dépasse d'un pixel à chaque passage ne dit plus rien. Un
-//    plafond marqué `cible` dit l'inverse : il demande un gain qui n'est pas
-//    encore mesuré, et l'entrée est complétée dès la mesure suivante ;
+//    un plafond qu'on dépasse d'un pixel à chaque passage ne dit plus rien.
+//    Quand une passe demande un gain qu'elle n'a pas encore mesuré, l'entrée
+//    porte `cible: true` : le plafond passe **sous** la mesure, l'échafaudage se
+//    voit, et la mesure suivante remplace la cible par son chiffre ;
 // 4. **seul le téléphone est plafonné.** Au large, le premier écran fait 394 px
 //    sur 900 : il y a la place. Un plafond qui ne se déclenche jamais est du
 //    bruit — et un contrôle qu'on ne lit plus ne contrôle plus rien.
 //
 // Le plafond est un **cliquet** : il ne remonte pas. La passe du 15 octobre 2026
-// l'a posé à 700 px (380) et 540 px (640) après avoir mesuré 685 et 524 ; la
-// suite se juge sur la direction — un écran de téléphone fait 780 px de haut,
-// et le contenu doit y commencer.
+// l'a posé à 720 px (380) et 540 px (640), après avoir mesuré 693 et 517 — les
+// deux états anciens étaient à 863 et 614. Le chemin qui reste est écrit ici
+// pour la suite : un écran de téléphone fait 780 px de haut, et le contenu doit
+// y commencer. Ce qui reste à gagner à 380 px tient au bandeau (483 px), dont le
+// titre fait quatre lignes et la ligne d'état quatre rangées.
 
 /** La hauteur du premier écran : ce qu'un visiteur voit avant le contenu. */
 export const PLAFONDS = {
   380: {
-    plafond: 700,
+    //: La marge du plafond est **d'une rangée** (27 px ici) : assez pour les
+    //: chiffres qui changent d'une simulation à l'autre — un verdict plus long,
+    //: un montant à trois chiffres —, trop peu pour cacher une rangée de plus.
+    plafond: 720,
     avant: 863,
-    mesure: 685,
+    mesure: 693,
     quand: "15 octobre 2026",
-    quoi: "bandeau 475 + sommaire 58 + ruban 152 (avant la passe : 566 + 58 + 239)",
+    quoi: "bandeau 483 + sommaire 58 + ruban 152 (avant la passe : 566 + 58 + 239)",
   },
   640: {
-    //: **Une cible** : le palier 640 vient de recevoir les règles du premier
-    //: écran, et le plafond demande le gain avant de le constater. La mesure
-    //: d'après remplace `cible` par le chiffre atteint — un plafond tenu ne se
-    //: devine pas, il se mesure.
     plafond: 540,
     avant: 614,
-    mesure: 614,
-    cible: true,
+    mesure: 517,
     quand: "15 octobre 2026",
-    quoi: "cible de 540 px ; 614 px mesurés avant la passe (350 + 58 + 206)",
+    quoi: "bandeau 335 + sommaire 58 + ruban 124 (avant la passe : 350 + 58 + 206)",
   },
 };
 

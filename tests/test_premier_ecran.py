@@ -373,8 +373,12 @@ class TestLaPageTientLePlafond(unittest.TestCase):
         """Sinon le premier clic remet le libellé long, et le ruban regonfle."""
         source = HTML_PAGE[HTML_PAGE.index("function direLeBouton"):]
         source = source[:source.index("\nfunction ", 10)]
-        self.assertIn("'-long'", source, "le libellé long n'est plus écrit")
-        self.assertIn("'-court'", source, "le libellé court n'est plus écrit")
+        # Les **écritures**, pas la présence des mots : un repère qu'on lit sans
+        # le remplir laisserait le bouton annoncer l'état précédent.
+        self.assertIn("longu.textContent = long", source, "le libellé long n'est plus écrit")
+        self.assertIn("court_.textContent = court", source, "le libellé court n'est plus écrit")
+        self.assertIn("setAttribute('aria-label', long)", source,
+                      "le nom accessible ne suit plus le libellé du bouton")
         self.assertIn("bouton.textContent = long", source,
                       "une page sans repères ne retombe plus sur le libellé long")
         for fonction in ("function basculerDensite", "function basculerDetailsConsole"):
