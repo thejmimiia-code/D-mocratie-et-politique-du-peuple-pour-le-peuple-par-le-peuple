@@ -768,3 +768,33 @@ Ces cinq points transversaux complètent P1-P21; ils ne les remplacent pas.
   à l'emploi, au déficit et aux recettes exigerait des expositions sectorielles,
   des portefeuilles observés et des coefficients sourcés; aucun de ces effets
   n'est actuellement prétendu ou imputé.
+
+### Vérification du 15 octobre 2026 — ce qui ouvre les dynamiques longues
+
+La page annonçait, dans l'aide de l'horizon : « les dynamiques à maturation
+longue s'activent à partir du sixième exercice ». Vérification faite le
+15 octobre 2026 sur un contexte neutre, sans aucun levier activé :
+
+| Exercice | Besoin non couvert de capital public (P16) | Dommages climatiques comptés (P17) |
+|---:|---:|---:|
+| 1 | 6,04 Md€ | 4,77 Md€/an |
+| 5 | 30,21 Md€ | 4,77 Md€/an |
+| 6 | 36,25 Md€ | 4,77 Md€/an |
+| 10 | 60,42 Md€ | 4,77 Md€/an |
+| à 5 ans, exercices 1 à 5 | 0,00 | 0,00 |
+
+**Ce n'est pas la sixième année qui ouvre ces deux dynamiques, c'est la durée du
+scénario** : `decision_moteur` pose `horizon_deux_mandatures = horizon > 5`, et
+`moteur.py` compte P16 et P17 **dès le premier exercice** quand l'appel simule
+plus de cinq ans. Le sixième exercice n'a donc rien d'un seuil — il est une année
+comme les autres. L'aide de la page a été corrigée pour dire cela, et
+`tests/test_horizons_prospectifs.py` **lit cette aide dans la page servie** : il
+lui est désormais interdit de promettre un seuil que le moteur ne connaît pas.
+
+La contrepartie importe autant que le constat. Sur les cinq premiers exercices,
+les scénarios à 5 et à 10 ans ne divergent **que** par ces deux séries, toutes
+deux hors budget (proxys non ajoutés au déficit) : déficit et dette sont
+identiques au centime près — `152,82 · 83,32 · 10,65 · −65,32 · −144,72`. « Cinq
+ans » n'est donc pas « dix ans tronqué » : c'est la même trajectoire budgétaire,
+avec deux dettes invisibles en plus — précisément la doctrine de ce dossier, et
+elle est maintenant mesurée plutôt qu'affirmée.

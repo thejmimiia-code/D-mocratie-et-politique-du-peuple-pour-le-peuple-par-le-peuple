@@ -145,7 +145,10 @@ async function photographier(nom, { theme, largeur, preparation, url, garderGuid
         && noeud.matches(".affichage-panneau, .outils-panneau, #overlay, .modale, .infobulle"));
       if (volontaire) continue;
       recouverts.push({
-        texte: (commande.textContent || "").trim().slice(0, 30).replace(/\s+/g, " "),
+        /* `innerText` lit ce qui est **peint** : les deux libellés d'une
+           commande (long au large, court sur un téléphone) ne s'additionnent
+           plus dans le rapport. */
+        texte: (commande.innerText || commande.textContent || "").trim().slice(0, 30).replace(/\s+/g, " "),
         par: etiqueter(pile[0]),
         pile: pile.slice(0, 5).map(etiqueter),
       });
@@ -193,7 +196,7 @@ async function photographier(nom, { theme, largeur, preparation, url, garderGuid
           nom: `${enfant.tagName.toLowerCase()}${enfant.id ? "#" + enfant.id : ""}${classe}`,
           x: Math.round(r.left - cadre.left), y: Math.round(r.top - cadre.top),
           largeur: Math.round(r.width), hauteur: Math.round(r.height),
-          texte: (enfant.textContent || "").trim().replace(/\s+/g, " ").slice(0, 28),
+          texte: (enfant.innerText || enfant.textContent || "").trim().replace(/\s+/g, " ").slice(0, 28),
         });
       }
       return enfants;

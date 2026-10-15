@@ -282,6 +282,23 @@ class TestLaMesureEstBranchee(unittest.TestCase):
         self.assertIn("total: bandeau + sommaire + ruban", source,
                       "le premier écran n'est plus la somme de ses cadres")
 
+    def test_le_rapport_montre_le_texte_peint(self):
+        """`textContent` lit aussi ce qui est masqué : le rapport s'y est trompé.
+
+        Une commande porte deux libellés — le long au large, le court sur un
+        téléphone — et un seul est peint. Lire `textContent` les additionnait :
+        le rapport annonçait « référence datée du projetréf » là où l'écran ne
+        montre qu'un texte. Un rapport qu'on lit pour savoir ce qui est à
+        l'écran doit lire ce qui est à l'écran.
+        """
+        source = CAPTURES.read_text(encoding="utf-8")
+        for extrait in ('texte: (commande.textContent', 'texte: (enfant.textContent'):
+            with self.subTest(extrait=extrait):
+                self.assertNotIn(extrait, source,
+                                 "le rapport étiquette un nœud par du texte masqué")
+        self.assertGreaterEqual(source.count("innerText"), 2,
+                                "les deux étiquettes du rapport ne lisent plus ce qui est peint")
+
     def test_l_outil_echoue_quand_un_plafond_est_depasse(self):
         source = CAPTURES.read_text(encoding="utf-8")
         self.assertIn("depassements(rapport)", source,
@@ -349,17 +366,70 @@ class TestLaPageTientLePlafond(unittest.TestCase):
                                             + pose["font-size"])
 
     def test_un_seul_libelle_est_peint_a_la_fois(self):
-        """Le long dit tout, le court tient dans 80 px : jamais les deux ensemble."""
-        base = [pose for contexte, pose in _regles_dans(".ruban-veille .mot-court")
+        """Le long dit tout, le court tient dans une rangée : jamais les deux.
+
+        La règle est celle de la page, pas du ruban : les pastilles d'état
+        portent le même couple — « référence datée du projet » ne tient pas sur
+        la rangée d'un téléphone, « référence datée » si.
+        """
+        base = [pose for contexte, pose in _regles_dans(".mot-court")
                 if not contexte]
         self.assertTrue(base, "le libellé court n'est plus masqué au large")
         self.assertEqual(base[-1].get("display"), "none")
-        courts = self._telephone(".ruban-veille .mot-court")
-        longs = self._telephone(".ruban-veille .mot-long")
+        courts = self._telephone(".mot-court")
+        longs = self._telephone(".mot-long")
         self.assertEqual(_pose(courts).get("display"), "inline",
                          "le libellé court ne s'affiche pas sur un téléphone")
         self.assertEqual(_pose(longs).get("display"), "none",
                          "le libellé long reste peint sur un téléphone")
+
+    def test_les_pastilles_d_etat_portent_les_deux_textes(self):
+        """Chaque pastille a ses deux textes, et rien n'est caché aux lecteurs.
+
+        Le texte écarté l'est par `display:none`, donc il sort aussi de l'arbre
+        d'accessibilité : rien n'est lu deux fois, et rien ne se tait. C'est
+        pourquoi les textes des pastilles ne portent **pas** `aria-hidden` —
+        contrairement aux libellés des commandes du ruban, dont le nom
+        accessible est tenu à part par `aria-label`.
+        """
+        for identifiant in ("badge-date", "badge-leviers"):
+            with self.subTest(pastille=identifiant):
+                self.assertIn(f'id="{identifiant}-long"', HTML_PAGE,
+                              f"{identifiant} n'a plus de texte long repéré")
+                self.assertIn(f'id="{identifiant}-court"', HTML_PAGE,
+                              f"{identifiant} n'a plus de texte court repéré")
+        debut = HTML_PAGE.index('id="badge-date"')
+        bloc = HTML_PAGE[debut:HTML_PAGE.index("</span></span>", debut)]
+        self.assertNotIn("aria-hidden", bloc,
+                         "un texte d'état caché aux lecteurs d'écran : ce qui est "
+                         "peint doit être ce qui est lu")
+
+    def test_les_deux_textes_d_une_pastille_sont_ecrits_ensemble(self):
+        """Sinon la pastille annoncerait l'état précédent — ou resterait vide."""
+        source = HTML_PAGE[HTML_PAGE.index("function direLaPastille"):]
+        source = source[:source.index("\nfunction ", 10)]
+        self.assertIn("longu.textContent = long", source,
+                      "le texte long n'est plus écrit")
+        self.assertIn("court_.textContent = court", source,
+                      "le texte court n'est plus écrit")
+        self.assertIn("noeud.textContent = long", source,
+                      "une page sans repères ne retombe plus sur le texte long")
+        for site in ("badge-date", "badge-leviers"):
+            with self.subTest(site=site):
+                self.assertIn(f"direLaPastille('{site}'", HTML_PAGE,
+                              f"{site} n'est plus écrit par direLaPastille")
+                self.assertNotIn(f"getElementById('{site}').textContent", HTML_PAGE,
+                                 f"{site} est encore écrit en clair, sans son texte court")
+
+    def test_le_contexte_dit_aussi_son_texte_court(self):
+        """« référence datée du projet » (25 signes) ne tient pas sur 340 px."""
+        source = HTML_PAGE[HTML_PAGE.index("function pastille(mode)"):]
+        source = source[:source.index("\nfunction ", 10)]
+        self.assertIn("mot-long", source, "la pastille de contexte n'a plus de texte long")
+        self.assertIn("mot-court", source, "la pastille de contexte n'a plus de texte court")
+        for mode in ("live", "reference", "mixte"):
+            with self.subTest(mode=mode):
+                self.assertIn(f"{mode}:", source, f"le mode {mode} n'a plus ses deux textes")
 
     def test_chaque_commande_du_ruban_porte_ses_deux_libelles(self):
         for identifiant in ("btn-console-details", "btn-densite", "aller-leviers", "aller-audit"):

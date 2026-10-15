@@ -786,6 +786,67 @@ Le résumé des captures publie désormais aussi le **plan du ruban** et celui d
 **ligne d'état** : mesurés depuis le début, jamais montrés. C'est là que la
 hauteur se perdait sans qu'on sache qui la prenait.
 
+## Dix-huitième incrément — les pastilles d'état, et le texte qu'on ne lit qu'une fois
+
+### Le défaut, mesuré
+
+À **380 px**, la ligne d'état du bandeau prenait **140 px en quatre rangées** — pour
+trois pastilles. L'une d'elles faisait **deux lignes** à elle seule :
+`16 leviers actifs · simulation 5 ans · score moyen 51,3 (référence 50,0)`, alors
+que le score est **déjà** dans le résumé de tête. Le téléphone relisait ce qu'il
+venait d'afficher, sur deux lignes, dans l'élément le plus étroit de la page : le
+même défaut que l'horizon dit deux fois, corrigé à la passe précédente, resté
+intact sur les autres pastilles.
+
+### Ce qui a changé
+
+Le couple de libellés `long` / `court` n'est plus une affaire de ruban : il
+devient la règle de la **page** — `.mot-court{display:none}` au large, bascule au
+palier **640 px** —, et les pastilles d'état le reprennent. Chacune porte ses deux
+textes : `live` · `référence datée` · `mixte`, l'horodatage nu sur téléphone,
+`N leviers — calcul…`, `N exercices simulés`, `N leviers · H ans`.
+
+`display:none` sort le texte écarté de l'arbre d'accessibilité : ce qui est peint
+est ce qui est lu, une fois, sans doublon — donc pas d'`aria-hidden` sur les
+textes d'état, contrairement aux libellés des commandes du ruban dont le nom
+accessible est tenu à part par `aria-label`. Les deux textes d'une pastille sont
+écrits **ensemble** par `direLaPastille()`, sinon la pastille annoncerait l'état
+précédent ; la fonction retombe sur le texte long quand la page ne porte pas ses
+deux repères.
+
+### Le gain, mesuré, et le cliquet resserré
+
+| Largeur | Avant la passe | Après | Plafond (avant → après) |
+|---|---:|---:|---|
+| 380 px | 693 | **646** | 720 → **673** |
+| 640 px | 517 | **488** | 540 → **515** |
+
+À 380 px, la ligne d'état passe de **quatre rangées (140 px) à trois (93 px)** :
+la pastille de deux lignes qui répétait le score n'en fait plus qu'une. Le cliquet
+est resserré d'autant — un gain qu'on ne relève pas se reperd —, avec la même
+marge d'une rangée. Et le rapport de mesure lit désormais `innerText` : il montre
+le libellé **peint**, `référence datée du projet` à 1280 px et `référence datée` à
+380 px, au lieu d'additionner les deux.
+
+### Le contrôle du ruban, requalifié — pas amolli
+
+`tests/test_interface.py` lisait dans le palier 640 l'affichage des libellés
+courts du ruban. Cette règle ayant changé de propriétaire, le contrôle lit
+désormais ce qui reste **sien** : la carte du ruban — quatre colonnes, cible du
+doigt de 44 px, verdict qui se lit en entier. La règle des libellés est tenue par
+`tests/test_premier_ecran.py`, et maintenant pour le ruban **et** pour les
+pastilles. Un contrôle qui aurait continué de lire une règle déplacée aurait
+rougi sur du travail juste ; le déplacer sans le remplacer aurait laissé la carte
+sans garde.
+
+### Dix sabotages, dix attrapés
+
+Courts non masqués au large, courts non peints sur téléphone, long laissé peint
+sur téléphone, texte court retiré d'une pastille, `aria-hidden` posé sur un texte
+d'état, écriture du texte court supprimée, pastille écrite en clair sans son
+texte court, contexte sans texte court, ruban remis en deux colonnes, cible du
+doigt rabotée sous 44 px.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si

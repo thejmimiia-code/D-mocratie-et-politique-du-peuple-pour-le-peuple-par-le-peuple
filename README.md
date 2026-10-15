@@ -826,6 +826,11 @@ Ces expériences interrogent le modèle ; elles ne constituent pas des prévisio
 (docs/RD_DOUBLE_MANDATURE.md) : calendrier électoral, verrou constitutionnel,
 usure du capital politique, second dividende de la dette, investissements à
 cycle long — avec deux scénarios décennaux exécutables et leur suite de tests dédiée.
+Vérifié le 15 octobre 2026 : **c'est la durée du scénario, et non le sixième
+exercice, qui ouvre les dynamiques à maturation longue** (capital public non
+couvert, exposition climatique) — comptées dès le premier exercice sur dix ans,
+strictement nulles sur cinq, et hors budget dans les deux cas
+([`tests/test_horizons_prospectifs.py`](tests/test_horizons_prospectifs.py)).
 
 ## Conflits et risques systémiques
 
