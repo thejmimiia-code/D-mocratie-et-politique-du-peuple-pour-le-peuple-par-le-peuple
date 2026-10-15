@@ -86,19 +86,19 @@ JOUR_ZERO = "15 octobre 2026"
 PLAFONDS: dict[str, dict] = {
     "brut": {
         "plafond": 505_000,
-        "mesure": 478_837,
-        "marge": 0.0546,
+        "mesure": 479190,
+        "marge": 0.0539,
         "quand": JOUR_ZERO,
         "jour_zero": True,
         "quoi": "le document brut : ce que l'appareil décompresse, analyse et "
-                "garde en mémoire, 478 837 o dont 317 991 de script en ligne",
+                "garde en mémoire, 479 190 o dont 318 344 de script en ligne",
         "sortie": "Retirer du document ce qui ne sert pas la visite, ou relever "
                   "l'ancre en revue : la compression ne paie pas le parse.",
     },
     "part_js": {
         "plafond": 0.72,
-        "mesure": 0.6641,
-        "marge": 0.0842,
+        "mesure": 0.6643,
+        "marge": 0.0838,
         "quand": JOUR_ZERO,
         "jour_zero": True,
         "quoi": "la part du document portée par le script en ligne : 66,4 % — un "

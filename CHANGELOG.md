@@ -8,8 +8,8 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ### La page se pèse devant vous — et le dépôt tient ce qu'elle ne dit pas (15 octobre 2026)
 
-- **Le fait, mesuré sur la page publiée** (`index.html`, gzip -6) : **478 837 octets bruts**,
-  **129 569 transférés**, dont **109 102 o** de feuille de style et **317 991 o** de script
+- **Le fait, mesuré sur la page publiée** (`index.html`, gzip -6) : **479 190 octets bruts**,
+  **129 701 transférés**, dont **109 102 o** de feuille de style et **318 344 o** de script
   en ligne — **66,4 %** du document — pour **51 744 o** de balisage. Le dépôt plafonnait déjà
   ce que le réseau transporte (`outils/budgets_fluidite.py`, ancre 125 284 o, plafond 137 813 o) ;
   il ne plafonnait pas **ce que l'appareil décompresse et analyse**, ni ne vérifiait **qui la page
@@ -21,7 +21,7 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   toute sous-ressource en même origine **déclarée** dans une liste blanche. Le seul appel de la
   page est `/_vercel/insights/script.js`, en même origine et en `defer`.
 - **Un seul juge par grandeur** : ce fichier ne redéclare **pas** de plafond réseau, il le **lit**
-  dans `outils/budgets_fluidite.py` et publie la réserve (8 244 o, 6,0 % du plafond, dont les
+  dans `outils/budgets_fluidite.py` et publie la réserve (8 112 o, 5,9 % du plafond, dont les
   518 o payés par cette passe). Deux plafonds concurrents sur le même nombre finiraient par
   diverger, et c'est la mesure qui lirait le mauvais.
 - **Et la page le dit elle-même au visiteur** : le bloc **6 de l'audit**, « Ce que cette visite a
@@ -41,10 +41,10 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   dans une cellule non repliable** (plus de 30 signes dans un `td.chiffre`) : la lecture sur
   téléphone devient une règle vérifiée, pas une intention. Sabotage vérifié — la classe
   remise fait rougir trois scénarios de navigateur.
-- **47 contrôles neufs, deux suites** : `tests/test_poids_de_la_page.py` (29) — plafonds datés,
+- **48 contrôles neufs, deux suites** : `tests/test_poids_de_la_page.py` (29) — plafonds datés,
   marge recalculée, mesure complète (CSS + JS + balisage = le fichier, au bit près), autonomie,
   plafond réseau lu et non recopié, verdict et sortie de la ligne de commande ; et
-  `tests/test_pesee_de_la_visite.py` (18) — dont **le JavaScript de la page exécuté dans Node sur
+  `tests/test_pesee_de_la_visite.py` (19) — dont **le JavaScript de la page exécuté dans Node sur
   un DOM minimal** (`tests/dom_minimal.mjs`), avec cinq doublures de navigateur : une visite
   normale, une visite servie du cache, une visite où un autre domaine est appelé, une mesure qui
   refuse de se faire (elle jette), et une API de mesure absente.
@@ -53,6 +53,11 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
   51 744, mesurés par positions), et la **disparition du `try/catch`** de la pesée. Le premier
   sabotage écrit pour ce contrôle « passait inaperçu » — il posait son `throw` **dans** le `try`,
   donc la garde le rattrapait : c'est le sabotage qui était faux, et il a été réécrit.
+- **Un chiffre qui dit ce qu'il mesure** : le poids « transféré » annoncé au visiteur
+  (`transferSize`) compte **tout** l'échange, **en-têtes compris**, alors que le plafond du dépôt
+  mesure un corps de document en gzip -6. Le libellé le dit désormais, et un contrôle refuse un
+  poids transféré qui ne déclarerait pas son périmètre : deux nombres qui ne mesurent pas la même
+  chose ne doivent pas avoir l'air d'en mesurer une. Sabotage vérifié.
 - **La CI refuse désormais quatre choses de plus** : document brut au-dessus de 505 000 o, script
   en ligne au-delà des trois quarts du document, sous-ressource d'un domaine tiers, sous-ressource
   en même origine non déclarée. Une étape dédiée les exécute (`poids analysé et autonomie`), à côté
