@@ -61,9 +61,14 @@ def routes_du_serveur(methode: str) -> set[str]:
 class FauxReseau:
     """Un hébergeur docile : tout répond juste, sauf ce qu'on sabote."""
 
-    def __init__(self, veille: object, sabote: dict[str, str] | None = None) -> None:
+    def __init__(self, veille: object, sabote: dict[str, str] | None = None,
+                 une_fois: list[str] | None = None) -> None:
         self.veille = veille
         self.sabote = sabote or {}
+        #: Chemins sabotés **une seule fois** : le premier appel est faux, les
+        #: suivants sont justes. C'est la forme d'un déploiement en vol — la
+        #: première page servie est celle d'avant, la deuxième est la bonne.
+        self.une_fois = set(une_fois or ())
         self.appels: list[str] = []
 
     def __call__(self, url: str, methode: str = "GET",
@@ -111,7 +116,10 @@ class FauxReseau:
             }[chemin]
             return reponse(200, type_contenu, fichier.read_bytes() if fichier else b"")
         page = f"<!DOCTYPE html><html lang=\"fr\"><head>{surface.entete_html()}</head></html>"
-        if self.sabote.get("/") == "sans-canonique":
+        une_fois_ici = "/" in self.une_fois
+        if une_fois_ici:
+            self.une_fois.discard("/")
+        if self.sabote.get("/") == "sans-canonique" or une_fois_ici:
             page = page.replace(f'rel="canonical" href="{surface.URL_CANONIQUE}"', "")
         return reponse(200, "text/html; charset=utf-8", page.encode("utf-8"))
 
@@ -188,12 +196,13 @@ class TestEpreuves(unittest.TestCase):
     def setUpClass(cls):
         cls.veille = charger_veille()
 
-    def sonder(self, sabote: dict[str, str] | None = None, hote: str = "canonique"):
-        faux = FauxReseau(self.veille, sabote)
+    def sonder(self, sabote: dict[str, str] | None = None, hote: str = "canonique",
+               une_fois: list[str] | None = None, essais: int = 1):
+        faux = FauxReseau(self.veille, sabote, une_fois)
         vrai = self.veille._demander
         self.veille._demander = faux
         try:
-            verdicts = self.veille.sonder(hote, self.veille.HOTES[hote], 1, 0.0)
+            verdicts = self.veille.sonder(hote, self.veille.HOTES[hote], essais, 0.0)
         finally:
             self.veille._demander = vrai
         return verdicts, faux
@@ -225,10 +234,13 @@ class TestEpreuves(unittest.TestCase):
         self.assertIn("adresse canonique", fautifs[0].detail)
 
     def test_une_route_disparue_est_vue(self):
-        verdicts, _ = self.sonder({"/api/objections": "absent"})
+        verdicts, faux = self.sonder({"/api/objections": "absent"}, essais=3)
         fautifs = [verdict for verdict in verdicts if not verdict.reussi]
         self.assertEqual([verdict.cible for verdict in fautifs], ["/api/objections"])
         self.assertIn("attendu 200, reçu 404", fautifs[0].detail)
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/api/objections"), 1,
+                         "une route absente a été redemandée trois fois pour rien")
 
     def test_une_route_qui_repond_une_erreur_est_vue(self):
         verdicts, _ = self.sonder({"/api/catalogue": "erreur"})
@@ -321,24 +333,89 @@ class TestEpreuves(unittest.TestCase):
             if ancien is not None:
                 os.environ["GITHUB_STEP_SUMMARY"] = ancien
 
-    def test_un_502_est_un_verdict_pas_un_reveil(self):
-        """La passerelle sans service : on le dit, on n'attend pas.
+    def test_un_502_sur_une_route_est_un_verdict_pas_un_reveil(self):
+        """La passerelle sans service, sur une route : on le dit, on n'attend pas.
 
-        Un 502 n'annonce aucun démarrage. L'attendre cinq fois par adresse, c'est
-        la quarantaine de minutes qui a fait qu'on ne lisait plus la veille.
+        Un 502 n'annonce aucun démarrage, et le répéter ne réveille rien. C'est
+        ce qui faisait durer une veille sur un hôte suspendu une quarantaine de
+        minutes — le genre de lenteur qui fait qu'on ne la lit plus.
         """
-        faux = FauxReseau(self.veille, {"panne": "oui"})
+        verdicts, faux = self.sonder({"panne": "oui"}, essais=5)
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/api/lexique"), 1,
+                         "une route a attendu cinq fois une passerelle qui ne répond pas")
+        rate = [verdict for verdict in verdicts if not verdict.reussi]
+        self.assertTrue(rate, "un 502 n'a pas été vu")
+        self.assertIn("passerelle", rate[0].detail)
+        self.assertIn("502", rate[0].detail)
+
+    def test_insister_sait_quand_il_faut_attendre_et_quand_non(self):
+        """Les trois règles de `_insister`, éprouvées sur lui — pas sur ses appels.
+
+        Les épreuves de `sonder` passent `essais=1` aux routes : elles ne peuvent
+        donc pas dire si l'insistance a été réservée à ce qu'il faut. Ces trois
+        cas-là, si.
+        """
+        faux = FauxReseau(self.veille, {"muet": "oui"})
         vrai = self.veille._demander
         self.veille._demander = faux
         try:
-            verdicts = self.veille.sonder("canonique", self.veille.HOTES["canonique"], 5, 0.0)
+            # 1. Le silence : on insiste — c'est un réveil en cours.
+            self.veille._insister("https://exemple.test/", essais=3, attente=0.0)
+            self.assertEqual(len(faux.appels), 3, "le silence n'est plus attendu")
+
+            # 2. Un 502 : un verdict. Le répéter ne réveille rien.
+            faux = FauxReseau(self.veille, {"panne": "oui"})
+            self.veille._demander = faux
+            self.veille._insister("https://exemple.test/", essais=3, attente=0.0)
+            self.assertEqual(len(faux.appels), 1, "un 502 a été attendu trois fois")
+
+            # 3. Un critère : on insiste tant qu'il n'est pas satisfait, et on
+            #    s'arrête dès qu'il l'est.
+            faux = FauxReseau(self.veille, {}, une_fois=["/"])
+            self.veille._demander = faux
+            reponse = self.veille._insister("https://exemple.test/", essais=5, attente=0.0,
+                                            acceptable=self.veille._page_complete)
+            self.assertEqual(len(faux.appels), 2, "le critère n'a pas arrêté l'attente")
+            self.assertTrue(self.veille._page_complete(reponse))
         finally:
             self.veille._demander = vrai
+
+    def test_une_page_complete_ne_se_demande_pas_deux_fois(self):
+        """L'insistance s'arrête à la première page entière.
+
+        Sans cette règle, `--essais 5` ferait cinq requêtes et quatre attentes de
+        vingt secondes **à chaque passage**, même quand tout va bien : quatre-
+        vingts secondes ajoutées à une veille qui n'avait rien à dire.
+        """
+        verdicts, faux = self.sonder(essais=5)
         base = self.veille.HOTES["canonique"]
         self.assertEqual(faux.appels.count(f"GET {base}/"), 1,
-                         "la veille a attendu cinq fois une passerelle qui ne répond pas")
+                         "une page déjà complète a été redemandée")
+        self.assertTrue(verdicts[0].reussi)
+
+    def test_la_page_attend_que_le_deploiement_arrive(self):
+        """Juste après une fusion, ce qui est servi n'est pas encore le dépôt.
+
+        Et « pas encore » n'est pas « faux » : la page est ce qu'un déploiement
+        remplace en dernier. La veille le sait depuis le 15 octobre 2026, où
+        elle est devenue le contrôle de l'après-fusion.
+        """
+        verdicts, faux = self.sonder(une_fois=["/"], essais=3)
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/"), 2,
+                         "la page n'a pas été réessayée : un déploiement en vol "
+                         "passerait pour une page cassée")
+        self.assertTrue(verdicts[0].reussi, "la page n'est pas repassée au vert")
+
+    def test_une_page_qui_repond_502_est_essayee_puis_dite(self):
+        """Sur la page, un 502 se réessaie — mais le verdict reste honnête."""
+        verdicts, faux = self.sonder({"panne": "oui"}, essais=3)
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/"), 3,
+                         "la page n'attend pas le déploiement")
+        self.assertFalse(verdicts[0].reussi)
         self.assertIn("passerelle", verdicts[0].detail)
-        self.assertIn("502", verdicts[0].detail)
 
     def test_une_panne_reseau_devient_un_verdict_pas_un_arret(self):
         """Un hôte muet ne doit pas emporter le rapport avec lui."""

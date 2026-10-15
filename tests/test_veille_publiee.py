@@ -49,14 +49,53 @@ class TestLaVeillePublieSonVerdict(unittest.TestCase):
     def setUpClass(cls):
         cls.texte = VEILLE.read_text(encoding="utf-8")
 
-    def test_la_veille_se_declenche_d_elle_meme_et_a_la_demande(self):
+    def test_la_veille_se_declenche_apres_chaque_fusion(self):
+        """**Après une fusion** : c'est là que la question a une réponse neuve.
+
+        Le déploiement vient d'avoir lieu ; la veille dit s'il est arrivé. Sans
+        ce déclencheur, la seule vérification régulière serait un calendrier —
+        or ce dépôt n'a reçu **aucun** événement `schedule` (mesuré le
+        15 octobre 2026, voir `docs/HEBERGEMENT.md`) : la veille ne tournerait
+        plus jamais, et sa page de suivi resterait figée sur un verdict périmé.
+        """
         self.assertIn("workflow_dispatch:", self.texte)
         self.assertIn("schedule:", self.texte)
         self.assertIn("cron:", self.texte)
-        # Une poussée qui touche ce qu'elle interroge la déclenche : sans cela,
-        # un changement du vérificateur ne serait vérifié que la semaine suivante.
-        self.assertIn("branches-ignore: [main]", self.texte)
-        self.assertIn("outils/verifier-surface-en-ligne.py", self.texte)
+        bloc = self.texte[self.texte.index("\n  push:\n"):self.texte.index("permissions:")]
+        self.assertIn("branches: [main]", bloc,
+                      "la veille ne se déclenche pas après une fusion")
+        self.assertNotIn("branches-ignore", bloc)
+
+    def test_la_veille_s_eprouve_avant_une_fusion_qui_la_touche(self):
+        """L'exercer sur ce qu'elle interroge, plutôt que le découvrir après."""
+        bloc = self.texte[self.texte.index("\n  pull_request:\n"):
+                          self.texte.index("permissions:")]
+        for chemin in ("outils/verifier-surface-en-ligne.py",
+                       "simulateur/surface_publique.py",
+                       ".github/workflows/veille-en-ligne.yml"):
+            with self.subTest(chemin=chemin):
+                self.assertIn(chemin, bloc)
+
+    def test_la_page_de_suivi_dit_ce_qui_a_declenche_le_passage(self):
+        """Une fusion, le calendrier, une demande : trois raisons, trois lectures.
+
+        Sans cela, un lecteur ne peut pas savoir si le verdict est **postérieur**
+        à son déploiement — c'est-à-dire si la page parle de la version qu'il
+        vient de mettre en ligne.
+        """
+        # Commentaires retirés avant de juger : la variable est aussi nommée
+        # dans l'explication qui accompagne la ligne, et un contrôle qui lit
+        # l'explication au lieu du code valide son propre commentaire — vu le
+        # 15 octobre 2026, une fois de plus.
+        lignes = [ligne for ligne in self.texte.splitlines()
+                  if not ligne.strip().startswith("#")]
+        code = "\n".join(lignes)
+        self.assertIn("entete=$(printf", code, "l'en-tête du rapport n'est plus construit")
+        # L'affectation entière : la commande s'étale sur plusieurs lignes, et
+        # c'est l'ensemble qui doit porter la variable — pas la ligne du format.
+        entete = code[code.index("entete=$(printf"):code.index("corps=$(printf")]
+        self.assertIn("$GITHUB_EVENT_NAME", entete,
+                      "l'en-tête publié ne dit plus ce qui a déclenché le passage")
 
     def test_elle_a_le_droit_d_ecrire_une_page(self):
         self.assertIn("issues: write", self.texte)

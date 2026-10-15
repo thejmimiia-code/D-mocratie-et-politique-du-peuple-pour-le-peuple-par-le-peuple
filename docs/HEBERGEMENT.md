@@ -277,9 +277,27 @@ lui-même qui n'est plus là :
 
 [`.github/workflows/veille-en-ligne.yml`](../.github/workflows/veille-en-ligne.yml)
 interroge **les deux** adresses — page, textes pour robots, images, vingt-deux
-routes — une fois par semaine, à chaque changement de la veille, et à la
-demande. Son verdict est publié dans un commentaire tenu à jour sur la page
-**« Veille en ligne »** du dépôt, lisible sans rien installer.
+routes — **après chaque fusion sur `main`**, avant une fusion qui touche la
+veille elle-même, à la demande, et une fois par semaine si le calendrier de
+GitHub veut bien livrer (ici, il ne livre pas : voir la mesure plus bas). Son
+verdict est publié dans un commentaire tenu à jour sur la page **« Veille en
+ligne »** du dépôt, lisible sans rien installer, et il dit **ce qui l'a
+déclenché** — une fusion, le calendrier, une demande.
+
+**Pourquoi après chaque fusion, et pas seulement le lundi.** Une fusion est le
+seul instant où la question « qu'est-ce qui est réellement servi ? » a une
+réponse **neuve** : un déploiement vient d'avoir lieu, et la veille dit s'il est
+arrivé. Un rendez-vous hebdomadaire, lui, ne peut que constater une panne dans
+les sept jours qui suivent — c'est-à-dire trop tard pour le visiteur qui l'a
+signalée.
+
+**Et un déploiement en cours n'est pas un mensonge.** Juste après une fusion, la
+page servie est encore celle d'avant pendant une à deux minutes : la veille
+n'appelle pas cela un échec, elle **attend**. Seule la page est réessayée ainsi
+(c'est elle qu'un déploiement remplace en dernier, et c'est elle aussi qui
+réveille un service endormi) ; les vingt et une autres adresses restent à un
+seul essai, sans quoi une veille sur un hôte tombé durerait quarante minutes au
+lieu de deux.
 
 **Deux poids, deux mesures** : l'adresse canonique est celle qu'on partage, donc
 son échec fait rougir la veille ; la copie de secours peut être endormie,

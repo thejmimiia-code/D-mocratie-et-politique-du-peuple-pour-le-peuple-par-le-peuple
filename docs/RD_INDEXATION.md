@@ -399,11 +399,21 @@ la panne, puis le retour —, sa page est distincte, et sa fenêtre est calculé
 pour rester sous le quota d'heures du palier gratuit : voir
 [`HEBERGEMENT.md`](HEBERGEMENT.md#le-garde-veille--empêcher-le-service-de-sendormir).
 
-Le workflow `.github/workflows/veille-en-ligne.yml` l'exécute à la demande, une
-fois par semaine, et à chaque poussée qui touche la veille elle-même (jamais à
-chaque poussée : une panne d'hébergeur ne doit pas faire rougir la contribution
-de quelqu'un d'autre). La veille tourne aussi à la main, sur n'importe quel
-poste :
+Le workflow `.github/workflows/veille-en-ligne.yml` l'exécute **après chaque
+fusion sur `main`** — le seul instant où la question a une réponse neuve, parce
+qu'un déploiement vient d'avoir lieu —, avant une fusion qui touche la veille
+elle-même, à la demande, et une fois par semaine si le calendrier veut bien
+livrer (mesuré le 15 octobre 2026 : il ne livre rien dans ce dépôt). Jamais à
+chaque poussée ordinaire : une panne d'hébergeur ne doit pas faire rougir la
+contribution de quelqu'un d'autre.
+
+**Et la veille sait attendre un déploiement.** Juste après une fusion, la page
+servie est encore celle d'avant pendant une à deux minutes : « pas encore » n'est
+pas « faux ». La page — et elle seule, parce qu'un déploiement la remplace en
+dernier et qu'elle réveille un service endormi — est réessayée jusqu'à être
+**complète** ; les autres adresses gardent leur verdict au premier essai, sans
+quoi une veille sur un hôte suspendu durerait quarante minutes. La veille tourne
+aussi à la main, sur n'importe quel poste :
 
 ```bash
 python3 outils/verifier-surface-en-ligne.py                # les deux hôtes
