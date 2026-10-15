@@ -18,6 +18,7 @@
 // des sources).
 
 import { mkdir, writeFile } from "node:fs/promises";
+import { depassements, lignes as lignes_premier_ecran } from "./plafonds_premier_ecran.mjs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -245,10 +246,24 @@ async function photographier(nom, { theme, largeur, preparation, url, garderGuid
           liste_display: liste ? getComputedStyle(liste).display : "—",
         };
       })(),
+      /* Le premier écran : ce qu'un visiteur voit avant la première ligne de
+         contenu. Bandeau, sommaire collant, ruban de veille — additionnés, ils
+         disent la part de l'écran que la page prend pour se présenter. */
+      premier_ecran: (() => {
+        const hauteurDe = (selecteur) => {
+          const element = document.querySelector(selecteur);
+          return element ? Math.round(element.getBoundingClientRect().height) : 0;
+        };
+        const bandeau = hauteurDe(".entete");
+        const sommaire = hauteurDe(".sommaire");
+        const ruban = hauteurDe(".ruban-veille");
+        return { bandeau, sommaire, ruban, total: bandeau + sommaire + ruban };
+      })(),
       plans: {
         entete: plan(".entete"),
         barre: plan(".entete .barre-contexte"),
         etat: plan(".entete .etat-contexte"),
+        ruban: plan(".ruban-veille"),
         sommaire: plan(".sommaire-liste"),
       },
       boites: [".entete", ".entete .barre-contexte", ".entete .barre-contexte button",
@@ -414,6 +429,13 @@ for (const vue of rapport) {
     + `${resumeBoite(vue, ".sommaire")} | ${resumeBoite(vue, ".sommaire-liste")} | `
     + `${resumeBoite(vue, ".ruban-veille")} |`);
 }
+/* Le premier écran, et son plafond. Une hauteur de bandeau ne dit pas si le
+   contenu existe pour le lecteur : 350 px sur 900 sont une respiration, 350 px
+   sur un téléphone sont un mur. C'est leur **somme** qui décide — bandeau,
+   sommaire collant, ruban —, et elle est plafonnée par largeur. */
+lignes.push("");
+for (const ligne of lignes_premier_ecran(rapport)) lignes.push(ligne);
+
 /* Le plan coté du bandeau : c'est là que la place se perd ou se gagne. Une
    hauteur seule ne dirait pas *qui* occupe le cadre — ni ce qui reste vide. */
 const plans = rapport.filter((vue) => vue.theme === "jour" && vue.nom.startsWith("accueil-"));
@@ -439,6 +461,19 @@ if (plans.length) {
     for (const enfant of vue.plans?.barre || []) {
       lignes.push(`    - barre : x=${enfant.x} y=${enfant.y} ${enfant.largeur}×${enfant.hauteur} `
         + `${enfant.nom} « ${enfant.texte} »`);
+    }
+    /* La ligne d'état et le ruban : ce sont eux qui décident de la hauteur du
+       premier écran sur un téléphone, et rien ne disait *qui* y occupait quoi. */
+    for (const [nom, enfants] of [["état", vue.plans?.etat || []],
+      ["ruban", vue.plans?.ruban || []]]) {
+      if (!enfants.length) continue;
+      const bas = Math.max(...enfants.map((e) => e.y + e.hauteur));
+      lignes.push(`    - ${nom} : ${enfants.length} enfant(s), `
+        + `${new Set(enfants.map((e) => e.y)).size} bande(s), bas le plus haut à y=${bas}`);
+      for (const enfant of enfants) {
+        lignes.push(`      - x=${enfant.x} y=${enfant.y} ${enfant.largeur}×${enfant.hauteur} `
+          + `${enfant.nom} « ${enfant.texte} »`);
+      }
     }
     /* Le sommaire est collant : sa hauteur se paie à chaque défilement. */
     const sommaire = vue.plans?.sommaire || [];
@@ -516,3 +551,14 @@ await writeFile(path.join(DOSSIER, "resume.md"), resume, "utf8");
 console.log(resume);
 await navigateur.close();
 console.log(`${rapport.length} captures écrites dans ${DOSSIER}`);
+
+/* Un plafond dépassé n'est pas une mesure : c'est un échec. Le travail rougit,
+   le résumé dit lequel et de combien, et l'étape « Dire l'échec » le publie là
+   où il se lit. Un plafond qu'on se contente d'afficher ne plafonne rien. */
+const trop = depassements(rapport);
+if (trop.length) {
+  console.error(`Premier écran : ${trop.length} vue(s) au-dessus du plafond`);
+  for (const depassement of trop) console.error(`  ⛔ ${depassement.phrase}`);
+  process.exit(1);
+}
+console.log("Premier écran : tous les plafonds sont tenus.");
