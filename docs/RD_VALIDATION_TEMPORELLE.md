@@ -225,6 +225,40 @@ Les coûts logistiques, réseaux multi-routes, interdépendances industrielles e
 effets humains de l'audit précédent restent également ouverts. Cette phase ne
 prétend pas les avoir résolus en ajoutant un protocole statistique.
 
+## Addendum — la fréquence de base et la compétence qui se refuse (R&D v5, 15 octobre 2026)
+
+La lacune P0 « pas de cas négatifs / fréquence de base » est traitée là où elle
+mord : dans le rapport. Un Brier seul ne dit rien — `0,2222` n'est ni bon ni
+mauvais sans savoir ce que vaut **annoncer partout la fréquence observée**. Le
+rapport publie donc, pour chaque référence : les cas positifs et négatifs, la
+**fréquence de base**, le **Brier de la référence sans compétence** `p(1−p)` et
+la **compétence** `1 − Brier / référence`.
+
+Et quand l'échantillon ne porte qu'un côté, la compétence **n'est pas publiée** :
+`competence_brier` vaut `null`, la raison est écrite (`aucun_cas_negatif`,
+`aucun_cas_positif`, `echantillon_vide`), et le champ `avertissements_echantillon`
+répète la limite à côté des scores — **depuis les mêmes nombres** (calculés une
+seule fois, pour que l'avertissement parle du score publié et non d'un jumeau).
+
+### Ce que la mesure a changé au jugement porté sur le corpus
+
+Exécuté sur le corpus synthétique, aux paramètres de la section 6 (48 cellules
+comparables, 18 positives, 30 négatives) :
+
+| Référence | Brier | Compétence vs fréquence de base |
+|---|---:|---:|
+| `frequence_lissee` | 0,2598 | **−0,108** — fait moins bien que d'annoncer 0,375 |
+| `dernier_etat_lisse` | 0,2222 | **+0,052** — à peine mieux |
+| *annoncer 0,375 partout* | 0,2344 | 0 (la référence) |
+
+Autrement dit : le lissage coûte plus qu'il n'apprend, et la seconde référence ne
+mérite son nom que de 5 %. Le tableau des limites de la section 7 s'en trouve
+corrigé — « Échantillon réel couvrant périodes positives et négatives » reste
+**non constitué sur données réelles**, mais le corpus synthétique porte bien les
+deux côtés, et le logiciel **refuse** désormais de publier une compétence sans
+eux. Une évaluation qui n'aurait pas de cas négatifs ne se tait pas par oubli :
+elle se tait par construction, et elle dit pourquoi.
+
 ## Addendum — adaptateur GED (R&D v4)
 
 Un [adaptateur local du schéma UCDP GED 26.1](RD_IMPORT_UCDP.md) est désormais testé.

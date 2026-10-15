@@ -34,12 +34,14 @@
 // cliquet est resserré à 673 et 515, même marge d'une rangée. La troisième, le
 // même jour encore, a donné deux formes à l'horodatage et retiré de la forme
 // courte des leviers l'horizon que le select voisin dit déjà : mesuré 603 et
-// 460, cliquet à 630 et 487. Un gain qu'on ne relève pas se reperd.
+// 460, cliquet à 630 et 487. Et la passe suivante, toujours le même jour, a
+// donné deux textes au titre et à la phrase du bandeau : mesuré 561, cliquet à
+// 588. Un gain qu'on ne relève pas se reperd.
 //
 // Le chemin qui reste est écrit ici pour la suite : un écran de téléphone fait
 // 780 px de haut, et le contenu doit y commencer. À 380 px, le bandeau fait
-// 393 px — un titre de quatre lignes (87), une phrase de quatre lignes (79),
-// quatre commandes (89) et une ligne d'état de deux rangées (64).
+// 351 px — un sur-titre (21), un titre de trois lignes (65), une phrase de trois
+// lignes (59), quatre commandes (89) et une ligne d'état de deux rangées (64).
 
 /** La hauteur du premier écran : ce qu'un visiteur voit avant le contenu. */
 export const PLAFONDS = {
@@ -47,13 +49,12 @@ export const PLAFONDS = {
     //: La marge du plafond est **d'une rangée** (27 px ici) : assez pour les
     //: chiffres qui changent d'une simulation à l'autre — un verdict plus long,
     //: un montant à trois chiffres —, trop peu pour cacher une rangée de plus.
-    plafond: 630,
-    avant: 646,
-    mesure: 603,
+    plafond: 588,
+    avant: 603,
+    mesure: 561,
     quand: "15 octobre 2026",
-    quoi: "bandeau 393 + sommaire 58 + ruban 152 (avant la passe : 420 + 58 + 152,"
-      + " dont une ligne d'état de trois rangées — l'horodatage court et la forme"
-      + " courte des leviers la font tenir en deux)",
+    quoi: "bandeau 351 + sommaire 58 + ruban 152 (avant la passe : 393 + 58 + 152 —"
+      + " le titre passe de quatre lignes à trois, la phrase de quatre à trois)",
   },
   640: {
     plafond: 487,

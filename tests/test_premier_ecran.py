@@ -256,10 +256,24 @@ class TestLeVerdict(unittest.TestCase):
                           "le verdict ne dit pas où la place se perd")
 
     def test_une_vue_sous_le_plafond_passe(self):
-        code, verdict = _verdict([_vue(380, 400, 58, 150)])
+        """La vue d'essai se construit **sous** le plafond du jour, quel qu'il soit.
+
+        Un jeu figé s'est retrouvé au-dessus du jour où le cliquet a été
+        resserré : c'est le test qui avait vieilli, pas la mesure. Le contrôle
+        refuse toute vue d'un seul pixel au-dessus — et accepte celle d'un pixel
+        en dessous.
+        """
+        largeur, limite = sorted(_plafonds().items())[0]
+        plafond = limite["plafond"]
+        #: Un pixel en moins que le plafond : sommaire et ruban comptent aussi.
+        bandeau = plafond - 3
+        code, verdict = _verdict([_vue(largeur, bandeau, 1, 1)])
         self.assertEqual(code, 0, "une vue sous le plafond a été refusée")
         self.assertEqual(verdict["depassements"], [])
         self.assertTrue(any("tenu" in ligne for ligne in verdict["lignes"]))
+        code, verdict = _verdict([_vue(largeur, bandeau + 2, 1, 1)])
+        self.assertEqual(code, 1, "une vue d'un pixel au-dessus du plafond est passée")
+        self.assertEqual(verdict["depassements"][0]["exces"], 1)
 
     def test_une_largeur_sans_plafond_n_est_jamais_signalee(self):
         """Le grand écran n'est pas plafonné : 394 px sur 900, il y a la place."""
@@ -479,6 +493,45 @@ class TestLaPageTientLePlafond(unittest.TestCase):
         self.assertIsNotNone(interligne_petit, "la phrase ne resserre plus son interligne")
         self.assertLess(float(interligne_petit), float(interligne_grand),
                         "l'interligne de la phrase ne se resserre pas")
+
+    def test_le_titre_et_la_phrase_du_bandeau_ont_deux_textes(self):
+        """Ce qui est peint sur un téléphone est plus **court** — pas plus petit.
+
+        Mesuré le 15 octobre 2026, à 380 px : le titre faisait quatre lignes
+        (87 px) et la phrase d'accroche quatre lignes (79 px) — 166 px du premier
+        écran, plus que les quatre commandes réunies (89 px). Le couple
+        long/court est celui de la page ; rien n'est retiré du document : la
+        devise entière reste dans le `<h1>`, donc dans `textContent`, et le
+        `<title>` du document ne bouge pas.
+        """
+        for ouverture, fermeture, debut_attendu, ce_que_le_long_garde in (
+                ("<h1>", "</h1>", "Simulateur Macro-Politique",
+                 "du peuple, pour le peuple, par le peuple"),
+                ('<p class="accroche">', "</p>", "Choisissez vos politiques",
+                 "domaine par domaine")):
+            with self.subTest(element=ouverture):
+                debut = HTML_PAGE.index(ouverture)
+                bloc = HTML_PAGE[debut:HTML_PAGE.index(fermeture, debut)]
+                self.assertIn('class="mot-long"', bloc,
+                              "l'élément n'a plus de forme longue : le document perd son texte")
+                self.assertIn('class="mot-court"', bloc,
+                              "l'élément n'a plus de forme courte : le téléphone n'y gagne rien")
+                self.assertNotIn("aria-hidden", bloc,
+                                 "un texte caché aux lecteurs d'écran : ce qui est peint "
+                                 "doit être ce qui est lu")
+                long_ = bloc.split('class="mot-long">', 1)[1].split("</span>", 1)[0]
+                court = bloc.split('class="mot-court">', 1)[1].split("</span>", 1)[0]
+                self.assertTrue(court.strip(), "la forme courte est vide")
+                self.assertTrue(long_.strip(), "la forme longue est vide")
+                self.assertLess(len(court), len(long_),
+                                "la forme courte est aussi longue que la longue : "
+                                "elle ne fait rien gagner")
+                self.assertIn(debut_attendu, court,
+                              "la forme courte ne dit plus ce qu'est la page")
+                self.assertIn(ce_que_le_long_garde, long_,
+                              "la forme longue a perdu du contenu : rien ne se retire")
+                self.assertIn(ce_que_le_long_garde, HTML_PAGE,
+                              "le texte retiré du document ne s'y trouve plus")
 
     def test_l_horodatage_d_un_telephone_tient_en_onze_signes(self):
         """Deux formes du même instant, écrites depuis la même source.
