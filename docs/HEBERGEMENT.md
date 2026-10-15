@@ -338,6 +338,28 @@ python3 outils/garde-veille.py --ping          # frappe à la porte et raconte
 python3 outils/garde-veille.py --cron "*/10 5-22 * * *"   # ce que la fenêtre couvre
 ```
 
+**Le lire depuis l'onglet Actions** : le nom de l'étape finale porte l'état —
+« Conclure — **ok** » ou « Conclure — **panne** ». Un journal de *run* se
+télécharge, un nom d'étape se lit.
+
+#### Une seconde porte, indépendante de GitHub
+
+Le calendrier de GitHub est le chemin le plus simple, mais il est **au mieux** :
+un passage peut être retardé, et GitHub désactive les calendriers d'un dépôt
+resté soixante jours sans activité. Pour ne dépendre de personne, deux services
+gratuits suffisent — **UptimeRobot** ou **cron-job.org** —, à qui l'on donne
+l'adresse de la sonde :
+
+```
+https://simulateur-macro-politique.onrender.com/api/lexique
+```
+
+Un contrôle toutes les dix minutes, avec une alerte par courriel si le statut
+change : ces services frappent depuis **leur** réseau, à leurs heures, et
+n'ont besoin d'aucun secret. Le meilleur des deux : le rendez-vous GitHub reste
+(il publie sur la page du dépôt), et le pinger externe garantit qu'aucun visiteur
+ne réveille le service à sa place.
+
 ---
 
 ## Ce qu'il faut savoir avant de partager le lien

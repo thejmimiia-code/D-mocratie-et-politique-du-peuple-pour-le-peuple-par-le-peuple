@@ -397,6 +397,27 @@ class TestLaDocumentationExpliqueLeRendezVous(unittest.TestCase):
     def test_elle_renvoie_au_fichier_du_rendez_vous(self):
         self.assertIn("garde-veille.yml", self.doc)
 
+    def test_elle_donne_la_porte_de_secours(self):
+        """Le calendrier de GitHub est « au mieux » : une autre porte doit exister.
+
+        Elle est faite d'une adresse et de deux services gratuits — et elle ne
+        dépend ni de GitHub, ni d'un secret du dépôt.
+        """
+        self.assertIn("#### Une seconde porte, indépendante de GitHub", self.doc,
+                      "la porte de secours n'a plus de section à elle")
+        self.assertIn("cron-job.org", self.doc)
+        self.assertIn("UptimeRobot", self.doc)
+        self.assertIn("alerte", self.doc,
+                      "une porte de secours qui ne prévient personne n'en est pas une")
+        self.assertIn(f"{GARDE.SECOURS.rstrip('/')}{GARDE.SONDE}", self.doc,
+                      "la seconde porte ne dit pas quelle adresse interroger")
+
+    def test_elle_dit_ou_lire_l_etat(self):
+        """Un nom d'étape se lit ; un journal de run ne se télécharge pas."""
+        self.assertIn("Conclure — **ok**", self.doc)
+        self.assertIn("nom d'étape se lit", self.doc,
+                      "la documentation ne dit pas où lire l'état")
+
     def test_les_ancres_citees_existent_vraiment(self):
         """Un renvoi vers une section qui n'existe pas ne mène nulle part.
 
