@@ -75,6 +75,19 @@ def _regles_dans(selecteur: str, *fragments: str) -> list[tuple[tuple[str, ...],
     return sortie
 
 
+def _dernier(selecteur: str, propriete: str, *fragments: str) -> str | None:
+    """La dernière règle qui **déclare** cette propriété, ou `None`.
+
+    Un sélecteur reçoit plusieurs règles dans le même palier — une pour la
+    taille, une pour l'interligne, une pour les marges. Lire « la dernière » ne
+    dit pas ce qu'on croit : il faut lire celle qui parle de la propriété.
+    """
+    for _contexte, pose in reversed(_regles_dans(selecteur, *fragments)):
+        if propriete in pose:
+            return pose[propriete]
+    return None
+
+
 def _pose(regles: list[tuple[tuple[str, ...], dict[str, str]]]) -> dict[str, str]:
     """La dernière règle, celle qui gagne à la cascade."""
     return regles[-1][1] if regles else {}
@@ -438,6 +451,77 @@ class TestLaPageTientLePlafond(unittest.TestCase):
                               f"{identifiant} n'a plus de libellé long repéré")
                 self.assertIn(f'id="{identifiant}-court"', HTML_PAGE,
                               f"{identifiant} n'a plus de libellé court repéré")
+
+    def test_le_titre_cede_un_cran_sur_un_telephone(self):
+        """Le titre du bandeau : 18,4 px au palier 640, 16,8 à 480.
+
+        Mesuré le 15 octobre 2026 : à 380 px, quatre lignes de titre coûtaient
+        96 px et quatre lignes de phrase 85 — le bandeau en faisait 436. Le
+        titre descend d'un cran et la phrase resserre son interligne : deux
+        rangées de texte en moins, sans qu'aucun corps ne passe sous le plancher
+        de lecture (`--t-min`, 12,5 px, à la plus petite taille de texte).
+        """
+        grand = _dernier("header.entete h1", "font-size", "(max-width:640px)")
+        petit = _dernier("header.entete h1", "font-size", "(max-width:480px)")
+        self.assertIsNotNone(grand, "la taille du titre au palier 640 ne se lit plus")
+        self.assertIsNotNone(petit, "le titre ne cède plus rien à 480 px")
+        taille_grande = _en_px(grand)
+        taille_petite = _en_px(petit)
+        self.assertIsNotNone(taille_petite, f"taille illisible pour le titre : {petit}")
+        self.assertLess(taille_petite, taille_grande,
+                        "le titre ne descend pas d'un cran : le bandeau ne gagne rien")
+        self.assertGreaterEqual(taille_petite, PLANCHER,
+                                "le titre passe sous le plancher de lecture")
+        interligne_grand = _dernier("header.entete .accroche", "line-height",
+                                    "(max-width:640px)")
+        interligne_petit = _dernier("header.entete .accroche", "line-height",
+                                    "(max-width:480px)")
+        self.assertIsNotNone(interligne_petit, "la phrase ne resserre plus son interligne")
+        self.assertLess(float(interligne_petit), float(interligne_grand),
+                        "l'interligne de la phrase ne se resserre pas")
+
+    def test_l_horodatage_d_un_telephone_tient_en_onze_signes(self):
+        """Deux formes du même instant, écrites depuis la même source.
+
+        L'écran large dit `horodatage : 2026-10-15 15:09 UTC` (157 px mesurés) ;
+        la rangée d'un téléphone n'en garde que onze signes, `15/10 15:09`, ce
+        qui laisse le contexte et les leviers côte à côte — et fait passer la
+        ligne d'état de trois rangées à deux.
+        """
+        source = HTML_PAGE[HTML_PAGE.index("function renderContexte"):]
+        source = source[:source.index("\nfunction ", 10)]
+        self.assertIn("const instant = c.horodatage.replace('T', ' ').slice(0, 16);", source,
+                      "l'horodatage n'est plus lu une seule fois pour ses deux formes")
+        self.assertIn("`horodatage : ${instant} UTC`", source,
+                      "la forme longue ne dit plus l'année et le fuseau")
+        self.assertIn("`${jour.slice(8, 10)}/${jour.slice(5, 7)} ${heure}`", source,
+                      "la forme courte de l'horodatage n'est plus construite")
+        court = source[source.index("`${jour.slice(8, 10)}"):]
+        court = court[:court.index("`") + 1]
+        self.assertNotIn("UTC", court, "la forme courte garde le fuseau : elle ne tient plus")
+        self.assertNotIn("horodatage", court,
+                         "la forme courte répète le mot de la forme longue")
+
+    def test_la_ligne_d_etat_se_resserre_sur_un_telephone(self):
+        """Trois pastilles et le select de l'horizon sur deux rangées, pas trois."""
+        def horizontal(valeur: str | None) -> float:
+            self.assertIsNotNone(valeur, "la pastille n'a plus de rembourrage à ce palier")
+            morceaux = valeur.split()
+            self.assertEqual(len(morceaux), 2, f"rembourrage inattendu : {valeur}")
+            return float(morceaux[-1].rstrip("px"))
+
+        petit = horizontal(_dernier("header.entete .etat-contexte .pastille", "padding",
+                                    "(max-width:480px)"))
+        grand = horizontal(_dernier("header.entete .etat-contexte .pastille", "padding",
+                                    "(max-width:640px)"))
+        self.assertLess(petit, grand,
+                        "les pastilles ne se resserrent pas d'un palier à l'autre")
+        ecart_petit = float(_dernier("header.entete .etat-contexte", "gap",
+                                     "(max-width:480px)").rstrip("px"))
+        ecart_grand = float(_dernier("header.entete .etat-contexte", "gap",
+                                     "(max-width:640px)").rstrip("px"))
+        self.assertLess(ecart_petit, ecart_grand,
+                        "l'écart entre pastilles ne se resserre pas")
 
     def test_les_deux_libelles_sont_ecrits_ensemble(self):
         """Sinon le premier clic remet le libellé long, et le ruban regonfle."""
