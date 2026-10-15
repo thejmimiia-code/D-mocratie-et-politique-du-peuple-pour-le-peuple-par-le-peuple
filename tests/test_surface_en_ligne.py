@@ -62,9 +62,13 @@ class FauxReseau:
     """Un hébergeur docile : tout répond juste, sauf ce qu'on sabote."""
 
     def __init__(self, veille: object, sabote: dict[str, str] | None = None,
-                 une_fois: list[str] | None = None) -> None:
+                 une_fois: list[str] | None = None, hics: list[str] | None = None) -> None:
         self.veille = veille
         self.sabote = sabote or {}
+        #: Routes qui répondent 502 **une fois**, puis juste. C'est la forme du
+        #: 502 mesuré le 15 octobre 2026 : la copie de secours redéployait, une
+        #: seule de ses soixante-huit adresses est tombée, et dans la seconde.
+        self.hics = set(hics or ())
         #: Chemins sabotés **une seule fois** : le premier appel est faux, les
         #: suivants sont justes. C'est la forme d'un déploiement en vol — la
         #: première page servie est celle d'avant, la deuxième est la bonne.
@@ -99,6 +103,12 @@ class FauxReseau:
                 return reponse(404, "text/plain", b"")
             if self.sabote.get(chemin) == "erreur":
                 return reponse(200, "application/json; charset=utf-8", b'{"error": "panne"}')
+            if self.sabote.get(chemin) == "sans-porte" or chemin in self.hics:
+                # La passerelle répond à la place du service, sur cette route-là
+                # seulement — les autres adresses de l'hôte, elles, répondent.
+                self.hics.discard(chemin)
+                return reponse(502, "text/html; charset=utf-8",
+                               b"<html><body>502 Bad Gateway</body></html>")
             return reponse(200, "application/json; charset=utf-8", b'{"ok": true}')
         if chemin in surface.TEXTES:
             texte = surface.texte(chemin) or ""
@@ -197,8 +207,9 @@ class TestEpreuves(unittest.TestCase):
         cls.veille = charger_veille()
 
     def sonder(self, sabote: dict[str, str] | None = None, hote: str = "canonique",
-               une_fois: list[str] | None = None, essais: int = 1):
-        faux = FauxReseau(self.veille, sabote, une_fois)
+               une_fois: list[str] | None = None, essais: int = 1,
+               hics: list[str] | None = None):
+        faux = FauxReseau(self.veille, sabote, une_fois, hics)
         vrai = self.veille._demander
         self.veille._demander = faux
         try:
@@ -206,6 +217,49 @@ class TestEpreuves(unittest.TestCase):
         finally:
             self.veille._demander = vrai
         return verdicts, faux
+
+    def test_un_502_isole_se_reprend_quand_l_hote_est_debout(self):
+        """Le 502 du 15 octobre 2026, rejoué : une route tombe, les autres répondent.
+
+        La veille publiait « le service n'est pas derrière » pour `/api/bulles`
+        alors que soixante-sept autres adresses du même hôte venaient de répondre
+        200 — la plus grosse comprise. Le service ne dormait pas : Render
+        redéployait la version qu'on venait de fusionner. Redemander cette
+        adresse-là coûte quinze secondes ; la déclarer morte coûte la confiance.
+        """
+        verdicts, faux = self.sonder(hics=["/api/bulles"])
+        base = self.veille.HOTES["canonique"]
+        bulles = next(verdict for verdict in verdicts if verdict.cible == "/api/bulles")
+        self.assertEqual(faux.appels.count(f"GET {base}/api/bulles"), 2,
+                         "un 502 isolé n'a pas été repris")
+        self.assertTrue(bulles.reussi, "la route n'est pas repassée au vert")
+        self.assertIn("cette réponse-là manquait, pas le service", bulles.detail,
+                      "le verdict ne dit pas qu'il a fallu reprendre la route")
+
+    def test_un_502_qui_dure_ne_dit_plus_que_le_service_est_absent(self):
+        """Un verdict doit dire ce qu'on a **mesuré**, pas ce qu'on suppose."""
+        verdicts, faux = self.sonder({"/api/bulles": "sans-porte"})
+        base = self.veille.HOTES["canonique"]
+        bulles = next(verdict for verdict in verdicts if verdict.cible == "/api/bulles")
+        self.assertEqual(faux.appels.count(f"GET {base}/api/bulles"), 2,
+                         "la reprise n'a pas eu lieu")
+        self.assertFalse(bulles.reussi)
+        self.assertIn("l'hôte répondait par ailleurs", bulles.detail)
+        self.assertNotIn("le service n'est pas derrière", bulles.detail)
+
+    def test_un_hote_muet_partout_ne_se_reprend_pas(self):
+        """Pas de reprise quand l'hôte n'a rien dit : ce n'est pas un à-coup.
+
+        C'est la règle qui garde la veille à deux minutes sur un hôte suspendu :
+        soixante-huit adresses reprises une fois seraient quarante minutes.
+        """
+        verdicts, faux = self.sonder({"panne": "oui"})
+        base = self.veille.HOTES["canonique"]
+        self.assertEqual(faux.appels.count(f"GET {base}/api/lexique"), 1,
+                         "une panne générale a été reprise : la veille s'allonge pour rien")
+        page = verdicts[0]
+        self.assertIn("le service n'est pas derrière", page.detail)
+        self.assertNotIn("l'hôte répondait par ailleurs", page.detail)
 
     def test_un_hebergeur_docile_fait_tout_passer(self):
         """Sans ce contrôle, une épreuve impossible passerait pour une exigence."""

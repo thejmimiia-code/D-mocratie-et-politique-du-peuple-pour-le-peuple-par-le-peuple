@@ -412,8 +412,17 @@ servie est encore celle d'avant pendant une à deux minutes : « pas encore » n
 pas « faux ». La page — et elle seule, parce qu'un déploiement la remplace en
 dernier et qu'elle réveille un service endormi — est réessayée jusqu'à être
 **complète** ; les autres adresses gardent leur verdict au premier essai, sans
-quoi une veille sur un hôte suspendu durerait quarante minutes. La veille tourne
-aussi à la main, sur n'importe quel poste :
+quoi une veille sur un hôte suspendu durerait quarante minutes.
+
+**Un 502 isolé, lui, se reprend.** Exception mesurée le 15 octobre 2026 : une
+seule des soixante-huit adresses de la copie de secours est tombée en 502, à la
+seconde où Render redéployait, pendant que les soixante-sept autres répondaient
+200. Une adresse se reprend donc **une fois** quand l'hôte a répondu ailleurs
+dans le même passage — un hôte qui répond est debout —, et jamais quand l'hôte
+n'a rien répondu du tout : ce n'est alors pas un à-coup, c'est une panne, et
+insister ferait durer la veille pour rien. Le verdict ne dit plus « le service
+n'est pas derrière » sur un hôte qui vient de répondre : il dit ce qu'il a vu.
+La veille tourne aussi à la main, sur n'importe quel poste :
 
 ```bash
 python3 outils/verifier-surface-en-ligne.py                # les deux hôtes
