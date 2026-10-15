@@ -865,6 +865,18 @@ signes — pour la rangée d'un téléphone. Le contexte et les leviers tiennent
 resserrent d'un cran, et la phrase d'accroche resserre son interligne **sans
 changer de corps** : la lecture ne rétrécit pas pour gagner une rangée.
 
+### Le gain, mesuré, et le cliquet resserré
+
+| Largeur | Avant la passe | Après | Plafond (avant → après) |
+|---|---:|---:|---|
+| 380 px | 646 | **603** | 673 → **630** |
+| 640 px | 488 | **460** | 515 → **487** |
+
+À 380 px, la ligne d'état passe de **trois rangées (91 px) à deux (64)** : le
+contexte (114 px), l'horodatage court (90) et les leviers (113) tiennent sur la
+même rangée — `16 leviers actifs`, car le select voisin dit déjà la durée. Le
+bandeau passe de 420 à **393 px**. Le cliquet suit la mesure à marge constante.
+
 ### Ce qui n'a pas changé, et pourquoi
 
 Le titre garde son corps. Le descendre d'un cran aurait gagné une ligne, mais
