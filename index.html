@@ -2119,7 +2119,8 @@ html[data-texte="137"]{font-size:137.5%}
       hypothèses. Vous trouverez ici, de façon permanente et auditable : les sources officielles
       de chaque donnée d'entrée, la formule et la source de chaque indicateur des 20 domaines,
       le champ et la source de chacun des leviers du catalogue, le barème institutionnel complet des
-      garde-fous, et la méthode des dynamiques croisées. Tout recoupement est possible.
+      garde-fous, la méthode des dynamiques croisées — et ce que <b>cette</b> visite a coûté,
+      tel que votre navigateur le mesure. Tout recoupement est possible.
     </p>
     <details id="audit-sources-details" open>
       <summary>1. Sources officielles des données d'entrée (recoupement possible)</summary>
@@ -2140,6 +2141,10 @@ html[data-texte="137"]{font-size:137.5%}
     <details id="audit-methodes-details">
       <summary>5. Dynamiques croisées : comment les effets sont calculés (méthode complète)</summary>
       <div class="corps" id="audit-methodes">chargement…</div>
+    </details>
+    <details id="audit-pesee-details">
+      <summary>6. Ce que cette visite a coûté : la page se pèse devant vous</summary>
+      <div class="corps" id="audit-pesee">mesure en cours…</div>
     </details>
     <div class="aide" style="margin-top:10px">
       <b>Bannière MRSC.</b> Outil open-source produit par son créateur pour l'intérêt général :
@@ -7172,6 +7177,107 @@ function auditMethodesHtml(){
       fonction du code, vérifiable ligne à ligne.</li>
   </ul>`;
 }
+/* Bloc « pesée de la visite » : la page se pèse devant celui qui la lit.
+   Elle n'écrit **aucun chiffre par avance** : les nombres sont lus dans ce que
+   le navigateur publie pour cette visite-là (`performance.getEntriesByType`) —
+   ce qui a traversé le réseau (compressé), ce que l'appareil a décompressé et
+   analysé, et combien de ressources ont été appelées, chez qui. Une mesure qui
+   se vante ment ; d'où trois prudences :
+   · l'API peut manquer (navigateur ancien) : on l'écrit, et on n'estime rien ;
+   · `transferSize` à zéro veut dire « servi depuis le cache » (ou « chiffre que
+     le navigateur ne publie pas ») : on le dit, on n'annonce pas zéro octet ;
+   · une erreur ici ne casse jamais l'audit : le tout est sous `try/catch`.
+   Le poids de la page et de chaque route est par ailleurs mesuré et plafonné
+   hors ligne, à chaque poussée (`outils/budgets_fluidite.py`,
+   `outils/poids_de_la_page.py`). Ce bloc-ci est la seule mesure que le visiteur
+   peut vérifier lui-même — pour sa visite, pas pour une moyenne. */
+function origineDe(url){
+  try { return new URL(url).origin; } catch (erreur){ return null; }
+}
+function peseeDeLaVisite(){
+  try {
+    if (typeof performance === 'undefined'
+        || typeof performance.getEntriesByType !== 'function') return null;
+    const navigations = performance.getEntriesByType('navigation') || [];
+    if (!navigations.length) return null;
+    const visite = navigations[0] || {};
+    const ressources = performance.getEntriesByType('resource') || [];
+    const octets = function (valeur){
+      const nombre = Number(valeur);
+      return Number.isFinite(nombre) && nombre > 0 ? nombre : 0;
+    };
+    // L'adresse de la visite est celle du document lui-même : c'est la seule
+    // origine de référence dont on dispose sans supposer quoi que ce soit.
+    const sienne = origineDe(visite.name);
+    let chezElle = 0, ailleurs = 0, nonClassees = 0;
+    ressources.forEach(function (ressource){
+      const origine = origineDe(ressource.name);
+      if (origine === null || sienne === null) nonClassees += 1;
+      else if (origine === sienne) chezElle += 1;
+      else ailleurs += 1;
+    });
+    return {
+      transfere: octets(visite.transferSize),
+      compresse: octets(visite.encodedBodySize),
+      decompresse: octets(visite.decodedBodySize),
+      premierOctet: octets(visite.responseStart),
+      pret: octets(visite.domContentLoadedEventEnd),
+      ressources: ressources.length,
+      chezElle: chezElle, ailleurs: ailleurs, nonClassees: nonClassees,
+    };
+  } catch (erreur){ return null; }
+}
+function ko(octets){
+  return fmt(Number(octets) / 1024, 1) + ' ko';
+}
+function auditPeseeHtml(){
+  const p = peseeDeLaVisite();
+  if (!p){
+    return '<p class="source-note">Votre navigateur ne publie pas la mesure de cette '
+      + 'visite : ce bloc préfère ne rien afficher plutôt qu’un chiffre estimé. Le poids '
+      + 'de la page reste mesuré et plafonné hors ligne, à chaque poussée, par la suite '
+      + 'de tests du dépôt.</p>';
+  }
+  const reseau = p.transfere > 0
+    ? ko(p.transfere) + ' transférés (compressés)'
+    : 'aucun octet transféré : page servie depuis le cache de votre appareil, ou '
+      + 'chiffre que le navigateur ne publie pas';
+  const provenance = p.ailleurs > 0
+    ? '<b>' + fmt(p.ailleurs, 0) + '</b> hors de son adresse : la page dépend d’un autre '
+      + 'domaine, et cette dépendance est à justifier.'
+    : (p.nonClassees > 0
+      ? 'en même origine, pour celles dont le navigateur publie l’adresse.'
+      : 'toutes chez elle : la page n’appelle aucun autre domaine — ni police, ni image, '
+        + 'ni script d’ailleurs.');
+  const debut = p.premierOctet > 0 ? fmt(p.premierOctet / 1000, 2) + ' s' : 'non publié';
+  const rendue = p.pret > 0 ? fmt(p.pret / 1000, 2) + ' s' : 'non publié';
+  return '<p class="source-note" style="margin-bottom:8px">Mesure publiée par <b>votre</b> '
+    + 'navigateur pour <b>cette</b> visite : la page ne calcule rien ici, elle recopie ce '
+    + 'qu’il déclare. Rechargez-la : les chiffres changeront.</p>'
+    + '<table><thead><tr><th>Ce que cette visite a coûté</th><th>Chiffre</th></tr></thead>'
+    + '<tbody>'
+    // Cette cellule-ci ne porte pas la classe « chiffre » : elle dit parfois une
+    // phrase (« servi depuis le cache… »), et `.audit td.chiffre` interdit le
+    // retour à la ligne — la phrase serait coupée sur un téléphone.
+    + '<tr><td>Sur le réseau</td><td>' + reseau + '</td></tr>'
+    + '<tr><td>Décompressé et analysé par votre appareil</td><td class="chiffre">'
+    + (p.decompresse > 0 ? ko(p.decompresse) : 'non publié') + '</td></tr>'
+    + '<tr><td>Ressources appelées en plus du document</td><td class="chiffre">'
+    + fmt(p.ressources, 0) + '</td></tr>'
+    + '<tr><td>Origine de ces ressources</td><td>' + provenance + '</td></tr>'
+    + '<tr><td>Premier octet / page rendue</td><td class="chiffre">' + debut + ' / '
+    + rendue + '</td></tr>'
+    + '</tbody></table>'
+    + '<p class="source-note" style="margin-top:8px">Ces chiffres portent sur le document '
+    + 'lui-même ; les données des routes (catalogue, contexte, bulles) arrivent ensuite, à '
+    + 'la demande, et leur poids est plafonné route par route dans le dépôt.</p>';
+}
+function peserLaVisite(){
+  const zone = document.getElementById('audit-pesee');
+  if (!zone) return false;
+  zone.innerHTML = auditPeseeHtml();
+  return true;
+}
 async function chargerAudit(){
   const zoneSources = document.getElementById('audit-sources');
   const zoneDomaines = document.getElementById('audit-domaines');
@@ -7194,6 +7300,9 @@ async function chargerAudit(){
   } catch (erreur){
     /* L'audit est un confort : une route muette ne casse pas le simulateur. */
   }
+  // La pesée se pose après le reste : elle ne dépend d'aucune route, et une
+  // mesure qui échoue ne doit pas emporter l'audit avec elle.
+  peserLaVisite();
 }
 
 /* Bloc « objections » : le registre de la contradiction, servi par

@@ -879,11 +879,22 @@ bandeau passe de 420 à **393 px**. Le cliquet suit la mesure à marge constante
 
 ### Ce qui n'a pas changé, et pourquoi
 
-Le titre garde son corps. Le descendre d'un cran aurait gagné une ligne, mais
-c'est la première chose que l'œil lit, et la page dit depuis le premier jour
-qu'elle ne rétrécit pas la lecture pour tenir dans un écran. Ce qui cède ici, ce
-sont des **répétitions** — un horodatage qui redit son année et son fuseau sur
-l'écran le plus étroit — pas des corps de texte.
+Le titre garde son corps **dans cette passe**. Le descendre d'un cran aurait
+gagné une ligne, mais c'est la première chose que l'œil lit, et la page dit
+depuis le premier jour qu'elle ne rétrécit pas la lecture pour tenir dans un
+écran. Ce qui cède ici, ce sont des **répétitions** — un horodatage qui redit
+son année et son fuseau sur l'écran le plus étroit — pas des corps de texte.
+
+**Note du 15 octobre 2026 — ce paragraphe avait besoin d'être accordé.** La
+feuille de style du jour ne dit plus tout à fait cela : au palier de **480 px**,
+`header.entete h1{font-size:1.05rem}` descend bien le corps du titre — 16,8 px,
+soit un rem de moins que les 1,45 rem de l'écran large, et **au-dessus du
+plancher de lecture** `--t-min` (12,5 px), qui reste la règle tenue par les
+contrôles de contraste et de taille. Le principe que cette page défend n'est donc
+pas « le titre ne bouge jamais », c'est « **rien ne descend sous le plancher de
+lecture** » : un corps de titre peut céder sur un téléphone, un corps de texte
+non. Ce palier-là précède le présent journal, et l'affirmation ci-dessus vaut
+pour les incréments dix-neuf et vingt — pas pour la feuille de style du jour.
 
 ## Vingtième incrément — le titre et la phrase, deux textes
 

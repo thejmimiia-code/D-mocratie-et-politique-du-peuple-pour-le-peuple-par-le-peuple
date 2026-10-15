@@ -108,6 +108,17 @@ jobs:
           print("Point d'entrée WSGI OK")
           PY
 
+      - name: Verify what the device parses, and who the page calls (poids analysé et autonomie)
+        # Deux dimensions que les octets compressés ne voient pas : le **document
+        # brut** (ce que l'appareil décompresse, analyse et garde en mémoire) et la
+        # **part du script en ligne** (un document ne doit pas devenir un programme).
+        # Le plafond du réseau, lui, reste tenu par l'étape suivante : ce contrôle le
+        # **lit** dans `outils/budgets_fluidite.py` au lieu de le redéclarer — deux
+        # plafonds concurrents sur la même grandeur feraient deux juges, et c'est la
+        # mesure qui lirait le mauvais. Il refuse aussi toute sous-ressource qui
+        # sortirait de la page : un outil citoyen n'appelle personne d'autre que lui.
+        run: python3 -m outils.poids_de_la_page --verifier
+
       - name: Verify the weight budgets (plafonds de poids de la page et des routes)
         # Ce n'est pas une mesure de confort : c'est l'engagement écrit dans
         # outils/budgets_fluidite.py, et l'étape échoue dès qu'un plafond est

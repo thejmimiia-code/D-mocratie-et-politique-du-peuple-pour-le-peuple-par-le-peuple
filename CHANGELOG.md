@@ -6,6 +6,57 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### La page se pèse devant vous — et le dépôt tient ce qu'elle ne dit pas (15 octobre 2026)
+
+- **Le fait, mesuré sur la page publiée** (`index.html`, gzip -6) : **478 837 octets bruts**,
+  **129 569 transférés**, dont **109 102 o** de feuille de style et **317 991 o** de script
+  en ligne — **66,4 %** du document — pour **51 744 o** de balisage. Le dépôt plafonnait déjà
+  ce que le réseau transporte (`outils/budgets_fluidite.py`, ancre 125 284 o, plafond 137 813 o) ;
+  il ne plafonnait pas **ce que l'appareil décompresse et analyse**, ni ne vérifiait **qui la page
+  appelle**. Deux angles morts, mesurés, puis fermés.
+- **Ce qui manquait, et ce qui le tient maintenant** (`outils/poids_de_la_page.py`, deux plafonds
+  et une liste blanche) : le **document brut** — la compression fait gagner le réseau, jamais la
+  mémoire du téléphone —, la **part du script en ligne** (plafond écrit : les trois quarts du
+  document ; mesuré 66,4 %), et l'**autonomie** : aucune sous-ressource d'un domaine tiers, et
+  toute sous-ressource en même origine **déclarée** dans une liste blanche. Le seul appel de la
+  page est `/_vercel/insights/script.js`, en même origine et en `defer`.
+- **Un seul juge par grandeur** : ce fichier ne redéclare **pas** de plafond réseau, il le **lit**
+  dans `outils/budgets_fluidite.py` et publie la réserve (8 244 o, 6,0 % du plafond, dont les
+  518 o payés par cette passe). Deux plafonds concurrents sur le même nombre finiraient par
+  diverger, et c'est la mesure qui lirait le mauvais.
+- **Et la page le dit elle-même au visiteur** : le bloc **6 de l'audit**, « Ce que cette visite a
+  coûté : la page se pèse devant vous », lit ce que le navigateur publie pour **cette** visite-là
+  (`performance.getEntriesByType('navigation')`) : transféré (compressé), décompressé et analysé,
+  nombre de ressources appelées et **chez qui**, premier octet et page rendue. **Aucun chiffre
+  n'est écrit d'avance** — un contrôle refuse tout poids en dur dans ce bloc —, et quand le
+  navigateur ne publie rien (API absente, mesure non chiffrée, `transferSize` à zéro : page servie
+  du cache), le bloc **l'écrit** au lieu d'annoncer un zéro. C'est le chantier 3 de
+  `docs/RD_BUDGETS_DE_FLUIDITE.md` (« afficher le poids réellement transféré à l'écran ») :
+  la seule mesure de poids qu'un visiteur peut vérifier lui-même.
+- **Un défaut trouvé en relisant la greffe, avant de fusionner** : la phrase du cache
+  (« page servie depuis le cache de votre appareil… ») était posée dans une cellule
+  `td.chiffre` — or `.audit td.chiffre{white-space:nowrap}` interdit le retour à la ligne :
+  sur un téléphone, la phrase aurait été **coupée**, dans le bloc même dont le but est d'être
+  lu. La cellule du réseau se replie désormais, et un contrôle neuf refuse **toute phrase
+  dans une cellule non repliable** (plus de 30 signes dans un `td.chiffre`) : la lecture sur
+  téléphone devient une règle vérifiée, pas une intention. Sabotage vérifié — la classe
+  remise fait rougir trois scénarios de navigateur.
+- **47 contrôles neufs, deux suites** : `tests/test_poids_de_la_page.py` (29) — plafonds datés,
+  marge recalculée, mesure complète (CSS + JS + balisage = le fichier, au bit près), autonomie,
+  plafond réseau lu et non recopié, verdict et sortie de la ligne de commande ; et
+  `tests/test_pesee_de_la_visite.py` (18) — dont **le JavaScript de la page exécuté dans Node sur
+  un DOM minimal** (`tests/dom_minimal.mjs`), avec cinq doublures de navigateur : une visite
+  normale, une visite servie du cache, une visite où un autre domaine est appelé, une mesure qui
+  refuse de se faire (elle jette), et une API de mesure absente.
+- **Dix-sept sabotages, dix-sept attrapés** — dont deux qui visent les erreurs écrites pendant cette
+  passe : le retour de la **mesure fausse** par soustraction de chaînes (363 776 o annoncés pour
+  51 744, mesurés par positions), et la **disparition du `try/catch`** de la pesée. Le premier
+  sabotage écrit pour ce contrôle « passait inaperçu » — il posait son `throw` **dans** le `try`,
+  donc la garde le rattrapait : c'est le sabotage qui était faux, et il a été réécrit.
+- **La CI refuse désormais quatre choses de plus** : document brut au-dessus de 505 000 o, script
+  en ligne au-delà des trois quarts du document, sous-ressource d'un domaine tiers, sous-ressource
+  en même origine non déclarée. Une étape dédiée les exécute (`poids analysé et autonomie`), à côté
+  des plafonds de poids déjà tenus.
 ### La page appelait « probabilité » ce que le moteur appelle « indice » (15 octobre 2026)
 
 - **Le fait, lu sur la page servie.** La strate 5 affichait « **Probabilité d'escalade mondiale (%)** · Escalade estimée à 17 % » et « Risque nucléaire tactique à 15 % ». Or le même nombre porte, dans `geopolitique_annuelle.py`, le commentaire `→ indice heuristique d'escalade 17.0/100` ; le CLI l'imprime « Indice heuristique d'escalade » ; et `docs/08_STRATE_GEOPOLITIQUE_ET_SCENARIOS_DE_GUERRE.md` ouvre sur « des indices heuristiques **non calibrés, et non des probabilités** ». La page disait donc l'inverse de la documentation du dépôt — et invitait à lire 17 % comme une probabilité de guerre.

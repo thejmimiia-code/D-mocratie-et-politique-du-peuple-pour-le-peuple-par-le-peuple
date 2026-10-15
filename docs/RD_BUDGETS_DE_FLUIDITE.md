@@ -185,6 +185,43 @@ une raison qui ne tient plus parce que la page n'appelle plus la route :
 
 ## 4. Ce qui surveille cette table
 
+### Ce que ces plafonds ne voyaient pas : le document brut, la part du script, et qui la page appelle (15 octobre 2026)
+
+Une mesure de poids compressé répond à « combien le réseau transporte ». Elle ne
+répond pas à deux questions qu'un téléphone pose, lui :
+
+1. **combien il décompresse et analyse.** Mesuré ce jour : **478 837 o bruts** pour
+   **129 569 o** transférés — la compression fait gagner le réseau, jamais la
+   mémoire de l'appareil. Le document brut a donc un plafond à lui,
+   **505 000 o**, dans `outils/poids_de_la_page.py` ;
+2. **quelle part du document est du programme.** Le script en ligne pèse
+   **317 991 o**, soit **66,4 %** de la page : non cacheable séparément, non
+   différable, payé à chaque visite même pour lire trois lignes. Le plafond écrit
+   est **les trois quarts du document** (72 %) : au-delà, la question n'est plus
+   « faut-il découper ? » mais « pourquoi ne l'a-t-on pas fait ? » ;
+3. **qui la page appelle.** Ni police distante, ni CDN, ni image ailleurs : un
+   outil citoyen qui tire une ressource chez un tiers lui dit qui le lit. Le seul
+   appel est `/_vercel/insights/script.js`, **en même origine** et en `defer` ;
+   toute autre sous-ressource doit être **déclarée** avec sa raison, et une
+   sous-ressource d'un domaine tiers fait rougir.
+
+**Et surtout : un seul juge par grandeur.** Ces deux plafonds-là ne touchent pas
+au poids transféré, qui reste tenu par la table ci-dessus : `outils/
+poids_de_la_page.py` **lit** l'ancre et le plafond de la page dans
+`outils/budgets_fluidite.py` et publie la réserve du jour (**8 244 o**, soit 6,0 %
+du plafond ; les 518 o de cette passe sont dedans). Il n'y a donc pas deux avis
+sur le même nombre — il y en a un, et un contrôle refuse qu'un second
+apparaisse.
+
+**Ce que le visiteur, lui, peut vérifier.** Le bloc 6 de l'audit, « Ce que cette
+visite a coûté : la page se pèse devant vous », lit
+`performance.getEntriesByType('navigation')` et affiche pour **cette** visite :
+transféré, décompressé et analysé, ressources appelées et leur origine, premier
+octet et page rendue. Aucun chiffre n'est écrit d'avance ; quand le navigateur ne
+publie rien, le bloc l'écrit au lieu d'estimer. C'est la seule mesure de poids
+qu'un lecteur peut contrôler lui-même — et elle rend publique la promesse
+d'autonomie, au lieu de la laisser dans un fichier de configuration.
+
 ### 45 contrôles (`tests/test_budgets_fluidite.py`)
 
 Quatre familles, dans l'ordre où elles protègent :
@@ -279,10 +316,15 @@ saboteur soigneux —, les contrôles de fond mordent à leur tour ; vérifié l
 2. **Découper `/api/bulles` en pages** (`docs/RD_OPTIMISATION_FLUIDITE.md`,
    suite envisagée n° 3). Le plafond ne règle pas le premier appel à froid : il
    rend seulement la question visible et chiffrée.
-3. **Afficher le poids réellement transféré à l'écran** — dans l'audit, à côté
-   des sources : `performance.getEntriesByType('navigation')[0].transferSize`
-   donne ce que **cette** visite a coûté, chiffres à l'appui. C'est la seule
-   mesure de poids qu'un visiteur peut vérifier lui-même.
+3. ~~**Afficher le poids réellement transféré à l'écran**~~ — **fait le
+   15 octobre 2026** : bloc 6 de l'audit, « Ce que cette visite a coûté : la page
+   se pèse devant vous ». `performance.getEntriesByType('navigation')[0]` donne
+   le poids transféré, le poids décompressé, les ressources appelées et leur
+   origine, le premier octet et la page rendue. **Aucun chiffre écrit d'avance**
+   (un contrôle refuse tout poids en dur), et le silence est préféré à
+   l'estimation quand le navigateur ne publie rien. Reste ouvert : ce que le
+   **cache** fait gagner d'une visite à l'autre, que seul un relevé successif
+   montrerait.
 4. **Plafonner les routes d'appoint** (`bulle`, `conseil`, `donnees`, `run`,
    `constitution`) le jour où l'une d'elles deviendra lourde : aujourd'hui elles
    sont excusées avec leur raison, et le contrôle refusera de laisser une raison
