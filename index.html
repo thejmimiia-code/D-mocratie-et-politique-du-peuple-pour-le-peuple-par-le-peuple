@@ -6470,7 +6470,7 @@ async function simuler(avecImpacts){
       `${nombreLeviersActifs()} leviers actifs · simulation ${horizon} ans · score moyen `
         + `${fmt(donnees.synthese.score_moyen_domaines,1)} `
         + `(référence ${fmt(donnees.synthese.score_moyen_reference,1)})`,
-      `${nombreLeviersActifs()} leviers · ${horizon} ans`);
+      `${nombreLeviersActifs()} leviers actifs`);
     activerExports();
   } catch (erreur){
     alert('Le serveur n\'a pas répondu : ' + erreur);

@@ -523,6 +523,22 @@ class TestLaPageTientLePlafond(unittest.TestCase):
         self.assertLess(ecart_petit, ecart_grand,
                         "l'écart entre pastilles ne se resserre pas")
 
+    def test_la_forme_courte_des_leviers_ne_redit_pas_l_horizon(self):
+        """Sur un téléphone, l'horizon se dit par le select, et là seulement.
+
+        Mesuré en CI le 15 octobre 2026, à 380 px : `16 leviers · 5 ans` fait
+        121 px, et il ne reste que 330 px pour trois pastilles — le `5 ans` du
+        select voisin suffit, et la ligne d'état passe de trois rangées à deux.
+        """
+        self.assertIn("`${nombreLeviersActifs()} leviers actifs`", HTML_PAGE,
+                      "la forme courte des leviers ne dit plus son nombre")
+        self.assertNotIn("`${nombreLeviersActifs()} leviers · ${horizon} ans`", HTML_PAGE,
+                         "la forme courte des leviers redit l'horizon du select voisin")
+        select = HTML_PAGE[HTML_PAGE.index('id="horizon-simulation"'):]
+        select = select[:select.index("</select>")]
+        self.assertIn('value="5"', select, "le select ne dit plus l'horizon de cinq ans")
+        self.assertIn('value="10"', select, "le select ne dit plus l'horizon de dix ans")
+
     def test_les_deux_libelles_sont_ecrits_ensemble(self):
         """Sinon le premier clic remet le libellé long, et le ruban regonfle."""
         source = HTML_PAGE[HTML_PAGE.index("function direLeBouton"):]
