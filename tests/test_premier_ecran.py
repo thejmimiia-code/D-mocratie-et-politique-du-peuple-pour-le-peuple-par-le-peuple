@@ -480,6 +480,45 @@ class TestLaPageTientLePlafond(unittest.TestCase):
         self.assertLess(float(interligne_petit), float(interligne_grand),
                         "l'interligne de la phrase ne se resserre pas")
 
+    def test_le_titre_et_la_phrase_du_bandeau_ont_deux_textes(self):
+        """Ce qui est peint sur un téléphone est plus **court** — pas plus petit.
+
+        Mesuré le 15 octobre 2026, à 380 px : le titre faisait quatre lignes
+        (87 px) et la phrase d'accroche quatre lignes (79 px) — 166 px du premier
+        écran, plus que les quatre commandes réunies (89 px). Le couple
+        long/court est celui de la page ; rien n'est retiré du document : la
+        devise entière reste dans le `<h1>`, donc dans `textContent`, et le
+        `<title>` du document ne bouge pas.
+        """
+        for ouverture, fermeture, debut_attendu, ce_que_le_long_garde in (
+                ("<h1>", "</h1>", "Simulateur Macro-Politique",
+                 "du peuple, pour le peuple, par le peuple"),
+                ('<p class="accroche">', "</p>", "Choisissez vos politiques",
+                 "domaine par domaine")):
+            with self.subTest(element=ouverture):
+                debut = HTML_PAGE.index(ouverture)
+                bloc = HTML_PAGE[debut:HTML_PAGE.index(fermeture, debut)]
+                self.assertIn('class="mot-long"', bloc,
+                              "l'élément n'a plus de forme longue : le document perd son texte")
+                self.assertIn('class="mot-court"', bloc,
+                              "l'élément n'a plus de forme courte : le téléphone n'y gagne rien")
+                self.assertNotIn("aria-hidden", bloc,
+                                 "un texte caché aux lecteurs d'écran : ce qui est peint "
+                                 "doit être ce qui est lu")
+                long_ = bloc.split('class="mot-long">', 1)[1].split("</span>", 1)[0]
+                court = bloc.split('class="mot-court">', 1)[1].split("</span>", 1)[0]
+                self.assertTrue(court.strip(), "la forme courte est vide")
+                self.assertTrue(long_.strip(), "la forme longue est vide")
+                self.assertLess(len(court), len(long_),
+                                "la forme courte est aussi longue que la longue : "
+                                "elle ne fait rien gagner")
+                self.assertIn(debut_attendu, court,
+                              "la forme courte ne dit plus ce qu'est la page")
+                self.assertIn(ce_que_le_long_garde, long_,
+                              "la forme longue a perdu du contenu : rien ne se retire")
+                self.assertIn(ce_que_le_long_garde, HTML_PAGE,
+                              "le texte retiré du document ne s'y trouve plus")
+
     def test_l_horodatage_d_un_telephone_tient_en_onze_signes(self):
         """Deux formes du même instant, écrites depuis la même source.
 

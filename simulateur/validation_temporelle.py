@@ -207,17 +207,70 @@ def metriques(paires: list[tuple[float, int]]) -> dict:
                             'probabilite_moyenne': mean(p for p, _ in groupe) if groupe else None,
                             'frequence_observee': mean(y for _, y in groupe) if groupe else None})
     epsilon = 1e-15  # convention déclarée pour les prévisions extrêmes 0/1
+    positifs = sum(y for _, y in paires)
+    negatifs = len(paires) - positifs
+    frequence = (positifs / len(paires)) if paires else None
+    brier = mean((p - y) ** 2 for p, y in paires) if paires else None
+    # La référence « sans compétence » : annoncer partout la fréquence observée.
+    # Un Brier ne se lit pas seul — c'est son écart à cette référence qui dit
+    # s'il y a une compétence, ou seulement une fréquence apprise. Et elle ne se
+    # calcule que si l'échantillon porte **les deux** cas : sans cas négatif (ou
+    # sans cas positif), aucune compétence n'est mesurable, et le rapport le dit
+    # au lieu de publier un score qui aurait l'air d'en être une.
+    reference = (frequence * (1 - frequence)) if frequence is not None else None
+    if not paires:
+        competence, raison = None, 'echantillon_vide'
+    elif positifs == 0:
+        competence, raison = None, 'aucun_cas_positif'
+    elif negatifs == 0:
+        competence, raison = None, 'aucun_cas_negatif'
+    elif not reference:
+        competence, raison = None, 'reference_nulle'
+    else:
+        competence, raison = 1 - brier / reference, None
     return {
         'n': len(paires),
-        'brier': mean((p - y) ** 2 for p, y in paires) if paires else None,
+        'brier': brier,
         'log_loss': mean(-math.log(max(epsilon, min(1 - epsilon, p if y else 1 - p)))
                          for p, y in paires) if paires else None,
         'vrais_positifs': sum(p >= 0.5 and y == 1 for p, y in paires),
         'fausses_alertes': sum(p >= 0.5 and y == 0 for p, y in paires),
         'evenements_manques': sum(p < 0.5 and y == 1 for p, y in paires),
         'vrais_negatifs': sum(p < 0.5 and y == 0 for p, y in paires),
+        'cas_positifs': positifs,
+        'cas_negatifs': negatifs,
+        'frequence_de_base': frequence,
+        'brier_reference_sans_competence': reference,
+        'competence_brier': competence,
+        'competence_non_publiee_pour': raison,
         'calibration_descriptive': calibration,
     }
+
+
+def avertissements_echantillon(scores: dict[str, dict]) -> list[str]:
+    """Ce que l'échantillon ne permet pas de conclure — dit, pas tu.
+
+    Un score de compétence sur un échantillon sans cas négatif mesure la
+    fréquence, pas la prévision : c'est la lacune P0 « pas de cas négatifs », et
+    la seule façon de ne pas la combler par erreur est de la publier.
+    """
+    avertissements = []
+    for nom, rapport in scores.items():
+        n = rapport.get('n') or 0
+        if not n:
+            avertissements.append(f'{nom} : aucun cas évalué — aucun score ne se lit.')
+            continue
+        if rapport.get('cas_positifs') == 0:
+            cote = 'positif'
+        elif rapport.get('cas_negatifs') == 0:
+            cote = 'négatif'
+        else:
+            continue
+        avertissements.append(
+            f"{nom} : échantillon sans cas {cote} ({n} cas évalués, fréquence de base "
+            f"{rapport.get('frequence_de_base')}) — aucune compétence mesurable : "
+            "annoncer la fréquence ferait aussi bien.")
+    return avertissements
 
 
 def evaluer(registre: Registre, debut: str, fin: str, au: str,
@@ -255,9 +308,22 @@ def evaluer(registre: Registre, debut: str, fin: str, au: str,
                           'unites': list(unites), 'minimum_historique': minimum,
                           'seuil_alerte': 0.5, 'epsilon_log_loss': 1e-15},
         'avertissement': 'Références statistiques seulement ; aucun score de guerre mondiale ou nucléaire.',
-        'scores': {nom: metriques(paires) for nom, paires in scores.items()},
+        'scores': _scores_et_avertissements(scores)[0],
+        'avertissements_echantillon': _scores_et_avertissements(scores)[1],
         'predictions': predictions, 'abstentions': abstentions, 'exclusions': exclusions,
     }
+
+
+def _scores_et_avertissements(
+        paires_par_modele: dict[str, list[tuple[float, int]]],
+) -> tuple[dict[str, dict], list[str]]:
+    """Les scores, puis leurs avertissements — calculés sur les **mêmes** objets.
+
+    Deux appels à `metriques` donneraient deux fois les mêmes nombres ; un seul
+    garantit que l'avertissement parle du score publié, pas d'un jumeau.
+    """
+    scores = {nom: metriques(paires) for nom, paires in paires_par_modele.items()}
+    return scores, avertissements_echantillon(scores)
 
 
 def main() -> None:

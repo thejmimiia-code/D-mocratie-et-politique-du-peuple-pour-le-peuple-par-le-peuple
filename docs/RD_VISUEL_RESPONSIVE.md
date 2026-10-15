@@ -885,6 +885,35 @@ qu'elle ne rétrécit pas la lecture pour tenir dans un écran. Ce qui cède ici
 sont des **répétitions** — un horodatage qui redit son année et son fuseau sur
 l'écran le plus étroit — pas des corps de texte.
 
+## Vingtième incrément — le titre et la phrase, deux textes
+
+### Le défaut, mesuré
+
+À 380 px, le bandeau fait **393 px**, dont **166 px de prose** : le titre sur
+quatre lignes (87 px) et la phrase d'accroche sur quatre lignes (79 px) — plus
+que les quatre commandes réunies (89 px). Le reste du premier écran se défend :
+les pastilles tiennent en deux rangées, les commandes en deux lignes.
+
+### Ce qui a changé
+
+Le couple long/court — posé pour les commandes du ruban, généralisé aux pastilles
+d'état — s'applique au **titre** et à la **phrase**. Sur un téléphone, le `<h1>`
+peint la devise entière sans la reprise « Démocratie et politique », et l'accroche
+garde sa promesse et la source des données. **Rien n'est retiré du document** : la
+forme longue reste dans le `<h1>` — donc dans `textContent`, dans le `<title>`,
+dans les métadonnées sociales et dans le JSON-LD — et **aucun corps ne descend**.
+Ce qui cède ici, ce sont des mots ; la lecture, elle, ne rétrécit pas.
+
+### Deux textes, deux usages — et pourquoi pas `aria-label` ici
+
+Aux commandes du ruban, le nom accessible est tenu à part par `aria-label`, parce
+qu'un bouton doit dire ce qu'il **fait** même quand son libellé se raccourcit.
+Pour le titre et les pastilles, non : `display:none` sort la forme écartée de
+l'arbre d'accessibilité, donc ce qui est lu est exactement ce qui est peint, une
+fois. Pour un **état** (les pastilles) et pour une **phrase d'identité** (le
+titre), c'est la bonne règle : on ne lit pas deux fois, et on ne lit pas ce qui
+n'est pas à l'écran.
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si

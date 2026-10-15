@@ -871,6 +871,13 @@ python -m simulateur.validation_temporelle \
 
 Cette démonstration vérifie le protocole, pas une capacité de prévision réelle.
 
+Depuis le 15 octobre 2026, le rapport publie la **fréquence de base** et la
+**compétence** de chaque référence par rapport à elle (`1 − Brier / p(1−p)`), et
+**refuse de publier une compétence** quand l'échantillon ne porte qu'un côté.
+Mesuré sur le corpus synthétique : `frequence_lissee` fait **moins bien** que
+d'annoncer la fréquence (compétence −0,108), `dernier_etat_lisse` à peine mieux
+(+0,052) — c'est exactement ce qu'un Brier seul ne pouvait pas dire.
+
 ### Adaptateur UCDP et dates ambiguës (R&D v4)
 
 [Schéma vérifié, import local et limites de disponibilité](docs/RD_IMPORT_UCDP.md).
