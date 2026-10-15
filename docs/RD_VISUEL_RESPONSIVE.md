@@ -814,6 +814,20 @@ accessible est tenu à part par `aria-label`. Les deux textes d'une pastille son
 précédent ; la fonction retombe sur le texte long quand la page ne porte pas ses
 deux repères.
 
+### Le gain, mesuré, et le cliquet resserré
+
+| Largeur | Avant la passe | Après | Plafond (avant → après) |
+|---|---:|---:|---|
+| 380 px | 693 | **646** | 720 → **673** |
+| 640 px | 517 | **488** | 540 → **515** |
+
+À 380 px, la ligne d'état passe de **quatre rangées (140 px) à trois (93 px)** :
+la pastille de deux lignes qui répétait le score n'en fait plus qu'une. Le cliquet
+est resserré d'autant — un gain qu'on ne relève pas se reperd —, avec la même
+marge d'une rangée. Et le rapport de mesure lit désormais `innerText` : il montre
+le libellé **peint**, `référence datée du projet` à 1280 px et `référence datée` à
+380 px, au lieu d'additionner les deux.
+
 ### Le contrôle du ruban, requalifié — pas amolli
 
 `tests/test_interface.py` lisait dans le palier 640 l'affichage des libellés

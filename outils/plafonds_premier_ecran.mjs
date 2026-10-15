@@ -29,10 +29,15 @@
 //
 // Le plafond est un **cliquet** : il ne remonte pas. La passe du 15 octobre 2026
 // l'a posé à 720 px (380) et 540 px (640), après avoir mesuré 693 et 517 — les
-// deux états anciens étaient à 863 et 614. Le chemin qui reste est écrit ici
-// pour la suite : un écran de téléphone fait 780 px de haut, et le contenu doit
-// y commencer. Ce qui reste à gagner à 380 px tient au bandeau (483 px), dont le
-// titre fait quatre lignes et la ligne d'état quatre rangées.
+// deux états anciens étaient à 863 et 614. La passe suivante, le même jour, a
+// porté les libellés courts aux pastilles d'état : mesuré 646 et 488, et le
+// cliquet est resserré à 673 et 515, même marge d'une rangée. Un gain qu'on ne
+// relève pas se reperd.
+//
+// Le chemin qui reste est écrit ici pour la suite : un écran de téléphone fait
+// 780 px de haut, et le contenu doit y commencer. Ce qui reste à gagner à 380 px
+// tient au bandeau (436 px), dont le titre fait quatre lignes et la ligne d'état
+// trois rangées.
 
 /** La hauteur du premier écran : ce qu'un visiteur voit avant le contenu. */
 export const PLAFONDS = {
@@ -40,18 +45,20 @@ export const PLAFONDS = {
     //: La marge du plafond est **d'une rangée** (27 px ici) : assez pour les
     //: chiffres qui changent d'une simulation à l'autre — un verdict plus long,
     //: un montant à trois chiffres —, trop peu pour cacher une rangée de plus.
-    plafond: 720,
-    avant: 863,
-    mesure: 693,
+    plafond: 673,
+    avant: 693,
+    mesure: 646,
     quand: "15 octobre 2026",
-    quoi: "bandeau 483 + sommaire 58 + ruban 152 (avant la passe : 566 + 58 + 239)",
+    quoi: "bandeau 436 + sommaire 58 + ruban 152 (avant la passe : 483 + 58 + 152 —"
+      + " les libellés courts des pastilles valent 47 px à eux seuls)",
   },
   640: {
-    plafond: 540,
-    avant: 614,
-    mesure: 517,
+    plafond: 515,
+    avant: 517,
+    mesure: 488,
     quand: "15 octobre 2026",
-    quoi: "bandeau 335 + sommaire 58 + ruban 124 (avant la passe : 350 + 58 + 206)",
+    quoi: "bandeau 306 + sommaire 58 + ruban 124 (avant la passe : 335 + 58 + 124 —"
+      + " les libellés courts des pastilles valent 29 px)",
   },
 };
 
