@@ -816,6 +816,16 @@ noter("le compteur annonce les leviers affichés et modifiés",
         .test(elements.get("compteur-leviers")?.textContent || ""),
       elements.get("compteur-leviers")?.textContent);
 
+/* Le libellé d'une commande du ruban vit dans le bouton **et** dans ses deux
+   repères (« …-long », « …-court ») : l'écran large montre le long, le
+   téléphone le court, et c'est le même mot pour qui lit la page en texte. Ce
+   contrôle lit les trois — sans quoi il ne verrait plus rien du tout. */
+const libelle = (identifiant) => [
+  elements.get(identifiant)?.textContent,
+  elements.get(identifiant + "-long")?.textContent,
+  elements.get(identifiant + "-court")?.textContent,
+].filter(Boolean).join(" ");
+
 /* 2 bis. Vue compacte : chaque paramètre sur une ligne. */
 apiPage.basculerDensite(true);
 for (let i = 0; i < 2; i += 1) await tourner();
@@ -827,10 +837,22 @@ const bascules = (contenu("leviers-grille").match(/onchange="majLevier/g) || [])
 noter("chaque levier compact garde sa commande", curseurs + bascules === leviersComplets,
       `${curseurs} curseurs + ${bascules} interrupteurs = ${curseurs + bascules} commandes`);
 noter("le libellé du bouton de densité bascule",
-      (elements.get("btn-densite")?.textContent || "").includes("confort"),
-      elements.get("btn-densite")?.textContent);
+      libelle("btn-densite").includes("confort"), libelle("btn-densite"));
+/* Et les deux libellés suivent ensemble : un bouton qui reprendrait sa longueur
+   au premier clic ferait regonfler le ruban d'un téléphone, qu'on vient
+   justement de tenir en une rangée. */
+noter("les deux libellés du ruban basculent ensemble",
+      elements.get("btn-densite-long")?.textContent === "Vue confort"
+      && elements.get("btn-densite-court")?.textContent === "Confort",
+      `long « ${elements.get("btn-densite-long")?.textContent} », `
+      + `court « ${elements.get("btn-densite-court")?.textContent} »`);
 apiPage.basculerDensite(false);
 for (let i = 0; i < 2; i += 1) await tourner();
+noter("les deux libellés du ruban reviennent ensemble",
+      elements.get("btn-densite-long")?.textContent === "Vue compacte"
+      && elements.get("btn-densite-court")?.textContent === "Compact",
+      `long « ${elements.get("btn-densite-long")?.textContent} », `
+      + `court « ${elements.get("btn-densite-court")?.textContent} »`);
 noter("le retour en vue confort restaure les descriptions",
       contenu("leviers-grille").includes("class=\"desc\""));
 

@@ -737,6 +737,10 @@ thead th{color:var(--texte-dim);font-weight:600;position:sticky;top:0;background
 .ruban-pop b{font-variant-numeric:tabular-nums}
 .ruban-veille .ruban-actions{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap}
 .ruban-veille button{padding:5px 10px;font-size:max(var(--t-min),.74rem)}
+/* Deux libellés dans le même bouton : le long dit tout, le court tient
+   sur une rangée de téléphone. Un seul est peint à la fois ; l'autre
+   reste dans le document pour qui lit la page en texte. */
+.ruban-veille .mot-court{display:none}
 /* Barre d'outils des leviers et vues */
 .barre-leviers{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
 .barre-leviers .recherche{flex:1;min-width:240px;margin-bottom:0}
@@ -1268,6 +1272,34 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
   .resume .metric .valeur{font-size:1.2rem}
   .pastille{white-space:normal}
   .tableau-defilant table{font-size:max(var(--t-min),.76rem)}
+  /* ── Le premier écran : le contenu doit y exister ──────────────────────
+     Mesuré dans Chromium le 15 octobre 2026, à 380 px : bandeau 566 px,
+     sommaire 58, ruban 239 — **863 px** de cadre avant la première ligne de
+     contenu, pour un écran de 780. Le visiteur ouvrait la page et ne voyait
+     que la page se présenter. Rien n'est retiré ici : le titre se resserre (il
+     tenait en trois lignes de 32 px), la phrase d'accroche aussi, les quatre
+     commandes se rangent en deux colonnes au lieu de trois rangées dont une
+     trouée, les pastilles se rapprochent, et l'horizon se dit **une fois** — le
+     select le porte, la pastille le répétait sur une rangée entière. Le corps
+     du texte, lui, ne descend jamais sous --t-min : c'est la mise en page qui
+     se resserre, pas la lecture qui rétrécit. */
+  header.entete{padding:var(--e-2) var(--e-3)}
+  /* La lecture ne rétrécit pas : le titre et la phrase gardent le corps du
+     palier 640. C'est l'interligne qui se resserre — un titre de quatre lignes
+     respirait 1,3 ligne par ligne de texte. */
+  header.entete h1{line-height:1.2}
+  header.entete .accroche{line-height:1.4}
+  header.entete .barre-contexte{display:grid;gap:var(--gap-barre);
+    grid-template-columns:repeat(2,minmax(0,1fr))}
+  header.entete .barre-contexte>*{width:100%}
+  header.entete .barre-contexte button,header.entete .barre-contexte summary{
+    justify-content:center;text-align:center}
+  header.entete .etat-contexte{gap:4px}
+  header.entete .etat-contexte .pastille{padding:2px 7px}
+  /* « une mandature · 5 ans » dit exactement ce que le select juste à côté
+     affiche, et les deux sont écrits par la même variable (`changerHorizon`).
+     Sur 340 px de large, la répétition coûte une rangée entière. */
+  #badge-horizon{display:none}
 }
 /* ── Le ruban de veille, en carte, sur un écran étroit ────────────────────
    Il n'est plus collant : plus de course avec le sommaire. Il se lit alors
@@ -1284,6 +1316,23 @@ html.impression-plan .conteneur > *:not(.bandeau-impression):not(#resume){displa
     grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
   .ruban-veille .ruban-actions button{width:100%;min-height:44px;padding:8px 6px;
     white-space:normal;line-height:1.2}
+}
+@media screen and (max-width:480px){
+  /* Le ruban d'un téléphone : la même carte, l'air en moins. Les commandes
+     gardent leurs 44 px — c'est la cible du doigt, pas du décor —, et les
+     quatre tiennent sur **une** rangée : deux rangées coûtaient 51 px de haut
+     pour 44 px de boutons. Le libellé court remplace le long, qui n'aurait pas
+     tenu dans 80 px de large ; le nom accessible, lui, ne change pas
+     (`aria-label`), et le libellé long reste dans le document. */
+  .ruban-veille{padding:7px 9px;gap:6px}
+  .ruban-veille .ruban-actions{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+  .ruban-veille .ruban-actions button{padding:6px 2px;line-height:1.1}
+  /* Le titre et le verdict partagent leur rangée quand le verdict est court ;
+     quand il est long, il passe à la ligne — comme avant, sans rien perdre. */
+  .ruban-veille .ruban-titre{width:auto}
+  .ruban-veille .console-verdict{flex:1 1 auto}
+  .ruban-veille .mot-long{display:none}
+  .ruban-veille .mot-court{display:inline}
 }
 /* ── Le même tableau, en cartes, sur un écran étroit ──────────────────────
    Neuf colonnes ne se lisent pas dans 360 px : on fait glisser la ligne, et
@@ -1652,10 +1701,10 @@ html[data-texte="137"]{font-size:137.5%}
     <span class="ruban-pop" id="ruban-population">risque population —</span>
     <span class="ruban-cout neutre" id="ruban-cout" data-aide="<b>Coût / gain réel du programme actif</b>Solde net des réglages globaux croisés (recettes nouvelles − dépenses nouvelles), recalculé en temps réel à chaque mouvement. Rouge = coût réel, vert = gain réel, en Md€ par an.">💶 coût / gain réel : —</span>
     <span class="ruban-actions">
-      <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()" data-aide="<b>Détail des seuils</b>Replie ou déplie le corps de la console de veille pour libérer l'écran : le verdict et les cinq strates restent affichés.">Masquer le détail des seuils</button>
-      <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : le catalogue tient à l'écran, tous réglables en direct.">Vue compacte</button>
-      <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct.">Régler les leviers</button>
-      <button class="discret" onclick="allerAudit()" data-aide="<b>Audit &amp; traçabilité</b>Toutes les sources officielles, chaque formule, chaque seuil et la méthode des dynamiques croisées : le simulateur à livre ouvert, pas une boîte noire.">🔍 Audit &amp; sources</button>
+      <button class="discret" id="btn-console-details" onclick="basculerDetailsConsole()" data-aide="<b>Détail des seuils</b>Replie ou déplie le corps de la console de veille pour libérer l'écran : le verdict et les cinq strates restent affichés."><span class="mot-long" id="btn-console-details-long">Masquer le détail des seuils</span><span class="mot-court" aria-hidden="true" id="btn-console-details-court">Masquer</span></button>
+      <button class="discret" id="btn-densite" onclick="basculerDensite()" data-aide="<b>Vue compacte</b>Une ligne par levier : le catalogue tient à l'écran, tous réglables en direct."><span class="mot-long" id="btn-densite-long">Vue compacte</span><span class="mot-court" aria-hidden="true" id="btn-densite-court">Compact</span></button>
+      <button class="primaire" onclick="allerAuxLeviers()" data-aide="<b>Régler les leviers</b>Fait défiler jusqu'à la grille des paramètres, où chaque geste relance la simulation en direct."><span class="mot-long" id="aller-leviers-long">Régler les leviers</span><span class="mot-court" aria-hidden="true" id="aller-leviers-court">Leviers</span></button>
+      <button class="discret" onclick="allerAudit()" data-aide="<b>Audit &amp; traçabilité</b>Toutes les sources officielles, chaque formule, chaque seuil et la méthode des dynamiques croisées : le simulateur à livre ouvert, pas une boîte noire."><span class="mot-long" id="aller-audit-long">🔍 Audit &amp; sources</span><span class="mot-court" aria-hidden="true" id="aller-audit-court">🔍 Audit</span></button>
     </span>
   </div>
 
@@ -3604,12 +3653,31 @@ function filtreCourant(){
 function cataloguePret(){
   return typeof CATALOGUE !== 'undefined' && !!CATALOGUE && !!CATALOGUE.parametres;
 }
+/* Un bouton du ruban porte deux libellés : le long, qui dit tout, et le
+   court, qui tient sur une rangée de téléphone. Les deux sont écrits **ici,
+   ensemble** — sinon le premier clic remettrait le libellé long, et le ruban
+   regonflerait sous les doigts de qui vient de le lire. Les identifiants sont
+   déduits de celui du bouton (« …-long », « …-court ») : aucun sélecteur à
+   interroger, et une page sans ces repères retombe sur le libellé long. */
+function direLeBouton(bouton, long, court){
+  if (!bouton) return;
+  const longu = document.getElementById(bouton.id + '-long');
+  const court_ = document.getElementById(bouton.id + '-court');
+  if (longu && court_){
+    longu.textContent = long;
+    court_.textContent = court;
+    bouton.setAttribute('aria-label', long);
+    return;
+  }
+  bouton.textContent = long;
+}
 function basculerDensite(force){
   VUE_COMPACTE = (force === undefined) ? !VUE_COMPACTE : !!force;
   const case_ = document.getElementById('case-densite');
   if (case_) case_.checked = VUE_COMPACTE;
-  const bouton = document.getElementById('btn-densite');
-  if (bouton) bouton.textContent = VUE_COMPACTE ? 'Vue confort' : 'Vue compacte';
+  direLeBouton(document.getElementById('btn-densite'),
+    VUE_COMPACTE ? 'Vue confort' : 'Vue compacte',
+    VUE_COMPACTE ? 'Confort' : 'Compact');
   const densite = VUE_COMPACTE ? 'compact' : 'aere';
   if (densiteAffichage() !== densite){
     retenirAffichage('densite', densite);
@@ -3623,9 +3691,10 @@ function basculerDetailsConsole(){
   const corps = document.getElementById('console-corps');
   if (!corps) return;
   corps.classList.toggle('replie');
-  const bouton = document.getElementById('btn-console-details');
-  if (bouton) bouton.textContent = corps.classList.contains('replie')
-    ? 'Afficher le détail des seuils' : 'Masquer le détail des seuils';
+  const replie = corps.classList.contains('replie');
+  direLeBouton(document.getElementById('btn-console-details'),
+    replie ? 'Afficher le détail des seuils' : 'Masquer le détail des seuils',
+    replie ? 'Afficher' : 'Masquer');
 }
 function allerAuxLeviers(){
   const section = document.getElementById('section-leviers');
