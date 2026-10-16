@@ -240,6 +240,24 @@ Qu'est-ce qui vient de l'extérieur ? Chocs extérieurs : pétrole, taux, change
 - **Statu quo** (`statut_quo`) : Immobilisme politique et dérive budgétaire.
 - **Stress-test : alternance 2032** (`alternance_2032`) : Deux mandatures sans verrou constitutionnel : réformes révocables, usure maximale du capital politique.
 
+## Ce que le modèle peut dire d'un avenir daté
+
+Registre de dates, jamais de prévisions : **aucune probabilité n'est calculée ici**. État au 2026-10-16 :
+
+- horizon de **5 ans** (une mandature) — jusqu'au **2031-10-16** : Du 2026-10-16 au 2031-10-16 — 3 des 4 fenêtres de veille documentées tombent entièrement dans cet horizon ; 1 commence après la fin de l'horizon (ordres_suivants).
+- horizon de **10 ans** (deux mandatures consécutives) — jusqu'au **2036-10-16** : Du 2026-10-16 au 2036-10-16 — 3 des 4 fenêtres de veille documentées tombent entièrement dans cet horizon ; 1 n'y tombe que partiellement (ordres_suivants).
+
+Les fenêtres de veille viennent de `docs/CONFLITS_RISQUES_SYSTEMIQUES_2026.md, § 7 — Fenêtres temporelles plausibles : des horizons, pas des dates de guerre` :
+
+- **2026-10-03 → 2027-04-03** — Incident majeur dans un théâtre déjà tendu, extension régionale en jours ou semaines
+- **2027-04-01 → 2028-10-01** — Deux crises simultanées compliquent la médiation et les engagements
+- **2028-10-01 → 2031-10-01** — Fragmentation et confrontation prolongée, éventuellement multi-théâtres
+- **2031-11-01 → sans fin datée** — Plusieurs ordres internationaux possibles, dont stabilisation
+
+Ce qui bloque encore une revendication prédictive (registre `docs/AUDIT_LACUNES_GEOPOLITIQUES.md, § 3 — Ce qui manque encore : registre priorisé`) : **2 ouvertes, 4 partiellement traitées, 1 refermée — aucune revendication prédictive n'est permise tant qu'une lacune P0 reste ouverte.**
+
+[Le croisement complet, ses règles et ses limites](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/RD_PROSPECTIVE.md)
+
 ## Ce que l'outil ne fait pas
 
 - il ne prédit ni élection ni croissance : c'est un modèle, donc une simplification assumée ;

@@ -314,6 +314,7 @@ page, et le site du M.R.S.C en propose une troisième, présentée à la main.
 - [Les cinq classes de leviers]({DEPOT}/blob/main/docs/RD_CLASSES_LEVIERS.md) : recettes, économies d'efficacité, dépenses, règles du jeu, monde subi.
 - [Objections ouvertes]({DEPOT}/blob/main/docs/21_OBJECTIONS_OUVERTES.md) : les critiques adressées à l'outil, et ce qu'elles changent.
 - [Hébergement et intégration]({DEPOT}/blob/main/docs/HEBERGEMENT.md) : où la page est servie, comment elle s'intègre ailleurs, quelles routes expose son API.
+- [Prospective : jusqu'où porte l'horizon]({DEPOT}/blob/main/docs/RD_PROSPECTIVE.md) : le croisement de l'horizon (5 ou 10 ans) avec les fenêtres de veille **datées du dépôt**, et l'état des lacunes qui bloquent une revendication prédictive — un registre de dates, jamais des probabilités (`GET /api/prospective`).
 
 ## Optional
 
@@ -348,6 +349,53 @@ def _description_courte(texte: str, limite: int = 320) -> str:
 
 
 @lru_cache(maxsize=1)
+def _section_prospective(depart=None) -> list[str]:
+    """Ce que le moteur peut dire d'un avenir daté — sans jamais le prédire.
+
+    Un lecteur automatique n'exécute pas la page : ce qu'il ne trouve pas dans ce
+    fichier, il ne le saura pas. La section est donc **engendrée** à partir de
+    `simulateur.prospective` : les fenêtres, leurs bornes, la fin des horizons et
+    l'état des lacunes sont recalculés au moment où le fichier est écrit — jamais
+    recopiés. C'est la même règle que la page : deux copies d'une même date
+    finissent par diverger, et c'est celle qu'on lit qui a tort.
+
+    Le paramètre `depart` existe pour être **éprouvé** : un contrôle engendre la
+    section à deux dates et refuse qu'elle dise la même chose. Une date écrite en
+    dur passerait inaperçue autrement — le jour de sa rédaction.
+    """
+    from datetime import date as _date
+
+    from simulateur import prospective
+
+    jour = depart or _date.today()
+    registre = prospective.registre(jour)
+    lignes: list[str] = [
+        "## Ce que le modèle peut dire d'un avenir daté",
+        "",
+        f"Registre de dates, jamais de prévisions : **aucune probabilité n'est calculée "
+        f"ici**. État au {registre['depart']} :",
+        "",
+    ]
+    for horizon in registre["horizons"]:
+        phrase = registre["phrases_des_horizons"].get(str(horizon["annees"]), "")
+        lignes.append(f"- horizon de **{horizon['annees']} ans** ({horizon['libelle']}) — "
+                      f"jusqu'au **{horizon['fin']}** : {phrase}")
+    lignes += ["", f"Les fenêtres de veille viennent de `{registre['source_fenetres']}` :", ""]
+    for fenetre in registre["fenetres"]:
+        bornes = (f"{fenetre['debut']} → {fenetre['fin']}" if fenetre["fin"]
+                  else f"{fenetre['debut']} → sans fin datée")
+        lignes.append(f"- **{bornes}** — {fenetre['libelle']}")
+    lignes += [
+        "",
+        f"Ce qui bloque encore une revendication prédictive (registre "
+        f"`{registre['source_lacunes']}`) : **{prospective.resume_des_lacunes()}**",
+        "",
+        f"[Le croisement complet, ses règles et ses limites]({DEPOT}/blob/main/docs/RD_PROSPECTIVE.md)",
+        "",
+    ]
+    return lignes
+
+
 def llms_complet() -> str:
     """Tout le contenu public en un seul fichier texte.
 
@@ -414,6 +462,8 @@ def llms_complet() -> str:
     for cle, scenario in sorted(SCENARIOS.items(), key=lambda item: item[1]["nom"]):
         lignes.append(f"- **{scenario['nom']}** (`{cle}`) : {scenario['description']}")
     lignes.append("")
+
+    lignes += _section_prospective()
 
     lignes += [
         "## Ce que l'outil ne fait pas",

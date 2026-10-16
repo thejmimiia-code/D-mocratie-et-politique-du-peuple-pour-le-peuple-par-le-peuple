@@ -26,6 +26,7 @@ page, et le site du M.R.S.C en propose une troisième, présentée à la main.
 - [Les cinq classes de leviers](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/RD_CLASSES_LEVIERS.md) : recettes, économies d'efficacité, dépenses, règles du jeu, monde subi.
 - [Objections ouvertes](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/21_OBJECTIONS_OUVERTES.md) : les critiques adressées à l'outil, et ce qu'elles changent.
 - [Hébergement et intégration](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/HEBERGEMENT.md) : où la page est servie, comment elle s'intègre ailleurs, quelles routes expose son API.
+- [Prospective : jusqu'où porte l'horizon](https://github.com/thejmimiia-code/D-mocratie-et-politique-du-peuple-pour-le-peuple-par-le-peuple/blob/main/docs/RD_PROSPECTIVE.md) : le croisement de l'horizon (5 ou 10 ans) avec les fenêtres de veille **datées du dépôt**, et l'état des lacunes qui bloquent une revendication prédictive — un registre de dates, jamais des probabilités (`GET /api/prospective`).
 
 ## Optional
 
