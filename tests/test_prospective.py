@@ -574,6 +574,25 @@ console.log(JSON.stringify({{ rendus: rendus, muet: muet }}));
             self.assertNotIn("à partir du 2031-11-01, sans fin datée", html,
                              "la phrase ne tient pas dans une cellule insécable")
 
+    def test_les_signaux_du_document_sont_montres_et_cites(self):
+        """Une veille qui ne dit pas ce qu'elle surveille n'est pas une veille.
+
+        Chaque fenêtre porte, dans le document, ce qui la **renforcerait** et ce
+        qui l'**écarterait**. Ces deux phrases sont affichées telles quelles —
+        pas reformulées : c'est ce qu'un lecteur doit surveiller, et une
+        reformulation perdrait le mot que la veille attend.
+        """
+        for annees in (5, 10):
+            html = self._html(annees)
+            for fenetre in self.reponse["fenetres"]:
+                with self.subTest(cle=fenetre["cle"], annees=annees):
+                    self.assertIn(fenetre["signaux_qui_renforcent"], html,
+                                  "le signal qui renforcerait n'est pas affiché")
+                    self.assertIn(fenetre["signaux_contraires"], html,
+                                  "le signal qui écarterait n'est pas affiché")
+            self.assertIn("<b>Renforcerait</b>", html)
+            self.assertIn("<b>Écarterait</b>", html)
+
     def test_les_couvertures_suivent_l_horizon_choisi(self):
         """Cinq ans et dix ans ne racontent pas la même chose."""
         cinq, dix = self._html(5), self._html(10)

@@ -7297,6 +7297,20 @@ function bornesDeLaFenetre(fenetre){
   if (!fenetre.fin) return fenetre.debut + ' → sans fin datée';
   return fenetre.debut + ' → ' + fenetre.fin;
 }
+/* Ce qu'il faudrait voir pour y croire, et ce qui l'écarterait — les mots du
+   document, pas une reformulation. Une veille qui ne dit pas ce qu'elle
+   surveille n'est pas une veille : c'est une date. Les deux phrases sont
+   longues, donc elles vivent dans la colonne qui se replie (jamais dans un
+   `td.chiffre`, insécable). */
+function signauxDeLaFenetre(fenetre){
+  const parties = [];
+  if (fenetre.signaux_qui_renforcent)
+    parties.push('<b>Renforcerait</b> : ' + echapperTexte(fenetre.signaux_qui_renforcent));
+  if (fenetre.signaux_contraires)
+    parties.push('<b>Écarterait</b> : ' + echapperTexte(fenetre.signaux_contraires));
+  if (!parties.length) return '';
+  return '<br><small class="source-note">' + parties.join('<br>') + '</small>';
+}
 function ligneFenetreProspective(fenetre, annees){
   const couverture = (fenetre.couverture || {})[String(annees)] || {};
   const marque = MARQUE_COUVERTURE[couverture.verdict] || '·';
@@ -7307,7 +7321,8 @@ function ligneFenetreProspective(fenetre, annees){
     + '<td>' + echapperTexte(fenetre.libelle)
     + '<br><small class="source-note">' + echapperTexte(fenetre.source)
     + (fenetre.fin ? '' : ' — le document n’écrit aucune fin à cette fenêtre')
-    + '</small></td>'
+    + '</small>'
+    + signauxDeLaFenetre(fenetre) + '</td>'
     + '<td>' + marque + ' ' + echapperTexte(mot) + pres + '</td></tr>';
 }
 function ligneLacuneProspective(lacune){

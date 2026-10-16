@@ -956,10 +956,13 @@ et ce HTML-là n'existe qu'au moment où le navigateur le fabrique.
 - la borne s'écrit **court** : `début → sans fin datée` (**27 signes**) ;
 - l'explication — « le document n'écrit aucune fin à cette fenêtre » — passe dans
   la colonne qui se **replie**, sous le libellé ;
-- et la règle du dépôt est désormais **exécutée** : six contrôles construisent le
+- et la règle du dépôt est désormais **exécutée** : sept contrôles construisent le
   bloc dans Node avec la réponse réelle de la route, sous les deux horizons,
   comptent **onze cellules insécables** (quatre bornes + sept rangs de lacune) et
-  refusent toute cellule de plus de **trente signes**.
+  refusent toute cellule de plus de **trente signes** ;
+- les **signaux de veille** ajoutés le même jour — « Renforcerait : … », « Écarterait : … » —
+  sont deux phrases longues par fenêtre : elles sont allées dans la même colonne
+  **repliable**, et le compte des cellules insécables n'a pas bougé d'une unité.
 
 ### Ce que cela ne change pas
 
