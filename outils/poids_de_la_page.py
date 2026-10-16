@@ -91,7 +91,8 @@ PLAFONDS: dict[str, dict] = {
         "quand": JOUR_ZERO,
         "jour_zero": True,
         "quoi": "le document brut : ce que l'appareil décompresse, analyse et "
-                "garde en mémoire, 479 190 o dont 318 344 de script en ligne",
+                "garde en mémoire — ancre mesurée le 15 octobre 2026 : 479 190 o "
+                "dont 318 344 de script en ligne",
         "sortie": "Retirer du document ce qui ne sert pas la visite, ou relever "
                   "l'ancre en revue : la compression ne paie pas le parse.",
     },

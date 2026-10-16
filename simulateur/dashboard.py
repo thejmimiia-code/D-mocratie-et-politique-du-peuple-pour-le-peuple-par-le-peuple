@@ -32,6 +32,10 @@ Deux niveaux de service cohabitent :
                                  `?coherence=1`, sinon synthèse) ;
       - `GET  /api/catalogue`    : familles, leviers, préréglages et valeurs par défaut ;
       - `GET  /api/presets`      : les préréglages doctrinaux ;
+      - `GET  /api/prospective`  : ce que l'horizon du modèle (5 ou 10 ans) rencontre des
+                                 fenêtres de veille documentées (`?depart=AAAA-MM-JJ`),
+                                 et l'état des lacunes qui bloquent une revendication
+                                 prédictive — des dates, jamais des probabilités ;
       - `GET  /api/objections`   : le registre de la contradiction (`?famille=mesure`,
                                  `?statut=en_cours`, `?levier=…`, `?chercher=…`) : objections
                                  fortes, concessions, ce qui ferait changer d'avis, et les
@@ -716,6 +720,22 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif chemin == "/api/comparer":
             try:
                 self._send_json(comparer(contexte=contexte_courant()))
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/prospective":
+            # Le registre de prospective : ce que l'horizon du modèle (5 ou 10 ans)
+            # rencontre des fenêtres de veille documentées, et l'état des lacunes qui
+            # bloquent une revendication prédictive. Rien n'est recalculé ici : tout
+            # est lu dans `simulateur.prospective`, lui-même citant les documents.
+            try:
+                from datetime import date as _date
+
+                from . import prospective as _prospective
+
+                depart = (_date.fromisoformat(query["depart"][0])
+                          if query.get("depart") and query["depart"][0] else _date.today())
+                self._send_json(_prospective.registre(depart))
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 

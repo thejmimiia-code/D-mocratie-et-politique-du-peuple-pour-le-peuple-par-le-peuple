@@ -82,9 +82,9 @@ n'est pas un plafond large : c'est un angle mort.
 
 ## 3. La table des plafonds
 
-Écrite dans `outils/budgets_fluidite.py` : **seize entrées** — quinze plafonds
-directs et un budget dérivé (le premier écran) —, seize ancres datées des 13 et
-14 octobre 2026, la marge de 10 % par défaut (20 % pour les cotations, dont la
+Écrite dans `outils/budgets_fluidite.py` : **dix-sept entrées** — seize plafonds
+directs et un budget dérivé (le premier écran) —, dix-sept ancres datées des 13, 14
+et 15 octobre 2026, la marge de 10 % par défaut (20 % pour les cotations, dont la
 base — sept lignes — rendrait un plafond trop serré cassant au premier ajout).
 
 ### Le relèvement du 14 octobre 2026 (passe « affichage »)
@@ -159,6 +159,7 @@ page passe de **123 131 o à 123 997 o** compressés, son plafond de **135 445 o
 | le lexique | 13 233 o | 14 557 o | 1 324 o |
 | les instances | 7 795 o | 8 575 o | 780 o |
 | les garde-fous | 7 569 o | 8 326 o | 757 o |
+| le registre de prospective | 2 439 o | 2 683 o | 244 o |
 | les cotations | 1 726 o | 2 072 o | 346 o |
 
 **Le budget du premier écran est dérivé**, et plus serré que la somme des
@@ -221,6 +222,22 @@ octet et page rendue. Aucun chiffre n'est écrit d'avance ; quand le navigateur 
 publie rien, le bloc l'écrit au lieu d'estimer. C'est la seule mesure de poids
 qu'un lecteur peut contrôler lui-même — et elle rend publique la promesse
 d'autonomie, au lieu de la laisser dans un fichier de configuration.
+
+### Ce que la 41e passe a coûté à la page (16 octobre 2026)
+
+Mesure du jour (`python3 outils/poids_de_la_page.py --verifier`) : **486 312 o
+bruts**, **131 761 o** transférés en gzip -6 — feuille de style 109 102 (22,4 %),
+script en ligne 325 044 (**66,8 %**, sous le plafond des trois quarts), balisage
+52 166 (10,7 %). Réserve : **6 052 o, soit 4,4 %** du plafond de la page.
+
+Ce que la passe a payé : le **septième bloc de l'audit** (prospective) et ses
+deux tableaux. **L'ancre n'est pas relevée cette fois** : + 2 060 o compressés
+(+1,6 %), une réserve qui reste confortable, et un relèvement d'ancre qui se
+justifie quand la réserve devient mince — pas à chaque passe. Le chiffre est
+publié ici pour que la revue le voie ; le contrôle de la table, lui, tient les
+trois nombres de chaque ligne (ancre, plafond, marge) **liés sur une seule
+ligne** depuis cette passe, pour qu'une ancre inventée ne puisse plus se cacher
+derrière le nombre d'un autre budget.
 
 ### 45 contrôles (`tests/test_budgets_fluidite.py`)
 

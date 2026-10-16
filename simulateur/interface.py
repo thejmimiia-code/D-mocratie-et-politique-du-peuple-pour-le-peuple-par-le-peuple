@@ -2099,7 +2099,9 @@ html[data-texte="137"]{font-size:137.5%}
       de chaque donnée d'entrée, la formule et la source de chaque indicateur des 20 domaines,
       le champ et la source de chacun des leviers du catalogue, le barème institutionnel complet des
       garde-fous, la méthode des dynamiques croisées — et ce que <b>cette</b> visite a coûté,
-      tel que votre navigateur le mesure. Tout recoupement est possible.
+      tel que votre navigateur le mesure. S'y ajoute une page de prospective : jusqu'où porte
+      l'horizon choisi, quelles fenêtres de veille documentées il rencontre, et ce qui manque
+      encore pour qu'une prévision soit défendable. Tout recoupement est possible.
     </p>
     <details id="audit-sources-details" open>
       <summary>1. Sources officielles des données d'entrée (recoupement possible)</summary>
@@ -2124,6 +2126,10 @@ html[data-texte="137"]{font-size:137.5%}
     <details id="audit-pesee-details">
       <summary>6. Ce que cette visite a coûté : la page se pèse devant vous</summary>
       <div class="corps" id="audit-pesee">mesure en cours…</div>
+    </details>
+    <details id="audit-prospective-details">
+      <summary>7. Prospective : jusqu'où porte l'horizon, et ce qu'il rencontre</summary>
+      <div class="corps" id="audit-prospective">chargement…</div>
     </details>
     <div class="aide" style="margin-top:10px">
       <b>Bannière MRSC.</b> Outil open-source produit par son créateur pour l'intérêt général :
@@ -2252,6 +2258,9 @@ function changerHorizon(valeur, relancer){
   HORIZON_SIMULATION = Number(valeur) === 10 ? 10 : 5;
   const select = document.getElementById('horizon-simulation');
   if (select) select.value = String(HORIZON_SIMULATION);
+  // L'horizon change : le bloc de prospective dit autre chose (les fenêtres
+  // couvertes ne sont pas les mêmes), et il le redit sans qu'on recharge rien.
+  rendreProspective();
   const badge = document.getElementById('badge-horizon');
   if (badge) badge.textContent = HORIZON_SIMULATION === 10
     ? 'deux mandatures · 10 ans' : 'une mandature · 5 ans';
@@ -7261,6 +7270,113 @@ function peserLaVisite(){
   zone.innerHTML = auditPeseeHtml();
   return true;
 }
+/* Bloc « prospective » : jusqu'où porte l'horizon choisi, et ce qu'il rencontre.
+   Les fenêtres de veille viennent d'un **document du dépôt** (§ 7 de
+   `docs/CONFLITS_RISQUES_SYSTEMIQUES_2026.md`) et l'horizon du select de la page ;
+   le croisement des deux est calculé par le serveur (`/api/prospective`), et la
+   page n'en recompose rien. Deux raisons, et non des moindres :
+   · une date de fin d'horizon recalculée en JavaScript finirait par diverger de
+     celle que le serveur calcule — et deux dates pour un même horizon, c'est une
+     de trop ;
+   · les fenêtres sont **citées**, avec leur document et leur section : recopier
+     leurs bornes ici les ferait survivre à une révision du document qui les porte.
+   La page affiche donc ce que le serveur a écrit, et le réaffiche quand on change
+   d'horizon : c'est tout son travail, et c'est assez. */
+let PROSPECTIVE = null;
+const MARQUE_COUVERTURE = {entierement: '✅', partiellement: '◐', hors_horizon: '⛔'};
+const MOT_COUVERTURE = {entierement: 'entièrement dans l’horizon',
+                        partiellement: 'partiellement couverte',
+                        hors_horizon: 'hors de l’horizon'};
+function bornesDeLaFenetre(fenetre){
+  // Cette cellule est insécable (`.audit td.chiffre{white-space:nowrap}`) : une
+  // phrase y serait coupée sur un téléphone. La fenêtre sans fin datée s'écrit
+  // donc court — « début → sans fin datée », vingt-sept signes au plus —, et l'explication
+  // va dans la colonne qui se replie. C'est le défaut trouvé à la passe
+  // précédente (« une phrase dans une cellule non repliable »), refusé ici avant
+  // d'être livré.
+  if (!fenetre.fin) return fenetre.debut + ' → sans fin datée';
+  return fenetre.debut + ' → ' + fenetre.fin;
+}
+function ligneFenetreProspective(fenetre, annees){
+  const couverture = (fenetre.couverture || {})[String(annees)] || {};
+  const marque = MARQUE_COUVERTURE[couverture.verdict] || '·';
+  const mot = MOT_COUVERTURE[couverture.verdict] || 'couverture inconnue';
+  const pres = couverture.a_un_mois_pres
+    ? ' <span class="source-note">(à un mois près)</span>' : '';
+  return '<tr><td class="chiffre">' + echapperTexte(bornesDeLaFenetre(fenetre)) + '</td>'
+    + '<td>' + echapperTexte(fenetre.libelle)
+    + '<br><small class="source-note">' + echapperTexte(fenetre.source)
+    + (fenetre.fin ? '' : ' — le document n’écrit aucune fin à cette fenêtre')
+    + '</small></td>'
+    + '<td>' + marque + ' ' + echapperTexte(mot) + pres + '</td></tr>';
+}
+function ligneLacuneProspective(lacune){
+  const marque = lacune.statut === 'refermee' ? '✅'
+    : (lacune.statut === 'partiellement_traitee' ? '◐' : '⛔');
+  const etat = lacune.fermee_le
+    ? ('refermée le ' + echapperTexte(lacune.fermee_le))
+    : (lacune.statut === 'ouverte' ? 'ouverte' : 'partiellement traitée');
+  return '<tr><td class="chiffre">' + echapperTexte(lacune.priorite) + '</td>'
+    + '<td>' + marque + ' ' + echapperTexte(lacune.libelle)
+    + '<br><small class="source-note">' + etat + ' — ' + echapperTexte(lacune.preuve)
+    + '</small></td>'
+    + '<td class="source-note">' + echapperTexte(lacune.critere) + '</td></tr>';
+}
+function auditProspectiveHtml(){
+  const annees = horizonCourant();
+  if (!PROSPECTIVE){
+    return '<p class="source-note">Registre de prospective indisponible : la route '
+      + '<code>/api/prospective</code> n’a pas répondu. Le reste de l’audit ne dépend pas '
+      + 'd’elle, et cette page préfère un aveu à un chiffre inventé.</p>';
+  }
+  const horizon = (PROSPECTIVE.horizons || []).find(function (h){
+    return Number(h.annees) === Number(annees); }) || {};
+  const phrase = (PROSPECTIVE.phrases_des_horizons || {})[String(annees)] || '';
+  const fenetres = (PROSPECTIVE.fenetres || [])
+    .map(function (f){ return ligneFenetreProspective(f, annees); }).join('');
+  const lacunes = (PROSPECTIVE.lacunes || []).map(ligneLacuneProspective).join('');
+  const comptes = PROSPECTIVE.lacunes_par_statut || {};
+  const resume = [comptes.ouverte ? comptes.ouverte + ' ouverte(s)' : '',
+                  comptes.partiellement_traitee
+                    ? comptes.partiellement_traitee + ' partiellement traitée(s)' : '',
+                  comptes.refermee ? comptes.refermee + ' refermée(s)' : '']
+    .filter(Boolean).join(', ');
+  return '<p class="source-note">Les fenêtres de veille sont celles du document '
+    + '<code>' + echapperTexte(PROSPECTIVE.source_fenetres || '') + '</code> ; votre horizon est '
+    + 'celui du select en haut de page. La page ne calcule ni la date de fin, ni la couverture : '
+    + 'elle recopie le croisement servi par le serveur.</p>'
+    + '<p><b>Votre horizon : ' + echapperTexte(horizon.libelle || '') + ' — jusqu’au '
+    + echapperTexte(horizon.fin || '—') + '.</b> ' + echapperTexte(phrase) + '</p>'
+    + '<table><thead><tr><th>Fenêtre de veille</th><th>Scénario possible sous conditions'
+    + '</th><th>Couverture à votre horizon</th></tr></thead><tbody>' + fenetres + '</tbody></table>'
+    + '<p class="source-note" style="margin-top:8px">Ces fenêtres sont un <b>plan de veille</b> '
+    + 'écrit pour organiser la surveillance, pas une prévision : le document le dit lui-même. '
+    + 'Le modèle ne les simule pas — il n’a ni rythme ni probabilité à en tirer.</p>'
+    + '<p style="margin-top:12px"><b>Ce qui bloque encore une revendication prédictive</b> '
+    + '(registre <code>' + echapperTexte(PROSPECTIVE.source_lacunes || '') + '</code>) : '
+    + echapperTexte(resume) + '.</p>'
+    + '<table><thead><tr><th>Rang</th><th>Lacune</th><th>Ce qui la fermerait</th></tr></thead>'
+    + '<tbody>' + lacunes + '</tbody></table>'
+    + '<p class="source-note" style="margin-top:8px">' + echapperTexte(PROSPECTIVE.avertissement || '')
+    + '</p>';
+}
+function rendreProspective(){
+  const zone = document.getElementById('audit-prospective');
+  if (!zone) return false;
+  zone.innerHTML = auditProspectiveHtml();
+  return true;
+}
+async function chargerProspective(){
+  // Un registre qui ne répond pas laisse le bloc en aveu : la prospective ne
+  // bloque ni l'audit, ni la simulation.
+  try {
+    const reponse = await fetch('/api/prospective');
+    PROSPECTIVE = await reponse.json();
+  } catch (erreur){
+    PROSPECTIVE = null;
+  }
+  return rendreProspective();
+}
 async function chargerAudit(){
   const zoneSources = document.getElementById('audit-sources');
   const zoneDomaines = document.getElementById('audit-domaines');
@@ -7286,6 +7402,9 @@ async function chargerAudit(){
   // La pesée se pose après le reste : elle ne dépend d'aucune route, et une
   // mesure qui échoue ne doit pas emporter l'audit avec elle.
   peserLaVisite();
+  // La prospective a sa propre route : si elle est muette, le bloc le dit et
+  // l'audit reste entier.
+  await chargerProspective();
 }
 
 /* Bloc « objections » : le registre de la contradiction, servi par

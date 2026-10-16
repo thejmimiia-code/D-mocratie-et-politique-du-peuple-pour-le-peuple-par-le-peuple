@@ -427,6 +427,23 @@ class TestDocumentEtCode(unittest.TestCase):
                               f"{budget.cle} : le plafond {plafond} o n'est annoncé nulle part")
                 self.assertIn(f"{ancre} o", texte,
                               f"{budget.cle} : l'ancre {ancre} o n'est annoncée nulle part")
+                # Une ancre doit être annoncée SUR LA LIGNE de son plafond. Trouvé
+                # par un sabotage resté muet le 15 octobre 2026 : l'ancre du registre
+                # de prospective, inventée (3 000 o), passait le contrôle parce que
+                # le nombre existait ailleurs dans le document — celui d'un autre
+                # budget. Le tableau est le registre : une ligne, un budget, trois
+                # nombres liés.
+                lignes = [ligne for ligne in texte.splitlines()
+                          if f"{plafond} o" in ligne]
+                self.assertTrue(
+                    lignes and any(f"{ancre} o" in ligne for ligne in lignes),
+                    f"{budget.cle} : la ligne qui annonce le plafond {plafond} o "
+                    f"n'annonce pas l'ancre {ancre} o du budget")
+                marge = f"{budget.plafond - budget.ancre:,}".replace(",", " ")
+                self.assertTrue(
+                    any(f"{marge} o" in ligne for ligne in lignes),
+                    f"{budget.cle} : la ligne du plafond {plafond} o n'annonce pas "
+                    f"sa marge {marge} o — {plafond} − {ancre}")
 
     def test_le_tableau_du_document_a_autant_de_lignes_que_de_plafonds(self):
         document = (RACINE / "docs" / "RD_BUDGETS_DE_FLUIDITE.md").read_text(encoding="utf-8")

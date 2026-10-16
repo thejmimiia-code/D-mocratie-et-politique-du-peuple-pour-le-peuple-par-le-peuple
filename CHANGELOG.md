@@ -6,6 +6,80 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### L'horizon du modèle rencontre enfin les fenêtres de veille documentées (16 octobre 2026)
+
+- **Le vide, mesuré.** Le dépôt portait quatre fenêtres de veille datées
+  (`docs/CONFLITS_RISQUES_SYSTEMIQUES_2026.md`, § 7), un registre de lacunes priorisées
+  (`docs/AUDIT_LACUNES_GEOPOLITIQUES.md`) et un protocole d'évaluation chronologique
+  (`docs/RD_VALIDATION_TEMPORELLE.md`). Le moteur, lui, simulait **5 ou 10 ans** depuis le jour
+  d'ouverture. Aucun des deux ne parlait à l'autre : la page offrait un select d'horizon qui ne
+  disait rien de ce que cet horizon rencontre. « 10 ans » se lisait comme une profondeur de champ ;
+  c'est une durée de calcul.
+- **Ce qui a changé** (`simulateur/prospective.py`) : le croisement est calculé, en dates, et
+  publié. Au 16 octobre 2026 — horizon **5 ans**, fin le 16 octobre 2031 — **3 des 4 fenêtres
+  tombent entièrement dedans** (incident majeur : fermée 1 657 j avant la fin ; crises simultanées :
+  1 110 j ; fragmentation prolongée : 15 j) et la quatrième, **sans fin datée**, s'ouvre le
+  1ᵉʳ novembre 2031 — **16 jours après** la fin. À **10 ans** (fin 2036), les trois premières y sont
+  (3 484 / 2 937 / 1 842 j) et la quatrième n'y tombe que **partiellement** : son début est dedans,
+  sa fin n'est pas datée.
+- **Trois règles, tenues par des contrôles** : **une fenêtre porte sa source** (le module cite le
+  document au mot près — un contrôle relit le § 7 et compare les libellés caractère par caractère) ;
+  **une borne imprécise se dit imprécise** (le document date au mois, le modèle calcule au jour : la
+  couverture de `fragmentation_prolongee` est annoncée « à un mois près », et le pas d'imprécision
+  est **31 jours**, la borne la plus large) ; **un statut de lacune ne se décide pas dans le code**
+  (un contrôle refuse qu'une lacune ouverte se dise refermée, et refuse qu'une lacune refermée perde
+  la date du document qui la ferme).
+- **Le registre des lacunes est publié, daté, et sans probabilité** : **2 ouvertes** (aucun jeu
+  historique calibré ; coûts économiques incomplets), **4 partiellement traitées** (cible prédictive,
+  disponibilité/révisions, cas négatifs et fréquence de base, validation hors échantillon — toutes
+  adossées à `simulateur/validation_temporelle.py`), **1 refermée** (l'indice nucléaire, le
+  15 octobre 2026). La phrase qui accompagne le registre est celle qui compte : « aucune
+  revendication prédictive n'est permise tant qu'une lacune P0 reste ouverte ». Le mot
+  « probabilité » ne peut apparaître qu'avec une négation — un contrôle lit le contexte.
+- **Une 23ᵉ route** : `GET /api/prospective` (`?depart=AAAA-MM-JJ`, facultatif) — **8 029 o** bruts,
+  **2 439 o** compressés pour un **plafond de 2 683 o** entré le jour même dans
+  `outils/budgets_fluidite.py` (17 budgets, 16 charges mesurées). Une date illisible n'est pas
+  devinée : la route répond **500** avec un message d'erreur plutôt que de retomber en silence sur
+  le jour. Le compte des routes passe de 22 à **23** dans `CONTRIBUTING.md`, `README.md` et
+  `docs/16_INSTANCES_YOYO_ET_FENTES.md`, et `outils/verifier-compteurs.py` le tient.
+- **Et la page le montre** : **bloc 7** de l'audit — « Prospective : jusqu'où porte l'horizon, et ce
+  qu'il rencontre » —, replié comme les six autres, **redessiné quand on change d'horizon**, avec
+  les fenêtres (source citée sous chacune), le tableau des lacunes et son critère de fermeture.
+  **Aucune date n'est écrite en dur dans le bloc** : le rendu recopie ce que le serveur a calculé,
+  parce qu'une date recalculée en JavaScript finirait par diverger de celle du serveur. Si la route
+  se tait, le bloc **l'écrit** (« Registre de prospective indisponible ») sans faire jeter le reste
+  de l'audit — la pesée de la visite ne dépend pas de la prospective.
+- **38 contrôles neufs** (`tests/test_prospective.py`) en cinq familles : le croisement des
+  horizons (13), la citation des documents (5), l'accord registre/document (5), la route et la page
+  (9), et — la plus utile — **le bloc exécuté pour de vrai dans Node** (6), alimenté par la réponse
+  réelle de la route. **16 sabotages, 16 attrapés** — et **quatre ont d'abord passé inaperçus**, ce qui est le vrai
+  apport de la passe : un **seuil de verdict déplacé d'un jour** ne rougissait nulle part (aucune
+  fenêtre du document ne s'ouvre pile le dernier jour : deux contrôles neufs tiennent la borne
+  exacte et son lendemain) ; une **preuve citant un symbole tronqué** passait parce que le contrôle
+  cherchait par sous-chaîne (il exige une frontière de mot) ; le **verdict d'un sabotage de plafond**
+  était faux, pas le contrôle (la garde des plafonds juge désormais les plafonds) ; et une **ancre
+  inventée** (2 439 → 3 000) ne rougissait pas parce que le document était lu « quelque part » — le
+  tableau devient le registre : une ligne, l'ancre, le plafond et la marge liés.
+- **Un défaut trouvé en relisant la greffe, avant de livrer** : la cellule des bornes était un
+  `td.chiffre` — donc **insécable** —, et pour la fenêtre sans fin datée elle faisait **quarante
+  signes** : sur un téléphone, ce texte aurait été coupé, dans le bloc même dont le but est d'être
+  lu. C'est exactement le défaut refusé à la passe précédente. La borne s'écrit désormais court
+  (« début → sans fin datée », 27 signes) et l'explication passe dans la colonne qui se replie ; un
+  contrôle neuf le vérifie **sur le HTML réellement fabriqué**, pas sur un texte de source — six
+  contrôles exécutent le bloc dans Node avec la réponse de la route sous les deux horizons, comptent
+  les cellules insécables et refusent toute cellule de plus de trente signes. Le sabotage qui remet
+  la phrase longue rougit les deux contrôles.
+- **Un contrôle qui avait vieilli, requalifié** : `test_pesee_de_la_visite` affirmait « l'audit a six
+  blocs numérotés ». Le septième bloc a rougi à la bonne place : le contrôle vérifie désormais une
+  **suite 1..N sans trou** (au moins six), au lieu d'un compte figé qui interdisait d'ajouter un bloc.
+- **La page grossit de ce qu'elle dit, et le dit** : `index.html` régénéré à **477 123 caractères**,
+  page publiée **486 312 o** bruts pour **131 761 o** transférés (script en ligne 325 044 o, soit
+  66,8 % — sous le plafond des trois quarts), **réserve 6 052 o, 4,4 % du plafond**. L'ancre n'est
+  **pas** relevée cette fois : + 2 060 o compressés, la réserve reste confortable, et un relèvement
+  d'ancre se justifie quand elle devient mince — pas à chaque passe. Le chiffre est publié ici pour
+  que la revue le voie. Le registre de prospective, lui, entre plafonné : **2 683 o** compressés
+  pour **2 439** mesurés.
+
 ### La page se pèse devant vous — et le dépôt tient ce qu'elle ne dit pas (15 octobre 2026)
 
 - **Le fait, mesuré sur la page publiée** (`index.html`, gzip -6) : **479 190 octets bruts**,
