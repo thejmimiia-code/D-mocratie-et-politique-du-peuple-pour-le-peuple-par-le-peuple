@@ -6,6 +6,25 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Chaque fenêtre de veille dit ce qu'il faudrait voir pour y croire (16 octobre 2026)
+
+- **Le manque.** Le bloc 7 montrait les fenêtres de veille, leurs bornes et leur couverture — mais
+  pas ce que le document écrit **à côté** de chaque fenêtre : les signaux qui la renforceraient et
+  ceux qui l'écarteraient. Une veille qui ne dit pas ce qu'elle surveille n'est pas une veille :
+  c'est une date. Le lecteur voyait « octobre 2028 → octobre 2031 » sans savoir quoi regarder.
+- **Ce qui a changé.** Chaque fenêtre porte désormais, sous son libellé, **deux phrases du
+  document** : « **Renforcerait** : … » et « **Écarterait** : … » — citées, jamais reformulées.
+  C'est la même règle que pour les libellés et les critères : une reformulation perdrait le mot
+  que la veille attend, et un lecteur ne peut pas surveiller ce qu'on lui a résumé.
+- **Un contrôle neuf** (`tests/test_prospective.py`, 39 tests) : pour chaque fenêtre, aux **deux**
+  horizons, les deux phrases servies par la route doivent se retrouver **telles quelles** dans le
+  HTML que la page fabrique — et la page doit dire ce qu'elles sont (`Renforcerait` / `Écarterait`),
+  pas les jeter en vrac. Elles vivent dans la colonne qui se **replie** : la règle des trente signes
+  dans une cellule insécable tient toujours, et le contrôle exécuté la vérifie sur le HTML réel.
+- **Deux sabotages, deux attrapés** : un signal reformulé, et les signaux retirés du bloc.
+- **La page, du coup** : **487 115 o** bruts pour **131 996 o** transférés (script en ligne 325 847,
+  **66,9 %** — sous le plafond des trois quarts). Réserve du plafond de page : **5 817 o, 4,2 %**.
+
 ### Le fichier que lisent les assistants dit, lui aussi, ce que l'outil ne prédit pas (16 octobre 2026)
 
 - **Le fait.** Le dépôt publie `llms.txt` et `llms-full.txt` — ce qu'un assistant lit **sans

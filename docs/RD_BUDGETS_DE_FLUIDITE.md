@@ -225,14 +225,16 @@ d'autonomie, au lieu de la laisser dans un fichier de configuration.
 
 ### Ce que la 41e passe a coûté à la page (16 octobre 2026)
 
-Mesure du jour (`python3 outils/poids_de_la_page.py --verifier`) : **486 312 o
-bruts**, **131 761 o** transférés en gzip -6 — feuille de style 109 102 (22,4 %),
-script en ligne 325 044 (**66,8 %**, sous le plafond des trois quarts), balisage
-52 166 (10,7 %). Réserve : **6 052 o, soit 4,4 %** du plafond de la page.
+Mesure du jour (`python3 outils/poids_de_la_page.py --verifier`), après les deux
+ajouts de la journée : **487 115 o** bruts, **131 996 o** transférés en gzip -6 —
+feuille de style 109 102 (22,4 %), script en ligne 325 847 (**66,9 %**, sous le
+plafond des trois quarts), balisage 52 166 (10,7 %). Réserve : **5 817 o, soit
+4,2 %** du plafond de la page.
 
-Ce que la passe a payé : le **septième bloc de l'audit** (prospective) et ses
-deux tableaux. **L'ancre n'est pas relevée cette fois** : + 2 060 o compressés
-(+1,6 %), une réserve qui reste confortable, et un relèvement d'ancre qui se
+Ce que la journée a payé : le **septième bloc de l'audit** (prospective), ses
+deux tableaux, puis les **signaux de veille** cités sous chaque fenêtre.
+**L'ancre n'est pas relevée cette fois** : + 2 295 o compressés (+1,8 %), une
+réserve qui reste confortable, et un relèvement d'ancre qui se
 justifie quand la réserve devient mince — pas à chaque passe. Le chiffre est
 publié ici pour que la revue le voie ; le contrôle de la table, lui, tient les
 trois nombres de chaque ligne (ancre, plafond, marge) **liés sur une seule

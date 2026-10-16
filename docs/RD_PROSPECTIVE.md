@@ -107,6 +107,16 @@ rapelle le rendu). Trois propriétés tenues par des contrôles :
   indisponible », sans faire jeter le reste de l'audit — la pesée de la visite et
   les six autres blocs ne dépendent pas de la prospective.
 
+### Ce que la veille surveille, en clair
+
+Sous chaque fenêtre, le bloc affiche **deux phrases du document** : ce qui la
+**renforcerait** et ce qui l'**écarterait**. Ce ne sont pas des ornements : une
+fenêtre de veille sans ses signaux est une date, pas une surveillance — et
+reformuler ces phrases ferait perdre le mot que la veille attend (« cessez-le-feu
+observé », « rupture des canaux »). Elles sont donc citées, comme les libellés et
+les critères, et un contrôle exécuté les vérifie sur le HTML réellement fabriqué,
+aux deux horizons.
+
 ## 7. La route
 
 `GET /api/prospective` (`?depart=AAAA-MM-JJ`, facultatif) devient la **23ᵉ route
