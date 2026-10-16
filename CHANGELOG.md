@@ -6,6 +6,37 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### Le fichier que lisent les assistants dit, lui aussi, ce que l'outil ne prédit pas (16 octobre 2026)
+
+- **Le fait.** Le dépôt publie `llms.txt` et `llms-full.txt` — ce qu'un assistant lit **sans
+  exécuter la page**. Ils disaient le catalogue, les domaines, les scénarios et les sources ; ils
+  ne disaient rien de la prospective, et surtout rien de sa nature : un lecteur automatique pouvait
+  donc résumer le modèle sans savoir qu'**aucune probabilité n'y est calculée**. Ce qu'un fichier
+  ne dit pas, son lecteur l'ignore — et l'invente.
+- **Ce qui a changé.** `llms.txt` gagne une ligne : le registre de prospective, sa route
+  (`GET /api/prospective`) et la phrase qui compte — « un registre de dates, **jamais des
+  probabilités** ». `llms-full.txt` gagne une **section engendrée** (`_section_prospective()`) :
+  les deux horizons avec leur **fin recalculée**, les **quatre fenêtres** citées avec leurs bornes,
+  et l'**état des lacunes** tel que le module le publie (2 ouvertes, 4 partiellement traitées,
+  1 refermée).
+- **Rien n'y est recopié.** La section est construite à partir de `simulateur.prospective` au
+  moment où le fichier est écrit : bornes, fins d'horizon et comptes viennent du module, comme la
+  page. Un contrôle engendre la section à **deux dates éloignées** (16 octobre 2026 et 16 octobre
+  2030) et refuse qu'elle dise la même chose — une fin d'horizon écrite en dur passerait sinon le
+  jour de sa rédaction, et pas le lendemain.
+- **Trois contrôles neufs** (`tests/test_indexation.py`, 38 tests) : le fichier court cite le
+  registre **et affirme la négation** (un fichier qui ne dit nulle part que l'outil ne calcule pas
+  de probabilités laisse son lecteur supposer l'inverse) ; le fichier long porte la prospective
+  **engendrée** (les fenêtres citées au mot près, `sans fin datée` pour celle qui n'en a pas, la
+  fin d'horizon du jour, le résumé des lacunes du module) ; et la section **dépend du jour**.
+- **Quatre sabotages, quatre attrapés** — dont un qui a d'abord **passé inaperçu** : retirer la
+  phrase « jamais des probabilités » du générateur ne faisait rougir personne, puisque plus aucune
+  ligne ne portait le mot à désamorcer. Le contrôle exige désormais la négation **elle-même**, et
+  pas seulement qu'elle accompagne le mot. Les trois autres : fin d'horizon écrite en dur, fenêtre
+  sans fin qui s'en invente une, libellé de fenêtre réécrit dans le fichier publié.
+- **Et le mot est tenu partout** : la surface publique, la page, la route et le module disent la
+  même chose de la même façon — un **registre de dates**, jamais une prévision.
+
 ### L'horizon du modèle rencontre enfin les fenêtres de veille documentées (16 octobre 2026)
 
 - **Le vide, mesuré.** Le dépôt portait quatre fenêtres de veille datées

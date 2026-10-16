@@ -35,6 +35,7 @@ import unittest
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ElementTree
+from datetime import date
 from html.parser import HTMLParser
 from importlib import import_module
 from pathlib import Path
@@ -389,6 +390,85 @@ class TestFichiersPublies(unittest.TestCase):
         # Deux fois la taille de la page, pas trois : un fichier énorme n'est
         # jamais lu jusqu'au bout par personne.
         self.assertLess(len(contenu), 400_000)
+
+    def test_llms_txt_cite_le_registre_de_prospective(self):
+        """Un lecteur automatique doit savoir que l'outil ne prédit pas.
+
+        Ce qu'il ne trouve pas dans ce fichier, il ne le saura pas : la route de
+        prospective et sa nature — un **registre de dates**, jamais des
+        probabilités — s'écrivent donc là où un assistant les lit.
+        """
+        contenu = (RACINE / "llms.txt").read_text(encoding="utf-8")
+        self.assertIn("RD_PROSPECTIVE.md", contenu)
+        self.assertIn("/api/prospective", contenu)
+        # Et la négation doit être **là** : un fichier qui ne dit nulle part que
+        # l'outil ne calcule pas de probabilités laisse le lecteur automatique
+        # supposer l'inverse. Un sabotage l'a montré : retirer la phrase entière
+        # ne faisait rougir aucun contrôle, puisque plus aucune ligne ne portait
+        # le mot à désamorcer.
+        self.assertRegex(contenu.lower(),
+                         r"(jamais|aucun\w*|pas)(\s+\S+){0,2}\s+probabilit",
+                         "le fichier ne dit nulle part, en clair, que l'outil ne "
+                         "calcule pas de probabilités")
+        # Le mot « probabilités » est celui qu'il faut désamorcer : il doit être
+        # précédé de la négation, sinon la phrase promet une prévision.
+        for ligne in contenu.splitlines():
+            if "probabilit" in ligne:
+                self.assertRegex(ligne.lower(), r"(jamais|aucun\w*|pas)(\s+\S+){0,2}\s+probabilit",
+                                 f"une probabilité est annoncée sans être démentie : {ligne}")
+
+    def test_llms_full_porte_la_prospective_engendree(self):
+        """Les fenêtres, les horizons et les lacunes : ceux du module, pas d'une copie."""
+        from simulateur import prospective as pro
+
+        contenu = (RACINE / "llms-full.txt").read_text(encoding="utf-8")
+        jour = date.today()
+        registre = pro.registre(jour)
+        self.assertIn("Ce que le modèle peut dire d'un avenir daté", contenu)
+        for horizon in registre["horizons"]:
+            self.assertIn(f"horizon de **{horizon['annees']} ans**", contenu)
+            self.assertIn(f"jusqu'au **{horizon['fin']}**", contenu,
+                          "la fin d'horizon du fichier doit être recalculée, pas recopiée")
+        for fenetre in registre["fenetres"]:
+            self.assertIn(fenetre["libelle"], contenu,
+                          "une fenêtre du document doit être citée telle quelle")
+        self.assertIn("sans fin datée", contenu)
+        self.assertIn(pro.resume_des_lacunes(), contenu,
+                      "l'état des lacunes publié n'est plus celui du module")
+        # Et la négation doit être **là** : un fichier qui ne dit nulle part que
+        # l'outil ne calcule pas de probabilités laisse le lecteur automatique
+        # supposer l'inverse. Un sabotage l'a montré : retirer la phrase entière
+        # ne faisait rougir aucun contrôle, puisque plus aucune ligne ne portait
+        # le mot à désamorcer.
+        self.assertRegex(contenu.lower(),
+                         r"(jamais|aucun\w*|pas)(\s+\S+){0,2}\s+probabilit",
+                         "le fichier ne dit nulle part, en clair, que l'outil ne "
+                         "calcule pas de probabilités")
+        for ligne in contenu.splitlines():
+            if "probabilit" in ligne:
+                self.assertRegex(ligne.lower(), r"(jamais|aucun\w*|pas)(\s+\S+){0,2}\s+probabilit",
+                                 f"une probabilité est annoncée sans être démentie : {ligne}")
+
+    def test_la_section_prospective_est_engendree_et_non_recopiee(self):
+        """Deux dates d'engendrement, deux textes : une date en dur serait vue ici.
+
+        Sans ce contrôle, écrire la fin d'horizon du jour dans le générateur
+        passerait — le jour de sa rédaction. La section est donc engendrée à deux
+        dates éloignées, et l'on refuse qu'elle dise la même chose.
+        """
+        from datetime import date as _date
+
+        from simulateur import prospective as pro
+
+        lundi = "\n".join(surface._section_prospective(_date(2026, 10, 16)))
+        dans_quatre_ans = "\n".join(surface._section_prospective(_date(2030, 10, 16)))
+        self.assertNotEqual(lundi, dans_quatre_ans,
+                            "la section ne dépend pas du jour : elle est figée")
+        for annees, _ in pro.HORIZONS:
+            fin = pro.fin_d_horizon(_date(2030, 10, 16), annees).isoformat()
+            self.assertIn(f"jusqu'au **{fin}**", dans_quatre_ans,
+                          "la fin d'horizon n'est pas celle que le module calcule")
+        self.assertIn("2035-10-16", dans_quatre_ans, "l'horizon de cinq ans depuis 2030")
 
     def test_les_liens_du_depot_existent(self):
         """Un lien mort dans un fichier public est une porte fermée."""

@@ -428,3 +428,33 @@ La veille tourne aussi à la main, sur n'importe quel poste :
 python3 outils/verifier-surface-en-ligne.py                # les deux hôtes
 python3 outils/verifier-surface-en-ligne.py --hote secours # la copie de secours seule
 ```
+
+## 14. Ce que lit un assistant qui n'exécute pas la page (16 octobre 2026)
+
+`llms.txt` et `llms-full.txt` existent pour un lecteur qui **ne joue pas la
+page** : un assistant, un indexeur, un agent. Ce qu'ils ne disent pas, ce
+lecteur l'ignore — ou l'invente. Or ils décrivaient le catalogue, les domaines,
+les scénarios et les sources sans jamais dire que le modèle **ne calcule aucune
+probabilité** : un résumé pouvait donc promettre une prévision.
+
+Deux ajouts, tous deux **engendrés** :
+
+1. dans `llms.txt`, une ligne pour le registre de prospective — sa route
+   (`GET /api/prospective`), son document et la phrase qui désamorce le mot :
+   « un registre de dates, **jamais des probabilités** » ;
+2. dans `llms-full.txt`, une section « Ce que le modèle peut dire d'un avenir
+   daté » construite au moment de l'écriture à partir de
+   `simulateur.prospective` : les deux horizons et leur **fin recalculée**, les
+   **quatre fenêtres de veille** citées avec leurs bornes (dont celle qui n'a
+   pas de fin — « sans fin datée »), et l'**état des lacunes** publié par le
+   module, avec la phrase qui compte : aucune revendication prédictive tant
+   qu'une lacune P0 reste ouverte.
+
+**La règle est celle de la page** : pas de seconde copie d'une date. Un contrôle
+engendre la section à **deux dates éloignées** et refuse qu'elle dise la même
+chose ; un autre exige que la négation soit **écrite**, et pas seulement
+présente à côté du mot « probabilité ». Les trois contrôles vivent dans
+`tests/test_indexation.py`, et quatre sabotages les éprouvent — dont un qui a
+d'abord passé inaperçu et a fait **durcir le contrôle** : retirer la phrase
+entière ne rougissait personne, puisque plus aucune ligne ne portait le mot à
+désamorcer.
