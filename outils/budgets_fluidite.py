@@ -183,6 +183,15 @@ BUDGETS: tuple[Budget, ...] = (
         "textes",
     ),
     Budget(
+        "prospective",
+        "le registre de prospective",
+        2_439,
+        "Ce que l'horizon du modèle rencontre des fenêtres de veille documentées, "
+        "et l'état des lacunes qui bloquent une revendication prédictive. Il change "
+        "quand la veille change — pas à chaque retouche de style.",
+        "textes",
+    ),
+    Budget(
         "marches",
         "les cotations de marché",
         1_726,
@@ -296,6 +305,7 @@ ROUTES_MESUREES: tuple[tuple[str, str], ...] = (
     ("/api/dynamiques", "dynamiques"),
     ("/api/instances", "instances"),
     ("/api/bulles?detail=resume", "bulles"),
+    ("/api/prospective", "prospective"),
 )
 
 #: Les routes que la page appelle et qu'on ne plafonne **pas** individuellement.

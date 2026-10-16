@@ -243,3 +243,36 @@ Une première partie du contrat de données et du banc d'évaluation est mainten
 versionnées, instantanés à date, contrôles anti-fuite et références chronologiques.
 La démonstration reste entièrement synthétique ; collecte réelle, agrégation des
 événements, calibration et évaluation indépendante restent à réaliser.
+
+## Addendum — R&D v5 (16 octobre 2026) : le registre devient consultable, et ses statuts sont datés
+
+Le registre priorisé du § 3 était un tableau figé dans un document daté. Il est
+désormais **publié par le moteur** (`simulateur/prospective.py`,
+`GET /api/prospective`) et **montré** au lecteur, avec l'horizon qu'il a choisi :
+le **bloc 7** de l'audit de la page cite le document, dit la couverture de chaque
+fenêtre de veille, et affiche pour chaque lacune **ce qui la fermerait**.
+
+**C'est le document qui décide, et le code le lit.** Un contrôle refuse qu'un
+statut se décide dans le code : une lacune ouverte ne peut pas se dire refermée,
+et une lacune refermée doit porter la **date** que ce document lui a donnée.
+
+| Priorité | Lacune | Statut au 16 octobre 2026 | Ce qui la fermerait |
+|---|---|---|---|
+| P0 | Cible prédictive non définie | partiellement traitée | Définition observable, horizon, unité géographique et règle de labellisation publiés |
+| P0 | Aucun jeu historique calibré | **ouverte** | Jeu versionné, provenance, couverture et licence documentées |
+| P0 | Dates de disponibilité et révisions absentes | partiellement traitée | Table « connue à la date t » et test automatisé contre les fuites temporelles |
+| P0 | Pas de cas négatifs / fréquence de base | partiellement traitée | Échantillon incluant crises contenues et périodes sans escalade |
+| P0 | Absence de validation prospective/hors échantillon | partiellement traitée | Découpage chronologique gelé, référence simple, erreurs et calibration publiées |
+| P0 | Coûts économiques incomplets | **ouverte** | Comptes ressources/emplois, coût d'acquisition, financement, absence de double comptage |
+| P1 | ~~Indice nucléaire non calibré~~ | **refermée le 15 octobre 2026** | Renommer/documenter les concepts, pas de probabilité d'emploi sans méthode défendable |
+
+Les quatre P0 « partiellement traitées » s'appuient sur `simulateur/validation_temporelle.py`,
+et sur un **corpus synthétique** : le protocole est exercé, la calibration réelle ne
+l'est pas. C'est exactement ce que la ligne « Aucun jeu historique calibré » continue
+de dire, et le registre le publie dans cet ordre de lecture :
+
+> **2 ouvertes, 4 partiellement traitées, 1 refermée — aucune revendication
+> prédictive n'est permise tant qu'une lacune P0 reste ouverte.**
+
+Le détail du croisement, la route, ses mesures et ses sabotages sont dans
+[`RD_PROSPECTIVE.md`](RD_PROSPECTIVE.md).

@@ -135,14 +135,21 @@ class TestLeBlocDePeseeDansLaPage(unittest.TestCase):
         cls.debut = cls.script.index(DEBUT)
         cls.fragment = cls.script[cls.debut:cls.script.index(FIN, cls.debut)]
 
-    def test_l_audit_a_six_blocs_numerotes(self):
-        """Le sixième existe, et la numérotation ne saute pas un rang."""
+    def test_les_blocs_de_l_audit_sont_numerotes_sans_trou(self):
+        """La numérotation de 1 à N, sans saut ni doublon.
+
+        Ce contrôle comptait les blocs (« six blocs numérotés ») : il vieillissait
+        à chaque bloc ajouté — c'est arrivé au septième, le 15 octobre 2026, et il
+        a fallu le réécrire. Ce qu'il doit tenir n'est pas un nombre, c'est une
+        **suite** : les blocs se suivent, et celui de la pesée est là.
+        """
         section = self.page[self.page.index('id="section-audit"'):]
         section = section[:section.index("</section>")]
         ids = re.findall(r'<details id="audit-([a-z]+)-details"', section)
         summaries = re.findall(r"<summary>(\d+)\.", section)
-        self.assertEqual(summaries, ["1", "2", "3", "4", "5", "6"],
-                         f"l'audit ne porte plus six blocs numérotés ({ids})")
+        self.assertEqual(summaries, [str(rang) for rang in range(1, len(ids) + 1)],
+                         f"la numérotation de l'audit saute un rang ou se répète ({ids})")
+        self.assertGreaterEqual(len(ids), 6, "l'audit a perdu des blocs en route")
         self.assertIn("pesee", ids)
         self.assertIn('id="audit-pesee"', section)
         self.assertIn('<div class="corps" id="audit-pesee">', section)

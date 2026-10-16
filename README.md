@@ -744,7 +744,7 @@ python3 -m unittest discover tests
 ```
 
 > ✅ **Plafond de l'offre Hobby : 12 fonctions par déploiement.** `api/` ne contient
-> qu'une seule fonction pour les 22 routes du moteur, `[...path].py`, plus
+> qu'une seule fonction pour les 23 routes du moteur, `[...path].py`, plus
 > `verifier-source` : deux fonctions au total. Aucune règle de réécriture
 > (`vercel.json`) n'est nécessaire. Pour un hébergement sans Vercel (un seul
 > processus), voir [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md).
@@ -878,6 +878,25 @@ Mesuré sur le corpus synthétique : `frequence_lissee` fait **moins bien** que
 d'annoncer la fréquence (compétence −0,108), `dernier_etat_lisse` à peine mieux
 (+0,052) — c'est exactement ce qu'un Brier seul ne pouvait pas dire.
 
+### Prospective : jusqu'où porte l'horizon, et ce qu'il rencontre (R&D v5)
+
+Les quatre fenêtres de veille du dossier prospectif ([§ 7](docs/CONFLITS_RISQUES_SYSTEMIQUES_2026.md))
+et les lacunes de [l'audit géopolitique](docs/AUDIT_LACUNES_GEOPOLITIQUES.md) sont
+désormais **croisées en dates** avec l'horizon du modèle, et publiées — sur la page
+(**bloc 7** de l'audit) comme par l'API (`GET /api/prospective`).
+
+```bash
+python3 -m simulateur.prospective --depart 2026-10-16   # le croisement et le registre
+python3 -m simulateur.prospective --json                # la donne brute
+```
+
+Au 16 octobre 2026 : l'horizon de **5 ans** (fin 2031) couvre **entièrement 3 des 4
+fenêtres** — la quatrième, **sans fin datée**, s'ouvre 16 jours après la fin ; à
+**10 ans**, elle n'y tombe que partiellement. Aucune n'est une prévision : le
+document le dit lui-même, et le registre le répète — **2 lacunes P0 ouvertes,
+4 partiellement traitées, 1 refermée**, et « aucune revendication prédictive tant
+qu'une P0 reste ouverte ». Le détail : [`docs/RD_PROSPECTIVE.md`](docs/RD_PROSPECTIVE.md).
+
 ### Adaptateur UCDP et dates ambiguës (R&D v4)
 
 [Schéma vérifié, import local et limites de disponibilité](docs/RD_IMPORT_UCDP.md).
@@ -905,7 +924,7 @@ python3 outils/mesurer_fluidite.py --verifier # plafonds de poids, code de sorti
 Les mesures sont locales et hors ligne : le gain de volume est structurel, les
 durées dépendent de la machine.
 
-Depuis le 14 octobre 2026, ces mesures sont **opposables** : seize plafonds sont
+Depuis le 14 octobre 2026, ces mesures sont **opposables** : dix-sept plafonds sont
 écrits dans [`outils/budgets_fluidite.py`](outils/budgets_fluidite.py) — chacun
 avec son ancre datée, son motif et sa sortie, une marge de 10 %, et une raison
 écrite pour les cinq routes appelées et volontairement non plafonnées. La page

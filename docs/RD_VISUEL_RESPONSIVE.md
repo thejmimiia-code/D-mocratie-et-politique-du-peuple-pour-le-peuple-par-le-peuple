@@ -937,6 +937,39 @@ fois. Pour un **état** (les pastilles) et pour une **phrase d'identité** (le
 titre), c'est la bonne règle : on ne lit pas deux fois, et on ne lit pas ce qui
 n'est pas à l'écran.
 
+## Vingt-et-unième incrément — un septième bloc, et la cellule qui ne se replie pas
+
+### Le défaut, refusé avant d'être livré
+
+Le bloc 7 de l'audit (prospective) pose deux tableaux, dont une colonne de
+**bornes** : `2026-10-03 → 2027-04-03`, ou — pour la fenêtre dont le document
+n'écrit aucune fin — une phrase de **quarante signes** en premier jet.
+Or cette colonne portait la classe `chiffre`, et `.audit td.chiffre{white-space:
+nowrap}` **interdit le retour à la ligne**. Sur un téléphone, la phrase aurait
+été coupée — dans le bloc même dont le but est d'être lu. C'est le défaut refusé
+à la passe précédente (« une phrase dans une cellule non repliable »), revenu par
+une porte que le contrôle d'alors ne surveillait pas : il lit le balisage écrit,
+et ce HTML-là n'existe qu'au moment où le navigateur le fabrique.
+
+### Ce qui a changé
+
+- la borne s'écrit **court** : `début → sans fin datée` (**27 signes**) ;
+- l'explication — « le document n'écrit aucune fin à cette fenêtre » — passe dans
+  la colonne qui se **replie**, sous le libellé ;
+- et la règle du dépôt est désormais **exécutée** : six contrôles construisent le
+  bloc dans Node avec la réponse réelle de la route, sous les deux horizons,
+  comptent **onze cellules insécables** (quatre bornes + sept rangs de lacune) et
+  refusent toute cellule de plus de **trente signes**.
+
+### Ce que cela ne change pas
+
+Le premier écran est **intact** : le bloc vit dans un `<details>` replié, sous la
+pesée, très en dessous de la ligne de flottaison. Les chiffres de CI restent donc
+ceux de la passe précédente — **561 px à 380** pour un cliquet de **588**, **460 px
+à 640** pour un cliquet de **487** —, et ils sont relevés à chaque poussée par les
+26 vues du harnais. Ce qui a changé, c'est le **poids** : + 2 060 o compressés,
+publiés dans `docs/RD_BUDGETS_DE_FLUIDITE.md` avec la réserve du jour (4,4 %).
+
 ## Ce qui est vérifié, et comment
 
 Les garde-fous ci-dessous sont dans `tests/test_interface.py` : ils échouent si

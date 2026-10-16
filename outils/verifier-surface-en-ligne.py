@@ -29,10 +29,11 @@ veille qui ne dit rien quand elle n'a rien pu vérifier ne sert à rien.
 une trentaine de secondes à se lever ; un déploiement, une à deux minutes à
 arriver. Dans les deux cas, ce qui est servi n'est pas encore ce que le dépôt
 engendre — et « pas encore » n'est pas « faux ». **La page** est donc réessayée
-quelle que soit la réponse (c'est elle, aussi, qui réveille) ; les vingt et une
-autres adresses suivent à un seul essai, parce qu'un hôte déjà réveillé répond
-du premier coup et qu'un hôte qui ne répond pas ne se réveille pas davantage
-parce qu'on l'a demandé vingt-deux fois.
+quelle que soit la réponse (c'est elle, aussi, qui réveille) ; les autres
+adresses suivent à un seul essai, parce qu'un hôte déjà réveillé répond du
+premier coup et qu'un hôte qui ne répond pas ne se réveille pas davantage parce
+qu'on l'a redemandé — un compte en toutes lettres vieillirait ici à chaque route
+neuve, et c'est la veille elle-même qui annonce son nombre d'épreuves.
 
 **Et un 502 peut n'être qu'un à-coup.** Mesure du 15 octobre 2026, treize
 heures quarante-cinq, copie de secours : la veille publie « le service n'est pas
@@ -88,6 +89,7 @@ ROUTES_GET = (
     "/api/dynamiques",
     "/api/nuances",
     "/api/objections",
+    "/api/prospective",
     "/api/presets",
     "/api/scenarios",
 )
