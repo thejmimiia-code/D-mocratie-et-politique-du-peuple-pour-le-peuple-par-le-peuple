@@ -83,7 +83,7 @@ ATTENDU_LACUNES = [
     ("P0", "Dates de disponibilité et révisions absentes", "partiellement_traitee"),
     ("P0", "Pas de cas négatifs / fréquence de base", "partiellement_traitee"),
     ("P0", "Absence de validation prospective/hors échantillon", "partiellement_traitee"),
-    ("P0", "Coûts économiques incomplets", "ouverte"),
+    ("P0", "Coûts économiques incomplets", "partiellement_traitee"),
     ("P1", "Indice nucléaire non calibré", "refermee"),
 ]
 
@@ -360,8 +360,8 @@ class TestLeRegistreEtLeDocumentSAccordent(unittest.TestCase):
 
     def test_le_resume_du_registre_est_accorde(self):
         resume = pro.resume_des_lacunes()
-        self.assertIn("2 ouvertes", resume)
-        self.assertIn("4 partiellement traitées", resume)
+        self.assertIn("1 ouverte", resume)
+        self.assertIn("5 partiellement traitées", resume)
         self.assertIn("1 refermée", resume)
         self.assertIn("aucune revendication prédictive", resume)
 
@@ -391,7 +391,9 @@ class TestLaRouteEtLaPage(unittest.TestCase):
         self.assertEqual(donnees["depart"], "2026-10-16")
         self.assertEqual(len(donnees["fenetres"]), 4)
         self.assertEqual(len(donnees["lacunes"]), 7)
-        self.assertEqual(donnees["lacunes_par_statut"]["ouverte"], 2)
+        self.assertEqual(donnees["lacunes_par_statut"]["ouverte"], 1)
+        self.assertEqual(donnees["lacunes_par_statut"]["partiellement_traitee"], 5)
+        self.assertEqual(donnees["lacunes_par_statut"]["refermee"], 1)
 
     def test_la_route_accepte_une_date_et_la_rejette_si_elle_est_illisible(self):
         statut, donnees = self._appeler("/api/prospective", "depart=2030-01-01")

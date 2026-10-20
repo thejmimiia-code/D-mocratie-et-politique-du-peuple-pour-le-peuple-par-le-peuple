@@ -263,15 +263,16 @@ et une lacune refermée doit porter la **date** que ce document lui a donnée.
 | P0 | Dates de disponibilité et révisions absentes | partiellement traitée | Table « connue à la date t » et test automatisé contre les fuites temporelles |
 | P0 | Pas de cas négatifs / fréquence de base | partiellement traitée | Échantillon incluant crises contenues et périodes sans escalade |
 | P0 | Absence de validation prospective/hors échantillon | partiellement traitée | Découpage chronologique gelé, référence simple, erreurs et calibration publiées |
-| P0 | Coûts économiques incomplets | **ouverte** | Comptes ressources/emplois, coût d'acquisition, financement, absence de double comptage |
+| P0 | Coûts économiques incomplets | partiellement traitée | Comptes ressources/emplois, coût d'acquisition, financement, absence de double comptage |
 | P1 | ~~Indice nucléaire non calibré~~ | **refermée le 15 octobre 2026** | Renommer/documenter les concepts, pas de probabilité d'emploi sans méthode défendable |
 
-Les quatre P0 « partiellement traitées » s'appuient sur `simulateur/validation_temporelle.py`,
-et sur un **corpus synthétique** : le protocole est exercé, la calibration réelle ne
-l'est pas. C'est exactement ce que la ligne « Aucun jeu historique calibré » continue
-de dire, et le registre le publie dans cet ordre de lecture :
+Les cinq P0 « partiellement traitées » s'appuient sur `simulateur/validation_temporelle.py`
+et `simulateur/innovation_prospective.py` (comptes ressources/emplois, CAPEX et portage des
+stocks de résilience) : le protocole est exercé, la calibration réelle ne l'est pas. C'est
+exactement ce que la ligne « Aucun jeu historique calibré » continue de dire, et le
+registre le publie dans cet ordre de lecture :
 
-> **2 ouvertes, 4 partiellement traitées, 1 refermée — aucune revendication
+> **1 ouverte, 5 partiellement traitées, 1 refermée — aucune revendication
 > prédictive n'est permise tant qu'une lacune P0 reste ouverte.**
 
 Le détail du croisement, la route, ses mesures et ses sabotages sont dans

@@ -241,9 +241,10 @@ LACUNES: tuple[Lacune, ...] = (
         libelle="Coûts économiques incomplets",
         critere="Comptes ressources/emplois, coût d'acquisition, financement et "
                 "absence de double comptage",
-        statut="ouverte",
-        preuve="les proxys du modèle sont hors budget : ils ne chiffrent ni le "
-               "financement ni l'acquisition",
+        statut="partiellement_traitee",
+        preuve="simulateur/innovation_prospective.py (StockResilience, "
+               "compte_ressources_emplois_resilience : comptes complets, "
+               "CAPEX 30,9 Md€ et OPEX 1,65 Md€/an)",
     ),
     Lacune(
         priorite="P1",
