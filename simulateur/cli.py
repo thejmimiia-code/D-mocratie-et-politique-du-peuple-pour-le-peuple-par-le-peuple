@@ -389,6 +389,25 @@ def afficher_comparaison_historique_cli(a_id: str, b_id: str):
             print(f"  💡 {e}")
 
 
+def afficher_prospective_cli(horizon: int = 5) -> None:
+    """Affiche le registre de prospective et le croisement des fenêtres de veille."""
+    from datetime import date
+    from simulateur.prospective import lignes
+    print("\n" + "=" * 105)
+    print(f"REGISTRE DE PROSPECTIVE : HORIZON {horizon} ANS ET CROISEMENT DES FENÊTRES DE VEILLE")
+    print("=" * 105)
+    for ligne in lignes(date.today()):
+        print(ligne)
+
+
+def afficher_innovation_cli(horizon: int = 5) -> None:
+    """Affiche le rapport de R&D, d'innovation et de prospective technologique."""
+    from datetime import date
+    from simulateur.innovation_prospective import lignes_rapport
+    for ligne in lignes_rapport(date.today(), horizon):
+        print(ligne)
+
+
 def comparer_tous_scenarios():
     """Exécute et compare les 4 scénarios."""
     print("\n" + "=" * 105)
@@ -406,11 +425,32 @@ def comparer_tous_scenarios():
 
 
 if __name__ == "__main__":
-    usage = f"Usage: python3 -m simulateur.cli [{USAGE_SCENARIOS}] [--export <path.json|csv>]"
+    usage = (
+        f"Usage: python3 -m simulateur.cli [{USAGE_SCENARIOS}] [--export <path.json|csv>]\n"
+        "       python3 -m simulateur.cli --prospective [--horizon 5|10]\n"
+        "       python3 -m simulateur.cli --innovation [--horizon 5|10]\n"
+        "       python3 -m simulateur.cli --stress-tests\n"
+        "       python3 -m simulateur.cli --think-tanks\n"
+        "       python3 -m simulateur.cli --histoire\n"
+        "       python3 -m simulateur.cli --societe"
+    )
     if len(sys.argv) > 1:
-        # Supporte : scenario [scenario] [--export <path.json|csv>]
-        scenario = sys.argv[1].lower()
-        if scenario in SCENARIOS_DISPONIBLES:
+        arg1 = sys.argv[1].lower()
+        horizon_choisi = 10 if ("--10" in sys.argv or "--horizon 10" in " ".join(sys.argv)) else 5
+
+        if arg1 == "--prospective":
+            afficher_prospective_cli(horizon_choisi)
+        elif arg1 in ("--innovation", "--rd", "--r-et-d"):
+            afficher_innovation_cli(horizon_choisi)
+        elif arg1 == "--stress-tests":
+            afficher_stress_tests_cli()
+        elif arg1 == "--think-tanks":
+            afficher_think_tanks_cli()
+        elif arg1 == "--histoire":
+            afficher_histoire_cli()
+        elif arg1 == "--societe":
+            afficher_societe_cli()
+        elif arg1 in SCENARIOS_DISPONIBLES:
             export_path = None
             if "--export" in sys.argv:
                 idx = sys.argv.index("--export")
@@ -419,7 +459,7 @@ if __name__ == "__main__":
                 else:
                     print(usage)
                     sys.exit(1)
-            executer_scenario(scenario, export_path=export_path)
+            executer_scenario(arg1, export_path=export_path)
         else:
             print(usage)
             sys.exit(1)
