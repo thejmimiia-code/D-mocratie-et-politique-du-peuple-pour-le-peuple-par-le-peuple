@@ -420,6 +420,37 @@ def _phrase_garde_fous(charge: dict) -> dict[str, Any] | None:
     }
 
 
+def _phrase_intergenerationnel(synthese: dict, horizon: int) -> dict[str, Any] | None:
+    bilan = synthese.get("bilan_intergenerationnel")
+    if not bilan or not isinstance(bilan, dict):
+        return None
+    invest_longs = bilan.get("investissements_longs_engages_cumules_mde")
+    climat_evite = bilan.get("dommages_climat_evites_annualises_hors_budget_mde")
+    actifs = bilan.get("actifs_arrives_a_maturite_mde") or {}
+    cycle_long = actifs.get("cycle_long") if isinstance(actifs, dict) else None
+
+    morceaux = []
+    if invest_longs is not None and invest_longs >= SEUILS["mde"]:
+        morceaux.append(f"{milliards(invest_longs)} d'investissements de long terme engagés")
+    if cycle_long is not None and cycle_long >= SEUILS["mde"]:
+        morceaux.append(f"{milliards(cycle_long)} d'actifs publics arrivant à maturité")
+    if climat_evite is not None and climat_evite >= SEUILS["mde"]:
+        morceaux.append(f"{milliards(climat_evite)} par an de dommages climatiques évités")
+
+    if not morceaux:
+        return None
+
+    texte = f"À l'horizon de {horizon} ans, vos choix engagent " + " et ".join(morceaux) + "."
+    return {
+        "cle": "intergenerationnel",
+        "grandeur": "Bilan intergénérationnel",
+        "valeur": f"{horizon} ans",
+        "texte": texte,
+        "niveau": "favorable",
+        "explication": "Investissements publics dont les retours socio-économiques et écologiques se mesurent au-delà de la mandature.",
+    }
+
+
 def _resume(lignes: list[dict[str, Any]], synthese: dict) -> str:
     """Une phrase de synthèse, construite à partir des lignes disponibles."""
     favorables = [ligne for ligne in lignes if ligne["niveau"] == "favorable"]
@@ -480,6 +511,7 @@ def lecture_claire(charge: dict[str, Any]) -> dict[str, Any]:
         lambda: _phrase_social(synthese),
         lambda: _phrase_europe(synthese),
         lambda: _phrase_garde_fous(charge),
+        lambda: _phrase_intergenerationnel(synthese, horizon),
     ):
         try:
             ligne = construire()

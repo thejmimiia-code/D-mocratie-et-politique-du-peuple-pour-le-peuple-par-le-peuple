@@ -335,5 +335,14 @@ def conseil_mouvement(
         "compensations": compensations,
         "budget": budget,
         "sources": sources,
+        "prospective": {
+            "horizon": horizon,
+            "investissements_longs_mde": round(
+                (sortie_apres.synthese.get("bilan_intergenerationnel") or {}).get("investissements_longs_engages_cumules_mde", 0.0)
+                - (sortie_avant.synthese.get("bilan_intergenerationnel") or {}).get("investissements_longs_engages_cumules_mde", 0.0), 2),
+            "climat_evite_mde": round(
+                (sortie_apres.synthese.get("bilan_intergenerationnel") or {}).get("dommages_climat_evites_annualises_hors_budget_mde", 0.0)
+                - (sortie_avant.synthese.get("bilan_intergenerationnel") or {}).get("dommages_climat_evites_annualises_hors_budget_mde", 0.0), 2),
+        },
         "lecture": " ".join(phrases),
     }

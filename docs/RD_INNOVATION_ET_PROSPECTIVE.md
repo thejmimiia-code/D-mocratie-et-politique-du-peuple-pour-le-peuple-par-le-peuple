@@ -132,8 +132,16 @@ politique unilatérale.
 
 ## 6. Vérifications et outillage
 
-- Commande de simulation : `python3 -m simulateur.innovation_prospective --horizon 5` (ou `10`, `--json`).
-- Suite de tests : `tests/test_innovation_prospective.py` (16 tests unitaires et d'intégration).
+- Commande de simulation directe : `python3 -m simulateur.innovation_prospective --horizon 5` (ou `10`, `--json`).
+- Commande CLI unifiée du simulateur : `python3 -m simulateur.cli --innovation` et `python3 -m simulateur.cli --prospective`.
+- API REST et Serveur Web interactif :
+  - `GET /api/innovation` : rapport consolidé d'innovation et rendements R&D.
+  - `GET /api/innovation/piliers` : fiches détaillées des 5 piliers technologiques souverains.
+  - `GET /api/innovation/stocks` : compte complet de ressources et emplois des réserves stratégiques.
+  - `GET /api/innovation/stress_test` : moteur de stress-testing multi-chocs.
+  - `GET /api/prospective` : registre des fenêtres de veille et suivi d'audit des lacunes (P0/P1/P2).
+  - Onglet interactif **« 🚀 Prospective & R&D (2026-2036) »** dans le dashboard web (`simulateur/web_server.py`).
+- Suites de tests : `tests/test_innovation_prospective.py`, `tests/test_prospective.py`, `tests/test_cli.py`, `tests/test_web_server.py`.
 - Statut de la lacune P0 : Les comptes de ressources/emplois et les coûts d'acquisition/portage
   étant formellement intégrés, la lacune P0 « Coûts économiques incomplets » dispose désormais de son
   cadre d'évaluation unifié.
