@@ -80,10 +80,10 @@ s'ouvre juste après, ce qui n'est pas un détail : c'est la fenêtre sans fin d
 | P0 | Dates de disponibilité et révisions absentes | partiellement traitée | `validation_temporelle.py` (`preuve_disponibilite`, `disponibilite`) |
 | P0 | Pas de cas négatifs / fréquence de base | partiellement traitée | `validation_temporelle.py` (`frequence_de_base`, `competence_brier`) |
 | P0 | Absence de validation hors échantillon | partiellement traitée | `validation_temporelle.py` (`evaluer`) — corpus synthétique |
-| P0 | Coûts économiques incomplets | **ouverte** | les proxys sont hors budget : ni financement ni acquisition |
+| P0 | Coûts économiques incomplets | partiellement traitée | `simulateur/innovation_prospective.py` (`StockResilience`, `compte_ressources_emplois_resilience`) |
 | P1 | Indice nucléaire non calibré | **refermée le 15 octobre 2026** | `simulateur/seuils.py` (indices `/100`, non calibrés) |
 
-Résumé publié par le module et affiché par la page : **2 ouvertes, 4 partiellement
+Résumé publié par le module et affiché par la page : **1 ouverte, 5 partiellement
 traitées, 1 refermée — aucune revendication prédictive n'est permise tant qu'une
 lacune P0 reste ouverte.** Le registre porte son propre avertissement : c'est un
 **registre de dates**, pas de prévisions, et **aucune probabilité n'est calculée
@@ -198,10 +198,10 @@ Deux réparations, et la seconde compte plus que la première :
 - **Les fenêtres vieillissent.** Elles sont datées d'un document daté : le jour où
   `CONFLITS_RISQUES_SYSTEMIQUES_2026.md` est révisé, un contrôle rouge le dit au
   lieu de laisser la page citer un texte qui n'existe plus.
-- **Le registre est un état, pas un plan.** « 2 ouvertes, 4 partiellement
-  traitées, 1 refermée » décrit ce que l'audit écrit au 16 octobre 2026 ; fermer
-  une lacune P0 demande des données calibrées et une évaluation indépendante, pas
-  une ligne de plus dans un fichier.
-- **Les deux lacunes P0 restantes gardent leur conséquence** : tant qu'elles sont
-  ouvertes, la seule lecture honnête du modèle reste celle du dépôt — un
+- **Le registre est un état, pas un plan.** « 1 ouverte, 5 partiellement
+  traitées, 1 refermée » décrit ce que l'audit écrit au 20 octobre 2026 ; fermer
+  la dernière lacune P0 (« Aucun jeu historique calibré ») demande des données
+  calibrées et une évaluation indépendante, pas une ligne de plus dans un fichier.
+- **La lacune P0 restante garde sa conséquence** : tant qu'elle est
+  ouverte, la seule lecture honnête du modèle reste celle du dépôt — un
   **explorateur d'hypothèses chiffrées**, pas un système de prévision.
