@@ -90,6 +90,7 @@ ROUTES_GET = (
     "/api/nuances",
     "/api/objections",
     "/api/prospective",
+    "/api/innovation",
     "/api/presets",
     "/api/scenarios",
 )

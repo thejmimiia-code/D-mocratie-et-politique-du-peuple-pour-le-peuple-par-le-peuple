@@ -53,6 +53,7 @@ ROUTES: tuple[str, ...] = (
     "objections",
     "nuances",
     "prospective",
+    "innovation",
 )
 
 #: La fonction unique servie par Vercel : un seul fichier `.py` dans `api/`, parce que

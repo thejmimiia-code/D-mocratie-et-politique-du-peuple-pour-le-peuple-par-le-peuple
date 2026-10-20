@@ -744,7 +744,7 @@ python3 -m unittest discover tests
 ```
 
 > ✅ **Plafond de l'offre Hobby : 12 fonctions par déploiement.** `api/` ne contient
-> qu'une seule fonction pour les 23 routes du moteur, `[...path].py`, plus
+> qu'une seule fonction pour les 24 routes du moteur, `[...path].py`, plus
 > `verifier-source` : deux fonctions au total. Aucune règle de réécriture
 > (`vercel.json`) n'est nécessaire. Pour un hébergement sans Vercel (un seul
 > processus), voir [`docs/HEBERGEMENT.md`](docs/HEBERGEMENT.md).

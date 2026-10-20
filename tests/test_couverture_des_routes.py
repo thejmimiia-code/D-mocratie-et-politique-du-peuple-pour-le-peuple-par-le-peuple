@@ -80,6 +80,11 @@ ROUTES_SANS_APPEL: dict[str, str] = {
         "dans `/api/contexte`) : le nom de la route ne peut donc pas apparaître dans le source "
         "de la page, et son absence y est normale."
     ),
+    "innovation": (
+        "la prospective d'innovation et les stocks stratégiques sont consolidés dans le "
+        "rapport prospectif `/api/prospective` et les stress tests CLI/serveur. La route "
+        "reste disponible pour l'exploration modulaire et les clients d'API."
+    ),
 }
 
 #: En deçà, ce n'est plus une raison : c'est un mot.

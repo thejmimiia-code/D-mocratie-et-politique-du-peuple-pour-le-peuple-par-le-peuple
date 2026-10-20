@@ -51,7 +51,7 @@ simulateur/
 ├── conseil.py            # Conseiller temps réel « effet papillon » (levier isolé, budget réel)
 ├── sources_officielles.py# 52 indicateurs publics sourcés (Eurostat, BCE, Banque mondiale)
 ├── donnees_live.py       # Registre 52 indicateurs, snapshot daté, collecte CORS ou hors-ligne
-├── dashboard.py          # Serveur HTTP multi-thread + API JSON (23 routes du moteur)
+├── dashboard.py          # Serveur HTTP multi-thread + API JSON (24 routes du moteur)
 ├── interface.py          # Page unique (156 leviers, rendu différé des 7 onglets, recherche)
 ├── surface_publique.py   # Ce que la page dit d'elle-même aux robots (robots.txt, sitemap.xml, llms.txt, en-tête)
 ├── web_server.py         # Console héritée (compatibilité, 11 scénarios)

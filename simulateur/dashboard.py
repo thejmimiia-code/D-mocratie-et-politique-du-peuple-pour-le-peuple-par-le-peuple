@@ -36,6 +36,7 @@ Deux niveaux de service cohabitent :
                                  fenêtres de veille documentées (`?depart=AAAA-MM-JJ`),
                                  et l'état des lacunes qui bloquent une revendication
                                  prédictive — des dates, jamais des probabilités ;
+      - `GET  /api/innovation`   : rapport consolidé R&D, prospective technologique et stocks de résilience ;
       - `GET  /api/objections`   : le registre de la contradiction (`?famille=mesure`,
                                  `?statut=en_cours`, `?levier=…`, `?chercher=…`) : objections
                                  fortes, concessions, ce qui ferait changer d'avis, et les
@@ -736,6 +737,21 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 depart = (_date.fromisoformat(query["depart"][0])
                           if query.get("depart") and query["depart"][0] else _date.today())
                 self._send_json(_prospective.registre(depart))
+            except Exception:
+                self._send_json({"error": traceback.format_exc()}, status=500)
+
+        elif chemin == "/api/innovation":
+            # Module R&D, innovation technologique et résilience stratégique (2026-2036).
+            try:
+                from . import innovation_prospective as _innovation
+
+                horizon_ans = int(query.get("horizon", ["10"])[0])
+                if horizon_ans not in (5, 10):
+                    horizon_ans = 10
+                depense_rnd = float(query.get("depense_rnd", ["5.0"])[0])
+                self._send_json(_innovation.rapport_prospective_innovation(
+                    horizon=horizon_ans, effort_rnd_mde=depense_rnd
+                ))
             except Exception:
                 self._send_json({"error": traceback.format_exc()}, status=500)
 
