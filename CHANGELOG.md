@@ -6,6 +6,16 @@ et ce projet suit [Semantic Versioning](https://semver.org/).
 
 ## [Non publié]
 
+### R&D v6 — Innovation, prospective technologique et chiffrage économique des stocks (20 octobre 2026)
+
+- **Le manque.** La prospective temporelle (5 et 10 ans) ne modélisait ni le temps de diffusion en S de la R&D (latence, amorçage, plein rendement de la PGF), ni les verrous des transitions technologiques et biophysiques (2026-2036). De plus, les stocks de résilience (énergie, semi-conducteurs, santé, alimentation) étaient modélisés en flux physiques sans compte ressources/emplois, entretenant une illusion de gratuité (lacune P0 « Coûts économiques incomplets »).
+- **Ce qui a changé** (`simulateur/innovation_prospective.py`, `docs/RD_INNOVATION_ET_PROSPECTIVE.md`) :
+  - **Diffusion logistique de la R&D** : modélisation de la courbe en S (latence 1,5 an, inflexion à 4 ans, taux de retour social net de 25-35 % à maturité et gains de PGF progressifs jusqu'à +0,89 pt en an 10 pour 5 Md€/an).
+  - **5 Piliers de prospective** : IA & supercalculateurs exaflopiques souverains, SMR & flexibilité électrique/hydrogène, relocalisation des principes actifs de santé, métaux critiques & recyclage circulaire, agroécologie & résilience hydrique — chacun avec TRL, jalons 2027-2036, signaux de renforcement, signaux contraires et verrous scientifiques.
+  - **Chiffrage économique complet des stocks (fin de la gratuité)** : panier national de 30,90 Md€ d'actifs immobilisés (CAPEX), 1,18 Md€/an de portage récurrent (OPEX, 3,5 à 5 %/an) et 0,46 Md€/an d'amortissement (charge totale 1,65 Md€/an soit 8,25 Md€ sur 5 ans et 16,45 Md€ sur 10 ans), avec comptes ressources/emplois équilibrés.
+  - **Stress-testing combiné** : sur un choc de stagflation globale, la combinaison R&D + Stocks évite 171,8 Md€ de pertes sur 5 ans (ratio 5,17) et 390,7 Md€ sur 10 ans (ratio 5,88), démontrant la complémentarité entre le tampon physique immédiat (stocks) et la transformation structurelle (R&D).
+- **16 contrôles neufs** (`tests/test_innovation_prospective.py`) : diffusion monotone et respect des latences, cohérence chronologique des piliers, conservation des équilibres comptables, stress-tests multi-chocs et CLI.
+
 ### Chaque fenêtre de veille dit ce qu'il faudrait voir pour y croire (16 octobre 2026)
 
 - **Le manque.** Le bloc 7 montrait les fenêtres de veille, leurs bornes et leur couverture — mais
