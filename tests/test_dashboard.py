@@ -540,6 +540,22 @@ class TestAPIparametrique(unittest.TestCase):
         for entree in donnees["comparaison"]:
             self.assertEqual(len(entree["scores"]), 20)
 
+    def test_api_prospective(self):
+        statut, donnees = self._appel("/api/prospective")
+        self.assertEqual(statut, 200)
+        self.assertIn("fenetres", donnees)
+        self.assertIn("lacunes", donnees)
+        self.assertIn("lacunes_par_statut", donnees)
+
+    def test_api_innovation(self):
+        statut, donnees = self._appel("/api/innovation?horizon=10&depense_rnd=5.0")
+        self.assertEqual(statut, 200)
+        self.assertIn("piliers_prospective", donnees)
+        self.assertIn("diffusion_rnd", donnees)
+        self.assertIn("compte_stocks_resilience", donnees)
+        self.assertEqual(donnees["horizon_annees"], 10)
+        self.assertEqual(len(donnees["piliers_prospective"]), 5)
+
     def test_proxy_refuse_un_indicateur_inconnu(self):
         try:
             statut, _ = self._appel("/api/proxy?indicateur=inexistant")

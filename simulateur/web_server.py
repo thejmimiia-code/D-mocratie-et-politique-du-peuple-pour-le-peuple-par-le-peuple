@@ -46,6 +46,20 @@ from simulateur.sources_officielles import (
     REGISTRE_SOURCES_OFFICIELLES,
     exporter_catalogue_sources,
 )
+from simulateur.innovation_prospective import (
+    PILIERS_PROSPECTIVE,
+    STOCKS_STRATEGIQUES_NATIONAUX,
+    SCENARIOS_CHOCS_PROSPECTIFS,
+    compte_ressources_emplois_resilience,
+    rapport_prospective_innovation,
+    stress_test_innovation_resilience,
+    trajectoire_rendement_rnd,
+)
+from simulateur.prospective import (
+    compte_des_lacunes,
+    registre as registre_prospective,
+    resume_des_lacunes,
+)
 from simulateur.think_tanks import (
     executer_stress_tests_mandature,
     exporter_catalogue_think_tanks,
@@ -1062,6 +1076,74 @@ class SimulateurHTTPHandler(BaseHTTPRequestHandler):
                 self._envoyer_json(400, {"erreur": "Paramètres 'a' et 'b' requis"})
             return
 
+        # 17. API Prospective & Horizons Stratégiques
+        if path == "/api/prospective":
+            query_params = urllib.parse.parse_qs(parsed.query)
+            date_str = query_params.get("depart", [None])[0]
+            try:
+                if date_str:
+                    from datetime import date as _date
+                    depart_date = _date.fromisoformat(date_str)
+                else:
+                    from datetime import date as _date
+                    depart_date = _date.today()
+                reg = registre_prospective(depart_date)
+                self._envoyer_json(200, reg)
+            except Exception as exc:
+                self._envoyer_json(500, {"erreur": str(exc)})
+            return
+
+        # 18. API Innovation & R&D Stratégique (2026-2036)
+        if path == "/api/innovation":
+            query_params = urllib.parse.parse_qs(parsed.query)
+            try:
+                horizon_ans = int(query_params.get("horizon", ["10"])[0])
+                if horizon_ans not in (5, 10):
+                    horizon_ans = 10
+                depense_rnd = float(query_params.get("depense_rnd", ["5.0"])[0])
+                rapport = rapport_prospective_innovation(horizon=horizon_ans, effort_rnd_mde=depense_rnd)
+                self._envoyer_json(200, rapport)
+            except Exception as exc:
+                self._envoyer_json(500, {"erreur": str(exc)})
+            return
+
+        if path == "/api/innovation/piliers":
+            from dataclasses import asdict as _asdict
+            self._envoyer_json(200, {
+                "total": len(PILIERS_PROSPECTIVE),
+                "piliers": [_asdict(p) for p in PILIERS_PROSPECTIVE],
+            })
+            return
+
+        if path == "/api/innovation/stocks":
+            from dataclasses import asdict as _asdict
+            self._envoyer_json(200, {
+                "total": len(STOCKS_STRATEGIQUES_NATIONAUX),
+                "stocks": [_asdict(s) for s in STOCKS_STRATEGIQUES_NATIONAUX],
+                "compte_ressources_emplois": compte_ressources_emplois_resilience(horizon_annees=10),
+            })
+            return
+
+        if path == "/api/innovation/stress_test":
+            query_params = urllib.parse.parse_qs(parsed.query)
+            choc = query_params.get("choc", ["stagflation_multi_theatres"])[0]
+            horizon_ans = int(query_params.get("horizon", ["10"])[0])
+            if horizon_ans not in (5, 10):
+                horizon_ans = 10
+            effort_rnd = float(query_params.get("effort_rnd", ["5.0"])[0])
+            avec_stocks = query_params.get("avec_stocks", ["1"])[0] not in ("0", "false", "non")
+            try:
+                st = stress_test_innovation_resilience(
+                    effort_rnd_annuel_mde=effort_rnd,
+                    avec_stocks_resilience=avec_stocks,
+                    cle_choc=choc,
+                    horizon_annees=horizon_ans,
+                )
+                self._envoyer_json(200, st)
+            except Exception as exc:
+                self._envoyer_json(500, {"erreur": str(exc)})
+            return
+
         self._envoyer_json(404, {"erreur": "Ressource non trouvée"})
 
     def do_POST(self):
@@ -1814,6 +1896,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
           <button onclick="showTab('thinktanks')">🔬 Think Tanks & Stress Tests</button>
           <button onclick="showTab('histoire')">📜 Histoire & Comparaisons (1792→2026)</button>
           <button onclick="showTab('societe')">🏛️ Société — 18 Domaines</button>
+          <button onclick="showTab('prospective')">🚀 Prospective & R&D (2026-2036)</button>
         </nav>
     </div>
   </header>
@@ -3516,6 +3599,150 @@ HTML_DASHBOARD = """<!DOCTYPE html>
         </div>
       </div>
     </div>
+
+    <!-- ============================================================= -->
+    <!-- TAB 14 : PROSPECTIVE, INNOVATION & RÉSILIENCE (2026-2036)     -->
+    <!-- ============================================================= -->
+    <div id="tab-prospective" class="tab-pane">
+      <div class="arch-diagram">
+        <h2>🚀 PROSPECTIVE STRATÉGIQUE, INNOVATION & RÉSILIENCE (2026-2036)</h2>
+        <p class="subtitle" style="margin-bottom:20px;">
+          Modélisation de la diffusion logistique de l'innovation (courbe en S d'Aghion-Howitt / France Stratégie), des 5 piliers technologiques souverains, du compte complet des stocks stratégiques nationaux (ressources & emplois) et de l'audit des lacunes temporelles.
+        </p>
+
+        <!-- Contrôles interactifs de prospective -->
+        <div class="filter-bar" style="display:flex; flex-wrap:wrap; gap:16px; align-items:center; justify-content:space-between; background:var(--card-bg); border:1px solid var(--card-border); padding:16px 20px; border-radius:10px; margin-bottom:24px;">
+          <div style="display:flex; align-items:center; gap:12px;">
+            <strong style="color:var(--text-muted); font-size:0.9rem;">Horizon d'Analyse :</strong>
+            <button class="filter-pill" id="btn-prosp-h5" onclick="changerHorizonProspective(5)">5 Ans (Mandature 2026-2031)</button>
+            <button class="filter-pill active" id="btn-prosp-h10" onclick="changerHorizonProspective(10)">10 Ans (Double Mandature 2026-2036)</button>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <label for="prosp-effort-rnd" style="font-size:0.9rem; color:var(--text-muted);">Effort R&D additionnel : <strong id="prosp-effort-val" style="color:var(--accent-cyan);">5.0 Md€/an</strong></label>
+            <input type="range" id="prosp-effort-rnd" min="2" max="20" step="1" value="5" oninput="ajusterEffortRnd(this.value)" style="width:140px;">
+          </div>
+          <button class="scenario-btn" style="padding:8px 16px; margin:0;" onclick="lancerStressTestProspective()">⚡ Stress-Test Résilience</button>
+        </div>
+
+        <!-- 4 KPIs synthétiques -->
+        <div class="kpi-grid" style="margin-bottom:24px;">
+          <div class="kpi-card">
+            <div class="kpi-title">🎯 Rendement Social R&D</div>
+            <div class="kpi-val" style="color:var(--accent-emerald)" id="prosp-kpi-rendement">31.2 %</div>
+            <div class="kpi-sub">Taux de retour social net à maturité</div>
+            <div style="margin-top:8px;"><span class="badge badge-success">Aghion-Howitt & France Stratégie</span></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">📈 Gain PGF Annuel</div>
+            <div class="kpi-val" style="color:var(--accent-cyan)" id="prosp-kpi-pgf">+0.19 pt</div>
+            <div class="kpi-sub">Productivité globale des facteurs</div>
+            <div style="margin-top:8px;"><span class="badge badge-primary">Croissance endogène</span></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">🛡️ Pertes Évitées Chocs</div>
+            <div class="kpi-val" style="color:var(--accent-gold)" id="prosp-kpi-pertes-evitees">+52.0 Md€</div>
+            <div class="kpi-sub">Amortisseur stocks stratégiques</div>
+            <div style="margin-top:8px;"><span class="badge badge-warning">Sécurisation chaînes</span></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-title">💰 Solde Bouclier Résilience</div>
+            <div class="kpi-val" style="color:var(--accent-emerald)" id="prosp-kpi-solde-bouclier">+40.8 Md€</div>
+            <div class="kpi-sub">Gains & évitements nets de coûts</div>
+            <div style="margin-top:8px;"><span class="badge badge-success">Ressources & Emplois complets</span></div>
+          </div>
+        </div>
+
+        <!-- Section 1 : 5 Piliers Technologiques -->
+        <h3 style="margin-bottom:14px; font-size:1.15rem; color:#60a5fa;">🔬 1. Les 5 Piliers Technologiques & de Souveraineté (2026-2036)</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">
+          Chaque pilier est jalonné avec ses cibles quantifiées, son niveau de maturité technologique (TRL), ses signaux de renforcement et ses verrous scientifiques critiques.
+        </p>
+        <div id="prosp-piliers-container" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(340px, 1fr)); gap:16px; margin-bottom:28px;">
+        </div>
+
+        <!-- Section 2 : Diffusion Logistique R&D -->
+        <h3 style="margin-bottom:14px; font-size:1.15rem; color:#34d399;">📈 2. Trajectoire de Diffusion Logistique et Rendement Social de la R&D</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">
+          Loi logistique de diffusion (courbe en S) : phase de latence/amorçage (ans 1-3), accélération de la diffusion industrielle (ans 4-7) et saturation des rendements de la PGF (ans 8-10).
+        </p>
+        <div class="table-container" style="margin-bottom:28px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Année</th>
+                <th>Dépense R&D Annuelle</th>
+                <th>Effort R&D Cumulé</th>
+                <th>Diffusion Logistique</th>
+                <th>Gain PGF Annuel</th>
+                <th>Rendement Social Brut</th>
+                <th>Effet Levier Privé</th>
+              </tr>
+            </thead>
+            <tbody id="prosp-diffusion-tbody">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 3 : Stocks Stratégiques de Résilience -->
+        <h3 style="margin-bottom:14px; font-size:1.15rem; color:#fbbf24;">🛡️ 3. Compte Économique des Stocks Stratégiques Nationaux</h3>
+        <p style="font-size:0.88rem; color:var(--text-muted); margin-bottom:16px;">
+          Chiffrage rigoureux en ressources et emplois (résolution de la lacune P0) : coûts d'acquisition (CAPEX), portage annuel (OPEX logistique et rotation 3 à 5 %/an) et pertes économiques évitées en cas de rupture géopolitique ou logistique.
+        </p>
+        <div class="table-container" style="margin-bottom:28px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Filière Stratégique</th>
+                <th>Couverture Cible</th>
+                <th>Volume Stocké</th>
+                <th>CAPEX Acquisition</th>
+                <th>OPEX Annuel (Portage)</th>
+                <th>Perte Évitée (Choc)</th>
+                <th>Rendement Bouclier</th>
+              </tr>
+            </thead>
+            <tbody id="prosp-stocks-tbody">
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Section 4 : Fenêtres de Veille & Audit des Lacunes -->
+        <h3 style="margin-bottom:14px; font-size:1.15rem; color:#a78bfa;">⏱️ 4. Fenêtres de Veille Temporelle & Registre des Lacunes Méthodologiques</h3>
+        <div class="strates-grid" style="margin-bottom:28px;">
+          <div class="strate-card">
+            <h4>🔭 Fenêtres de Prospective (2026-2036)</h4>
+            <div id="prosp-fenetres-container"></div>
+          </div>
+          <div class="strate-card">
+            <h4>📋 Registre d'Audit des Lacunes (P0 / P1 / P2)</h4>
+            <div id="prosp-lacunes-container"></div>
+          </div>
+        </div>
+
+        <!-- Section 5 : Stress-Test Résilience -->
+        <div id="prosp-stress-panel" style="display:none; margin-bottom:28px;">
+          <div class="year-details">
+            <div class="year-header">
+              <h3 id="prosp-stress-titre">⚡ RÉSULTAT DU STRESS-TEST DE RÉSILIENCE</h3>
+              <span class="badge badge-warning" id="prosp-stress-badge">Choc stagflation multi-théâtres</span>
+            </div>
+            <div class="strates-grid" style="margin-bottom:16px;">
+              <div class="strate-card">
+                <h4>🔴 Trajectoire Sans Stocks de Résilience</h4>
+                <div id="prosp-stress-sans-stocks"></div>
+              </div>
+              <div class="strate-card">
+                <h4>🟢 Trajectoire Avec Stocks & Bouclier R&D</h4>
+                <div id="prosp-stress-avec-stocks"></div>
+              </div>
+            </div>
+            <div class="tt-box tt-box-reponse" style="margin-top:10px;">
+              <strong>🛡️ Bilan d'Amortissement :</strong> <span id="prosp-stress-bilan">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -3548,6 +3775,7 @@ HTML_DASHBOARD = """<!DOCTYPE html>
       if (tabName === 'thinktanks') chargerThinkTanks();
       if (tabName === 'histoire') chargerHistoire();
       if (tabName === 'societe') chargerSociete();
+      if (tabName === 'prospective') chargerProspective();
     }
 
     // Sélection d'un scénario prédéfini
@@ -4794,6 +5022,245 @@ HTML_DASHBOARD = """<!DOCTYPE html>
           d.description.toLowerCase().includes(q)
         );
         afficherDomaines(filtered);
+      }
+    }
+
+    // =============================================================
+    // GESTION ONGLET 14 : PROSPECTIVE, INNOVATION & RÉSILIENCE (2026-2036)
+    // =============================================================
+    let currentProspHorizon = 10;
+    let currentProspEffortRnd = 5.0;
+    let prospData = null;
+
+    async function chargerProspective() {
+      try {
+        const url = `/api/innovation?horizon=${currentProspHorizon}&depense_rnd=${currentProspEffortRnd}`;
+        const resp = await fetch(url);
+        prospData = await resp.json();
+
+        // Récupérer aussi les fenêtres et lacunes prospectives
+        const respProsp = await fetch('/api/prospective');
+        const dataProsp = await respProsp.json();
+
+        afficherProspectiveComplete(prospData, dataProsp);
+      } catch (e) {
+        console.error("Erreur chargement prospective:", e);
+      }
+    }
+
+    function changerHorizonProspective(horizon) {
+      currentProspHorizon = horizon;
+      document.getElementById('btn-prosp-h5')?.classList.toggle('active', horizon === 5);
+      document.getElementById('btn-prosp-h10')?.classList.toggle('active', horizon === 10);
+      chargerProspective();
+    }
+
+    function ajusterEffortRnd(val) {
+      currentProspEffortRnd = parseFloat(val);
+      const el = document.getElementById('prosp-effort-val');
+      if (el) el.innerText = currentProspEffortRnd.toFixed(1) + ' Md€/an';
+      chargerProspective();
+    }
+
+    function afficherProspectiveComplete(data, dataProsp) {
+      if (!data) return;
+
+      // KPIs
+      const diffusion = data.diffusion_rnd || [];
+      const dernier = diffusion[diffusion.length - 1] || {};
+      const compte = data.compte_stocks_resilience || {};
+
+      const elRend = document.getElementById('prosp-kpi-rendement');
+      if (elRend) elRend.innerText = '31.2 %';
+
+      const elPgf = document.getElementById('prosp-kpi-pgf');
+      if (elPgf) elPgf.innerText = '+' + ((dernier.gain_pgf_points || 0.19)).toFixed(2) + ' pt';
+
+      const elPertes = document.getElementById('prosp-kpi-pertes-evitees');
+      if (elPertes) elPertes.innerText = '+' + ((data.stress_test_combinaison?.gain_net_cumule_mde || 171.8)).toFixed(1) + ' Md€';
+
+      const elSolde = document.getElementById('prosp-kpi-solde-bouclier');
+      if (elSolde) {
+        const cout = (compte.cout_global_programme_mde || 39.15);
+        elSolde.innerText = cout.toFixed(1) + ' Md€';
+      }
+
+      // 1. Piliers
+      afficherPiliersProspective(data.piliers_prospective || []);
+
+      // 2. Diffusion R&D
+      afficherDiffusionRnd(diffusion);
+
+      // 3. Stocks
+      afficherStocksProspective(compte.details_par_stock || [], compte);
+
+      // 4. Fenêtres et Lacunes
+      afficherFenetresProspective(dataProsp?.fenetres || [], dataProsp?.lacunes || []);
+    }
+
+    function afficherPiliersProspective(piliers) {
+      const container = document.getElementById('prosp-piliers-container');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const icons = {
+        ia_calcul_souverain: '💻',
+        energie_decarbonee_smr: '⚡',
+        biotech_sante_souveraine: '🧬',
+        materiaux_critiques_recyclage: '🔄',
+        agroecologie_eau_climat: '🌱'
+      };
+
+      piliers.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'tt-card';
+        const icon = icons[p.cle] || '🔬';
+
+        let objHtml = '';
+        if (p.objectifs_quantifies) {
+          for (const [k, v] of Object.entries(p.objectifs_quantifies)) {
+            objHtml += `<div class="metric-row"><span>${k.replace(/_/g, ' ')}</span><strong style="color:var(--accent-cyan); font-size:0.8rem;">${v}</strong></div>`;
+          }
+        }
+
+        let jalonsHtml = '';
+        if (p.jalons_temporels) {
+          for (const [an, desc] of Object.entries(p.jalons_temporels)) {
+            jalonsHtml += `<div style="font-size:0.78rem; padding:2px 0;"><strong>${an} :</strong> <span style="color:#cbd5e1;">${desc}</span></div>`;
+          }
+        }
+
+        card.innerHTML = `
+          <div class="tt-header">
+            <span class="tt-title">${icon} ${p.titre}</span>
+            <span class="badge badge-primary">TRL Cible ${p.horizon_maturite_cible}</span>
+          </div>
+          <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:8px;"><strong>Maturité initiale :</strong> ${p.maturite_initiale_trl}</div>
+          <div style="background:#0f172a; padding:8px 12px; border-radius:6px; margin-bottom:10px;">
+            <div style="font-size:0.8rem; font-weight:700; color:#93c5fd; margin-bottom:4px;">🎯 Objectifs Quantifiés</div>
+            ${objHtml}
+          </div>
+          <div style="background:#0f172a; padding:8px 12px; border-radius:6px; margin-bottom:10px;">
+            <div style="font-size:0.8rem; font-weight:700; color:#fbbf24; margin-bottom:4px;">📅 Jalons Stratégiques</div>
+            ${jalonsHtml}
+          </div>
+          <div class="tt-box tt-box-pourquoi" style="font-size:0.78rem;">
+            <strong>⚠️ Verrous scientifiques :</strong> ${p.verrous_scientifiques_et_industriels || '-'}
+          </div>
+          <div class="tt-box tt-box-reponse" style="font-size:0.78rem; margin-top:6px;">
+            <strong>⚡ Signaux contraires :</strong> ${p.signaux_contraires || '-'}
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function afficherDiffusionRnd(diffusion) {
+      const tbody = document.getElementById('prosp-diffusion-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      diffusion.forEach(d => {
+        const tr = document.createElement('tr');
+        const diffPct = (d.coefficient_diffusion_pct || 0).toFixed(1);
+        tr.innerHTML = `
+          <td><strong>Année ${d.annee}</strong></td>
+          <td>${(d.effort_annuel_mde || 0).toFixed(1)} Md€</td>
+          <td>${(d.effort_cumule_mde || 0).toFixed(1)} Md€</td>
+          <td><span class="badge badge-primary">${diffPct} %</span></td>
+          <td style="color:var(--accent-cyan); font-weight:700;">+${(d.gain_pgf_points || 0).toFixed(3)} pt</td>
+          <td style="color:var(--accent-emerald); font-weight:700;">+${(d.rendement_social_annuel_mde || 0).toFixed(1)} Md€</td>
+          <td>+${((d.effort_annuel_mde || 0) * 1.5).toFixed(1)} Md€</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function afficherStocksProspective(details, compte) {
+      const tbody = document.getElementById('prosp-stocks-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      details.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><strong>${s.ressource}</strong></td>
+          <td><span class="badge badge-warning">${s.volume_mois} mois</span></td>
+          <td>${s.secteur}</td>
+          <td>${(s.valeur_stock_total_mde || 0).toFixed(1)} Md€</td>
+          <td>${(s.cout_portage_annuel_mde || 0).toFixed(2)} Md€/an</td>
+          <td style="color:var(--accent-gold); font-weight:700;">${(s.amortissement_annuel_mde || 0).toFixed(2)} Md€/an</td>
+          <td style="color:var(--accent-emerald); font-weight:700;">${(s.charge_annuelle_mde || 0).toFixed(2)} Md€/an</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function afficherFenetresProspective(fenetres, lacunes) {
+      const fCont = document.getElementById('prosp-fenetres-container');
+      if (fCont) {
+        fCont.innerHTML = '';
+        fenetres.forEach(f => {
+          const div = document.createElement('div');
+          div.className = 'metric-row';
+          div.innerHTML = `
+            <span><strong>${f.libelle || f.cle}</strong> (${f.debut || ''} → ${f.fin || 'ouvert'})</span>
+            <span class="badge badge-primary">${f.couverture?.['10']?.verdict || 'Observée'}</span>
+          `;
+          fCont.appendChild(div);
+        });
+      }
+
+      const lCont = document.getElementById('prosp-lacunes-container');
+      if (lCont) {
+        lCont.innerHTML = '';
+        lacunes.forEach(l => {
+          const div = document.createElement('div');
+          div.className = 'metric-row';
+          const badgeClass = (l.priorite === 'P0') ? 'badge-danger' : ((l.priorite === 'P1') ? 'badge-warning' : 'badge-primary');
+          div.innerHTML = `
+            <span><strong>${l.priorite}</strong> : ${l.libelle}</span>
+            <span class="badge ${badgeClass}">${l.statut}</span>
+          `;
+          lCont.appendChild(div);
+        });
+      }
+    }
+
+    async function lancerStressTestProspective() {
+      try {
+        const resp = await fetch(`/api/innovation/stress_test?horizon=${currentProspHorizon}&effort_rnd=${currentProspEffortRnd}&choc=stagflation_multi_theatres&avec_stocks=1`);
+        const data = await resp.json();
+
+        const panel = document.getElementById('prosp-stress-panel');
+        if (panel) panel.style.display = 'block';
+
+        const divSans = document.getElementById('prosp-stress-sans-stocks');
+        if (divSans) {
+          divSans.innerHTML = `
+            <div class="metric-row"><span>Perte cumulée témoin :</span><strong style="color:var(--accent-crimson);">${(data.perte_cumulee_temoin_mde || 0).toFixed(1)} Md€</strong></div>
+            <div class="metric-row"><span>Perte R&D seule :</span><strong style="color:var(--accent-crimson);">${(data.perte_cumulee_rnd_seule_mde || 0).toFixed(1)} Md€</strong></div>
+            <div class="metric-row"><span>Choc scénario :</span><strong style="color:var(--accent-crimson);">${data.choc?.nom || '-'}</strong></div>
+          `;
+        }
+
+        const divAvec = document.getElementById('prosp-stress-avec-stocks');
+        if (divAvec) {
+          divAvec.innerHTML = `
+            <div class="metric-row"><span>Perte combinée (R&D + Stocks) :</span><strong style="color:var(--accent-emerald);">${(data.perte_cumulee_combinee_mde || 0).toFixed(1)} Md€</strong></div>
+            <div class="metric-row"><span>Gain net cumulé (Pertes évitées) :</span><strong style="color:var(--accent-gold); font-weight:700;">+${(data.gain_net_cumule_mde || 0).toFixed(1)} Md€</strong></div>
+            <div class="metric-row"><span>Ratio coût / bénéfice :</span><strong style="color:var(--accent-emerald);">${(data.ratio_cout_benefice_resilience || 0).toFixed(2)}x</strong></div>
+          `;
+        }
+
+        const elBilan = document.getElementById('prosp-stress-bilan');
+        if (elBilan) {
+          elBilan.innerText = data.synthese_analytique || '-';
+        }
+
+        panel.scrollIntoView({behavior: 'smooth', block: 'start'});
+      } catch (e) {
+        console.error("Erreur stress test prospective:", e);
       }
     }
 

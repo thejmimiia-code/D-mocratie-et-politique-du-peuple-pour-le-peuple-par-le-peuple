@@ -244,6 +244,60 @@ class TestWebServerHTTP(unittest.TestCase):
             self.assertEqual(data["format"], "markdown")
             self.assertIn("# RAPPORT DE SIMULATION MACRO-POLITIQUE", data["contenu"])
 
+    def test_api_prospective(self):
+        with urlopen(f"{self.base_url}/api/prospective") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("fenetres", data)
+            self.assertIn("lacunes", data)
+            self.assertIn("lacunes_par_statut", data)
+
+    def test_api_innovation(self):
+        with urlopen(f"{self.base_url}/api/innovation?horizon=10&depense_rnd=5.0") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("piliers_prospective", data)
+            self.assertIn("diffusion_rnd", data)
+            self.assertIn("compte_stocks_resilience", data)
+            self.assertIn("stress_test_combinaison", data)
+            self.assertEqual(data["horizon_annees"], 10)
+            self.assertEqual(len(data["piliers_prospective"]), 5)
+
+    def test_api_innovation_piliers(self):
+        with urlopen(f"{self.base_url}/api/innovation/piliers") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertEqual(data["total"], 5)
+            self.assertEqual(len(data["piliers"]), 5)
+            cles = [p["cle"] for p in data["piliers"]]
+            self.assertIn("ia_calcul_souverain", cles)
+            self.assertIn("energie_decarbonee_smr", cles)
+
+    def test_api_innovation_stocks(self):
+        with urlopen(f"{self.base_url}/api/innovation/stocks") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertGreaterEqual(data["total"], 5)
+            self.assertIn("compte_ressources_emplois", data)
+
+    def test_api_innovation_stress_test(self):
+        with urlopen(f"{self.base_url}/api/innovation/stress_test?horizon=10&effort_rnd=5.0&choc=stagflation_multi_theatres&avec_stocks=1") as resp:
+            self.assertEqual(resp.status, 200)
+            data = json.loads(resp.read().decode("utf-8"))
+            self.assertIn("choc", data)
+            self.assertIn("perte_cumulee_temoin_mde", data)
+            self.assertIn("perte_cumulee_combinee_mde", data)
+            self.assertIn("gain_net_cumule_mde", data)
+            self.assertIn("ratio_cout_benefice_resilience", data)
+
+    def test_tab_prospective_dans_index_html(self):
+        with urlopen(f"{self.base_url}/") as resp:
+            self.assertEqual(resp.status, 200)
+            body = resp.read().decode("utf-8")
+            self.assertIn("tab-prospective", body)
+            self.assertIn("PROSPECTIVE STRATÉGIQUE, INNOVATION & RÉSILIENCE", body)
+            self.assertIn("chargerProspective", body)
+
 
 if __name__ == "__main__":
     unittest.main()
